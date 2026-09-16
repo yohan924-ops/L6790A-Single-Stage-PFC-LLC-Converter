@@ -1,0 +1,974 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<?application progid="SMath Solver" version="1.5.0.9678"?>
+<worksheet xmlns="http://smath.info/schemas/worksheet/1.0">
+  <settings ppi="96">
+    <identity><id>9c1f7a30-4d21-4e6b-9f11-6b2a7c5d3e88</id><revision>1</revision></identity>
+    <metadata lang="eng"><author>L6790A project</author></metadata>
+    <calculation><precision>4</precision><exponentialThreshold>5</exponentialThreshold><trailingZeros>false</trailingZeros><significantDigitsMode>false</significantDigitsMode><mixedNumbers>false</mixedNumbers><roundingMode>0</roundingMode><approximateEqualAccuracy>3</approximateEqualAccuracy><fractions>decimal</fractions></calculation>
+    <pageModel active="true" viewMode="2" printGrid="false" printAreas="true" simpleEqualsOnly="false" printBackgroundImages="true" hideElementsHighlightings="false">
+      <paper id="63" orientation="Landscape" width="1752" height="1268" />
+      <margins left="19" right="19" top="19" bottom="19" />
+      <header alignment="Center" color="#a9a9a9">&amp;[DATE] &amp;[TIME] - &amp;[FILENAME]</header>
+      <footer alignment="Center" color="#a9a9a9">&amp;[PAGENUM] / &amp;[COUNT]</footer>
+      <backgrounds />
+    </pageModel>
+    <dependencies>
+      <assembly name="SMath Core" version="1.75.9678.0" guid="a37cba83-b69c-4c71-9992-55ff666763bd" />
+      <assembly name="MathRegion" version="1.75.9678.0" guid="02f1ab51-215b-466e-a74d-5d8b1cf85e8d" />
+      <assembly name="PictureRegion" version="1.75.9678.0" guid="06b5df04-393e-4be7-9107-305196fcb861" />
+      <assembly name="PlotRegion" version="1.75.9678.0" guid="c451c2b5-798b-4f08-b9ec-b90963d1ddaa" />
+      <assembly name="AreaRegion" version="1.75.9678.0" guid="4974b228-4974-44cf-8274-bf2936b4a766" />
+      <assembly name="SpecialFunctions" version="1.75.9678.0" guid="2814e667-4e12-48b1-8d51-194e480eabc5" />
+      <assembly name="TextRegion" version="1.75.9678.0" guid="485d28c5-349a-48b6-93be-12a35a1c1e39" />
+    </dependencies>
+  </settings>
+  <regions type="content">
+    <region left="20" top="30" width="1560" height="32" color="#000000" fontSize="15" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: bold; font-style: normal; font-size: 15px;">Why does P19 draw and the gain sheet not?  -  one change per rung</p>
+      </content>
+    </text>
+    </region>
+    <region left="20" top="76" width="1560" height="51" color="#444444" fontSize="9" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">Every rung below prints a number and then plots the same curve. The number says whether the matrix exists; the frame says whether the window found it. Read them in order and stop at the first rung that goes wrong - that rung names the cause. Expected shape</p>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">every time: a hump rising to about 1.423 near f_n 0.69 and falling to 0.510 at the right edge.</p>
+      </content>
+    </text>
+    </region>
+    <region left="20" top="135" width="470" height="25" color="#000000" fontSize="10" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">[PICK] lambda:</p>
+      </content>
+    </text>
+    </region>
+    <region left="510" top="135" width="1080" height="27" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <math>
+      <input>
+        <e type="operand">λ</e>
+        <e type="operand">0.55</e>
+        <e type="operator" args="2">:</e>
+      </input>
+    </math>
+    </region>
+    <region left="20" top="170" width="470" height="25" color="#000000" fontSize="10" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">[PICK] Q of the drawn curve:</p>
+      </content>
+    </text>
+    </region>
+    <region left="510" top="170" width="1080" height="27" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <math>
+      <input>
+        <e type="operand">Q.c</e>
+        <e type="operand">0.766</e>
+        <e type="operator" args="2">:</e>
+      </input>
+    </math>
+    </region>
+    <region left="20" top="205" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">WHAT IS ALREADY KNOWN. In the gain sheet SMath wrote back el(G.c,91,1) = 2.2 and el(G.c,91,2) = 0.5096, both correct, so the loop, the formula and el() are all working and the matrices are real. Whatever is wrong is in the plotting alone.</p>
+      </content>
+    </text>
+    </region>
+    <region left="20" top="236" width="1560" height="51" color="#444444" fontSize="9" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">THE ONE THING WORTH DOING IF NOTHING BELOW DRAWS. SMath re-saves this file keeping every plot attribute, so it can be asked directly. Take any one frame, drag it and roll the mouse wheel until the curve is visible, then save the file and say so. The window</p>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">you reached is then written into the file as scale_x, scale_y, transpose_x and transpose_y, and the correct calibration can be read off it exactly - no more arithmetic about what a grid division is.</p>
+      </content>
+    </text>
+    </region>
+    <region left="20" top="311" width="1560" height="27" color="#0f2a44" fontSize="12" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: bold; font-style: normal; font-size: 12px;">L1  literal bound, 3 statements, 1 matrix, 11 points     closest to P18</p>
+      </content>
+    </text>
+    </region>
+    <region left="20" top="346" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">P18 fills its matrix with range(1,11) and five statements, and P19 plots it. This is the same shape with the gain formula in place of the dB line.</p>
+      </content>
+    </text>
+    </region>
+    <region left="20" top="377" width="470" height="25" color="#000000" fontSize="10" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">- fill T.1:</p>
+      </content>
+    </text>
+    </region>
+    <region left="510" top="377" width="700" height="200" color="#000000" fontSize="8" isBreakable="false">
+    <math>
+      <input>
+        <e type="operand">k.1</e>
+        <e type="operand">1</e>
+        <e type="operand">11</e>
+        <e type="function" args="2">range</e>
+        <e type="operand">x.1</e>
+        <e type="operand">0.55</e>
+        <e type="operand">k.1</e>
+        <e type="operand">1</e>
+        <e type="operator" args="2">-</e>
+        <e type="bracket">(</e>
+        <e type="operand">1.65</e>
+        <e type="operator" args="2">*</e>
+        <e type="operand">10</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">+</e>
+        <e type="operator" args="2">:</e>
+        <e type="operand">T.1</e>
+        <e type="operand">k.1</e>
+        <e type="operand">1</e>
+        <e type="function" args="3">el</e>
+        <e type="operand">x.1</e>
+        <e type="operator" args="2">:</e>
+        <e type="operand">T.1</e>
+        <e type="operand">k.1</e>
+        <e type="operand">2</e>
+        <e type="function" args="3">el</e>
+        <e type="operand">1</e>
+        <e type="operand">1</e>
+        <e type="operand">λ</e>
+        <e type="operator" args="2">+</e>
+        <e type="operand">λ</e>
+        <e type="operand">x.1</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">-</e>
+        <e type="bracket">(</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operand">Q.c</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operand">x.1</e>
+        <e type="operand">1</e>
+        <e type="operand">x.1</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">-</e>
+        <e type="bracket">(</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operator" args="2">*</e>
+        <e type="operator" args="2">+</e>
+        <e type="function" args="1">sqrt</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">:</e>
+        <e type="operand">3</e>
+        <e type="operand">1</e>
+        <e type="function" args="5">line</e>
+        <e type="function" args="3">for</e>
+      </input>
+    </math>
+    </region>
+    <region left="20" top="585" width="470" height="25" color="#000000" fontSize="10" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">- T.1 last point, f_n must be 2.20:</p>
+      </content>
+    </text>
+    </region>
+    <region left="510" top="585" width="1080" height="29" color="#000000" fontSize="8" isBreakable="false">
+    <math decimalPlaces="4">
+      <input>
+        <e type="operand">r.1a</e>
+        <e type="operand">T.1</e>
+        <e type="operand">11</e>
+        <e type="operand">1</e>
+        <e type="function" args="3">el</e>
+        <e type="operator" args="2">:</e>
+      </input>
+        <result action="numeric">
+          <e type="operand">2.2000</e>
+        </result>
+    </math>
+    </region>
+    <region left="20" top="622" width="470" height="25" color="#000000" fontSize="10" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">- T.1 last point, gain must be 0.5096:</p>
+      </content>
+    </text>
+    </region>
+    <region left="510" top="622" width="1080" height="29" color="#000000" fontSize="8" isBreakable="false">
+    <math decimalPlaces="4">
+      <input>
+        <e type="operand">r.1b</e>
+        <e type="operand">T.1</e>
+        <e type="operand">11</e>
+        <e type="operand">2</e>
+        <e type="function" args="3">el</e>
+        <e type="operator" args="2">:</e>
+      </input>
+        <result action="numeric">
+          <e type="operand">0.5096</e>
+        </result>
+    </math>
+    </region>
+    <region left="20" top="659" width="520" height="260" color="#000000" fontSize="10" isBreakable="false">
+    <plot grid="true" axes="true" type="2d" render="lines" scale_x="0.013461538" scale_y="0.030769231" scale_z="1" rotate_x="0" rotate_y="0" rotate_z="0" transpose_x="-409" transpose_y="-130" transpose_z="0">
+      <input>
+        <e type="operand">T.1</e>
+      </input>
+    </plot>
+    </region>
+    <region left="20" top="967" width="1560" height="27" color="#0f2a44" fontSize="12" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: bold; font-style: normal; font-size: 12px;">L2  the only change is a VARIABLE bound in range()</p>
+      </content>
+    </text>
+    </region>
+    <region left="20" top="1002" width="470" height="25" color="#000000" fontSize="10" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">- point count as a variable:</p>
+      </content>
+    </text>
+    </region>
+    <region left="510" top="1002" width="1080" height="27" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <math>
+      <input>
+        <e type="operand">N.2</e>
+        <e type="operand">11</e>
+        <e type="operator" args="2">:</e>
+      </input>
+    </math>
+    </region>
+    <region left="20" top="1037" width="470" height="25" color="#000000" fontSize="10" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">- fill T.2:</p>
+      </content>
+    </text>
+    </region>
+    <region left="510" top="1037" width="700" height="200" color="#000000" fontSize="8" isBreakable="false">
+    <math>
+      <input>
+        <e type="operand">k.2</e>
+        <e type="operand">1</e>
+        <e type="operand">N.2</e>
+        <e type="function" args="2">range</e>
+        <e type="operand">x.2</e>
+        <e type="operand">0.55</e>
+        <e type="operand">k.2</e>
+        <e type="operand">1</e>
+        <e type="operator" args="2">-</e>
+        <e type="bracket">(</e>
+        <e type="operand">1.65</e>
+        <e type="operator" args="2">*</e>
+        <e type="operand">N.2</e>
+        <e type="operand">1</e>
+        <e type="operator" args="2">-</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">+</e>
+        <e type="operator" args="2">:</e>
+        <e type="operand">T.2</e>
+        <e type="operand">k.2</e>
+        <e type="operand">1</e>
+        <e type="function" args="3">el</e>
+        <e type="operand">x.2</e>
+        <e type="operator" args="2">:</e>
+        <e type="operand">T.2</e>
+        <e type="operand">k.2</e>
+        <e type="operand">2</e>
+        <e type="function" args="3">el</e>
+        <e type="operand">1</e>
+        <e type="operand">1</e>
+        <e type="operand">λ</e>
+        <e type="operator" args="2">+</e>
+        <e type="operand">λ</e>
+        <e type="operand">x.2</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">-</e>
+        <e type="bracket">(</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operand">Q.c</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operand">x.2</e>
+        <e type="operand">1</e>
+        <e type="operand">x.2</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">-</e>
+        <e type="bracket">(</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operator" args="2">*</e>
+        <e type="operator" args="2">+</e>
+        <e type="function" args="1">sqrt</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">:</e>
+        <e type="operand">3</e>
+        <e type="operand">1</e>
+        <e type="function" args="5">line</e>
+        <e type="function" args="3">for</e>
+      </input>
+    </math>
+    </region>
+    <region left="20" top="1245" width="470" height="25" color="#000000" fontSize="10" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">- T.2 last point, gain must be 0.5096:</p>
+      </content>
+    </text>
+    </region>
+    <region left="510" top="1245" width="1080" height="29" color="#000000" fontSize="8" isBreakable="false">
+    <math decimalPlaces="4">
+      <input>
+        <e type="operand">r.2b</e>
+        <e type="operand">T.2</e>
+        <e type="operand">N.2</e>
+        <e type="operand">2</e>
+        <e type="function" args="3">el</e>
+        <e type="operator" args="2">:</e>
+      </input>
+        <result action="numeric">
+          <e type="operand">0.5096</e>
+        </result>
+    </math>
+    </region>
+    <region left="20" top="1282" width="520" height="260" color="#000000" fontSize="10" isBreakable="false">
+    <plot grid="true" axes="true" type="2d" render="lines" scale_x="0.013461538" scale_y="0.030769231" scale_z="1" rotate_x="0" rotate_y="0" rotate_z="0" transpose_x="-409" transpose_y="-130" transpose_z="0">
+      <input>
+        <e type="operand">T.2</e>
+      </input>
+    </plot>
+    </region>
+    <region left="20" top="1590" width="1560" height="27" color="#0f2a44" fontSize="12" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: bold; font-style: normal; font-size: 12px;">L3  the only change is FOUR matrices and nine statements</p>
+      </content>
+    </text>
+    </region>
+    <region left="20" top="1625" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">line() carries 11 arguments here instead of 5. Section 16.6 of the design sheet uses 14 and MyBode.sm never goes past 8, so this is the widest untested case.</p>
+      </content>
+    </text>
+    </region>
+    <region left="20" top="1656" width="470" height="25" color="#000000" fontSize="10" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">- fill T.3a .. T.3d:</p>
+      </content>
+    </text>
+    </region>
+    <region left="510" top="1656" width="900" height="320" color="#000000" fontSize="8" isBreakable="false">
+    <math>
+      <input>
+        <e type="operand">k.3</e>
+        <e type="operand">1</e>
+        <e type="operand">N.2</e>
+        <e type="function" args="2">range</e>
+        <e type="operand">x.3</e>
+        <e type="operand">0.55</e>
+        <e type="operand">k.3</e>
+        <e type="operand">1</e>
+        <e type="operator" args="2">-</e>
+        <e type="bracket">(</e>
+        <e type="operand">1.65</e>
+        <e type="operator" args="2">*</e>
+        <e type="operand">N.2</e>
+        <e type="operand">1</e>
+        <e type="operator" args="2">-</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">+</e>
+        <e type="operator" args="2">:</e>
+        <e type="operand">T.3a</e>
+        <e type="operand">k.3</e>
+        <e type="operand">1</e>
+        <e type="function" args="3">el</e>
+        <e type="operand">x.3</e>
+        <e type="operator" args="2">:</e>
+        <e type="operand">T.3a</e>
+        <e type="operand">k.3</e>
+        <e type="operand">2</e>
+        <e type="function" args="3">el</e>
+        <e type="operand">1</e>
+        <e type="operand">1</e>
+        <e type="operand">λ</e>
+        <e type="operator" args="2">+</e>
+        <e type="operand">λ</e>
+        <e type="operand">x.3</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">-</e>
+        <e type="bracket">(</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operand">Q.c</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operand">x.3</e>
+        <e type="operand">1</e>
+        <e type="operand">x.3</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">-</e>
+        <e type="bracket">(</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operator" args="2">*</e>
+        <e type="operator" args="2">+</e>
+        <e type="function" args="1">sqrt</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">:</e>
+        <e type="operand">T.3b</e>
+        <e type="operand">k.3</e>
+        <e type="operand">1</e>
+        <e type="function" args="3">el</e>
+        <e type="operand">x.3</e>
+        <e type="operator" args="2">:</e>
+        <e type="operand">T.3b</e>
+        <e type="operand">k.3</e>
+        <e type="operand">2</e>
+        <e type="function" args="3">el</e>
+        <e type="operand">1</e>
+        <e type="operand">1</e>
+        <e type="operand">λ</e>
+        <e type="operator" args="2">+</e>
+        <e type="operand">λ</e>
+        <e type="operand">x.3</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">-</e>
+        <e type="bracket">(</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operand">Q.c</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operand">x.3</e>
+        <e type="operand">1</e>
+        <e type="operand">x.3</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">-</e>
+        <e type="bracket">(</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operator" args="2">*</e>
+        <e type="operator" args="2">+</e>
+        <e type="function" args="1">sqrt</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">:</e>
+        <e type="operand">T.3c</e>
+        <e type="operand">k.3</e>
+        <e type="operand">1</e>
+        <e type="function" args="3">el</e>
+        <e type="operand">x.3</e>
+        <e type="operator" args="2">:</e>
+        <e type="operand">T.3c</e>
+        <e type="operand">k.3</e>
+        <e type="operand">2</e>
+        <e type="function" args="3">el</e>
+        <e type="operand">1</e>
+        <e type="operand">1</e>
+        <e type="operand">λ</e>
+        <e type="operator" args="2">+</e>
+        <e type="operand">λ</e>
+        <e type="operand">x.3</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">-</e>
+        <e type="bracket">(</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operand">Q.c</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operand">x.3</e>
+        <e type="operand">1</e>
+        <e type="operand">x.3</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">-</e>
+        <e type="bracket">(</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operator" args="2">*</e>
+        <e type="operator" args="2">+</e>
+        <e type="function" args="1">sqrt</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">:</e>
+        <e type="operand">T.3d</e>
+        <e type="operand">k.3</e>
+        <e type="operand">1</e>
+        <e type="function" args="3">el</e>
+        <e type="operand">x.3</e>
+        <e type="operator" args="2">:</e>
+        <e type="operand">T.3d</e>
+        <e type="operand">k.3</e>
+        <e type="operand">2</e>
+        <e type="function" args="3">el</e>
+        <e type="operand">1</e>
+        <e type="operand">1</e>
+        <e type="operand">λ</e>
+        <e type="operator" args="2">+</e>
+        <e type="operand">λ</e>
+        <e type="operand">x.3</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">-</e>
+        <e type="bracket">(</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operand">Q.c</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operand">x.3</e>
+        <e type="operand">1</e>
+        <e type="operand">x.3</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">-</e>
+        <e type="bracket">(</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operator" args="2">*</e>
+        <e type="operator" args="2">+</e>
+        <e type="function" args="1">sqrt</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">:</e>
+        <e type="operand">9</e>
+        <e type="operand">1</e>
+        <e type="function" args="11">line</e>
+        <e type="function" args="3">for</e>
+      </input>
+    </math>
+    </region>
+    <region left="20" top="1984" width="470" height="25" color="#000000" fontSize="10" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">- T.3c last point, gain must be 0.5096:</p>
+      </content>
+    </text>
+    </region>
+    <region left="510" top="1984" width="1080" height="29" color="#000000" fontSize="8" isBreakable="false">
+    <math decimalPlaces="4">
+      <input>
+        <e type="operand">r.3b</e>
+        <e type="operand">T.3c</e>
+        <e type="operand">N.2</e>
+        <e type="operand">2</e>
+        <e type="function" args="3">el</e>
+        <e type="operator" args="2">:</e>
+      </input>
+        <result action="numeric">
+          <e type="operand">0.5096</e>
+        </result>
+    </math>
+    </region>
+    <region left="20" top="2021" width="520" height="260" color="#000000" fontSize="10" isBreakable="false">
+    <plot grid="true" axes="true" type="2d" render="lines" scale_x="0.013461538" scale_y="0.030769231" scale_z="1" rotate_x="0" rotate_y="0" rotate_z="0" transpose_x="-409" transpose_y="-130" transpose_z="0">
+      <input>
+        <e type="operand">T.3c</e>
+      </input>
+    </plot>
+    </region>
+    <region left="20" top="2329" width="1560" height="27" color="#0f2a44" fontSize="12" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: bold; font-style: normal; font-size: 12px;">L4  the only change is 91 points instead of 11</p>
+      </content>
+    </text>
+    </region>
+    <region left="20" top="2364" width="470" height="25" color="#000000" fontSize="10" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">- point count:</p>
+      </content>
+    </text>
+    </region>
+    <region left="510" top="2364" width="1080" height="27" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <math>
+      <input>
+        <e type="operand">N.4</e>
+        <e type="operand">91</e>
+        <e type="operator" args="2">:</e>
+      </input>
+    </math>
+    </region>
+    <region left="20" top="2399" width="470" height="25" color="#000000" fontSize="10" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">- fill T.4:</p>
+      </content>
+    </text>
+    </region>
+    <region left="510" top="2399" width="700" height="200" color="#000000" fontSize="8" isBreakable="false">
+    <math>
+      <input>
+        <e type="operand">k.4</e>
+        <e type="operand">1</e>
+        <e type="operand">N.4</e>
+        <e type="function" args="2">range</e>
+        <e type="operand">x.4</e>
+        <e type="operand">0.55</e>
+        <e type="operand">k.4</e>
+        <e type="operand">1</e>
+        <e type="operator" args="2">-</e>
+        <e type="bracket">(</e>
+        <e type="operand">1.65</e>
+        <e type="operator" args="2">*</e>
+        <e type="operand">N.4</e>
+        <e type="operand">1</e>
+        <e type="operator" args="2">-</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">+</e>
+        <e type="operator" args="2">:</e>
+        <e type="operand">T.4</e>
+        <e type="operand">k.4</e>
+        <e type="operand">1</e>
+        <e type="function" args="3">el</e>
+        <e type="operand">x.4</e>
+        <e type="operator" args="2">:</e>
+        <e type="operand">T.4</e>
+        <e type="operand">k.4</e>
+        <e type="operand">2</e>
+        <e type="function" args="3">el</e>
+        <e type="operand">1</e>
+        <e type="operand">1</e>
+        <e type="operand">λ</e>
+        <e type="operator" args="2">+</e>
+        <e type="operand">λ</e>
+        <e type="operand">x.4</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">-</e>
+        <e type="bracket">(</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operand">Q.c</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operand">x.4</e>
+        <e type="operand">1</e>
+        <e type="operand">x.4</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">-</e>
+        <e type="bracket">(</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operator" args="2">*</e>
+        <e type="operator" args="2">+</e>
+        <e type="function" args="1">sqrt</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">:</e>
+        <e type="operand">3</e>
+        <e type="operand">1</e>
+        <e type="function" args="5">line</e>
+        <e type="function" args="3">for</e>
+      </input>
+    </math>
+    </region>
+    <region left="20" top="2607" width="470" height="25" color="#000000" fontSize="10" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">- T.4 last point, gain must be 0.5096:</p>
+      </content>
+    </text>
+    </region>
+    <region left="510" top="2607" width="1080" height="29" color="#000000" fontSize="8" isBreakable="false">
+    <math decimalPlaces="4">
+      <input>
+        <e type="operand">r.4b</e>
+        <e type="operand">T.4</e>
+        <e type="operand">N.4</e>
+        <e type="operand">2</e>
+        <e type="function" args="3">el</e>
+        <e type="operator" args="2">:</e>
+      </input>
+        <result action="numeric">
+          <e type="operand">0.5096</e>
+        </result>
+    </math>
+    </region>
+    <region left="20" top="2644" width="520" height="260" color="#000000" fontSize="10" isBreakable="false">
+    <plot grid="true" axes="true" type="2d" render="lines" scale_x="0.013461538" scale_y="0.030769231" scale_z="1" rotate_x="0" rotate_y="0" rotate_z="0" transpose_x="-409" transpose_y="-130" transpose_z="0">
+      <input>
+        <e type="operand">T.4</e>
+      </input>
+    </plot>
+    </region>
+    <region left="20" top="2952" width="1560" height="27" color="#0f2a44" fontSize="12" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: bold; font-style: normal; font-size: 12px;">L6  the TI app note idiom      one index, augment(), eval()</p>
+      </content>
+    </text>
+    </region>
+    <region left="20" top="2987" width="1560" height="51" color="#444444" fontSize="9" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">SMPS_Input_Filter_Design_TI_APP_Note.sm fills COLUMN VECTORS with a single index - el(f, j), not el(f, j, 1) - and then glues them with eval(augment(vectorize(x), vectorize(y))). Three differences from L1 at once, but every one of them is taken from a sheet</p>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">that renders here. It also proves eval, augment and vectorize exist, which this project had assumed they did not.</p>
+      </content>
+    </text>
+    </region>
+    <region left="20" top="3046" width="470" height="25" color="#000000" fontSize="10" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">- fill two column vectors:</p>
+      </content>
+    </text>
+    </region>
+    <region left="510" top="3046" width="760" height="200" color="#000000" fontSize="8" isBreakable="false">
+    <math>
+      <input>
+        <e type="operand">k.6</e>
+        <e type="operand">1</e>
+        <e type="operand">N.2</e>
+        <e type="function" args="2">range</e>
+        <e type="operand">X.6</e>
+        <e type="operand">k.6</e>
+        <e type="function" args="2">el</e>
+        <e type="operand">0.55</e>
+        <e type="operand">k.6</e>
+        <e type="operand">1</e>
+        <e type="operator" args="2">-</e>
+        <e type="bracket">(</e>
+        <e type="operand">1.65</e>
+        <e type="operator" args="2">*</e>
+        <e type="operand">N.2</e>
+        <e type="operand">1</e>
+        <e type="operator" args="2">-</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">+</e>
+        <e type="operator" args="2">:</e>
+        <e type="operand">Y.6</e>
+        <e type="operand">k.6</e>
+        <e type="function" args="2">el</e>
+        <e type="operand">1</e>
+        <e type="operand">1</e>
+        <e type="operand">λ</e>
+        <e type="operator" args="2">+</e>
+        <e type="operand">λ</e>
+        <e type="operand">X.6</e>
+        <e type="operand">k.6</e>
+        <e type="function" args="2">el</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">-</e>
+        <e type="bracket">(</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operand">Q.c</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operand">X.6</e>
+        <e type="operand">k.6</e>
+        <e type="function" args="2">el</e>
+        <e type="operand">1</e>
+        <e type="operand">X.6</e>
+        <e type="operand">k.6</e>
+        <e type="function" args="2">el</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">-</e>
+        <e type="bracket">(</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operator" args="2">*</e>
+        <e type="operator" args="2">+</e>
+        <e type="function" args="1">sqrt</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">:</e>
+        <e type="operand">2</e>
+        <e type="operand">1</e>
+        <e type="function" args="4">line</e>
+        <e type="function" args="3">for</e>
+      </input>
+    </math>
+    </region>
+    <region left="20" top="3254" width="470" height="25" color="#000000" fontSize="10" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Y.6 last point, gain must be 0.5096:</p>
+      </content>
+    </text>
+    </region>
+    <region left="510" top="3254" width="1080" height="29" color="#000000" fontSize="8" isBreakable="false">
+    <math decimalPlaces="4">
+      <input>
+        <e type="operand">r.6b</e>
+        <e type="operand">Y.6</e>
+        <e type="operand">N.2</e>
+        <e type="function" args="2">el</e>
+        <e type="operator" args="2">:</e>
+      </input>
+        <result action="numeric">
+          <e type="operand">0.5096</e>
+        </result>
+    </math>
+    </region>
+    <region left="20" top="3291" width="470" height="25" color="#000000" fontSize="10" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">- glue them the way the TI sheet does:</p>
+      </content>
+    </text>
+    </region>
+    <region left="20" top="3316" width="760" height="64" isBreakable="false">
+    <math decimalPlaces="4" exponentialThreshold="5">
+      <input>
+        <e type="operand">P.6</e>
+        <e type="operand">X.6</e>
+        <e type="function" args="1">vectorize</e>
+        <e type="operand">Y.6</e>
+        <e type="function" args="1">vectorize</e>
+        <e type="function" args="2">augment</e>
+        <e type="function" args="1">eval</e>
+        <e type="operator" args="2">:</e>
+      </input>
+    </math>
+    </region>
+    <region left="20" top="3388" width="520" height="260" color="#000000" fontSize="10" isBreakable="false">
+    <plot grid="true" axes="true" type="2d" render="lines" scale_x="0.013461538" scale_y="0.030769231" scale_z="1" rotate_x="0" rotate_y="0" rotate_z="0" transpose_x="-409" transpose_y="-130" transpose_z="0">
+      <input>
+        <e type="operand">P.6</e>
+      </input>
+    </plot>
+    </region>
+    <region left="20" top="3696" width="1560" height="27" color="#0f2a44" fontSize="12" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: bold; font-style: normal; font-size: 12px;">L7  no matrix at all      plot a FUNCTION of the plot variable</p>
+      </content>
+    </text>
+    </region>
+    <region left="20" top="3731" width="1560" height="51" color="#444444" fontSize="9" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">Project Admittance Copy.sm puts S1(x) and S2(x) straight into a plot. For a closed-form gain curve that is the obvious thing to do - no loop, no matrix, nothing to fill - and it was never tried here. If this rung draws and the others do not, the whole</p>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">matrix approach can be dropped.</p>
+      </content>
+    </text>
+    </region>
+    <region left="20" top="3790" width="470" height="25" color="#000000" fontSize="10" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">- define the gain as a function of x:</p>
+      </content>
+    </text>
+    </region>
+    <region left="20" top="3815" width="760" height="64" isBreakable="false">
+    <math decimalPlaces="4" exponentialThreshold="5">
+      <input>
+        <e type="operand">x</e>
+        <e type="function" args="1">M.f</e>
+        <e type="operand">1</e>
+        <e type="operand">1</e>
+        <e type="operand">λ</e>
+        <e type="operator" args="2">+</e>
+        <e type="operand">λ</e>
+        <e type="operand">x</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">-</e>
+        <e type="bracket">(</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operand">Q.c</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operand">x</e>
+        <e type="operand">1</e>
+        <e type="operand">x</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">-</e>
+        <e type="bracket">(</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operator" args="2">*</e>
+        <e type="operator" args="2">+</e>
+        <e type="function" args="1">sqrt</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">:</e>
+      </input>
+    </math>
+    </region>
+    <region left="20" top="3887" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">- M.f(1) must be 1.0000 whatever Q, and M.f(2.20) must be 0.5096.</p>
+      </content>
+    </text>
+    </region>
+    <region left="20" top="3918" width="520" height="260" color="#000000" fontSize="10" isBreakable="false">
+    <plot grid="true" axes="true" type="2d" render="lines" scale_x="0.013461538" scale_y="0.030769231" scale_z="1" rotate_x="0" rotate_y="0" rotate_z="0" transpose_x="-409" transpose_y="-130" transpose_z="0">
+      <input>
+        <e type="operand">x</e>
+        <e type="function" args="1">M.f</e>
+      </input>
+    </plot>
+    </region>
+    <region left="20" top="4226" width="1560" height="27" color="#0f2a44" fontSize="12" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: bold; font-style: normal; font-size: 12px;">L5  the same T.1 at four grid divisions      only one window can be right</p>
+      </content>
+    </text>
+    </region>
+    <region left="20" top="4261" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">If L1 printed its numbers but drew nothing, the matrix is fine and the window is not. These four ask for the identical window and differ only in the pixels per grid division: 20, 8, 4, 2 - left to right, top row then bottom.</p>
+      </content>
+    </text>
+    </region>
+    <region left="20" top="4292" width="520" height="260" color="#000000" fontSize="10" isBreakable="false">
+    <plot grid="true" axes="true" type="2d" render="lines" scale_x="0.067307692" scale_y="0.153846154" scale_z="1" rotate_x="0" rotate_y="0" rotate_z="0" transpose_x="-409" transpose_y="-130" transpose_z="0">
+      <input>
+        <e type="operand">T.1</e>
+      </input>
+    </plot>
+    </region>
+    <region left="580" top="4292" width="520" height="260" color="#000000" fontSize="10" isBreakable="false">
+    <plot grid="true" axes="true" type="2d" render="lines" scale_x="0.026923077" scale_y="0.061538462" scale_z="1" rotate_x="0" rotate_y="0" rotate_z="0" transpose_x="-409" transpose_y="-130" transpose_z="0">
+      <input>
+        <e type="operand">T.1</e>
+      </input>
+    </plot>
+    </region>
+    <region left="20" top="4584" width="520" height="260" color="#000000" fontSize="10" isBreakable="false">
+    <plot grid="true" axes="true" type="2d" render="lines" scale_x="0.013461538" scale_y="0.030769231" scale_z="1" rotate_x="0" rotate_y="0" rotate_z="0" transpose_x="-409" transpose_y="-130" transpose_z="0">
+      <input>
+        <e type="operand">T.1</e>
+      </input>
+    </plot>
+    </region>
+    <region left="580" top="4584" width="520" height="260" color="#000000" fontSize="10" isBreakable="false">
+    <plot grid="true" axes="true" type="2d" render="lines" scale_x="0.006730769" scale_y="0.015384615" scale_z="1" rotate_x="0" rotate_y="0" rotate_z="0" transpose_x="-409" transpose_y="-130" transpose_z="0">
+      <input>
+        <e type="operand">T.1</e>
+      </input>
+    </plot>
+    </region>
+    <region left="20" top="4876" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">- what to report: for each of L1..L4, did the number print and did the frame draw; and in L5, which of the four frames holds the curve.</p>
+      </content>
+    </text>
+    </region>
+  </regions>
+</worksheet>
