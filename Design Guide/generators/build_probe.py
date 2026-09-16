@@ -57,10 +57,10 @@ S.h2('P3  display unit via <contract>                  expected 150.0000 kHz')
 S.row('- contract to kHz:', 'p.3', "150000*'Hz", 'kHz', 4)
 
 S.h2('P4  the resistance unit is lower-case ohm        expected 0.0240 ohm')
-S.const('- ohm (NOT Ohm):', 'p.4', "0.024*%ohm", 'ohm', 4)
+S.const('- ohm (NOT Ohm):', 'p.4', "0.024*'ohm", 'ohm', 4)
 
 S.h2('P5  mixed units must cancel                      expected 700.0000 W')
-S.row('- ohm*W / ohm:', 'p.5', "16.8*%ohm*'W/p.4", 'W', 4)
+S.row('- ohm*W / ohm:', 'p.5', "16.8*'ohm*'W/p.4", 'W', 4)
 
 S.h2('P6  fractional power on a pure number            expected 1.4142')
 S.row('- sqrt:', 'p.6', "sqrt(2)", None, 4)
@@ -144,7 +144,7 @@ S.note('   All twenty-one must read 1.0000 in their own unit. kohm and mohm are 
 
 S.h2('P17  a unit-carrying quantity through a fractional power')
 S.note('   the failure mode of SMath pitfall 3: a stray unit tag blocks ^0.5 and ln()')
-S.row('- ratio made explicitly unitless:', 'p.17a', "(264*'V)/(173.24*%V)", None, 4)
+S.row('- ratio made explicitly unitless:', 'p.17a', "(264*'V)/(173.24*'V)", None, 4)
 S.row('- and then raised to a fractional power:', 'p.17b', "p.17a^0.5", None, 4)
 S.note('   expected 1.5239 and 1.2345')
 
@@ -196,7 +196,7 @@ S.row('- visible again, must be 2.4495:', 'p.20d', 'p.20c', None, 4)
 # builder string agrees with section 8 to the digit and the RPN reads back
 # exactly as intended. So the fault is in a CONSTRUCT, and these take them
 # one at a time.
-import math as _m                                                # noqa: E402
+import math as _m                                                 # noqa: E402
 
 _LAM = 0.4583333333333333
 _QPK = 0.5001479368730567
@@ -423,5 +423,5 @@ for k, want in EXPECT.items():
     got = S.ns[k.replace('.', '__')]
     ok = abs(got - want) <= max(abs(want) * 1e-4, 1e-9)
     bad += 0 if ok else 1
-    print(f'  {k:7s} = {got:<16.8g} expected {want:<16.8g} {"OK" if ok else "** DIFF"}')
+    print(f'  {k:7s} = {got:<6.8g} expected {want:<16.8g} {"OK" if ok else "** DIFF"}')
 print(f'  mismatches: {bad}')
