@@ -151,7 +151,7 @@ def main():
     # (name, expression, note) in the order the sheet defines them
     rows = []
     for m in re.finditer(r"S\.(row|const|set)\(\s*(?:'(?:[^']*)'|\"[^\"]*\")\s*,\s*"
-                         r''([^']+)'\s*,\s*((?:\"[^\"]*\"|'[^']*')(?:\s*(?:\"[^\"]*\"|'[^']*'))*)",
+                         r"'([^']+)'\s*,\s*((?:\"[^\"]*\"|'[^']*')(?:\s*(?:\"[^\"]*\"|'[^']*'))*)",
                          src):
         rows.append((m.group(2), m.group(3), m.start()))
     shown = set(re.findall(r"S\.show\(\s*'[^']*'\s*,\s*'([^']+)'", src))
