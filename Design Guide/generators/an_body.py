@@ -102,7 +102,7 @@ def build(A):
         'magnetics and the filter. Take that loss away and hundreds of kHz '
         'becomes reasonable.',
         '<b>The transformer leakage is used, not fought.</b> In a forward '
-        'converter leakage is a problem to be snubbed. Here it can BE '
+        'converter leakage is a problem to be snubbed. Here it can <i>be</i> '
         'L<sub>r</sub>, so the resonant inductor costs nothing and the '
         'snubber disappears with it.',
         '<b>No output inductor.</b> The rectifier feeds the output capacitor '
@@ -576,8 +576,11 @@ def build(A):
              'regulated. IEC&nbsp;61000-3-2 sets the limits, and which '
              'limit applies depends on the class: a mains rectifier of '
              'this shape is Class&nbsp;D, exempt below 75&nbsp;W and '
-             'held to a milliamp-per-watt line above it, while lighting '
-             'is Class&nbsp;C and is caught from 25&nbsp;W.'))
+             'held to a milliamp-per-watt line above it. <b>But Class&nbsp;D '
+             'only reaches 600&nbsp;W</b> &mdash; this design draws '
+             '%(Pin).0f&nbsp;W at the input, above that, so the absolute '
+             'Class&nbsp;A limits apply instead. Settle the class first.'
+             % V))
 
     add(h2('How a corrector fixes it'))
     add(p('Force the input current to follow the input voltage and the '
@@ -2032,7 +2035,8 @@ def build(A):
              'nominal, %(vo).1f&nbsp;V at OVP2 &mdash; and the only remaining '
              'constraint is that the turns come out whole. Carrying that check '
              'over from a self-supplied design reports a failure that is not '
-             'one.' % dict(va=A.SH['V.aux'], vo=A.SH['V.aux_OVP2'])))
+             'one.' % dict(va=A.SH['V.aux'],
+                           vo=A.SH['n.aux'] * A.SH['V.OVP2_act'])))
 
     add(h2('HVSU and V<sub>CC</sub>'))
     ext(bullets([
@@ -2176,7 +2180,9 @@ def build(A):
         'ripple current, and judge a centre tap at the output node rather '
         'than per winding.',
         '<b>Carry the conduction ratio &radic;d into the secondary rms.</b> '
-        'Dropping it overstates the loss by about 12&nbsp;%% here.' % {},
+        'Dropping it overstates the rms by about 12&nbsp;%% here, and the '
+        'loss &mdash; which goes as the square &mdash; by about '
+        '26&nbsp;%%.' % {},
         '<b>Decide how L<sub>r</sub> is built before specifying the '
         'transformer</b>, and put open-circuit and short-circuit inductance '
         'on the drawing alongside the turns.',
@@ -2208,9 +2214,13 @@ def build(A):
         'the architecture, so it has no precedent to borrow from.' % V,
         '<b>ZVS at the half-bridge morphing edge</b> (245&nbsp;'
         'V<sub>pk</sub>, full load), on the gate and mid-point waveforms. '
-        'The calculation says %(Tzc).0f&nbsp;ns against %(tD).0f&nbsp;ns; '
+        'The calculation says %(cTzc).0f&nbsp;ns against %(tD).0f&nbsp;ns; '
         'confirm it is not hard switching, and that the adaptive dead time '
-        'actually settles where it is assumed to.' % V,
+        'actually settles where it is assumed to. <b>Then measure the worst '
+        'point of the sweep as well</b> &mdash; %(zLoad).0f&nbsp;%% load at '
+        'the %(zVin).1f&nbsp;Vac equivalent corner, %(zTzc).0f&nbsp;ns &mdash; '
+        'because that, not the design corner, is the figure this design is '
+        'held to.' % dict(V, **ZVS_WORST),
         '<b>Switching frequency at the full-bridge morphing edge</b> '
         '(235&nbsp;V<sub>pk</sub>, full load). Calculated '
         '%(fswB).1f&nbsp;kHz; check it does not run into the VCO ceiling and '
@@ -2403,8 +2413,9 @@ def build(A):
               'R<sub>ac</sub> by about 3 %, so nothing downstream is '
               'sensitive &mdash; but it should be replaced by a measurement']],
             widths=[CW * 0.22, CW * 0.34, CW * 0.44]))
-    add(note('<b>Every consistency check in this note is a consistency '
-             'check.</b> The numbers here agree across three independent '
+    add(note('<b>Every cross-check in this note is a consistency check, not '
+             'a correctness check.</b> The numbers here agree across three '
+             'independent '
              'implementations, which means they implement the same equations '
              '&mdash; not that the equations describe the hardware. That is '
              'what the measurement list in Section&nbsp;'
@@ -2416,11 +2427,15 @@ def build(A):
 ZVS_WORST = {}          # filled by _zvs_grid, read by the text beside it
 
 
-def _zvs_grid(A):
-    """T_ZC over load and equivalent input, recomputed - never transcribed"""
+def _zvs_grid(A, head=('Load', '%.1f Vac eq.')):
+    """T_ZC over load and equivalent input, recomputed - never transcribed
+
+    head lets the Korean edition label the same grid in its own language;
+    the numbers are computed here either way, never transcribed.
+    """
     import l6790
     cols = (A.R['Vin_min'], 180., 225., 264., 332.34)
-    rows = [['Load'] + ['%.1f Vac eq.' % c for c in cols]]
+    rows = [[head[0]] + [head[1] % c for c in cols]]
     worst = None
     for ld in (1.0, 0.75, 0.50, 0.25):
         r = ['%d %%' % (ld * 100)]

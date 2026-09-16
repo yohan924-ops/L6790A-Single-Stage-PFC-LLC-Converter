@@ -11,6 +11,16 @@
   * U+2212 대신 ASCII 하이픈 — 임베드 서체에서 안 그려지는 일이 있었다
 """
 
+# an_pdf._fsw_peaks() 는 라인 조건 이름을 영어로 만든다.  값은 그쪽에서
+# 계산한 것을 그대로 쓰고 이름만 여기서 옮긴다 — 숫자를 다시 적지 않는다.
+_LINECOND = {
+    'minimum line': '최저 상용전원',
+    'tank minimum': '탱크 최저',
+    'nominal': '공칭',
+    'maximum line': '최고 상용전원',
+    'FB threshold': 'FB 임계',
+}
+
 
 def build(A):
     h1, h2, p, eq, fig, tbl, note = A.h1, A.h2, A.p, A.eq, A.fig, A.tbl, A.note
@@ -95,7 +105,7 @@ def build(A):
         '<b>조용하다.</b> 전류가 사다리꼴이 아니라 정현파이고 스위칭 천이가 '
         '느리고 감쇠돼 있어서, 같은 전력의 하드 스위칭 컨버터보다 전도·방사 '
         '스펙트럼이 훨씬 작다.']))
-    add(p('대가도 똑같이 실제하므로 같은 자리에 적는다. 주파수로 조절하므로 '
+    add(p('대가도 그만큼 분명하므로 같은 자리에 적는다. 주파수로 조절하므로 '
           '동작 주파수가 라인과 부하에 따라 움직이고, 자성 부품은 그 범위 '
           '전체에서 버텨야 한다. 부하가 전력을 가져가든 말든 순환 자화 전류가 '
           '흐르므로 경부하 효율은 강점이 아니다. 그리고 설계가 듀티 식에서 '
@@ -1034,7 +1044,7 @@ def build(A):
           '표&nbsp;%s 다.' % TR('zvs')))
     add(tbl('운전 영역 전체의 T<sub>ZC</sub> [ns], 선정 탱크 기준. '
             '데드타임은 %(tD).0f ns 다.' % V,
-            _zvs_grid(A),
+            _zvs_grid(A, head=('부하', '등가 %.1f Vac')),
             widths=[CW * 0.16] + [CW * 0.168] * 5, key='zvs',
             align={1: 'CENTER', 2: 'CENTER', 3: 'CENTER', 4: 'CENTER',
                    5: 'CENTER'}))
@@ -1081,7 +1091,7 @@ def build(A):
             '사이클의 일부를 공진 위에서 보낸다.' % V,
             [['라인 조건', 'V<sub>eq</sub>', '최고 f<sub>sw</sub>',
               'f<sub>r</sub> 기준']]
-            + [[nm, '%.0f V' % veq, '%.1f kHz' % pk,
+            + [[_LINECOND.get(nm, nm), '%.0f V' % veq, '%.1f kHz' % pk,
                 '<b>위</b>' if ab else '아래']
                for nm, veq, pk, ab in V['fswPk']],
             widths=[CW * 0.30, CW * 0.18, CW * 0.22, CW * 0.30]))
@@ -1780,7 +1790,7 @@ def build(A):
              '%(va).1f&nbsp;V, OVP2 에서 %(vo).1f&nbsp;V &mdash; 남는 제약은 '
              '턴수가 정수여야 한다는 것뿐이다. 자급 구성에서 이 검사를 그대로 '
              '가져오면 있지도 않은 불합격을 보고한다.'
-             % dict(va=SH['V.aux'], vo=SH['V.aux_OVP2'])))
+             % dict(va=SH['V.aux'], vo=SH['n.aux'] * SH['V.OVP2_act'])))
 
     add(h2('HVSU 와 V<sub>CC</sub>'))
     ext(bullets([
@@ -1905,7 +1915,8 @@ def build(A):
         '<b>출력 커패시터 리플 전류에 2f<sub>l</sub> 성분을 포함하고</b>, '
         '센터탭은 권선당이 아니라 출력 노드에서 판정한다.',
         '<b>2차 실효값에 도통비 &radic;d 를 반영한다.</b> 빼먹으면 여기서는 '
-        '손실을 약 12&nbsp;% 과대평가한다.',
+        '실효값을 약 12&nbsp;%, 제곱으로 가는 손실을 약 26&nbsp;% '
+        '과대평가한다.',
         '<b>L<sub>r</sub> 을 어떻게 만들지 먼저 정하고 나서 트랜스포머 '
         '사양을 쓴다.</b> 도면에는 턴수와 함께 개방·단락 인덕턴스를 적는다.',
         '<b>커패시터 ESR 은 스위칭 주파수 값을 쓴다</b>, 120&nbsp;Hz '
@@ -1932,9 +1943,13 @@ def build(A):
         '창은 유한하다. 이 리스크는 아키텍처가 만든 것이라 참고할 전례가 '
         '없다.' % V,
         '<b>하프브리지 morphing 경계(245&nbsp;V<sub>pk</sub>, 전부하)에서의 '
-        'ZVS</b>, 게이트와 중점 파형으로. 계산은 %(Tzc).0f&nbsp;ns 대 '
+        'ZVS</b>, 게이트와 중점 파형으로. 계산은 %(cTzc).0f&nbsp;ns 대 '
         '%(tD).0f&nbsp;ns 다. 하드 스위칭이 아닌지, 그리고 적응 데드타임이 '
-        '실제로 가정한 자리로 수렴하는지 확인한다.' % V,
+        '실제로 가정한 자리로 수렴하는지 확인한다. <b>그다음 스윕의 최악점도 '
+        '같이 잰다</b> &mdash; %(zVin).1f&nbsp;Vac 등가 코너의 '
+        '%(zLoad).0f&nbsp;%% 부하, %(zTzc).0f&nbsp;ns &mdash; 설계가 지켜야 '
+        '하는 값이 설계 코너가 아니라 그쪽이기 때문이다.'
+        % dict(V, **ZVS_WORST),
         '<b>풀브리지 morphing 경계(235&nbsp;V<sub>pk</sub>, 전부하)에서의 '
         '스위칭 주파수.</b> 계산 %(fswB).1f&nbsp;kHz. VCO 천장에 부딪혀 전력 '
         '제한에 걸리지 않는지 본다.' % V,
