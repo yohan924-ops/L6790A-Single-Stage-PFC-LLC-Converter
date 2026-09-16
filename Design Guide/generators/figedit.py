@@ -144,11 +144,11 @@ def main():
     # 2. The two operation circuits are captioned only "Figure 2.5" and so on
     #    in the source, which says nothing. Name what each one is.
     band('an_ref_op_power_raw.png', 'an_ref_op_power.png',
-     [(0.25, 'POWER DELIVERY   first half'),
-      (0.75, 'POWER DELIVERY   second half')], h=48, size=27)
+         [(0.25, 'POWER DELIVERY   first half'),
+          (0.75, 'POWER DELIVERY   second half')], h=48, size=27)
     band('an_ref_op_free_raw.png', 'an_ref_op_free.png',
-     [(0.25, 'FREEWHEELING   first half'),
-      (0.75, 'FREEWHEELING   second half')], h=48, size=27)
+         [(0.25, 'FREEWHEELING   first half'),
+          (0.75, 'FREEWHEELING   second half')], h=48, size=27)
 
     # 3. The source writes n for the WOUND ratio. In this document n is the
     #    equivalent-model ratio and the wound one is n_T - and this is the
