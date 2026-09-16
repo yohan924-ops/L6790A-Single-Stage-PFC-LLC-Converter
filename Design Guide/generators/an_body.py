@@ -1179,10 +1179,25 @@ def build(A):
           'fitted approximation, and it is evaluated at the design '
           'Q<sub>ZVS</sub> rather than at the Q the converter actually runs '
           'at. Measured against a full sweep it can err in <b>either</b> '
-          'direction &mdash; on this tank it understates the margin by 34&nbsp;'
-          '%, on another it overstates by 23&nbsp;%. Optimistic is the '
-          'dangerous direction, because it reports ZVS margin that is not '
-          'there.'))
+          'direction &mdash; on this tank it reads %(TzcCF).0f&nbsp;ns against '
+          'the swept %(Tzc).0f&nbsp;ns, so it understates the margin by '
+          '%(TzcCFmag).0f&nbsp;%%, while on another tank it overstates by '
+          'about 23&nbsp;%%. Optimistic is the dangerous direction, because it '
+          'reports ZVS margin that is not there.'
+          % dict(V, TzcCFmag=abs(V['TzcCFpc']))))
+    add(note('<b>And it has to be told which &lambda; to use.</b> The shortcut '
+             'is written with a bare &lambda;, and it means the <i>design</i> '
+             '&lambda; &mdash; the largest of the four candidates, '
+             '%(lamreq).3f here &mdash; together with the design '
+             'Q<sub>ZVS</sub>. Read the same expression with '
+             '&lambda;<sub>act</sub>&nbsp;=&nbsp;%(lam).3f, which is what the '
+             'symbol means everywhere after the tank is chosen, and the phase '
+             'comes out <b>negative</b> (%(TzcCFact).0f&nbsp;ns) &mdash; a '
+             'capacitive answer for a tank that is comfortably inductive. The '
+             'sweep below carries no such ambiguity: it uses '
+             '&lambda;<sub>act</sub> and the Q of the moment, which is what '
+             'the hardware has.'
+             % dict(V, lamreq=A.SH['λ'])))
     add(p('The reliable procedure is to sweep &theta;, input voltage and load '
           'with the <b>selected</b> tank and take the minimum. The result for '
           'this design is given in Table&nbsp;%s.' % TR('zvs')))
@@ -1743,7 +1758,20 @@ def build(A):
              'optional.'))
 
     # =============================================================== 6
-    add(h1('Summary of the worked design'))
+    add(h1('Design example'))
+    add(p('Everything above is method. This chapter is the one design carried '
+          'all the way through: what the numbers came out as, how the parts '
+          'around the controller are chosen, and what has to be true on the '
+          'bench before any of it is believed. It is written so that it can be '
+          'read on its own once the method is understood.'))
+    add(p('The specification is the one in Section&nbsp;'
+          + SR('Specification and power budget')
+          + ': <b>90 to %(Vacmax).0f&nbsp;Vac in, %(Vout).0f&nbsp;V / '
+            '%(Iout).1f&nbsp;A = %(Pout).1f&nbsp;W out</b>, centre-tapped '
+            'synchronous rectification, no bulk capacitor and no boost '
+            'stage.' % V))
+
+    add(h2('What the design came out as'))
     add(tbl('Principal values.',
             [['Block', 'Values'],
              ['Tank', 'C<sub>r</sub> %(Cr).0f nF, L<sub>r</sub> %(Lr).0f '
@@ -1791,8 +1819,238 @@ def build(A):
               + SR('Semiconductor requirements')]],
             widths=[CW * 0.36, CW * 0.14, CW * 0.50]))
 
+    # ------------------------------------------------ the controller network
+    add(h2('The parts around the controller, one at a time'))
+    add(p('Section&nbsp;' + SR('Controller network') + ' listed these as a '
+          'table of results. This is where each one comes from. Five pins '
+          'carry a passive part that has to be sized, and every one of them '
+          'is sized against something already fixed &mdash; so the order '
+          'below is the order they have to be done in.'))
+
+    add(h2('The oscillator: C<sub>T</sub> first, then R<sub>T</sub>'))
+    add(p('The VCO charges C<sub>T</sub> from the sum of a fixed current '
+          'V<sub>ref</sub>/R<sub>T</sub> and the error-amplifier current '
+          'I<sub>EA</sub>, up to V<sub>ref</sub>&nbsp;=&nbsp;1.5&nbsp;V, then '
+          'adds a fixed idle time:'))
+    add(eq(r'\frac{T_{sw}}{2}=\frac{C_{T}V_{ref}}'
+           r'{\frac{V_{ref}}{R_{T}}+I_{EA}}+T_{idle}'))
+    add(p('<b>I<sub>EA</sub> is the only actuator in the converter.</b> More '
+          'current means a higher frequency, which means less power. '
+          'Everything the control loop does, it does through this one term.'))
+    add(p('C<sub>T</sub> is chosen first because it sets the <i>span</i>, and '
+          'R<sub>T</sub> after it because it sets the <i>floor</i>:'))
+    add(eq(r'C_{T,max}=\frac{I_{EA,max}}{2V_{ref}}\cdot'
+           r'\frac{(1-2T_{idle}f_{sw,max})(1-2T_{idle}f_{sw,min})}'
+           r'{f_{sw,max}-f_{sw,min}}\,,\qquad '
+           r'C_{T,min}=\frac{1}{R_{T,max}}'
+           r'\left(\frac{1}{2f_{sw,min}}-T_{idle}\right)'))
+    add(eq(r'R_{T,ceil}=\frac{1}{C_{T}}'
+           r'\left(\frac{1}{2f_{sw,min}}-T_{idle}\right)'))
+    add(p('with f<sub>sw,min</sub> set to f<sub>o</sub> &mdash; the frequency '
+          'floor of the whole design, for the reason in Section&nbsp;'
+          + SR('Two divergences that cancel') + '. Here that window is '
+            '%(CTmin).0f to %(CTmax).0f&nbsp;pF, the datasheet allows 270 to '
+            '1000&nbsp;pF, and the part is taken from the middle of the '
+            'overlap rather than from either edge: <b>C<sub>T</sub> = '
+            '%(CT).0f&nbsp;pF</b>, C0G. Then R<sub>T,ceil</sub> = '
+            '%(RTceil).2f&nbsp;k&Omega; gives <b>R<sub>T</sub> = '
+            '%(RT).0f&nbsp;k&Omega;</b>.'
+          % dict(V, CTmin=A.SH['C.T_min'], CTmax=A.SH['C.T_max'],
+                 RTceil=A.SH['R.T_ceil'] / 1e3)))
+    add(note('<b>R<sub>T,ceil</sub> is a maximum, not a minimum, whatever it '
+             'is called.</b> f<sub>Min</sub> = '
+             '1/[2(C<sub>T</sub>R<sub>T</sub>+T<sub>idle</sub>)] <i>falls</i> '
+             'as R<sub>T</sub> grows, so rounding this number up puts the VCO '
+             'clamp below f<sub>o</sub> and leaves nothing but the '
+             'anti-capacitive protection between the converter and the '
+             'capacitive region. Round it <b>down</b>.'))
+    add(p('The three frequencies the selected pair actually produce are'))
+    add(eq(r'f_{Min}=\frac{1}{2(C_{T}R_{T}+T_{idle})}\,,\qquad '
+           r'f_{Max}=\frac{1}{2\left(\frac{C_{T}}'
+           r'{\frac{I_{EA,max}}{V_{ref}}+\frac{1}{R_{T}}}+T_{idle}\right)}'))
+    add(tbl('Oscillator: what the two parts produce, and the limits each '
+            'result has to clear.',
+            [['Quantity', 'Value', 'Limit', 'Margin'],
+             ['f<sub>Min</sub>', '%(fMin).1f kHz' % V,
+              'above f<sub>o</sub> = %(fo).1f kHz' % V,
+              '%(kfloor).3f' % V],
+             ['f<sub>Max</sub>', '%(fMax).1f kHz' % V,
+              'above f<sub>sw,max</sub> = %(fswmaxop).1f kHz' % V,
+              '%(kceil).3f' % V],
+             ['f<sub>SU</sub>', '%(fSU).1f kHz' % dict(V, fSU=A.SH['f.SU']),
+              'below the 675 kHz silicon ceiling', '%(kSU).3f'
+              % dict(V, kSU=A.SH['k.SU'])],
+             ['R<sub>T</sub>C<sub>T</sub>',
+              '%(tau).2f &micro;s' % dict(V, tau=A.SH['τ.RT']),
+              '2.5 to 12 &micro;s', '%(a).3f / %(b).3f'
+              % dict(a=A.SH['k.tau_lo'], b=A.SH['k.tau_hi'])],
+             ['R<sub>T</sub>', '%(RT).0f k&Omega;' % V, '5 to 30 k&Omega;',
+              '%(a).3f / %(b).3f'
+              % dict(a=A.SH['k.RT_lo'], b=A.SH['k.RT_hi'])],
+             ['C<sub>T</sub>', '%(CT).0f pF' % V, '270 to 1000 pF',
+              '%(a).3f / %(b).3f'
+              % dict(a=A.SH['k.CT_lo'], b=A.SH['k.CT_hi'])]],
+            widths=[CW * 0.18, CW * 0.20, CW * 0.44, CW * 0.18]))
+    add(note('<b>T<sub>idle</sub> is the weakest number in this chapter.</b> '
+             'The draft datasheet gives 700&nbsp;ns in the text and a table '
+             'that back-solves to 250&nbsp;ns; this design is worked at '
+             '%(Tidle).0f&nbsp;ns. At 700&nbsp;ns the same R<sub>T</sub> and '
+             'C<sub>T</sub> put f<sub>Min</sub> essentially on top of '
+             'f<sub>o</sub> and the floor margin disappears. <b>It is not a '
+             'precision question, it is whether the two clamps still bracket '
+             'the operating range</b>, and it is the first thing to measure '
+             'on hardware.' % V))
+
+    add(h2('The current-sense resistor, which sets three things at once'))
+    add(p('R<sub>CS</sub> is asked for by two conditions and the smaller one '
+          'wins:'))
+    add(eq(r'R_{CS,max1}=\frac{16.8\,\Omega\!\cdot\!\mathrm{W}}{P_{in}}'
+           r'\qquad\qquad '
+           r'R_{CS,max2}=\frac{0.55\,\mathrm{V}}{I_{Lr,pk}}'))
+    add(p('The first is the maximum-power law of Section&nbsp;'
+          + SR('The feedback pin is a power command')
+          + '; the second is the OCP1 trip point. Here they give '
+            '%(a).2f and %(b).2f&nbsp;m&Omega;, so the power law binds. '
+            'Dissipation then fixes how many resistors that has to be split '
+            'over &mdash; %(P).2f&nbsp;W at the worst switching cycle, so '
+            '<b>%(N).0f in parallel</b>, and %(R1).0f&nbsp;m&Omega; each '
+            'gives <b>R<sub>CS</sub> = %(RCS).1f&nbsp;m&Omega;</b>.'
+          % dict(V, a=A.SH['R.CS1'], b=A.SH['R.CS2'],
+                 P=A.SH['P.RCS_pk'], N=A.SH['N.RCS'],
+                 R1=A.SH['R.CS_single'])))
+    add(note('<b>The denominator of R<sub>CS,max2</sub> is the composite tank '
+             'peak, not the reflected load current.</b> R<sub>CS</sub> sits '
+             'in the bridge return, so it carries the magnetising component '
+             'too. Using I<sub>trafo,pk</sub> = %(Itr).2f&nbsp;A instead of '
+             'I<sub>Lr,pk</sub> = %(Icomp).2f&nbsp;A loosens the limit by '
+             'about 12&nbsp;%% and the over-current protection with it.' % V))
+    add(tbl('What the selected R<sub>CS</sub> then fixes.',
+            [['Result', 'Value', 'Against'],
+             ['Maximum input power', '%(P).1f W'
+              % dict(P=A.SH['P.in_max_act']),
+              'P<sub>in</sub> = %(Pin).1f W' % V],
+             ['OCP1 trip', '%(I).2f A' % dict(I=A.SH['I.OCP1']),
+              'composite peak %(Icomp).2f A, margin %(kOCP).3f' % V],
+             ['OCP2 trip', '%(I).2f A' % dict(I=A.SH['I.OCP2']),
+              'immediate stop, 50 &micro;s, restart at f<sub>SU</sub>'],
+             ['Sense dissipation', '%(P).2f W total, %(Pe).3f W each'
+              % dict(P=A.SH['P.RCS_pk'], Pe=A.SH['P.RCS_each_pk']),
+              '1 W parts, margin %(k).3f' % dict(k=A.SH['k.NRCS'])]],
+            widths=[CW * 0.26, CW * 0.26, CW * 0.48]))
+
+    add(h2('Burst mode: one resistor, read once at power-up'))
+    add(eq(r'R_{BM}=16.7\,\frac{\mathrm{k}\Omega}{\mathrm{V}^{2}}'
+           r'\,R_{CS}\,P_{in,BM}\,,\qquad '
+           r'V_{BM,eq}=\frac{R_{BM}}{100\,\mathrm{k}\Omega}+0.5\,\mathrm{V}'))
+    add(p('Entering burst at %(PinBM).0f&nbsp;W of input power &mdash; about '
+          '%(rBM).0f&nbsp;%% of rated &mdash; asks for %(calc).2f&nbsp;'
+          'k&Omega;, so <b>R<sub>BM</sub> = %(RBM).0f&nbsp;k&Omega;</b> and '
+          'the equivalent threshold on the FB pin is %(V).3f&nbsp;V. The valid '
+          'range is 15 to 140&nbsp;k&Omega;; tying the pin to ground disables '
+          'burst mode altogether, while deep burst stays active either way.'
+          % dict(V, rBM=100 * A.SH['r.BM'], calc=A.SH['R.BM'],
+                 V=A.SH['V.BM_eq'])))
+    add(note('This threshold and the feedback ripple have to be checked '
+             'against each other, or the converter chatters in and out of '
+             'burst once per half line cycle &mdash; Section&nbsp;'
+             + SR('Feedback ripple against the burst threshold') + '.'))
+
+    add(h2('Brown-out and bridge configuration: the CFG pin'))
+    add(p('One resistor does two unrelated jobs, and both are read once at '
+          'power-up:'))
+    add(eq(r'V_{BO,pk}=R_{CFG}\times 4\,\frac{\mathrm{V}}{\mathrm{k}\Omega}'
+           r'\,,\qquad V_{BO,rms}=\frac{V_{BO,pk}}{\sqrt{2}}'))
+    add(p('The brown-out threshold is compared against the <i>peak</i> of the '
+          'mains, so it has to be converted before it is compared with an rms '
+          'specification &mdash; a &radic;2 that is easy to drop. Asking for '
+          'brown-out just below the minimum line gives R<sub>CFG,max</sub> = '
+          '%(max).2f&nbsp;k&Omega;; <b>this is a maximum, so it rounds '
+          'down</b>, to <b>%(RCFG).0f&nbsp;k&Omega;</b>, and '
+          'V<sub>BO</sub> = %(VBO).2f&nbsp;V<sub>rms</sub> against a '
+          '%(Vacmin).0f&nbsp;Vac minimum &mdash; margin %(k).3f. Rounding up '
+          'instead would stop the converter starting at low line.'
+          % dict(V, max=A.SH['R.CFG_max'] / 1e3, k=A.SH['k.BO'])))
+    add(tbl('What R<sub>CFG</sub> and LOUT2 select together. The 235 and '
+            '245 V thresholds are fixed inside the IC and cannot be moved.',
+            [['R<sub>CFG</sub>', 'LOUT2', 'Configuration'],
+             ['15 k&Omega;', 'open',
+              'morphing, fixed brown-out (60 V / 70 V peak)'],
+             ['15 to 47 k&Omega;', 'open',
+              '<b>morphing, adjustable brown-out &mdash; this design</b>'],
+             ['47 to 100 k&Omega;', 'open', 'fixed full bridge'],
+             ['15 k&Omega;', 'to GND',
+              'fixed half bridge, split C<sub>r</sub>, fixed brown-out'],
+             ['15 to 100 k&Omega;', 'to GND',
+              'fixed half bridge, split C<sub>r</sub>, adjustable brown-out']],
+            widths=[CW * 0.20, CW * 0.14, CW * 0.66]))
+    add(note('<b>For a universal-input design there is only one window.</b> '
+             'The datasheet floor is 15&nbsp;k&Omega; and brown-out at the '
+             'minimum line is the ceiling at %(max).1f&nbsp;k&Omega;, so the '
+             '47&nbsp;k&Omega; morphing limit never binds. And nothing may be '
+             'hung on LOUT2: the pin-strap drives 300&nbsp;&micro;A into it '
+             'and needs 2.5&nbsp;V, so a pull-down under about 8&nbsp;'
+             'k&Omega; reads as a request for a fixed half bridge.'
+             % dict(max=A.SH['R.CFG_max'] / 1e3)))
+
+    add(h2('Output sensing and over-voltage: the ZCD divider'))
+    add(p('The auxiliary winding is divided down to the ZCD pin, and the '
+          'divider ratio alone sets both over-voltage thresholds &mdash; the '
+          'absolute resistor values only set the bias current:'))
+    add(eq(r'R_{ZCD,L}=\frac{2.3\,\mathrm{V}}{I_{bias}}\,,\qquad '
+           r'R_{ZCD,H}=R_{ZCD,L}\left('
+           r'\frac{n_{aux}}{n_{sec}}\frac{V_{OVP1,out}}{2.3\,\mathrm{V}}'
+           r'-1\right)'))
+    add(eq(r'V_{OVP1}=\frac{2.3\,\mathrm{V}}{n_{aux}/n_{sec}}'
+           r'\left(\frac{R_{ZCD,H}}{R_{ZCD,L}}+1\right)\,,\qquad '
+           r'V_{OVP2}=\frac{2.5}{2.3}\,V_{OVP1}'))
+    add(p('Aiming OVP1 %(pc).0f&nbsp;%% above the output gives '
+          '%(t).2f&nbsp;V as a target. With '
+          'n<sub>aux</sub>/n<sub>sec</sub> = %(naux).1f the calculated pair is '
+          '%(rl).2f / %(rh).1f&nbsp;k&Omega;, and the parts fitted are '
+          '<b>%(RZL).0f&nbsp;k&Omega; and %(RZH).0f&nbsp;k&Omega;</b> &mdash; '
+          'the upper one deliberately the <i>next E24 value above</i> the '
+          'calculation, so that OVP1 lands clear of the ripple crest rather '
+          'than on it. The result is OVP1 %(OVP1).2f&nbsp;V and OVP2 '
+          '%(OVP2).2f&nbsp;V, and start-up hands over to the loop at '
+          '%(su).2f&nbsp;V of output.'
+          % dict(V, pc=100 * (A.SH['V.OVP1_out'] / V['Vout'] - 1),
+                 t=A.SH['V.OVP1_out'], naux=A.SH['n.aux'],
+                 rl=A.SH['R.ZCD_L'], rh=A.SH['R.ZCD_H'],
+                 su=A.SH['V.out_SUend'])))
+    add(note('<b>Two ways to get this wrong, both of which stop the converter '
+             'dead.</b> Swapping the two resistors inverts the ratio and OVP1 '
+             'trips at well under a volt of output, so the converter never '
+             'starts. And the winding polarity must make ZCD <i>positive</i> '
+             'when the low side of leg&nbsp;1 is on; reversed, the bridge hard '
+             'switches from the first pulse.'))
+    add(note('<b>The turns-ratio ceiling in the datasheet does not apply '
+             'here.</b> It asks that the rectified auxiliary voltage stay '
+             'under the V<sub>CC</sub> rating at OVP2, which is a question '
+             'only when that winding supplies V<sub>CC</sub>. In this design '
+             'V<sub>CC</sub> comes from a housekeeping rail and the winding '
+             'senses only, so its voltage is free &mdash; %(va).1f&nbsp;V '
+             'nominal, %(vo).1f&nbsp;V at OVP2 &mdash; and the only remaining '
+             'constraint is that the turns come out whole. Carrying that check '
+             'over from a self-supplied design reports a failure that is not '
+             'one.' % dict(va=A.SH['V.aux'], vo=A.SH['V.aux_OVP2'])))
+
+    add(h2('HVSU and V<sub>CC</sub>'))
+    ext(bullets([
+        '<b>HVSU connects ahead of the input bridge</b>, on the ac side, '
+        'through one 1000&nbsp;V diode per line. Behind the bridge both the '
+        'X-capacitor discharge and the brown-out detection stop working, '
+        'because neither can see the mains disappear.',
+        'The V<sub>CC</sub> capacitor has to hold the IC from '
+        'V<sub>CCon</sub> = 17&nbsp;V down to V<sub>CCoff</sub> = '
+        '8&nbsp;V for as long as it takes the supply to take over. The '
+        'start-up unit stops %s&nbsp;ms after V<sub>CCon</sub> is reached, '
+        'whether or not anything has.' % '120',
+        'Where a linear regulator feeds V<sub>CC</sub>, put a diode between '
+        'its output and the pin so the start-up charging current cannot be '
+        'pushed back into it.',
+        'A 100&nbsp;nF bypass sits at the pin itself.']))
+
     # =============================================================== 7
-    add(h1('Practical notes'))
     add(h2('Controller pin rules'))
     add(p('These follow from the datasheet and each one causes immediate '
           'misbehaviour if broken.'))
@@ -1885,6 +2143,98 @@ def build(A):
         'Judging device stress without dividing by the number of parts '
         'actually in parallel.']))
 
+    add(h2('System design rules'))
+    add(p('The same material as a checklist, in the order a design meets it. '
+          'Each line is a rule that this note has already argued for '
+          'somewhere above; the point of collecting them is that a reviewer '
+          'can run down the list without re-reading the argument.'))
+    ext(bullets([
+        '<b>Design the tank at the real ends of the equivalent range.</b> '
+        'With morphing that is %(Veqlo).1f and %(Veqhi).1f&nbsp;Vac, not '
+        '2&times;%(Vacmin).0f and %(Vacmax).0f. Looking only at the mains '
+        'range misses both worst corners.' % V,
+        '<b>Expect &lambda; near 0.5.</b> The 5-to-10 inductance ratio of a '
+        'two-stage LLC will not start at low line.',
+        '<b>Keep the oscillator floor above f<sub>o</sub></b>, and treat the '
+        'anti-capacitive protection as the last line, not the first.',
+        '<b>Size the output bank from both conditions</b> &mdash; ripple and '
+        'hold-up &mdash; take the larger, and then check the rms ripple '
+        'current separately. The capacitance and the current are different '
+        'questions.',
+        '<b>Put the voltage-loop crossover in the tens of hertz</b>, then deal '
+        'with the feedback ripple that survives by moving R<sub>BM</sub>, not '
+        'by speeding the loop up.',
+        '<b>Measure both morphing edges</b>, at full load and at light load. '
+        'The half-bridge edge is the worst case for gain and ZVS, the '
+        'full-bridge edge for switching frequency.',
+        '<b>Check the turns ratio as a reflected voltage</b>, '
+        'n&thinsp;V<sub>o,eff</sub>, never as a bare ratio &mdash; that is '
+        'what keeps n and n<sub>T</sub> from being interchanged.',
+        '<b>Judge the over-current margin on the composite tank peak</b>, not '
+        'on the reflected load current.',
+        '<b>Include the 2f<sub>l</sub> component</b> in the output capacitor '
+        'ripple current, and judge a centre tap at the output node rather '
+        'than per winding.',
+        '<b>Carry the conduction ratio &radic;d into the secondary rms.</b> '
+        'Dropping it overstates the loss by about 12&nbsp;%% here.' % {},
+        '<b>Decide how L<sub>r</sub> is built before specifying the '
+        'transformer</b>, and put open-circuit and short-circuit inductance '
+        'on the drawing alongside the turns.',
+        '<b>Use capacitor ESR at the switching frequency</b>, not the '
+        '120&nbsp;Hz tan&thinsp;&delta;.',
+        '<b>Never round L<sub>m</sub> up.</b> It lowers &lambda; and takes '
+        'the ZVS margin with it.',
+        '<b>Verify ZVS by sweeping the selected tank</b>, not with the closed '
+        'form &mdash; and if the closed form is used anyway, feed it '
+        '&lambda;<sub>act</sub> and the Q of the moment, and know that its '
+        'error has no fixed sign.',
+        '<b>Record calculated and selected values separately</b>, and make '
+        'every downstream check read the selected one. A sheet that silently '
+        'reads the calculated value reports margins the hardware does not '
+        'have.']))
+
+    add(h2('What to measure first on hardware'))
+    add(p('In order. The first four decide whether the design is sound at '
+          'all; the rest confirm margins that are computed but never yet '
+          'seen.'))
+    ext(bullets([
+        '<b>f<sub>sw</sub>(&theta;) over a line half cycle.</b> This settles '
+        'T<sub>idle</sub>, and with it both oscillator clamps &mdash; the '
+        'thinnest margin in the design. Everything else in the controller '
+        'network hangs off it.',
+        '<b>Cold start into the full output bank.</b> A %(Cout).1f&nbsp;mF '
+        'bank is a far heavier start-up load than a conventional design '
+        'presents, and the start-up window is finite. This risk is created by '
+        'the architecture, so it has no precedent to borrow from.' % V,
+        '<b>ZVS at the half-bridge morphing edge</b> (245&nbsp;'
+        'V<sub>pk</sub>, full load), on the gate and mid-point waveforms. '
+        'The calculation says %(Tzc).0f&nbsp;ns against %(tD).0f&nbsp;ns; '
+        'confirm it is not hard switching, and that the adaptive dead time '
+        'actually settles where it is assumed to.' % V,
+        '<b>Switching frequency at the full-bridge morphing edge</b> '
+        '(235&nbsp;V<sub>pk</sub>, full load). Calculated '
+        '%(fswB).1f&nbsp;kHz; check it does not run into the VCO ceiling and '
+        'get power-limited.' % V,
+        '<b>Input current and THD at %(Vacmin).0f&nbsp;Vac, full load</b>, to '
+        'put a number on the zero-crossing dead zone.' % V,
+        '<b>Output ripple against what the load actually tolerates.</b> The '
+        'bank is sized from a specification; this is where the specification '
+        'is tested.',
+        '<b>Ripple current and temperature rise in the output bank</b> '
+        '&mdash; %(ICout).2f&nbsp;A rms calculated, %(Icout1).2f&nbsp;A per '
+        'capacitor.' % V,
+        '<b>Device temperatures, primary and secondary.</b> This is where the '
+        'accepted loss-budget miss is settled: measure it in <b>half-bridge '
+        'morphing</b>, above 245&nbsp;V<sub>pk</sub>, because in full bridge '
+        'the standing device is switching and dissipates far less.',
+        '<b>Feedback ripple against the burst threshold</b> at light load.',
+        '<b>An ac dropout at the worst line phase</b> &mdash; cut the mains '
+        'at the trough of the ripple and confirm the output is still above '
+        '%(Vomin).0f&nbsp;V after %(Thold).0f&nbsp;ms.' % V,
+        '<b>A step across the morphing band</b>, both directions, on a '
+        'programmable source. A ramp gives the loop time to follow and hides '
+        'the transition.']))
+
     # =============================================================== 8
     add(h1('References'))
     ext(bullets([
@@ -1905,6 +2255,160 @@ def build(A):
         '(region framing of Figure&nbsp;' + FR('f04_three_regions') + ').',
         'W. Wenbo et al., <i>A single-stage 1.65 kW ac-dc LLC converter</i>, '
         'IEEE ECCE.']))
+
+    # =============================================================== 9
+    add(h1('Errata and open items'))
+    add(p('Everything in this chapter is something the note works around '
+          'rather than something it solves. It is last because none of it is '
+          'needed to follow the design, and first to be re-read before a '
+          'production release &mdash; most of it is a question that only the '
+          'released datasheet or a prototype can close.'))
+
+    add(h2('Datasheet: the draft is not self-consistent'))
+    add(tbl('Points where the draft datasheet contradicts itself or leaves a '
+            'value open. Every one of them must be re-checked against the '
+            'released document.',
+            [['Item', 'What the draft says', 'What is used here, and why'],
+             ['Oscillator idle time T<sub>idle</sub>',
+              'Section 5.3.2 says 700 ns; Table 5 back-solves to about 250 ns '
+              'from the frequency expressions',
+              '<b>%(Tidle).0f ns.</b> The two clamps bracket the operating '
+              'range at 250 ns and stop doing so at 700 ns, so this is a '
+              'measurement, not a rounding' % V],
+             ['Brown-out expression',
+              'V<sub>BO</sub> = min(60 V, R<sub>CFG</sub>&middot;4 V/k&Omega;) '
+              '&mdash; read literally this is 60 V for every resistor, which '
+              'contradicts the configuration table',
+              'Read as R<sub>CFG</sub>&middot;4 V/k&Omega; with 15 k&Omega; as '
+              'the floor. That is the only reading consistent with the table'],
+             ['Brown-out units',
+              'the threshold is a <i>peak</i> voltage; board notes and design '
+              'tools quote rms',
+              'Converted explicitly wherever it is compared '
+              '(&radic;2 = 1.414)'],
+             ['Thermal resistance', 'TBD',
+              'No junction temperature can be predicted from the datasheet '
+              'alone; the loss budget is checked against measured rise '
+              'instead'],
+             ['ZCD absolute maximum', 'lower limit given as TBD',
+              'The divider is sized from the OVP thresholds only'],
+             ['Driver naming in Section 5.3.1',
+              'LOUT1 and LOUT2 are transposed in one sentence against the '
+              'block diagram and the configuration table',
+              'The block diagram and the table are taken as correct: LOUT2 is '
+              'the pin that is strapped and held high in half bridge']],
+            widths=[CW * 0.22, CW * 0.40, CW * 0.38]))
+
+    add(h2('Things this note does differently from a spreadsheet design'))
+    add(p('These are not datasheet problems. They are places where the '
+          'obvious way to set a design sheet up gives an answer that is wrong '
+          'in a way nothing flags, so they are worth stating as traps rather '
+          'than as corrections to any particular tool.'))
+    add(tbl('Traps that produce a plausible wrong number.',
+            [['Where', 'The trap', 'Consequence if missed'],
+             ['Equivalent input range',
+              'taking the maximum from the ac maximum instead of the '
+              'full-bridge morphing edge',
+              'The frequency corner is never evaluated. Here it is the '
+              'difference between %(Vacmax).0f and %(Veqhi).1f Vac '
+              'equivalent, and it also sets &lambda;' % V],
+             ['&lambda; from the minimum-gain condition',
+              'the same corner again, one step earlier',
+              'The required &lambda; comes out far too small &mdash; a factor '
+              'of over a hundred in one case &mdash; and L<sub>m</sub> with '
+              'it'],
+             ['Line-cycle rms currents',
+              'evaluating one phase, usually &theta; = &pi;/4, and calling it '
+              'the line-cycle value',
+              'The output bank ripple current and the rectifier loss are '
+              'both understated. A Simpson rule over the half cycle costs '
+              'nothing and is exact enough'],
+             ['Secondary rms above resonance',
+              'squaring a full half sine when the current is truncated',
+              'Up to 8 % at the high corner. Below resonance the factor is '
+              'exactly 1, which is why it can sit unnoticed for a long time'],
+             ['Primary device rating',
+              'rating on the reflected load current I<sub>trafo,pk</sub>',
+              'About 12 % under-rated &mdash; the switch carries the '
+              '<i>composite</i> tank current'],
+             ['Loss and thermal resistance',
+              'computing loss from the 25 &deg;C R<sub>DS(on)</sub> and then '
+              'asking for a heatsink that holds 125 &deg;C',
+              'The required thermal resistance comes out roughly twice as '
+              'easy as it is'],
+             ['ZVS check',
+              'the closed-form shortcut, at the design Q and with the design '
+              '&lambda;',
+              'Error of either sign; on this tank %(pc).0f %% conservative, '
+              'on another about 23 %% optimistic. Optimistic is the '
+              'dangerous direction'
+              % dict(pc=abs(V['TzcCFpc']))],
+             ['Selected versus calculated',
+              'a check that reads the calculated value while the board '
+              'carries the selected one',
+              'Every downstream margin is reported for a design that was not '
+              'built']],
+            widths=[CW * 0.20, CW * 0.38, CW * 0.42]))
+
+    add(h2('Constants used here without a derivation'))
+    ext(bullets([
+        'The <b>&pi;&sup2;/8</b> in the dead-time form of the '
+        '&lambda; condition. It behaves like a correction for the '
+        'fundamental content of a square wave, but no source states it. It '
+        'is indicative; the binding check is the ZVS sweep.',
+        'The <b>exponent 5</b> in the closed-form ZVS shortcut. This is a '
+        'fitted number, and it is the main reason the shortcut errs '
+        'unpredictably near the boundary.',
+        'The <b>0.744</b> in the input-voltage margin factor of the '
+        'compensator design. It scales the crossover target and nothing '
+        'downstream is sensitive to it at the percent level.',
+        'The <b>16.8 &Omega;&middot;W</b> maximum-power constant is '
+        'consistent with the feedback span and the multiplier gains quoted '
+        'in the datasheet &mdash; 2.8&nbsp;V / 0.167 = 16.8 &mdash; so it is '
+        'derived rather than assumed, and is listed here only because the '
+        'gains themselves are draft values.']))
+
+    add(h2('Open items in this design'))
+    add(tbl('What is not settled, and what would settle it.',
+            [['Item', 'State', 'What closes it'],
+             ['T<sub>idle</sub>', 'two candidate values, 250 and 700 ns',
+              'Measure f<sub>sw</sub>(&theta;) on the first board'],
+             ['Primary conduction loss',
+              '%(kPloss).3f against the budget &mdash; <b>not met, and '
+              'accepted</b>' % V,
+              'No single 600 V device meets a 3 W budget in the standing '
+              'position. Whether it needs a heatsink is a thermal '
+              'measurement, not a calculation'],
+             ['Secondary loss budget',
+              '%(kPSR).3f &mdash; essentially exhausted' % V,
+              'One more device in parallel per leg recovers it; the decision '
+              'waits on the measured temperature'],
+             ['Transformer inductance tolerance',
+              'the tank tolerates a %(Ldrop).1f %% fall in open-circuit '
+              'inductance and the usual specification asks for '
+              '&plusmn;10 %%' % V,
+              'Either tighten the low side with the supplier, or lower '
+              'R<sub>T</sub> to lift f<sub>Min</sub> first. <b>Before the '
+              'transformer is ordered</b>'],
+             ['Output bank volume and height',
+              '%(Cout).1f mF, %(nC).0f parts' % V,
+              'A mechanical question, not an electrical one, and it can send '
+              'the whole architecture back to the output voltage'],
+             ['Standby power', 'burst entry assumed at %(PinBM).0f W' % V,
+              'Measure, then trade R<sub>BM</sub> against the feedback '
+              'ripple'],
+             ['Efficiency assumption',
+              '&eta;<sub>HB</sub> = %(etaHB).0f %% assumed' % V,
+              'Optimistic. Taking 95 % instead moves R<sub>CS</sub> and '
+              'R<sub>ac</sub> by about 3 %, so nothing downstream is '
+              'sensitive &mdash; but it should be replaced by a measurement']],
+            widths=[CW * 0.22, CW * 0.34, CW * 0.44]))
+    add(note('<b>Every consistency check in this note is a consistency '
+             'check.</b> The numbers here agree across three independent '
+             'implementations, which means they implement the same equations '
+             '&mdash; not that the equations describe the hardware. That is '
+             'what the measurement list in Section&nbsp;'
+             + SR('What to measure first on hardware') + ' is for.'))
 
     return s
 

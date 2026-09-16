@@ -150,7 +150,11 @@ V = dict(
     Vout=25.0, Iout=26.3, Pout=657.5, Vomin=19.0, Thold=12.0, dv=5.0,
     Vacmin=90.0, Vacmax=264.0, flmin=47.0, flmax=63.0, tD=220.0,
     Pin=R['Pin'], eta=R['eta_tot'] * 100, etaHB=98.0,
-    Veqlo=R['Vin_min'], Veqhi=332.34, Veqlo2=166.17, Veqhi2=346.52,
+    # the four morphing corners, all from the two datasheet thresholds -
+    # typed as constants these drift: 346.52 stood here against a true
+    # 2*245/sqrt(2) = 346.48
+    Veqlo=R['Vin_min'], Veqhi=2 * 235 / sqrt(2),
+    Veqlo2=235 / sqrt(2), Veqhi2=2 * 245 / sqrt(2),
     n=R['n'], nT=SH['n.T'], Vrefl=R['n'] * R['Vo_eff'],
     Rac=R['Rac'], Qpk=R['Qpk'], lam=R['lam_a'], m=1 + 1 / R['lam_a'],
     Z0=SH['Z.0'], Z0s=SH['Z.0s'], QZVS=SH['Q.ZVS'],
@@ -163,7 +167,7 @@ V = dict(
     Icomp=SA['comp_pk'], Iprims=SH['I.pri_rms'], Iprilc=SA['Ipri_lc'],
     Idio=SH['I.diode_lc'], ICout=SH['I.Cout_rms'],
     Cout=SH['C.out'], Cout1=470.0, nC=SH['n.C'], dVo=SH['ΔV.out'],
-    dVopc=SH['ΔV.out_pc'], thold=SH['t.hold_act'], RN=17.4,
+    dVopc=SH['ΔV.out_pc'], thold=SH['t.hold_act'], RN=SH['R.Nact'],
     Icout1=SH['I.Cout_each'], Ccer=SH['C.ceramic'],
     Crip=SH['C.ripple'], Chold=SH['C.hold_req'],
     VDS=SH['V.DS_pri'], VDSs=SH['V.DS_sec_rec'],
@@ -204,7 +208,12 @@ V = dict(
     nAbove=sum(1 for _n, _v, _p, a in _fsw_peaks() if a),
     kfloor=SH['k.floor'], kceil=SH['k.ceil'], kOCP=SH['k.OCP'],
     khold=SH['k.hold'], kPloss=SH['k.Ploss'], kPSR=SH['k.PSR'],
-    Ploss=9.62, Rth=10.4, PSR=1.41,
+    # the standing device in half-bridge morphing, and what it demands of the
+    # heatsinking.  These were typed in as 9.62 W and 10.4 C/W, which is the
+    # pair an earlier line-cycle rms produced - the sheet now says otherwise
+    # and a typed number cannot follow it.
+    Ploss=SH['P.mos_dc'], Rth=(125.0 - 25.0) / SH['P.mos_dc'],
+    PSR=SH['P.SR_dev'],
 )
 
 # Hold-up is the one requirement both architectures must meet identically,
@@ -232,61 +241,219 @@ V['ripKs'] = V['ripLHS'] / V['ripRHS']  # the same call made by the screening ru
 V['tholdVo'] = (V['Cout'] * 1e-3 * (V['Vout'] ** 2 - V['Vomin'] ** 2)
                 / (2 * V['Pout']) * 1e3)
 
+
+def _zvs_closed_form():
+    """the closed-form ZVS shortcut, so its error is measured and not quoted
+
+    The shortcut is evaluated with the DESIGN lambda and the design Q_ZVS -
+    not with lambda.act and the Q the converter actually runs at.  That is
+    not a detail: read the same expression with lambda.act, which is what the
+    symbol means everywhere else once the tank is chosen, and the phase comes
+    out NEGATIVE - a capacitive answer - on every design point.  The two
+    readings are reported side by side so the caller can say which is which.
+    """
+    from math import atan
+    M_, Qz, Q1, fr = SH['M.HBmin'], SH['Q.ZVS'], SH['Q.ZVS1'], SH['f.r'] * 1e3
+    e = 1 + (Qz / Q1) ** 5
+
+    def one(lam):
+        fn = 1 / sqrt(1 + (1 / lam) * (1 - M_ ** (-e)))
+        num = (lam ** 2 + lam + (fn ** 2 - 1) * Qz ** 2) * fn ** 2 - lam ** 2
+        return atan(num / (Qz * fn ** 3)) / (2 * pi * fn * fr) * 1e9
+
+    return one(SH['λ']), one(SH['λ.act'])
+
+
+V['TzcCF'], V['TzcCFact'] = _zvs_closed_form()
+# signed error of the shortcut against the sweep at the SAME corner
+V['TzcCFpc'] = 100 * (V['TzcCF'] / V['Tzc'] - 1)
+
+# Two oscillator inputs the sheet does not echo as results, recovered from
+# rows that it does, so that the design example can quote them without a
+# typed constant.
+V['Tidle'] = (1 / (2 * SH['f.Min'] * 1e3)
+              - SH['C.T'] * 1e-12 * SH['R.T'] * 1e3) * 1e9          # ns
+V['PinBM'] = SH['r.BM'] * V['Pin']                                  # W
+
 # ================================================================== styles
 # The typeface is a variable so a Korean document can reuse this layout.
 FONT, FONTB, FONTI = 'Helvetica', 'Helvetica-Bold', 'Helvetica-Oblique'
 
 
+def _winfonts():
+    return os.path.join(os.environ.get('WINDIR', 'C:' + os.sep + 'Windows'),
+                        'Fonts')
+
+
+def _pkgfonts():
+    """fonts that ship inside an installed package, if there is one
+
+    A Linux box usually has no Malgun Gothic and often no Korean font at all.
+    Rather than put a font binary in the repository, look for one that a
+    package already carries.
+    """
+    out = []
+    for mod in ('koreanize_matplotlib', 'matplotlib'):
+        try:
+            m = __import__(mod)
+        except Exception:
+            continue
+        d = os.path.dirname(m.__file__)
+        for sub in ('fonts', os.path.join('mpl-data', 'fonts', 'ttf')):
+            p = os.path.join(d, sub)
+            if os.path.isdir(p):
+                out.append(p)
+    return out
+
+
+def _pick(cands):
+    """first (regular, bold, italic) triple whose files all exist
+
+    Each candidate is (dir, regular, bold, italic); italic may be None, in
+    which case the regular face stands in for it.
+    """
+    for d, reg, bold, ital in cands:
+        if d is None:
+            continue
+        pr = os.path.join(d, reg)
+        pb = os.path.join(d, bold)
+        pi_ = os.path.join(d, ital) if ital else pr
+        if os.path.exists(pr) and os.path.exists(pb) and os.path.exists(pi_):
+            return pr, pb, pi_
+    return None
+
+
+# Entities the prose uses that a substitute face may not carry, and what to
+# put there instead. A missing glyph is not an error in reportlab - it draws
+# nothing, so "5.17 us" silently becomes "5.17 s". NanumGothic, the usual
+# Linux stand-in, has GREEK SMALL MU but not MICRO SIGN, and no MINUS SIGN.
+_FALLBACK = {
+    '&micro;': (0xB5, '&#956;'),        # MICRO SIGN   -> GREEK SMALL MU
+    '&minus;': (0x2212, '-'),           # MINUS SIGN   -> hyphen
+    '&asymp;': (0x2248, '~'),
+    '&radic;': (0x221A, 'sqrt'),
+    '&infin;': (0x221E, 'inf'),
+    '&ge;': (0x2265, '&gt;='),
+    '&le;': (0x2264, '&lt;='),
+    '&times;': (0xD7, 'x'),
+    '&sup2;': (0xB2, '^2'),
+    '&plusmn;': (0xB1, '+/-'),
+}
+_ENTFIX = {}
+
+
+def _entity_fixups(tag):
+    """which of the entities above this face cannot draw"""
+    from reportlab.pdfbase import pdfmetrics
+    out = {}
+    try:
+        c2g = pdfmetrics.getFont(tag).face.charToGlyph
+    except Exception:
+        return out
+    for ent, (cp, alt) in _FALLBACK.items():
+        if cp not in c2g:
+            out[ent] = alt
+    return out
+
+
+def _register(tag, triple):
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
+    pr, pb, pi_ = triple
+    pdfmetrics.registerFont(TTFont(tag, pr))
+    pdfmetrics.registerFont(TTFont(tag + '-B', pb))
+    pdfmetrics.registerFont(TTFont(tag + '-I', pi_))
+    pdfmetrics.registerFontFamily(tag, normal=tag, bold=tag + '-B',
+                                  italic=tag + '-I', boldItalic=tag + '-B')
+    _ENTFIX.clear()
+    _ENTFIX.update(_entity_fixups(tag))
+    if _ENTFIX:
+        print('  이 서체에 없는 글자를 바꿔 넣는다: %s'
+              % ' '.join(sorted(_ENTFIX)))
+
+
 def use_unicode():
-    """Register Arial for the Latin text.
+    """Register a Latin face that carries Greek and the maths signs.
 
     reportlab's built-in Helvetica is Latin-1, so every Greek letter and every
     maths sign in the prose was dropped silently - lambda, mu, ohm and eta came
-    out blank and the square root came out as a stray glyph.  Arial is metric
-    compatible with Helvetica, so the layout does not move, and it carries the
-    Greek block plus the arrows and relations this note uses.
+    out blank and the square root came out as a stray glyph.
+
+    Arial is the first choice because it is metric compatible with Helvetica,
+    so the layout does not move.  Liberation Sans is a metric-compatible clone
+    of Arial and is the usual Linux stand-in; DejaVu Sans is the last resort
+    and does shift the line breaks slightly.
     """
     global FONT, FONTB, FONTI
-    from reportlab.pdfbase import pdfmetrics
-    from reportlab.pdfbase.ttfonts import TTFont
-    W = os.path.join(os.environ.get('WINDIR', 'C:' + os.sep + 'Windows'),
-                     'Fonts')
-    try:
-        pdfmetrics.registerFont(TTFont('AN', os.path.join(W, 'arial.ttf')))
-        pdfmetrics.registerFont(TTFont('AN-B', os.path.join(W, 'arialbd.ttf')))
-        pdfmetrics.registerFont(TTFont('AN-I', os.path.join(W, 'ariali.ttf')))
-    except Exception as e:                       # keep building without Greek
-        print('Arial 을 못 찾아 Helvetica 로 간다 (그리스 문자가 빠진다):', e)
+    t = _pick([(_winfonts(), 'arial.ttf', 'arialbd.ttf', 'ariali.ttf'),
+               ('/usr/share/fonts/truetype/liberation',
+                'LiberationSans-Regular.ttf', 'LiberationSans-Bold.ttf',
+                'LiberationSans-Italic.ttf'),
+               ('/usr/share/fonts/truetype/dejavu', 'DejaVuSans.ttf',
+                'DejaVuSans-Bold.ttf', 'DejaVuSans-Oblique.ttf')]
+              + [(d, 'DejaVuSans.ttf', 'DejaVuSans-Bold.ttf',
+                  'DejaVuSans-Oblique.ttf') for d in _pkgfonts()])
+    if t is None:                                # keep building without Greek
+        print('라틴 유니코드 폰트를 못 찾아 Helvetica 로 간다 '
+              '(그리스 문자가 빠진다)')
         return
-    pdfmetrics.registerFontFamily('AN', normal='AN', bold='AN-B',
-                                  italic='AN-I', boldItalic='AN-B')
+    _register('AN', t)
     bold = {k for k, v in S.items() if v.fontName == FONTB}
     ital = {k for k, v in S.items() if v.fontName == FONTI}
     FONT, FONTB, FONTI = 'AN', 'AN-B', 'AN-I'
     for k, v in S.items():
         v.fontName = FONTB if k in bold else (FONTI if k in ital else FONT)
+    print('본문 서체: %s' % os.path.basename(t[0]))
 
 
 def use_korean():
-    """swap in Malgun Gothic - reportlab's built-ins are Latin-1 only"""
+    """swap in a Korean face - reportlab's built-ins are Latin-1 only
+
+    Malgun Gothic first, because that is what the documents were laid out on.
+    Everything after it is a stand-in for a machine that does not have it; the
+    metrics differ slightly, so line breaks can move, but nothing is dropped.
+    """
     global FONT, FONTB, FONTI
-    from reportlab.pdfbase import pdfmetrics
-    from reportlab.pdfbase.ttfonts import TTFont
-    W = os.path.join(os.environ.get('WINDIR', 'C:\\Windows'), 'Fonts')
-    pdfmetrics.registerFont(TTFont('KR', os.path.join(W, 'malgun.ttf')))
-    pdfmetrics.registerFont(TTFont('KR-B', os.path.join(W, 'malgunbd.ttf')))
-    pdfmetrics.registerFontFamily('KR', normal='KR', bold='KR-B',
-                                  italic='KR', boldItalic='KR-B')
+    t = _pick([(_winfonts(), 'malgun.ttf', 'malgunbd.ttf', None),
+               ('/usr/share/fonts/truetype/nanum', 'NanumGothic.ttf',
+                'NanumGothicBold.ttf', None),
+               ('/usr/share/fonts/opentype/noto', 'NotoSansCJK-Regular.ttc',
+                'NotoSansCJK-Bold.ttc', None)]
+              + [(d, 'NanumGothic.ttf', 'NanumGothicBold.ttf', None)
+                 for d in _pkgfonts()]
+              + [('/usr/share/fonts/truetype/wqy', 'wqy-zenhei.ttc',
+                  'wqy-zenhei.ttc', None)])
+    if t is None:
+        raise SystemExit('한국어 폰트를 찾을 수 없다. Malgun Gothic 이 있는 '
+                         'PC 에서 돌리거나  pip install koreanize-matplotlib '
+                         '로 NanumGothic 을 받아 둘 것.')
+    global LEAD_SCALE
+    _register('KR', t)
     bold = {k for k, v in S.items() if v.fontName == FONTB}
-    FONT, FONTB, FONTI = 'KR', 'KR-B', 'KR'
+    FONT, FONTB, FONTI = 'KR', 'KR-B', 'KR-I'
+    # Hangul fills the full em box, so a leading set for Latin leaves a
+    # subscript sitting on the line below it. Measured on the first build:
+    # I_Lr and f_sw in running text collided at the Latin leading and clear
+    # it at 1.16.
+    LEAD_SCALE = 1.16
     for k, v in S.items():
         v.fontName = FONTB if k in bold else FONT
+        v.leading = round(v.leading * LEAD_SCALE, 1)
+    print('본문 서체: %s   행간 x%.2f'
+          % (os.path.basename(t[0]), LEAD_SCALE))
+
+
+# Styles built after use_korean() - bullets() makes one per call - have to get
+# the same leading the S dict got, or a subscript in a bullet lands on the
+# line below while the same subscript in a paragraph clears it.
+LEAD_SCALE = 1.0
 
 
 def st(name, **kw):
     kw.setdefault('fontName', FONT)
     kw.setdefault('fontSize', 9.3)
     kw.setdefault('leading', 12.2)
+    kw['leading'] = round(kw['leading'] * LEAD_SCALE, 1)
     kw.setdefault('textColor', colors.black)
     return ParagraphStyle(name, **kw)
 
@@ -325,7 +492,10 @@ def T(t):
     # string would print the placeholder. Refuse rather than ship it.
     if '%%' in t or '%(' in t or '%s' in t or '%d' in t:
         raise SystemExit('포맷 안 된 문자열이 남아 있다: %s' % t[:110])
-    return t.replace('&thinsp;', '&#8202;')
+    t = t.replace('&thinsp;', '&#8202;')
+    for ent, alt in _ENTFIX.items():          # empty unless a face lacks them
+        t = t.replace(ent, alt)
+    return t
 
 # ============================================================== equations
 def eqpng(tex, size=17.0):
@@ -711,11 +881,11 @@ def legal():
     return s
 
 
-def toc():
+def toc(title='Table of contents'):
     t = TableOfContents()
     t.levelStyles = [S['toc0'], S['toc1']]
     t.dotsMinLevel = 0
-    return [Paragraph('Table of contents', S['h1']), Spacer(1, 8), t]
+    return [Paragraph(title, S['h1']), Spacer(1, 8), t]
 
 
 # ==================================================================== build
