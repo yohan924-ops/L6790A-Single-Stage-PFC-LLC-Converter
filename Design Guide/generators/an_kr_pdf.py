@@ -64,8 +64,8 @@ def legal():
     s.append(Spacer(1, 16))
     s.append(Paragraph('표기', A.S['h2']))
     s.extend(A.bullets([
-        '<b>줄임말은 영어 그대로 쓴다</b> — ZVS, ZCS, PFC, THD, FHA, SR, '
-        'OCP, OVP, VCO, BM. 억지로 우리말로 옮기면 오히려 읽기 어렵다.',
+        '<b>f<sub>l</sub></b> 이라고 쓴 것만 라인 주파수이고, 나머지 주파수는 '
+        '전부 스위칭 주파수다.',
         '<b>n</b> — 등가모델 권선비. 게인 식에 들어가는 값이며 감는 턴수의 '
         '비가 아니다.',
         '<b>n<sub>T</sub></b> — 실제로 감는 턴수의 비. '
@@ -85,12 +85,12 @@ def legal():
 
 def main():
     A.use_korean()
-    A.TITLE = '단일단 PF LLC 컨버터 설계'
+    A.TITLE = 'Single-Stage PF LLC 컨버터 설계'
     A.HEADSIZE = 12.5
     A.FIGWORD, A.TBLWORD = '그림', '표'
     A.DOCID = ['Application Note AN-SS-L6790A-01 KR', 'V1.0  2026년 9월']
     A.COVER = {
-        'title': ['단일단 PF LLC', '컨버터 설계'],
+        'title': ['Single-Stage PF LLC', '컨버터 설계'],
         'sub': 'STMicroelectronics L6790A',
         'boxhead': '이 문서가 끝까지 따라가는 설계',
         'box': ['90 ~ 264 Vac 유니버설 입력,  47 ~ 63 Hz',
