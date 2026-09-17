@@ -19,7 +19,7 @@ from reportlab.platypus import (NextPageTemplate, PageBreak,      # noqa: E402
                                 Paragraph, Spacer, Table, TableStyle)
 
 OUT = os.path.join(
-    A.GUIDE, 'AN_L6790A_SingleStage_PF_LLC_ApplicationNote_KR_v1.0.pdf')
+    A.GUIDE, 'AN_L6790A_SingleStage_PFC_LLC_ApplicationNote_KR_v1.2.pdf')
 
 
 def legal():
@@ -42,10 +42,16 @@ def legal():
     s.append(Table(
         [[Paragraph(c, A.S['th']) for c in ('버전', '날짜', '내용')],
          [Paragraph('V1.0', A.S['tc']), Paragraph('2026년 9월', A.S['tc']),
-          Paragraph(A.T('영문판 V1.1 을 바탕으로 한 한국어 초판. 설계 예제 '
-                        '%.0f V / %.1f A, %.1f W, 권선비 %d : %d.'
+          Paragraph(A.T('한국어 초판. 설계 예제 %.0f V / %.1f A, %.1f W, '
+                        '권선비 %d : %d.'
                         % (A.V['Vout'], A.V['Iout'], A.V['Pout'],
-                           A.V['NpSet'], A.V['Ns'])), A.S['tc'])]],
+                           A.V['NpSet'], A.V['Ns'])), A.S['tc'])],
+         [Paragraph('V1.2', A.S['tc']), Paragraph('2026년 9월', A.S['tc']),
+          Paragraph(A.T('명칭을 single-stage PFC LLC 로 통일. 판정 여유의 '
+                        '정의 신설. 계산값을 설계 절차에서 설계 예제로 '
+                        '옮기고, 값마다 어느 식에서 나왔는지와 넣은 숫자를 '
+                        '함께 적었다. 영문판과 판 번호를 맞췄다.'),
+                    A.S['tc'])]],
         colWidths=[70, 90, A.CW - 160],
         style=TableStyle([('BACKGROUND', (0, 0), (-1, 0), A.NAVY),
                           ('LINEBELOW', (0, 0), (-1, -1), 0.4, A.LT),
@@ -78,12 +84,12 @@ def legal():
 
 def main():
     A.use_korean()
-    A.TITLE = 'Single-Stage PF LLC 컨버터 설계'
+    A.TITLE = 'Single-Stage PFC LLC 컨버터 설계'
     A.HEADSIZE = 12.5
     A.FIGWORD, A.TBLWORD = '그림', '표'
-    A.DOCID = ['Application Note AN-SS-L6790A-01 KR', 'V1.0  2026년 9월']
+    A.DOCID = ['Application Note AN-SS-L6790A-01 KR', 'V1.2  2026년 9월']
     A.COVER = {
-        'title': ['Single-Stage PF LLC', '컨버터 설계'],
+        'title': ['Single-Stage PFC LLC', '컨버터 설계'],
         'sub': 'STMicroelectronics L6790A',
         'boxhead': '설계 예제',
         'box': ['90 ~ 264 Vac,  47 ~ 63 Hz',

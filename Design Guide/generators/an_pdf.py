@@ -12,7 +12,7 @@ Every number in the text comes out of VAL, which is built from l6790.py and
 the SMath sheet. Nothing here is typed by hand, so the note cannot drift away
 from the design the way a transcribed value would.
 
-    python an_pdf.py            -> Design Guide/AN_L6790A_..._v1.1.pdf
+    python an_pdf.py            -> Design Guide/AN_L6790A_..._v1.2.pdf
     python an_pdf.py --figs     -> re-render the plain figures first
 """
 import hashlib
@@ -43,14 +43,14 @@ GUIDE = os.path.normpath(os.path.join(HERE, '..'))
 FIGS = os.path.join(GUIDE, 'figures', 'an')
 EQD = os.path.join(HERE, '.eqcache')
 OUT = os.path.join(GUIDE,
-                   'AN_L6790A_SingleStage_PF_LLC_ApplicationNote_v1.1.pdf')
+                   'AN_L6790A_SingleStage_PFC_LLC_ApplicationNote_v1.2.pdf')
 
-DOCID = ['Application Note AN-SS-L6790A-01', 'V1.1  September 2026']
-TITLE = 'Single-Stage PF LLC Converter Design'
+DOCID = ['Application Note AN-SS-L6790A-01', 'V1.2  September 2026']
+TITLE = 'Single-Stage PFC LLC Converter Design'
 HEADSIZE = 14.5                 # 머리글 크기 - 한글 제목은 줄여야 상자를 안 문다
 FIGWORD, TBLWORD = 'Figure', 'Table'
 COVER = {
-    'title': ['Single-Stage PF LLC', 'Converter Design'],
+    'title': ['Single-Stage PFC LLC', 'Converter Design'],
     'sub': 'with the STMicroelectronics L6790A',
     'boxhead': 'Worked design',
     'box': ['90 to 264 Vac,  47 to 63 Hz',
@@ -828,7 +828,13 @@ def legal():
                     'compensator design method, the gain-margin check and '
                     'the input capacitor added. Worked design moved to the '
                     'N<sub>p</sub>:N<sub>s</sub> = %d:%d transformer.'
-                    % (V['NpSet'], V['Ns']), S['tc'])]],
+                    % (V['NpSet'], V['Ns']), S['tc'])],
+         [Paragraph('V1.2', S['tc']), Paragraph('September 2026', S['tc']),
+          Paragraph('Renamed single-stage PFC LLC throughout. Verification '
+                    'margins defined. Worked values moved out of the design '
+                    'procedure and into the design example, where each one '
+                    'names the equation it comes from and shows the numbers '
+                    'put into it.', S['tc'])]],
         colWidths=[70, 90, CW - 160],
         style=TableStyle([('BACKGROUND', (0, 0), (-1, 0), NAVY),
                           ('LINEBELOW', (0, 0), (-1, -1), 0.4, LT),
@@ -891,7 +897,7 @@ DESC = 5
 def build(story, out=None, toc_title='Table of contents'):
     """page furniture + the story. A second document reuses everything here."""
     doc = Doc(out or OUT, pagesize=A4, title=TITLE,
-              author='Single-stage PF LLC programme',
+              author='Single-stage PFC LLC programme',
               subject=DOCID[0], leftMargin=LM, rightMargin=RM,
               topMargin=TM, bottomMargin=BM)
     doc.addPageTemplates([

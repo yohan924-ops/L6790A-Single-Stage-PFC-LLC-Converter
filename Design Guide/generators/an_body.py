@@ -28,7 +28,7 @@ def build(A):
           'input cannot deliver smoothly, and it presents the LLC with an '
           'almost constant input, so the resonant tank only has to cover a '
           'narrow range.'))
-    add(p('A <b>single-stage PF LLC</b> deletes both the boost stage and that '
+    add(p('A <b>single-stage PFC LLC</b> deletes both the boost stage and that '
           'capacitor. The rectified mains feeds the resonant tank directly. '
           'What results is a converter whose input is a 100/120&nbsp;Hz half '
           'sine, whose gain is no longer a control variable, and whose output '
@@ -713,7 +713,7 @@ def build(A):
     add(h2('Gain is a boundary condition, not a control variable'))
     add(p('In a two-stage LLC the controller commands gain: it moves the '
           'switching frequency until the output is right. In a single-stage '
-          'PF LLC it cannot, because <b>both ports are voltage sources</b>. '
+          'PFC LLC it cannot, because <b>both ports are voltage sources</b>. '
           'The output is a millifarad-class capacitor whose voltage cannot '
           'move within a switching cycle, and the input is the rectified '
           'mains, which the converter does not control either. The '
@@ -863,7 +863,7 @@ def build(A):
           'quirk of one design.' % V))
     add(p('The price is circulating current. A small L<sub>m</sub> means a '
           'large magnetising current that carries no power but does carry '
-          'conduction loss, at every load. <b>A single-stage PF LLC is less '
+          'conduction loss, at every load. <b>A single-stage PFC LLC is less '
           'efficient than a two-stage LLC, and that is inherent rather than a '
           'design defect.</b>'))
 

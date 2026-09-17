@@ -30,7 +30,7 @@ import pymupdf                                                # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DEFAULT = os.path.normpath(os.path.join(
-    HERE, '..', 'AN_L6790A_SingleStage_PF_LLC_ApplicationNote_v1.1.pdf'))
+    HERE, '..', 'AN_L6790A_SingleStage_PFC_LLC_ApplicationNote_v1.2.pdf'))
 
 # the frame an_pdf lays into: A4 with these margins
 LM, RM, TM, BM = 62.0, 62.0, 108.0, 62.0
