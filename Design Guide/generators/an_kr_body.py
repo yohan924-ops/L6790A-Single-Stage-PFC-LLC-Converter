@@ -172,7 +172,7 @@ def build(A):
         'L<sub>r</sub> 이 상쇄되므로 <b>거기서는 부하와 무관하게 M = 1</b> '
         '이다. f<sub>r</sub> 아래에서는 승압(M&nbsp;&gt;&nbsp;1), 위에서는 '
         '강압이다.',
-        '<b>Q = Z<sub>0</sub>/R<sub>ac</sub></b>, 여기서 '
+        '<b>품질계수 Q = Z<sub>0</sub>/R<sub>ac</sub></b>, 여기서 '
         'Z<sub>0</sub> = &radic;(L<sub>r</sub>/C<sub>r</sub>) 가 탱크의 특성 '
         '임피던스다. Q 는 탱크에 부하가 얼마나 무겁게 걸렸는지를 나타낸다 '
         '&mdash; '
@@ -959,7 +959,7 @@ def build(A):
     add(p('P<sub>in,LLC</sub> 는 공진 단으로 들어가는 전력이다. 앞의 4 는 '
           '보통 쓰는 8 에 분모로 평균이 아니라 <i>라인 피크</i> 전력 2P 를 '
           '넣은 것이다 &mdash; 아래 주의 상자 참조.'))
-    add(p('낮은 등가 코너의 게인 요구와 ZVS 요구가 함께 Q 의 상한 '
+    add(p('낮은 등가 코너의 게인 요구와 ZVS 요구가 함께 품질계수의 상한 '
           'Q<sub>ZVS</sub> 를 잡고, 그러면 R<sub>ac</sub>Q<sub>ZVS</sub> 가 '
           '탱크를 <i>치수 잡는</i> 임피던스가 된다. 그것이 식&nbsp;%(e)s 로 '
           'C<sub>r</sub> 을 정하고, C<sub>r</sub> 과 목표 f<sub>r</sub> 이 '
@@ -994,7 +994,7 @@ def build(A):
              '순간이다. 같은 식의 분모에 2P 를 넣는 것이 8 을 4 로 바꾸는 '
              '것의 전부다. <b>다른 공식이 아니고, 하프브리지냐 풀브리지냐와도 '
              '아무 상관이 없다</b> &mdash; 브리지 계수는 부하가 아니라 등가 '
-             '입력 전압에 들어간다. 그러면 Q 는 라인 피크에서의 값을 '
+             '입력 전압에 들어간다. 그러면 Q 는 라인 피크에서의 품질계수를 '
              '뜻하고, 다른 위상은 전부 '
              'Q(&theta;) = Q<sub>pk</sub>sin&sup2;&thinsp;&theta; 로 거기서 '
              '따라 나온다. 2-stage 쪽 숫자를 그대로 가져오면 부하를 2배 '
@@ -1599,7 +1599,7 @@ def build(A):
               ER('Rac'),
               '(4/&pi;&sup2;) n&sup2; V<sub>o,eff</sub>&sup2; / '
               'P<sub>in,LLC</sub> &mdash; 4 는 라인 피크라는 뜻'],
-             ['10', 'Q 의 상한 Q<sub>ZVS</sub>', '%(QZVS).4f' % V,
+             ['10', '품질계수 상한 Q<sub>ZVS</sub>', '%(QZVS).4f' % V,
               ER('zvs'),
               '낮은 코너에서 게인 조건과 ZVS 조건 중 작은 쪽'],
              ['11', '설계 임피던스', '%(Z0).2f &Omega;' % V,
@@ -1684,7 +1684,7 @@ def build(A):
         'R<sub>ac</sub>Q<sub>ZVS</sub>/2&pi;f<sub>r</sub> 이 아닌 이유가 '
         '이것이다 &mdash; C<sub>r</sub> 이 먼저 움직였다.'
         % dict(V, e=ER('fr'), frt='%.0f' % V['frt']),
-        '<b>18행, 탱크가 실제로 도는 Q.</b> Z<sub>0</sub>&nbsp;=&nbsp;'
+        '<b>18행, 탱크가 실제로 도는 품질계수.</b> Z<sub>0</sub>&nbsp;=&nbsp;'
         '&radic;(L<sub>r</sub>/C<sub>r</sub>) &nbsp;=&nbsp; '
         '&radic;(%(Lr).0f&nbsp;&micro;H / %(Cr).0f&nbsp;nF) &nbsp;=&nbsp; '
         '%(Z0s).2f&nbsp;&Omega; 이고, '
