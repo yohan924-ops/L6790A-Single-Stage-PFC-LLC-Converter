@@ -213,13 +213,13 @@ def build(A):
     add(eq(r'f_o=\frac{1}{2\pi\sqrt{(L_r+L_m)\,C_r}}', key='fo'))
     add(p('At f<sub>r</sub> the gain is exactly 1 for any load, because the '
           'load term vanishes. At f<sub>o</sub> the no-load gain is '
-          'without limit. A single-stage converter spends most of the line cycle '
-          'in the band between them &mdash; here %(fo).1f to '
-          '%(fr).1f&nbsp;kHz &mdash; while a two-stage LLC sits close to '
-          'f<sub>r</sub> nearly all the time.' % V))
+          'without limit. Between the two the tank can boost; above '
+          'f<sub>r</sub> it cannot. An LLC fed from a fixed dc bus runs close '
+          'to f<sub>r</sub> nearly all the time, and drops into that band '
+          'only when the bus sags.'))
     add(fig('f02_two_resonances',
-            'The two resonances, and the band a single-stage converter lives '
-            'in.', width=CW * 0.84))
+            'The two resonances, and the band between them in which the tank '
+            'can boost.', width=CW * 0.84))
 
     add(p('Two expressions are not much use without knowing what each one '
           'does to the current, and the current is where the difference is '
@@ -303,8 +303,8 @@ def build(A):
 
     add(p('A conventional LLC picks one side and stays there &mdash; usually '
           'just above f<sub>r</sub> at nominal input, where the gain is close '
-          'to 1 and the circulating current is smallest. Which side a '
-          '<i>single-stage</i> converter is on is a different question, and '
+          'to 1 and the circulating current is smallest. Which side the '
+          'converter designed here runs on is a different question, and '
           'it is answered in Section&nbsp;'
           + SR('Which side of resonance this converter runs on')
           + ' once the rest of the machinery is in place.'))
@@ -407,7 +407,7 @@ def build(A):
     ext(bullets([
         'A converter can be <b>below f<sub>r</sub> and still inductive</b> '
         '&mdash; that is the ordinary boosting region, and it is where an '
-        'LLC spends most of its life.',
+        'LLC normally runs.',
         'It can be <b>below f<sub>r</sub> and capacitive</b>, which is the '
         'fault. Going below f<sub>r</sub> is not the danger; going below the '
         'peak is.',
@@ -450,13 +450,15 @@ def build(A):
         'reaches zero on its own &mdash; which only occurs <b>below '
         'f<sub>r</sub></b>. Above f<sub>r</sub> the rectifier is cut off '
         'while still conducting and reverse recovery comes back.']))
-    add(note('<b>Which explains the previous figure.</b> At low line the '
-             'converter is below f<sub>r</sub> for the whole cycle and gets '
-             'ZCS on the secondary for free. At high line it is above '
-             'f<sub>r</sub> for much of the cycle and does not. That is a '
-             'reason to care about the secondary body diode and the '
-             'synchronous-rectifier dead time in a single-stage design, '
-             'where a conventional LLC could ignore it.'))
+    add(note('<b>So ZCS is not a property of the circuit but of the '
+             'operating point.</b> Below f<sub>r</sub> the secondary '
+             'rectifiers turn off at zero current and reverse recovery never '
+             'appears; above f<sub>r</sub> they do not and it does. A '
+             'converter that stays on one side settles the question once. '
+             'One whose input moves far enough to cross f<sub>r</sub> has to '
+             'be checked on both sides: its secondary body diode and '
+             'synchronous-rectifier dead time matter whenever it is running '
+             'above f<sub>r</sub>.'))
 
     add(h2('Sizing the dead time so that ZVS actually happens'))
     add(p('ZVS is what makes an LLC efficient, and it is a charge problem '
@@ -488,7 +490,7 @@ def build(A):
         '<b>1  Turns ratio from the nominal point.</b> Choose n so that the '
         'converter runs at or near M&nbsp;=&nbsp;1 at nominal input, that '
         'is at f<sub>r</sub>. That is where the circulating current is '
-        'lowest and where the converter should spend most of its life.',
+        'lowest and where the converter should normally run.',
         '<b>2  The gain range the tank must cover.</b> From the input range '
         'and the output tolerance, M<sub>min</sub> and M<sub>max</sub>. '
         'M<sub>max</sub> is asked at minimum input and full load, '
@@ -512,16 +514,6 @@ def build(A):
             'peak gain a tank can reach depends on both. Picking a required '
             'gain and a Q leaves only a band of usable m. (ON Semiconductor '
             'AN-4151.)', width=CW * 0.52))
-    add(note('<b>Two of those steps are the ones a single-stage converter '
-             'breaks.</b> Step&nbsp;1 has no nominal point to sit at, '
-             'because the input sweeps a half sine; and step&nbsp;2 asks for '
-             'a gain range that no single tank can cover, which is why the '
-             'bridge itself has to change. Sections&nbsp;'
-             + SR('Gain is a boundary condition, not a control variable')
-             + ' and '
-             + SR('Topology morphing')
-             + ' are those two departures.'))
-
     add(note('<b>That is the first half.</b> Everything above is the LLC on '
              'its own: a tank, a gain curve, and a frequency that moves the '
              'operating point along it. Nothing in it has anything to do '
@@ -611,11 +603,11 @@ def build(A):
             'rides on the reactor current; its average follows the input '
             'voltage, which is what the two loops were arranged to produce. '
             '(Toshiba, Power Factor Correction Circuits.)', width=CW * 0.66))
-    add(note('<b>This comes back later.</b> The same conflict reappears in '
-             'the single-stage converter, in a sharper form: '
-             'there the outer loop is the <i>only</i> loop, its output is a '
-             'power command, and any 2f<sub>l</sub> ripple that survives it '
-             'becomes input current distortion directly. That is '
+    add(note('<b>This comes back later.</b> Take the boost stage away and '
+             'the same conflict returns in a sharper form: the outer loop is '
+             'then the <i>only</i> loop, its output is a power command, and '
+             'any 2f<sub>l</sub> ripple that survives it becomes input '
+             'current distortion directly. That is '
              'Section&nbsp;' + SR('Voltage loop and compensation') + '.'))
     add(p('The corrector delivers what was asked for, and hands over a new '
           'problem in doing so. A current that follows the voltage means an '
@@ -644,6 +636,15 @@ def build(A):
           'rest of the story.'))
 
     add(h1('Why single stage, and what it costs'))
+    add(note('<b>Two steps of that recipe are the ones this converter '
+             'breaks.</b> Step&nbsp;1 has no nominal point to settle at, '
+             'because the input sweeps a half sine; and step&nbsp;2 asks for '
+             'a gain range that no single tank can cover, which is why the '
+             'bridge itself has to change. Sections&nbsp;'
+             + SR('Gain is a boundary condition, not a control variable')
+             + ' and '
+             + SR('Topology morphing')
+             + ' are those two departures.'))
     add(h2('The energy a unity power factor cannot deliver'))
     add(p('Drawing a sinusoidal current in phase with a sinusoidal voltage '
           'makes the instantaneous input power a raised sine squared. It '
@@ -1145,7 +1146,7 @@ def build(A):
              'most heavily loaded &mdash; putting 2P in the denominator of '
              'the same expression is what turns the 8 into a 4. <b>It is not '
              'a different formula and it has nothing to do with half bridge '
-             'against full bridge</b>; the bridge factor lives in the '
+             'against full bridge</b>; the bridge factor belongs to the '
              'equivalent input voltage, not in the load. Q then means the '
              'quality factor at the line peak, and every other phase scales '
              'from it as Q(&theta;) = Q<sub>pk</sub>sin&sup2;&thinsp;&theta;. '
@@ -1187,8 +1188,9 @@ def build(A):
           'the current is continuous and d clamps at one. The rms figures '
           'that ratings and losses are built on carry d, so this is not a '
           'matter of wording.'))
-    add(p('<b>Which side the converter lives on is not a separate choice. The '
-          'turns ratio decides it.</b> The demand is M<sub>req</sub> = '
+    add(p('<b>Which side of resonance the converter runs on is not a '
+          'separate choice. The turns ratio decides it.</b> The demand is '
+          'M<sub>req</sub> = '
           '2nV<sub>o,eff</sub>/(&radic;2&nbsp;V<sub>eq</sub>), so a larger n '
           'asks for more gain, and more gain means further below resonance. '
           'Two candidate transformers on the same tank can end up on opposite '

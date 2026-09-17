@@ -156,8 +156,8 @@ def f02_two_resonances():
     ax.axvspan(0.45, FN0, color=MAG, alpha=0.10)
     note(ax, 0.475, 0.42, 'capacitive AT NO LOAD\nhard switching — stay out',
          color=MAG, size=10)
-    foot(fig, 'Between f$_o$ and f$_r$ the tank can boost, and that band is where '
-              'an LLC lives. Follow one loaded curve down, though, and the gain '
+    foot(fig, 'Between f$_o$ and f$_r$ the tank can boost, and that is the band '
+              'an LLC boosts in. Follow one loaded curve down, though, and the gain '
               'stops rising at its own peak and falls again - the shaded edge is '
               'the no-load position of that peak, not the loaded one.')
     fig.tight_layout(rect=[0, 0.05, 1, 0.955])
@@ -1048,8 +1048,8 @@ def f17_morph_gates():
         ax.grid(False)
         ax.set_title(ttl, fontsize=11.5, color=NAVY, pad=8)
 
-    foot(fig, 'The dead time between the two signals of a leg is what ZVS '
-              'lives in. Morphing changes nothing else: same pins, same tank, '
+    foot(fig, 'The dead time between the two signals of a leg is the window '
+              'ZVS needs. Morphing changes nothing else: same pins, same tank, '
               'same control law \u2014 leg 2 simply stops switching, and the '
               'transition is hysteretic so it cannot chatter.')
     fig.tight_layout(rect=[0, 0.085, 1, 0.935])
