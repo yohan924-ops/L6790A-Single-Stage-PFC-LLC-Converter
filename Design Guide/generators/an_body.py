@@ -8,6 +8,22 @@ constants in this file, and there must never be.
 """
 
 
+def _edge_numbers(A):
+    """the capacitive edge at full load, and the gain peak people quote for it
+
+    Two different frequencies.  Printed side by side so the reader can see how
+    far apart they are rather than being told they are the same thing.
+    """
+    import l6790
+    lam, Q, fr = A.V['lam'], A.V['Qpk'], A.V['fr']
+    edge = l6790.zvs_edge(Q, lam)
+    fn = [0.30 + 0.7e-5 * i for i in range(100001)]
+    pk = max(fn, key=lambda x: l6790.M(x, Q, lam))
+    from math import degrees
+    return {'fnEdge': edge * fr, 'fnPk': pk * fr,
+            'phPk': abs(degrees(l6790.phase(pk, Q, lam)))}
+
+
 def build(A):
     """A is the an_pdf module, handed in - importing it here would load a
     second copy whenever an_pdf is run as __main__."""
@@ -335,8 +351,10 @@ def build(A):
           'which is exact only at no load &mdash; the capacitive edge moves '
           'up with load, and the next section is about that.'))
     add(fig('f04_three_regions',
-            'The three operating regions. Only the inductive ones are usable, '
-            'and the boundary moves with load.', width=CW * 0.84))
+            'The three operating regions, shaded for the full-load curve '
+            'drawn. Only the inductive ones are usable, and the boundary '
+            'between them moves up as the converter is loaded.',
+            width=CW * 0.84))
 
     add(h2('Capacitive and inductive, and why those words'))
     add(p('The names have nothing to do with which component dominates. They '
@@ -382,7 +400,7 @@ def build(A):
           'lines on it.'))
     add(tbl('Two classifications, two boundaries, two consequences.',
             [['', 'capacitive / inductive', 'below / above resonance'],
-             ['the boundary', 'the <b>peak-gain</b> frequency',
+             ['the boundary', 'where <b>arg Z<sub>in</sub> = 0</b>',
               '<b>f<sub>r</sub></b>, the series resonance'],
              ['does it move?', '<b>yes &mdash; with load</b>',
               'no, it is fixed by L<sub>r</sub> and C<sub>r</sub>'],
@@ -399,6 +417,21 @@ def build(A):
           'a fixed band below f<sub>o</sub> &mdash; it grows as load is '
           'added, and a frequency that is safely inductive at light load can '
           'be capacitive at overload.'))
+    add(note('<b>The edge is not quite the gain peak.</b> The tank is '
+             'capacitive while the phase of its input impedance is negative, '
+             'so the edge is where <b>arg Z<sub>in</sub> = 0</b>, and that '
+             'sits a little <i>above</i> the peak of the gain curve. At full '
+             'load in this design the peak is at %(fnPk).1f&nbsp;kHz while '
+             'the phase does not reach zero until %(fnEdge).1f&nbsp;kHz, and '
+             'at the peak itself the bridge still sees %(phPk).1f&deg; of '
+             'capacitive phase. The peak is the usual stand-in because it '
+             'needs only the gain curve, but it is optimistic in the '
+             'dangerous direction: it calls a band inductive while the '
+             'bridge is still hard switching. Both are approximations of one '
+             'real condition, and Section&nbsp;%(zvsref)s measures that '
+             'condition directly instead &mdash; the time the tank current '
+             'takes to reach zero after the bridge changes.'
+             % dict(V, zvsref=SR('ZVS verification'), **_edge_numbers(A))))
     add(fig('an_ref_loadshift',
             'The capacitive boundary is not fixed. Loading the converter '
             'pushes the gain peak, and with it the edge of the capacitive '

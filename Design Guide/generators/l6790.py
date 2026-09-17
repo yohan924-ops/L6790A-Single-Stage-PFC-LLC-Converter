@@ -37,6 +37,21 @@ def phase(fn, Q, lam):
     return atan(num / (Q * fn ** 3))
 
 
+def zvs_edge(Q, lam):
+    """The capacitive / inductive boundary: the f_n where phase() is zero.
+
+    This is NOT the gain peak.  The peak of M(f_n) is the usual textbook
+    stand-in for the boundary and it sits a little BELOW it, so quoting the
+    peak is optimistic by a few degrees of phase.  Setting the numerator of
+    phase() to zero gives a quadratic in u = f_n**2:
+
+        Q**2 u**2 + (lam**2 + lam - Q**2) u - lam**2 = 0
+    """
+    b = lam * lam + lam - Q * Q
+    u = (-b + sqrt(b * b + 4.0 * Q * Q * lam * lam)) / (2.0 * Q * Q)
+    return sqrt(u)
+
+
 def design(Vac_min=90., Vac_max=264., fl=50., fl_min=47.,
            Vout=60., Pout=240., Vo_min=50., dv_out=0.10, Thold=10e-3,
            eta_HB=0.98, fr_t=150e3, fsw_max_spec=225e3, fsw_min_spec=50e3,

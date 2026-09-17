@@ -22,6 +22,21 @@ _LINECOND = {
 }
 
 
+def _edge_numbers(A):
+    """전부하에서의 capacitive 경계와, 사람들이 그 대신 말하는 게인 피크.
+
+    서로 다른 주파수다.  같다고 적어 두는 대신 나란히 인쇄해서 얼마나 떨어져
+    있는지 보이게 한다.
+    """
+    import l6790
+    from math import degrees
+    lam, Q, fr = A.V['lam'], A.V['Qpk'], A.V['fr']
+    fn = [0.30 + 0.7e-5 * i for i in range(100001)]
+    pk = max(fn, key=lambda x: l6790.M(x, Q, lam))
+    return {'fnEdge': l6790.zvs_edge(Q, lam) * fr, 'fnPk': pk * fr,
+            'phPk': abs(degrees(l6790.phase(pk, Q, lam)))}
+
+
 def build(A):
     h1, h2, p, eq, fig, tbl, note = A.h1, A.h2, A.p, A.eq, A.fig, A.tbl, A.note
     bullets, V, CW = A.bullets, A.V, A.CW
@@ -294,8 +309,9 @@ def build(A):
              '영어 그대로 쓴다 &mdash; 현장에서 그렇게 부르고, 무엇보다 '
              '<b>두 쌍은 같은 경계가 아니다</b>. 그 차이가 다음다음 절이다.'))
     add(fig('f04_three_regions',
-            '세 동작 영역. 쓸 수 있는 것은 inductive 둘뿐이고, 경계는 부하와 '
-            '함께 움직인다.', width=CW * 0.84))
+            '세 동작 영역. 색은 그려진 전부하 곡선 기준이다. 쓸 수 있는 것은 '
+            'inductive 둘뿐이고, 둘을 가르는 경계는 부하를 걸수록 위로 '
+            '올라간다.', width=CW * 0.84))
 
     add(h2('capacitive 와 inductive, 그리고 왜 그 말을 쓰는가'))
     add(p('이 이름은 어느 부품이 지배하느냐와는 아무 상관이 없다. '
@@ -333,7 +349,7 @@ def build(A):
           '가리키기 때문이다. 하지만 그 축 위의 <b>다른 선</b>이다.'))
     add(tbl('두 가지 분류, 두 개의 경계, 두 가지 결과.',
             [['', 'capacitive / inductive', 'below / above'],
-             ['경계는', '<b>게인 피크</b> 주파수',
+             ['경계는', '<b>arg Z<sub>in</sub> = 0</b> 인 곳',
               '<b>f<sub>r</sub></b>, 직렬 공진'],
              ['움직이나?', '<b>그렇다 &mdash; 부하에 따라</b>',
               '아니다. L<sub>r</sub> 과 C<sub>r</sub> 이 고정한다'],
@@ -347,6 +363,19 @@ def build(A):
           'capacitive 영역은 f<sub>o</sub> 아래의 고정된 띠가 아니다 &mdash; '
           '부하를 더하면 넓어지고, 경부하에서 안전하게 inductive 이던 주파수가 '
           '과부하에서는 capacitive 일 수 있다.'))
+    add(note('<b>엄밀히 말하면 경계는 게인 피크가 아니다.</b> 탱크가 '
+             'capacitive 인 것은 입력 임피던스의 위상이 음수인 동안이므로 '
+             '경계는 <b>arg Z<sub>in</sub> = 0</b> 인 지점이고, 그 자리는 게인 '
+             '곡선의 피크보다 조금 <i>위</i>다. 본 설계의 전부하에서 피크는 '
+             '%(fnPk).1f&nbsp;kHz 인데 위상이 0 이 되는 것은 '
+             '%(fnEdge).1f&nbsp;kHz 이고, 피크 바로 그 자리에서도 브리지는 '
+             '아직 %(phPk).1f&deg; 만큼 capacitive 를 본다. 게인 곡선만 있으면 '
+             '되기 때문에 피크를 대신 쓰는 것인데, <b>틀리는 방향이 나쁜 '
+             '쪽</b>이다 &mdash; 브리지가 아직 하드 스위칭하는 구간을 '
+             'inductive 라고 불러 준다. 둘 다 하나의 실제 조건을 근사한 것이고, '
+             '%(zvsref)s 절은 그 조건을 직접 잰다 &mdash; 브리지가 바뀐 뒤 탱크 '
+             '전류가 0 에 닿기까지 걸리는 시간이다.'
+             % dict(V, zvsref=SR('ZVS 검증'), **_edge_numbers(A))))
     add(fig('an_ref_loadshift',
             'capacitive 경계는 고정돼 있지 않다. 부하를 걸면 게인 피크가, 따라서 '
             'capacitive 영역의 가장자리가 더 높은 주파수로 밀린다. '

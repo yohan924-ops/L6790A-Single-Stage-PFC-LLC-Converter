@@ -36,7 +36,7 @@ import numpy as np                                                   # noqa: E40
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-from l6790 import design, sweep, M as gain_fn                        # noqa: E402
+from l6790 import design, sweep, zvs_edge, M as gain_fn              # noqa: E402
 
 OUT = os.path.normpath(os.path.join(HERE, '..', 'figures'))
 
@@ -205,10 +205,12 @@ def f04_three_regions():
         ax.plot(fn, [gain_fn(x, q, LAM) for x in fn], color=LT, lw=1.3)
     ax.plot(fn, [gain_fn(x, QPK, LAM) for x in fn], color=NAVY, lw=2.8,
             zorder=4, label='full load  Q = %.2f' % QPK)
-    ax.axvspan(0.45, FN0, color=MAG, alpha=0.16)
-    ax.axvspan(FN0, 1.0, color=GRN, alpha=0.16)
+    _edge = zvs_edge(QPK, LAM)          # arg Z_in = 0 on the curve drawn
+    ax.axvspan(0.45, _edge, color=MAG, alpha=0.16)
+    ax.axvspan(_edge, 1.0, color=GRN, alpha=0.16)
     ax.axvspan(1.0, 2.2, color=CYA, alpha=0.14)
-    ax.axvline(FN0, color=PUR, ls='--', lw=1.7)
+    ax.axvline(_edge, color=MAG, ls='--', lw=2.0)
+    ax.axvline(FN0, color=PUR, ls=':', lw=1.5)
     ax.axvline(1.0, color=GREY, ls='--', lw=1.7)
     ax.axhline(1.0, color=GREY, ls=':', lw=1.2)
     ax.set_xlim(0.45, 2.2)
@@ -217,41 +219,43 @@ def f04_three_regions():
     ax.set_ylabel('gain   M')
     ax.legend(loc='upper right', fontsize=9.5)
     # short tags inside the bands, and the two resonances above the axis
-    for x, t, c in (((0.45 + FN0) / 2, '(3)', MAG),
-                    ((FN0 + 1.0) / 2, '(2)', GRN), (1.6, '(1)', CYA)):
+    for x, t, c in (((0.45 + _edge) / 2, '(3)', MAG),
+                    ((_edge + 1.0) / 2, '(2)', GRN), (1.6, '(1)', CYA)):
         ax.text(x, 1.86, t, color=c, fontsize=15, fontweight='bold',
                 ha='center', va='center')
     # the boundary belongs to the curve that is drawn, and this one is loaded
     _pk = max(np.linspace(FN0, 1.0, 900), key=lambda x: gain_fn(x, QPK, LAM))
-    ax.plot([_pk], [gain_fn(_pk, QPK, LAM)], marker='*', ms=17, color=MAG,
+    ax.plot([_pk], [gain_fn(_pk, QPK, LAM)], marker='*', ms=15, color=NAVY,
             mec='white', mew=1.2, zorder=6)
-    ax.annotate('peak gain AT THIS LOAD\nthe real capacitive edge is here,\n'
-                'not at f$_o$ - it moves right as load rises',
-                (_pk, gain_fn(_pk, QPK, LAM)), xytext=(1.22, 1.40),
-                color=MAG, fontsize=9.6,
+    ax.annotate('capacitive edge AT THIS LOAD, %.1f kHz\n'
+                'arg Z$_{in}$ = 0 here - it moves right as load rises\n'
+                'the gain peak (star, %.1f kHz) is the usual\n'
+                'stand-in and sits low, so it flatters the margin'
+                % (_edge * FR / 1e3, _pk * FR / 1e3),
+                (_edge, 1.35), xytext=(1.13, 1.70), va='top',
+                color=MAG, fontsize=9.0,
                 bbox=dict(boxstyle='round,pad=0.25', fc='white', ec=MAG,
                           lw=1.0, alpha=0.95),
                 arrowprops=dict(arrowstyle='-|>', color=MAG, lw=1.4))
-    ax.annotate('f$_o$ = %.1f kHz' % (FO / 1e3), (FN0, 0.22),
-                xytext=(FN0 + 0.10, 0.42), color=PUR, fontsize=10.5,
+    ax.annotate('f$_o$ = %.1f kHz\nthe NO-LOAD edge' % (FO / 1e3), (FN0, 0.30),
+                xytext=(0.47, 0.06), color=PUR, fontsize=9.8,
                 bbox=dict(boxstyle='round,pad=0.25', fc='white', ec=PUR,
                           lw=1.0, alpha=0.95),
                 arrowprops=dict(arrowstyle='-|>', color=PUR, lw=1.4))
     ax.annotate('f$_r$ = %.1f kHz' % (FR / 1e3), (1.0, 0.22),
-                xytext=(1.12, 0.42), color=GREY, fontsize=10.5,
+                xytext=(1.12, 0.26), color=GREY, fontsize=10.5,
                 bbox=dict(boxstyle='round,pad=0.25', fc='white', ec=GREY,
                           lw=1.0, alpha=0.95),
                 arrowprops=dict(arrowstyle='-|>', color=GREY, lw=1.4))
 
     cards = [
-        (MAG, '(3)   below the GAIN PEAK',
+        (MAG, '(3)   f < capacitive edge',
          'CAPACITIVE. The body diode is\nhard reverse-recovered ->\n'
-         'shoot-through current. Devices\ncan be DESTROYED. At no\n'
-         'load the edge is f$_o$; under load higher.'),
-        (GRN, '(2)   f$_o$ < f < f$_r$   gain > 1',
-         'Inductive, ZVS, and the tank\ncan BOOST. The normal LLC\n'
-         'region - where a single-stage\nconverter spends most of the\n'
-         'line cycle.'),
+         'shoot-through current and\nDESTROYED devices. The edge\n'
+         'is at f$_o$ at no load only.'),
+        (GRN, '(2)   edge < f < f$_r$   gain > 1',
+         'Inductive, ZVS, and the tank\ncan BOOST. This is the normal\n'
+         'LLC operating region.'),
         (CYA, '(1)   f > f$_r$   gain < 1',
          'Still inductive, still ZVS, but\nthe tank can no longer boost.\n'
          'Used at high line and light\nload.'),
@@ -261,13 +265,14 @@ def f04_three_regions():
         a.axis('off')
         a.add_patch(Rectangle((0.02, 0.04), 0.96, 0.92, transform=a.transAxes,
                               fc='white', ec=c, lw=1.6, zorder=1))
-        a.text(0.07, 0.86, head, transform=a.transAxes, color=c, fontsize=10.5,
+        a.text(0.07, 0.86, head, transform=a.transAxes, color=c, fontsize=9.6,
                fontweight='bold', va='top', zorder=2)
         a.text(0.07, 0.68, body, transform=a.transAxes, color=NAVY,
                fontsize=9.6, va='top', linespacing=1.55, zorder=2)
     foot(fig, 'Frequency is the only control knob: raise it to cut the gain, '
-              'lower it to raise the gain - but never below the gain peak. '
-              'f$_o$ is that limit only at no load.   '
+              'lower it to raise the gain - but never below the capacitive '
+              'edge, and the edge belongs to the load you are at. '
+              'f$_o$ is where it sits at no load only.   '
               '(region framing after ROHM TechWeb)')
     fig.tight_layout(rect=[0, 0.045, 1, 0.955])
     save(fig, 'f04_three_regions')
