@@ -52,13 +52,10 @@ FIGWORD, TBLWORD = 'Figure', 'Table'
 COVER = {
     'title': ['Single-Stage PF LLC', 'Converter Design'],
     'sub': 'with the STMicroelectronics L6790A',
-    'boxhead': 'Design worked through in this note',
-    'box': ['90 to 264 Vac universal input,  47 to 63 Hz',
-            '25 V / 26.3 A = 657.5 W  worked design',
-            'No bulk capacitor and no boost stage',
-            'Every design value traced to the reference implementation'],
-    'foot': ['Unofficial engineering document. Not an ST publication.',
-             'The L6790A datasheet used here is a DRAFT (30 April 2026).'],
+    'boxhead': 'Worked design',
+    'box': ['90 to 264 Vac,  47 to 63 Hz',
+            '25 V / 26.3 A = 657.5 W'],
+    'foot': [],
 }
 
 NAVY = colors.HexColor('#03234B')
@@ -781,18 +778,15 @@ def cover_page(c, doc):
     c.setFillColor(BLUE)
     c.drawString(LM, PH - 556, COVER['sub'])
 
+    h = 44 + 15 * len(COVER['box'])
     c.setFillColor(colors.HexColor('#CBD8E6'))
-    c.roundRect(LM, 96, CW, 170, 6, stroke=0, fill=1)
+    c.roundRect(LM, 96, CW, h, 6, stroke=0, fill=1)
     c.setFillColor(colors.black)
     c.setFont(FONTB, 9.4)
-    c.drawString(LM + 18, 236, COVER['boxhead'])
+    c.drawString(LM + 18, 96 + h - 22, COVER['boxhead'])
     c.setFont(FONT, 9.2)
     for i, line in enumerate(COVER['box']):
-        c.drawString(LM + 18, 214 - i * 15, line)
-    c.setFont(FONTI, 8.6)
-    c.setFillColor(GREY)
-    for i, line in enumerate(COVER['foot']):
-        c.drawString(LM + 18, 128 - i * 14, line)
+        c.drawString(LM + 18, 96 + h - 44 - i * 15, line)
     c.restoreState()
 
 
@@ -805,29 +799,17 @@ class Doc(BaseDocTemplate):
 
 # ==================================================================== front
 def legal():
-    s = [Paragraph('About this document', S['h1'])]
+    s = [Paragraph('Before you start', S['h1'])]
     for t in (
-        'This application note was written to support an internal engineering '
-        'programme. It is <b>not</b> a publication of STMicroelectronics or of '
-        'any other semiconductor manufacturer, and it carries no endorsement '
-        'from them. Where it describes the behaviour of the L6790A it does so '
-        'on the basis of a <b>draft</b> datasheet dated 30&nbsp;April&nbsp;2026, '
-        'which contains items marked TBD and at least one internal '
-        'inconsistency. Every controller constant taken from that document '
-        'must be re-verified against the released datasheet before the design '
-        'is committed to production.',
-        'The worked design is real and self-consistent, but it has not yet '
-        'been built. Numbers presented as measured are identified as such; '
-        'everything else is calculated. Where a design decision was taken '
-        'against a budget rather than within it, the note says so rather than '
-        'quietly adjusting the budget.',
-        'Every figure that carries a number from this design is generated '
-        'from the same reference implementation that produces the design '
-        'values, so no such figure can disagree with the text. A few '
-        'illustrations of standard LLC theory are reproduced from the '
-        'application notes listed in the references; each of those carries '
-        'its source in the caption, and they remain the property of their '
-        'authors.',
+        'The L6790A behaviour described here comes from a <b>draft</b> '
+        'datasheet dated 30&nbsp;April&nbsp;2026. That draft has items marked '
+        'TBD and at least one place where it contradicts itself. Check every '
+        'controller constant against the released datasheet before the design '
+        'goes to production.',
+        'The worked design has not been built. Only the numbers marked as '
+        'measured are measured; the rest are calculated.',
+        'Some of the LLC theory figures are taken from the application notes '
+        'in the reference list. Each one names its source in the caption.',
     ):
         s.append(Paragraph(T(t), S['p']))
         s.append(Spacer(1, 3))
