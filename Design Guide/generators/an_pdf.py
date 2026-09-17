@@ -516,8 +516,13 @@ def eqpng(tex, size=17.0):
 _EQN = [0]
 
 
-def eq(tex, size=17.0, number=True):
-    """a centred equation with its number at the right margin"""
+def eq(tex, size=17.0, number=True, key=None):
+    """a centred equation with its number at the right margin
+
+    key registers the number so that the worked example can say which
+    equation a figure was substituted into, instead of the reader having
+    to find it. The number is never typed by hand.
+    """
     from PIL import Image as PIm
     p = eqpng(tex, size)
     iw, ih = PIm.open(p).size
@@ -530,6 +535,8 @@ def eq(tex, size=17.0, number=True):
     if number:
         _EQN[0] += 1
         lab = '(%d)' % _EQN[0]
+        if key:
+            REFS['eq'][key] = _EQN[0]
     t = Table([[Image(p, w, h), Paragraph(lab, S['eqn'])]],
               colWidths=[CW - 46, 46], rowHeights=[h + 10])
     t.setStyle(TableStyle([('ALIGN', (0, 0), (0, 0), 'CENTER'),
@@ -547,13 +554,13 @@ _FIG = {}
 # name -> the number it was given, filled on the first pass and read on the
 # second. A reference that has no entry yet renders as "?" and the build
 # refuses to keep it (see _check_refs).
-REFS = {'fig': {}, 'tbl': {}, 'sec': {}}
+REFS = {'fig': {}, 'tbl': {}, 'sec': {}, 'eq': {}}
 
 
 # Every name asked for, so that one which never resolves fails the build
 # instead of printing a question mark into the page. Pass one asks before
 # anything is registered, so the test is what is still missing at the end.
-_ASKED = {'fig': set(), 'tbl': set(), 'sec': set()}
+_ASKED = {'fig': set(), 'tbl': set(), 'sec': set(), 'eq': set()}
 
 
 def _ref(kind, key):
@@ -571,6 +578,10 @@ def tblref(name):
 
 def secref(title):
     return _ref('sec', title)
+
+
+def eqref(key):
+    return _ref('eq', key)
 
 
 def check_refs():

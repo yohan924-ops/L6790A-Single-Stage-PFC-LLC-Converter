@@ -14,6 +14,7 @@ def build(A):
     h1, h2, p, eq, fig, tbl, note = A.h1, A.h2, A.p, A.eq, A.fig, A.tbl, A.note
     bullets, V, CW = A.bullets, A.V, A.CW
     FR, TR, SR = A.figref, A.tblref, A.secref
+    ER = A.eqref
     s = []
     add = s.append
     ext = s.extend
@@ -208,10 +209,10 @@ def build(A):
     add(p('Every LLC has two. When the secondary conducts, the reflected '
           'output voltage clamps L<sub>m</sub> and it drops out of the '
           'circuit, leaving the series resonance'))
-    add(eq(r'f_r=\frac{1}{2\pi\sqrt{L_rC_r}}'))
+    add(eq(r'f_r=\frac{1}{2\pi\sqrt{L_rC_r}}', key='fr'))
     add(p('At no load nothing clamps L<sub>m</sub>, and the tank resonates '
           'with both inductances:'))
-    add(eq(r'f_o=\frac{1}{2\pi\sqrt{(L_r+L_m)\,C_r}}'))
+    add(eq(r'f_o=\frac{1}{2\pi\sqrt{(L_r+L_m)\,C_r}}', key='fo'))
     add(p('At f<sub>r</sub> the gain is exactly 1 for any load, because the '
           'load term vanishes. At f<sub>o</sub> the no-load gain is '
           'unbounded. A single-stage converter spends most of the line cycle '
@@ -315,7 +316,7 @@ def build(A):
     add(p('With the usual first-harmonic approximation the tank gain is'))
     add(eq(r'M(f_n,Q,\lambda)=\frac{1}'
            r'{\sqrt{\left(1+\lambda-\frac{\lambda}{f_n^{2}}\right)^{2}'
-           r'+Q^{2}\left(f_n-\frac{1}{f_n}\right)^{2}}}'))
+           r'+Q^{2}\left(f_n-\frac{1}{f_n}\right)^{2}}}', key='M'))
     add(p('with f<sub>n</sub>, Q and &lambda; as defined in the conventions. '
           'Two checks are worth making on it by eye before trusting any curve '
           'drawn from it. At f<sub>n</sub>&nbsp;=&nbsp;1 the second term '
@@ -468,7 +469,7 @@ def build(A):
           'design quantity is the time the tank current takes to reach zero '
           'after the bridge transition, T<sub>ZC</sub>, and the requirement '
           'is simply that it outlast the dead time:'))
-    add(eq(r'T_{ZC}\;>\;t_D'))
+    add(eq(r'T_{ZC}\;>\;t_D', key='zvs'))
     add(fig('f05_zvs_mechanism',
             'How ZVS happens: the magnetising current, not the load current, '
             'discharges the bridge node during the dead time.',
@@ -721,7 +722,7 @@ def build(A):
           'mains, which the converter does not control either. The '
           'instantaneous gain is therefore forced:'))
     add(eq(r'M(\theta)=\frac{n\,V_{o,eff}}{V_{drive}(\theta)}'
-           r'=\frac{n\,V_{o,eff}}{\sqrt{2}\,V_{ac,eq}\,\sin\theta}'))
+           r'=\frac{n\,V_{o,eff}}{\sqrt{2}\,V_{ac,eq}\,\sin\theta}', key='Mreq'))
     add(p('with &theta; the line phase angle. The reasoning is worth '
           'spelling out, because it is the hinge of the whole topology. A '
           'gain is a ratio of two voltages. In a two-stage converter the '
@@ -744,7 +745,7 @@ def build(A):
           'as 1/sin&thinsp;&theta; without limit. The converter survives '
           'because the load vanishes at the same time. A unity-power-factor '
           'input draws power proportional to sin&sup2;&thinsp;&theta;, so'))
-    add(eq(r'Q(\theta)=Q_{pk}\,\sin^{2}\theta'))
+    add(eq(r'Q(\theta)=Q_{pk}\,\sin^{2}\theta', key='Qtheta'))
     add(p('and an unloaded LLC has unbounded gain at its lower resonance '
           'f<sub>o</sub>. Two divergences meet, and the operating point walks '
           'down towards f<sub>o</sub> as the mains approaches zero '
@@ -779,7 +780,7 @@ def build(A):
           'in x:'))
     add(eq(r'\lambda^{2}x^{3}+(q-2\lambda(1+\lambda))x^{2}'
            r'+((1+\lambda)^{2}-2q-\frac{u}{M_{pk}^{2}})x+q=0,'
-           r'\qquad u=\sin^{2}\theta,\;\; q=Q_{pk}^{2}u^{2}'))
+           r'\qquad u=\sin^{2}\theta,\;\; q=Q_{pk}^{2}u^{2}', key='cubic'))
     add(p('One root is always negative: the cubic is +q at x&nbsp;= 0 and '
           'runs to &minus;&infin; as x does. The other two are the two '
           'crossings of one curve. On x&nbsp;&gt; 0 the right-hand side of '
@@ -819,7 +820,7 @@ def build(A):
           'feedback voltage. It is not an error signal in the usual sense:'))
     add(eq(r'V_{FB}\;=\;V_{os}+\frac{2K_{HV}}{K_{M}K_{FF}}\,R_{CS}\,P_{in}'
            r'\;=\;0.5\,\mathrm{V}+0.167\,'
-           r'\frac{\mathrm{V}}{\Omega\cdot\mathrm{W}}\,R_{CS}\,P_{in}'))
+           r'\frac{\mathrm{V}}{\Omega\cdot\mathrm{W}}\,R_{CS}\,P_{in}', key='VFB'))
     add(p('Substituting the 2.8&nbsp;V feedback span gives '
           '2.8/0.167 = 16.8&nbsp;&Omega;&middot;W, which is exactly the '
           'maximum-power rule in the datasheet. <b>Maximum power limiting, '
@@ -878,7 +879,7 @@ def build(A):
            r'{1-\left(\frac{f_r}{f_{sw,max}}\right)^{2}}'
            r'\qquad\qquad'
            r'\lambda_{TD}=\frac{\lambda_{1}}'
-           r'{1-\frac{\pi^{2}}{8}\left(\frac{f_r}{f_{sw,max}}\right)^{2}}'))
+           r'{1-\frac{\pi^{2}}{8}\left(\frac{f_r}{f_{sw,max}}\right)^{2}}', key='lam'))
     add(p('&lambda;<sub>1</sub> is the plain minimum-gain condition. The other '
           'two are the same condition with the frequency ceiling folded in: '
           'the tank has to reach the lowest required gain <i>before</i> it '
@@ -916,7 +917,7 @@ def build(A):
           'fall indefinitely. Raising the frequency only walks it down to an '
           'asymptote:'))
     add(eq(r'M_{\infty}\;=\;\lim_{f\to\infty}M_{no\;load}'
-           r'\;=\;\frac{1}{1+\lambda}'))
+           r'\;=\;\frac{1}{1+\lambda}', key='Minf'))
     add(p('<b>If the required minimum gain lies below M<sub>&infin;</sub>, no '
           'frequency satisfies the condition at all.</b> A spreadsheet '
           'solving for that frequency returns an error rather than a number, '
@@ -1035,6 +1036,10 @@ def build(A):
              'has not yet been confirmed in the time domain.' % V))
 
     # =============================================================== 5
+    # the sweep populates ZVS_WORST, which the summary tables of the
+    # design example read before the grid itself is printed
+    _zvs_grid(A)
+
     add(h1('Design procedure'))
     add(fig('bom_power_stage',
             'The complete power stage. The bridge rectifier feeds the '
@@ -1053,7 +1058,531 @@ def build(A):
           'depend on one another. Working out of order will produce a tank '
           'that has to be redone.'))
 
-    add(h2('Specification and power budget'))
+    add(h2('The specification this note works to'))
+    add(p('The worked example in Section&nbsp;%(ref)s states its '
+          'specification in full, sorted by what kind of number each one is '
+          '&mdash; imposed, chosen, assumed, or derived &mdash; because the '
+          'only useful question about a number is whether it can be moved, '
+          'and the answer differs by group. The procedure below refers to it '
+          'but does not repeat it. Two of its qualifiers matter to every '
+          'step here and are worth stating once. <b>The worst line frequency '
+          'is the lowest</b>, so everything that depends on f<sub>l</sub> '
+          'uses %(flmin).0f&nbsp;Hz. And <b>hold-up is specified at the worst '
+          'line phase</b>, which is the ripple trough rather than the '
+          'nominal output.'
+          % dict(V, ref=SR('The specification, sorted by what kind of number '
+                           'it is'))))
+
+    add(h2('The equivalent input range'))
+    add(p('This is the step most often got wrong. With morphing the tank does '
+          'not see 90&nbsp;Vac at the bottom and %(Vacmax).0f&nbsp;Vac at the '
+          'top. It sees an <b>equivalent</b> input given by the bridge mode:'
+          % V))
+    # matplotlib mathtext has no cases environment and no \text
+    add(eq(r'V_{ac,eq}=2\,V_{ac}\;\;\mathrm{(full\;bridge)}'
+           r'\;\;\;\;\;\;\;\;V_{ac,eq}=V_{ac}\;\;\mathrm{(half\;bridge)}', key='Veq'))
+    add(p('At the half-bridge edge the mains is 245&nbsp;V<sub>pk</sub> and '
+          'the tank sees %(Veqlo).1f&nbsp;Vac equivalent; at the full-bridge '
+          'edge the mains is 235&nbsp;V<sub>pk</sub> in full bridge and the '
+          'tank sees %(Veqhi).1f&nbsp;Vac equivalent. <b>These two edges are '
+          'the design corners, not the ends of the mains range:</b> the low '
+          'edge is the worst case for gain and ZVS, the high edge for '
+          'switching frequency.' % V))
+
+    add(h2('Turns ratio and reflected voltage'))
+    add(p('The turns ratio only ever appears multiplied by the effective '
+          'output voltage, so what matters is the <b>reflected voltage</b>:'))
+    add(eq(r'V_{refl}=n\,V_{o,eff}=n\left(V_{out}+N_{rect}V_{f}\right)', key='Vrefl'))
+    add(p('Two ratios have to be kept apart. <b>n</b> is the '
+          'equivalent-model ratio used in the gain equation; '
+          '<b>n<sub>T</sub></b> is the physical turns ratio of a transformer '
+          'whose leakage is integrated into L<sub>r</sub>. Confusing them '
+          'shifts the whole gain curve, and at &lambda;&nbsp;&asymp;&nbsp;0.5 '
+          'they differ by more than 20&nbsp;%%. The transformer drawing must '
+          'therefore specify open- and short-circuit inductance as well as '
+          'turns.' % {}))
+
+    add(h2('The resonant tank'))
+    add(p('The equivalent ac load resistance for a centre-tapped secondary '
+          'is'))
+    add(eq(r'R_{ac}=\frac{4}{\pi^{2}}\,'
+           r'\frac{n^{2}V_{o,eff}^{2}}{P_{in,LLC}}', key='Rac'))
+    add(p('with P<sub>in,LLC</sub> the power into the resonant stage. The '
+          '4 is the usual 8 with the <i>line-peak</i> power 2P in the '
+          'denominator rather than the average &mdash; see the note below.'))
+    add(p('The gain requirement at the low equivalent corner and the ZVS '
+          'requirement together cap the quality factor at Q<sub>ZVS</sub>, '
+          'and R<sub>ac</sub>Q<sub>ZVS</sub> is then the impedance the tank '
+          'is <i>sized</i> from: it fixes C<sub>r</sub> through '
+          'equation&nbsp;%(e)s, and C<sub>r</sub> with the target '
+          'f<sub>r</sub> fixes L<sub>r</sub>. Three rules govern what happens '
+          'next, and they matter more than the arithmetic:'
+          % dict(e=ER('fr'))))
+    ext(bullets([
+        'The three <i>calculated</i> figures are not one tank. C<sub>r</sub> '
+        'comes from the design impedance; L<sub>r</sub> is then whatever '
+        'pairs with the <b>selected</b> C<sub>r</sub>, which is why it is not '
+        'R<sub>ac</sub>Q<sub>ZVS</sub>/2&pi;f<sub>r</sub>; and the '
+        'L<sub>m</sub> figure is L<sub>r</sub> divided by the &lambda; that '
+        '<i>no load at the high corner</i> asks for &mdash; a condition a '
+        'design may knowingly not meet (Section&nbsp;'
+        + SR('The other bound on &lambda;, and where it has no solution')
+        + '), so it is not a value to round towards.',
+        '<b>Never round L<sub>m</sub> up.</b> That lowers &lambda; and takes '
+        'the ZVS margin with it. C<sub>r</sub> above its calculated value and '
+        'L<sub>m</sub> below have the opposite effect: Q<sub>pk</sub> falls '
+        'and &lambda; is held.',
+        '<b>Sit under the Q<sub>ZVS</sub> cap rather than on it.</b> That gap '
+        'is where most of a design&rsquo;s ZVS margin comes from, and it is a '
+        'choice rather than an accident of rounding. L<sub>m</sub> is chosen '
+        'together with n so that n<sub>T</sub>&nbsp;=&nbsp;'
+        'n&radic;(1+&lambda;<sub>act</sub>) lands on a ratio that can '
+        'actually be wound.']))
+    add(note('<b>The same expression, evaluated somewhere else.</b> Every '
+             'LLC text writes R<sub>ac</sub> = '
+             '(8/&pi;&sup2;)n&sup2;V<sub>o</sub>&sup2;/P, and so does this '
+             'one. A two-stage converter has only one output power, so that '
+             'is the end of it. Here the drawn power is '
+             'p(&theta;) = 2P&thinsp;sin&sup2;&thinsp;&theta;, so '
+             'R<sub>ac</sub> varies over the line cycle as well, and a '
+             'single number has to be pinned to a chosen instant. This note '
+             'pins it to the <b>line peak</b>, where p = 2P and the tank is '
+             'most heavily loaded &mdash; putting 2P in the denominator of '
+             'the same expression is what turns the 8 into a 4. <b>It is not '
+             'a different formula and it has nothing to do with half bridge '
+             'against full bridge</b>; the bridge factor lives in the '
+             'equivalent input voltage, not in the load. Q then means the '
+             'quality factor at the line peak, and every other phase scales '
+             'from it as Q(&theta;) = Q<sub>pk</sub>sin&sup2;&thinsp;&theta;. '
+             'Taking the two-stage number across instead understates the '
+             'loading by two, and every tank value that follows is wrong.'))
+
+    add(h2('ZVS verification'))
+    add(p('The closed-form ZVS estimate found in most design guides is a '
+          'fitted approximation, and it is evaluated at the design '
+          'Q<sub>ZVS</sub> rather than at the Q the converter actually runs '
+          'at. Measured against a full sweep it can err in <b>either</b> '
+          'direction, by tens of per cent, and the sign of the error is not '
+          'fixed &mdash; it depends on the tank. Optimistic is the dangerous '
+          'direction, because it reports ZVS margin that is not there. '
+          'Section&nbsp;%(ref)s puts numbers on both directions.'
+          % dict(ref=SR('ZVS over the whole operating space'))))
+    add(note('<b>And it has to be told which &lambda; to use.</b> The shortcut '
+             'is written with a bare &lambda;, and it means the <i>design</i> '
+             '&lambda; &mdash; the largest of the four candidates &mdash; '
+             'together with the design Q<sub>ZVS</sub>. Read the same '
+             'expression with &lambda;<sub>act</sub>, which is what the '
+             'symbol means everywhere after the tank is chosen, and the phase '
+             'can come out <b>negative</b> &mdash; a capacitive answer for '
+             'a tank that is comfortably inductive. The sweep carries no such '
+             'ambiguity: it uses &lambda;<sub>act</sub> and the Q of the '
+             'moment, which is what the hardware has.'))
+    add(p('The reliable procedure is to sweep &theta;, input voltage and '
+          'load with the <b>selected</b> tank and take the minimum. That is '
+          'a grid, not a formula, and it is the only form of this check that '
+          'can be trusted. Section&nbsp;%(ref)s runs it for this design and '
+          'says where the worst point turned out to be &mdash; which is not '
+          'where a reader would guess.'
+          % dict(ref=SR('ZVS over the whole operating space'))))
+
+    add(h2('Which side of resonance the converter runs on'))
+    add(p('Below f<sub>r</sub> the secondary current is a truncated sine with '
+          'a dead interval and the conduction ratio d = '
+          'f<sub>sw</sub>/f<sub>r</sub> is less than one; above f<sub>r</sub> '
+          'the current is continuous and d clamps at one. The rms figures '
+          'that ratings and losses are built on carry d, so this is not a '
+          'stylistic distinction.'))
+    add(p('<b>Which side the converter lives on is not a separate choice. The '
+          'turns ratio decides it.</b> The demand is M<sub>req</sub> = '
+          '2nV<sub>o,eff</sub>/(&radic;2&nbsp;V<sub>eq</sub>), so a larger n '
+          'asks for more gain, and more gain means further below resonance. '
+          'Two candidate transformers on the same tank can end up on opposite '
+          'sides of f<sub>r</sub> at the same mains voltage.'))
+    add(note('Worth settling before the transformer is ordered. Comparing '
+             'candidate turns ratios on gain margin alone hides it, and the '
+             'two sides do not stress the secondary the same way: below '
+             'resonance the rectifiers turn off at zero current, above it '
+             'they do not.'))
+
+    add(h2('Currents over the line cycle'))
+    add(p('Ratings come from the worst switching cycle; losses come from the '
+          'line-cycle rms. They are different numbers and must not be '
+          'confused. Two further rules apply to a single-stage converter in '
+          'particular.'))
+    ext(bullets([
+        'The <b>composite</b> tank current is what the primary devices and '
+        'the sense resistor see. It is the sum of the reflected load current '
+        'and the magnetising current, and its peak is neither the sum nor the '
+        'larger of the two peaks, because they occur at different instants.',
+        'Below resonance the secondary conducts for only '
+        'd&nbsp;=&nbsp;f<sub>sw</sub>/f<sub>r</sub> of each half period. '
+        'Omitting that conduction ratio over-estimates the rms, and the '
+        'loss by the square of that.']))
+    add(fig('an_tank_current',
+            'The composite tank current, and why its peak is not the sum of '
+            'the two component peaks.', width=CW * 0.74))
+    add(h2('The transformer'))
+    add(p('The tank has fixed L<sub>r</sub>, L<sub>m</sub> and a ratio; the '
+          'transformer has turns, an open-circuit inductance and a leakage. '
+          'Getting from one to the other is where most of the errors in a '
+          'resonant design are made, because <b>two different turns ratios '
+          'and two different inductances carry almost the same names</b>.'))
+
+    add(h2('Two ratios, two inductances'))
+    add(p('When all of the leakage is referred to the primary, the tank sees '
+          'an ideal transformer of ratio n, a series L<sub>r</sub> and a '
+          'shunt L<sub>m</sub>. That n is <b>not</b> the wound ratio. With k '
+          'the coupling coefficient,'))
+    add(eq(r'n \;=\; k\,n_{T},\qquad k \;=\; \sqrt{\frac{L_{m}}{L_{m}+L_{r}}}'
+           r'\;=\;\frac{1}{\sqrt{1+\lambda}}', key='nnT'))
+    add(p('so n<sub>T</sub> = n &radic;(1+&lambda;). At &lambda; &asymp; 0.5 '
+          'the two differ by more than 20&nbsp;%%, which is far more than any '
+          'gain margin.' % {}))
+    add(p('The same split appears in the inductances. The tank model uses '
+          'L<sub>r</sub> and L<sub>m</sub>; the physical transformer is '
+          'described by a magnetising inductance L<sub>&mu;</sub> with '
+          'leakage on both sides:'))
+    add(eq(r'L_{\mu}=\sqrt{L_{m}\,(L_{m}+L_{r})}\,,\qquad '
+           r'L_{L1}=L_{m}+L_{r}-L_{\mu}\,,\qquad '
+           r'L_{L2}=\frac{L_{L1}}{n_{T}^{2}}', key='Lmu'))
+    add(fig('an_ref_integrated',
+            'The same transformer drawn both ways. Above, the leakage split '
+            'between the two sides; below, all of it referred to the primary '
+            'so that the tank sees L<sub>r</sub>, a shunt inductance and an '
+            'ideal transformer whose ratio is no longer the wound one. '
+            'The source calls the total primary inductance L<sub>p</sub>, '
+            'which is L<sub>open</sub> here, and its M<sub>V</sub> is '
+            '&radic;(1+&lambda;) &mdash; so n<sub>T</sub>/M<sub>V</sub> is '
+            'n. (ON Semiconductor AN-4151; the wound ratio relabelled '
+            'n<sub>T</sub> to match this note.)', width=CW * 0.62))
+    add(note('That three-element form assumes the leakage splits evenly '
+             'between the two sides. The real split is set by the winding '
+             'arrangement rather than by the design, and it does not matter: '
+             'the tank sees only the two quantities a meter can read.'))
+
+    add(h2('What the transformer specification must say'))
+    add(p('Only two inductances are measurable at terminals, and they are '
+          'exactly the two the tank needs:'))
+    add(eq(r'L_{open}=L_{\mu}+L_{L1}=L_{m}+L_{r},\qquad '
+           r'L_{short}=L_{L1}+\frac{L_{\mu}\,n_{T}^{2}L_{L2}}'
+           r'{L_{\mu}+n_{T}^{2}L_{L2}}=L_{r}', key='Lopen'))
+    add(p('L<sub>open</sub> is read at the primary with every other winding '
+          'open, L<sub>short</sub> with the secondary shorted. <b>Specify '
+          'those two and the turns, never L<sub>&mu;</sub></b> &mdash; no '
+          'terminal pair exposes L<sub>&mu;</sub>, so a supplier cannot test '
+          'it, and a part that meets it can still miss the tank. State the '
+          'turns ratio in words as well: at one or two secondary turns the '
+          'self-inductance of that winding is dominated by the loop of the '
+          'lead-out, so &radic;(L<sub>1</sub>/L<sub>2</sub>) does not recover '
+          'the ratio.'))
+
+    add(h2('Peak flux is set by the secondary, not the primary'))
+    add(p('Below resonance the secondary conducts for a resonant half period '
+          'and the output voltage stands across the secondary winding for all '
+          'of it. Above resonance it conducts for a shorter switching half '
+          'period, so f<sub>r</sub> is the worst case everywhere on the line '
+          'cycle:'))
+    add(eq(r'B_{pk}=\frac{V_{out,eff}}{4\,f_{r}\,N_{s}\,A_{e}}'
+           r'\qquad\Longrightarrow\qquad '
+           r'A_{e}\;\geq\;\frac{V_{out,eff}}{4\,f_{r}\,N_{s}\,B_{max}}', key='Bpk'))
+    add(p('<b>N<sub>p</sub> does not appear.</b> Adding primary turns does '
+          'not reduce the flux; only adding secondary turns does. That is an '
+          'uncomfortable result for a low-voltage, high-current output, where '
+          'the secondary wants to be a single turn: halving N<sub>s</sub> '
+          'doubles the core area needed. That is why a single-turn secondary '
+          'is expensive in core area even though it is the obvious choice for '
+          'the current.'))
+    add(note('Computing the same flux from an inductance is correct only with '
+             'the <b>physical</b> L<sub>&mu;</sub>: B<sub>pk</sub> = '
+             'L<sub>&mu;</sub> i<sub>&mu;,pk</sub> / (N<sub>p</sub> '
+             'A<sub>e</sub>) reduces exactly to the expression above. Using '
+             'the tank model L<sub>m</sub> with the real N<sub>p</sub> '
+             'understates the flux by &radic;(1+&lambda;) &mdash; about a '
+             'quarter at &lambda;&nbsp;&asymp;&nbsp;0.5 &mdash; because the '
+             'L<sub>m</sub> branch carries n V<sub>out</sub> while the '
+             'winding reflects n<sub>T</sub> V<sub>out</sub>.'))
+
+    add(h2('The saturation test is not the peak winding current'))
+    add(p('A DC-overlap test leaves every other winding open, so none of the '
+          'primary ampere-turns is cancelled by the secondary and the same '
+          'current makes far more flux than it does in operation. Ask for the '
+          'current that reproduces the operating flux in that test:'))
+    add(eq(r'I_{eq}=\frac{B_{pk}\,N_{p}\,A_{e}}{L_{open}}', key='Isat'))
+    add(p('Handing the supplier the peak tank current instead asks for a flux '
+          'density no ferrite reaches, and the answer comes back as an '
+          'oversized core or as a query.'))
+
+    add(h2('The specification, and what it is not allowed to leave out'))
+    add(note('<b>The open-circuit tolerance is not a round number, and it '
+             'is not free to be one.</b> f<sub>o</sub> goes as '
+             '1/&radic;L<sub>open</sub>, so a low part raises the frequency '
+             'floor towards the oscillator clamp. The fall a tank can '
+             'tolerate follows from k<sub>floor</sub> and is typically a few '
+             'per cent, so the reflex &plusmn;10&nbsp;%% can let a compliant '
+             'part hard switch. Section&nbsp;' % {}
+             + SR('Controller network') + ' derives the figure and gives the '
+             'two ways out. Ask the supplier for the asymmetric limit, or '
+             'buy the room in the oscillator first and then ask for '
+             '&plusmn;10&nbsp;%.'))
+    add(note('Core, bobbin, wire and winding order are the supplier choice, '
+             'and insulation and creepage follow the applicable safety '
+             'standard. '
+             'Nothing above constrains them; everything above is measurable '
+             'at the terminals.'))
+
+    add(h2('If one transformer is not practical'))
+    add(p('At a low output voltage and high current the secondary is a single '
+          'heavy turn and the core comes out large, which can lose against '
+          'a height or footprint limit. The transformer can then be built as '
+          'N<sub>x</sub> identical units with <b>primaries in series and '
+          'secondaries in parallel</b>. Series primaries carry the same '
+          'current, so the paralleled secondaries share automatically without '
+          'ballasting.'))
+    ext(bullets([
+        'Open-circuit and leakage inductance divide by N<sub>x</sub>, and so '
+        'do the secondary currents. <b>The primary current does not divide.</b>',
+        'The DC-overlap test current does not change: flux and primary '
+        'ampere-turns scale together.',
+        'The wound ratio of the assembly becomes '
+        'N<sub>x</sub>N<sub>p</sub>/N<sub>s</sub>, so <b>the achievable '
+        'ratios are quantised in steps of N<sub>x</sub>/N<sub>s</sub></b>. '
+        'That has to be honoured when the tank is chosen, not discovered '
+        'afterwards.']))
+
+    add(h2('The input capacitor'))
+    add(p('With no bulk capacitor, C<sub>in</sub> is a film capacitor that '
+          'absorbs switching ripple and nothing else. Making it large is not '
+          'conservative: it holds charge across the zero crossing and '
+          'distorts the line current, so it is a THD term, not a filter '
+          'term.'))
+    add(eq(r'C_{in}\;=\;3\,\frac{\mathrm{nF}}{\mathrm{W}}\times P_{in}', key='Cin'))
+    add(p('That is a <b>lower</b> bound, so round up to the next standard '
+          'value and rate it for the full line voltage.'))
+
+    add(h2('The output capacitor bank'))
+    add(p('Two conditions apply, and the larger wins. The ripple condition '
+          'is'))
+    add(eq(r'C_{out}\;\geq\;\frac{P_{out}}'
+           r'{2\pi f_{l,min}\,\Delta v\,V_{out}^{2}}', key='Crip'))
+    add(p('and the hold-up condition is'))
+    add(eq(r'C_{out}\;\geq\;\frac{2P_{out}T_{hold}}'
+           r'{\left(V_{out}-\frac{1}{2}\Delta v_{pp}\right)^{2}'
+           r'-V_{o,min}^{2}}', key='Chold'))
+    add(note('<b>Hold-up starts at the worst line phase, and that belongs in '
+             'the sizing.</b> If the mains disappears at the trough of the '
+             '2f<sub>l</sub> ripple the bank is already half a ripple below '
+             'nominal when it starts, which is why V<sub>out</sub> above '
+             'carries the &minus;&frac12;&Delta;v term. The difference is not '
+             'small &mdash; it is worth ten per cent or so of the ride-out '
+             'time. &Delta;v<sub>pp</sub> there is the ripple the bank '
+             'actually produces, not the allowance, which makes the condition '
+             'mildly circular and is why it is evaluated once the bank is '
+             'chosen.'))
+    add(p('Which one wins is a question about the specification and not '
+          'about the output voltage: both conditions scale as '
+          '1/V<sub>out</sub>&sup2;, so V<sub>out</sub> cancels when they are '
+          'divided. Writing k&nbsp;=&nbsp;V<sub>o,min</sub>/V<sub>out</sub>, '
+          'ripple dominates when'))
+    add(eq(r'\left(1-\frac{\Delta v}{2}\right)^{2}-k^{2}'
+           r'\;>\;4\pi f_{l}\,\Delta v\,T_{hold}', key='ripscreen'))
+    add(p('This screening form uses the <i>allowed</i> &Delta;v rather than '
+          'the achieved ripple, because it is asked before the bank exists. '
+          'On the specification of this note it comes out close, and '
+          'loosening &Delta;v to 10&nbsp;%% would hand the decision to '
+          'hold-up instead.' % {}))
+    add(fig('f19_cout_criterion',
+            'Both sizing conditions fall as 1/V<sub>out</sub>&sup2;, so only '
+            'the specification separates them. Right: hold-up asks for the '
+            'same energy either side of the boost stage &mdash; what changes '
+            'is the capacitance that holds it.'))
+    ext(bullets([
+        'Include the <b>2f<sub>l</sub> component</b> in the ripple current. '
+        'The switching-frequency part alone is well short of the truth: the '
+        '2f<sub>l</sub> envelope carries a comparable rms of its own, and '
+        'the two are orthogonal so they add in quadrature.',
+        'With a centre-tapped secondary, judge the capacitor ripple current '
+        'at the <b>output node</b>, not per winding.',
+        'Use the ESR at the <b>switching frequency</b>. An electrolytic '
+        'tan&thinsp;&delta; is quoted at 120&nbsp;Hz and is five to ten times '
+        'larger there.']))
+    add(note('<b>A risk this architecture creates.</b> The controller '
+             'start-up window is finite, and a bank of this size is a far '
+             'heavier start-up load than the few millifarads a conventional '
+             'design presents. Cold start into the full bank should be one of '
+             'the first things measured on hardware.'))
+
+    add(h2('Semiconductor requirements'))
+    add(p('This note states requirements rather than selecting parts, because '
+          'the choice depends on package, thermal design and cost. Four rules '
+          'decide whether the requirement is stated correctly at all.'))
+    ext(bullets([
+        'Rate the primary switches on the <b>composite tank peak</b>, not '
+        'on the reflected load current. The load component alone under-rates '
+        'the device by roughly a tenth, because the magnetising current is '
+        'missing from it.',
+        'Divide currents by the number of devices actually in parallel before '
+        'judging stress. Tabulated currents are <b>per switch position</b> on '
+        'the primary and <b>per leg</b> on the secondary; a centre-tapped leg '
+        'carries the whole secondary current, not half of it.',
+        'Compute loss from R<sub>DS(on)</sub> at <b>T<sub>j,max</sub></b>, '
+        'not at 25&nbsp;&deg;C. The datasheet maximum is process spread at '
+        '25&nbsp;&deg;C; temperature is a separate multiplier, roughly 1.8 '
+        'for a 600&nbsp;V superjunction device and 1.9 for a low-voltage '
+        'synchronous rectifier. Using the 25&nbsp;&deg;C value to size a '
+        'heatsink is optimistic by about a factor of two.',
+        'A curve plotted against T<sub>a</sub> may still be read as '
+        'T<sub>j</sub> <b>if it is a pulse test</b> &mdash; the die does not '
+        'self-heat during the pulse. For any non-pulsed curve this is not '
+        'valid.']))
+    add(note('<b>The standing device in half-bridge morphing is the one to '
+             'watch.</b> It never switches, so it is easy to overlook, and it '
+             'carries the whole tank current continuously. On a design of '
+             'this power it is where the conduction-loss budget is either met '
+             'or knowingly missed, and Section&nbsp;'
+             + SR('Where the power goes') + ' shows which of the two happened '
+             'here.'))
+
+    add(h2('Controller network'))
+    add(fig('bom_pin_config',
+            'The controller and its passive network. HVSU is fed from the AC '
+            'side of the bridge; the auxiliary winding drives ZCD through a '
+            'divider; R<sub>T</sub> and C<sub>T</sub> set the oscillator '
+            'limits; R<sub>CFG</sub> and R<sub>BM</sub> are read at power-up.',
+            width=CW))
+    add(p('Decide first what the auxiliary winding is for, because it '
+          'changes one of the rules below. In the usual arrangement it does '
+          'two jobs &mdash; it senses the zero crossing and it supplies '
+          'V<sub>CC</sub> &mdash; and the second job caps its turns ratio, '
+          'since the rectified auxiliary voltage at OVP2 must stay under the '
+          'V<sub>CC</sub> rating. That cap is often the binding constraint on '
+          'the winding. Where V<sub>CC</sub> is supplied from elsewhere, as it '
+          'is here, the cap does not exist: the winding senses only, its '
+          'voltage is set by whatever ratio the ZCD divider is designed '
+          'around, and the sole remaining constraint is that the turns come '
+          'out whole. A ratio check carried over from the self-supplied case '
+          'will read as a failure in that arrangement and should be marked '
+          'not applicable rather than satisfied.'))
+    add(p('Each of these parts follows from something already fixed, and '
+          'Section&nbsp;' + SR('The parts around the controller')
+          + ' sizes them one at a time in the '
+          'order they have to be done. The one that deserves the most '
+          'attention throughout is R<sub>T</sub>, because it sets the '
+          'oscillator floor and that floor must stay above f<sub>o</sub>.'))
+    add(note('<b>That floor is usually the thinnest margin in the '
+             'design.</b> f<sub>Min</sub> must sit above f<sub>o</sub>, or '
+             'nothing but the anti-capacitive protection stands between the '
+             'converter and the capacitive region. It also depends on the '
+             'oscillator idle time, which the draft datasheet states '
+             'inconsistently, so whatever it computes to has to be confirmed '
+             'by measuring f<sub>sw</sub>(&theta;) on hardware.'))
+    add(p('That ratio is also what the transformer tolerance has to fit '
+          'inside, and this is easy to miss because the two live in different '
+          'documents. Since f<sub>o</sub> = 1/(2&pi;&radic;(L<sub>open</sub>'
+          'C<sub>r</sub>)), a <b>low</b> open-circuit inductance raises '
+          'f<sub>o</sub>. The fall that can be tolerated is'))
+    add(eq(r'\frac{\Delta L}{L}\;=\;1-\frac{1}{k_{floor}^{2}}', key='Ldrop'))
+    add(p('With a floor margin in the low percent, that is a few per cent '
+          'of inductance &mdash; and a transformer specification asking for '
+          'the reflex &plusmn;10&nbsp;%% then does <b>not</b> fit inside it: '
+          'at the bottom of that tolerance the converter hard switches. '
+          'Either the tolerance is tightened on the low side, or '
+          'R<sub>T</sub> is reduced to lift f<sub>Min</sub> and buy the room. '
+          '<b>Check this before the transformer is ordered</b>, not '
+          'after.' % {}))
+
+    add(h2('Voltage loop and compensation'))
+    add(fig('comp_network_st',
+            'The secondary-side error amplifier and the optocoupler. '
+            'R<sub>I</sub> and R<sub>O</sub> set the regulated output, '
+            'R<sub>f</sub>C<sub>f</sub> and C<sub>fo</sub> shape the '
+            'compensator, and R<sub>P</sub> and R<sub>B</sub> bias the shunt '
+            'regulator and the optocoupler diode.',
+            width=CW * 0.68))
+    add(p('The output is a capacitor fed by a constant-power source, so the '
+          'control-to-output transfer is a <b>pure integrator</b>: '
+          '&minus;90&deg; at every frequency. That makes the loop easy to '
+          'compensate and hard to place, because the crossover is set by a '
+          'constraint that has nothing to do with stability.'))
+    add(p('Any 2f<sub>l</sub> ripple that survives the loop and reaches the '
+          'feedback pin becomes a power command that varies over the line '
+          'cycle, and therefore input current distortion &mdash; mostly third '
+          'harmonic. Raising the crossover reduces output ripple and '
+          '<b>increases</b> distortion. The two constraints pull in opposite '
+          'directions, and the practical answer is in the high teens of '
+          'hertz.'))
+    add(p('The compensator is a Type&nbsp;II network placed by the Venable '
+          'K-factor method. With &alpha;<sub>v</sub> the ratio between the '
+          'error-amplifier gain at 2f<sub>l</sub> and the gain the loop needs '
+          'there,'))
+    add(eq(r'K_{v}=\frac{1}{2\alpha_{v}}\left[(1+\alpha_{v}^{2})\tan\Phi_{M}'
+           r'+\sqrt{(1+\alpha_{v}^{2}\tan\Phi_{M})^{2}'
+           r'+4\alpha_{v}^{2}}\;\right]', key='Kv'))
+    add(p('K<sub>v</sub> then places the zero and the pole symmetrically '
+          'about the crossover, which is what makes the phase bump land where '
+          'it is needed:'))
+    add(eq(r'f_{MB}=\frac{1}{2\pi}\sqrt{\frac{G_{o}K_{v}EA_{o}}{\Gamma_{v}}},'
+           r'\qquad f_{p}=K_{v}f_{MB},\qquad f_{z}=\frac{f_{MB}}{K_{v}}', key='fMB'))
+    add(p('f<sub>MB</sub> is the geometric mean the two are placed about, '
+          'so the zero lands below the crossover and the pole above it by the '
+          'same factor. A third, high-frequency pole f<sub>px</sub> is added '
+          'near a kilohertz to roll off switching noise.'))
+
+    add(h2('Gain margin, and why it needs checking'))
+    add(p('Phase margin alone does not close the stability argument. Above '
+          'f<sub>px</sub> this network has one zero against two poles, so the '
+          'phase heads for &minus;270&deg; and <b>&minus;180&deg; is crossed '
+          'at a finite frequency</b>. That crossing needs no root search '
+          'either: setting the zero and pole phase contributions equal and '
+          'taking the tangent of both sides leaves one square root,'))
+    add(eq(r'f_{180}=\sqrt{\,f_{p}f_{px}-f_{z}(f_{p}+f_{px})\,}'
+           r'\,,\qquad GM=-20\log_{10}|T(f_{180})|', key='f180'))
+    add(p('<b>A negative radicand is the answer, not an error</b>: it means '
+          'the phase never reaches &minus;180&deg; and the gain margin is '
+          'infinite. Judge the result against 6&nbsp;dB as a floor and '
+          '10&nbsp;dB as a comfortable target. With a crossover in the tens '
+          'of hertz the margin is usually large in this topology &mdash; '
+          'which is a reason to compute it, not a reason to assume it.'))
+
+    add(h2('Feedback ripple against the burst threshold'))
+    add(p('A crossover this low leaves 2f<sub>l</sub> ripple on the feedback '
+          'pin. Because that pin is a power command, the ripple walks the '
+          'commanded power up and down every half line cycle; if it straddles '
+          'the burst-entry threshold the converter chatters in and out of '
+          'burst. The ripple amplitude at the burst point is'))
+    add(eq(r'\Delta V_{FB}\;=\;\frac{P_{in,BM}}{V_{out}}\,'
+           r'\frac{1}{2\pi f_{l}\,C_{out}}\;G_{EA}(2f_{l})', key='dVFB'))
+    add(p('Lowering R<sub>BM</sub> by &Delta;R<sub>BM</sub> = '
+          '&Delta;V<sub>FB</sub>/(2&nbsp;&times;&nbsp;0.01&nbsp;V/k&Omega;) '
+          'moves the burst entry point below that ripple. <b>Raising the '
+          'crossover would shrink the ripple but worsen the distortion</b>, '
+          'so trading it against R<sub>BM</sub> is the practical answer '
+          'rather than speeding up the loop.'))
+
+    add(fig('an_loop_bode',
+            'Open-loop gain and phase margin of the selected compensation '
+            'network.', width=CW * 0.72))
+    add(note('<b>A loop this slow cannot recover from a large load step.</b> '
+             'The controller&rsquo;s anti-saturation circuit does that '
+             'instead, which is why the optocoupler bias resistor must sit '
+             'inside its permitted window. Checking the window is not '
+             'optional.'))
+
+    # =============================================================== 6
+    add(h1('Design example'))
+    add(p('Everything above is method: what each quantity is, which equation '
+          'produces it, and what goes wrong if it is produced the wrong way. '
+          'Almost no numbers, on purpose &mdash; a worked value in the middle '
+          'of an explanation gets remembered instead of the reasoning.'))
+    add(p('This chapter is where the numbers live. One design is carried from '
+          'the specification to the component values, and every figure in it '
+          'names the equation it came out of, with this design&rsquo;s inputs '
+          'substituted so the arithmetic can be followed rather than taken on '
+          'trust. The specification is <b>90 to %(Vacmax).0f&nbsp;Vac in, '
+          '%(Vout).0f&nbsp;V / %(Iout).1f&nbsp;A = %(Pout).1f&nbsp;W out</b>, '
+          'centre-tapped synchronous rectification, no bulk capacitor and no '
+          'boost stage.' % V))
+
+    add(h2('The specification, sorted by what kind of number it is'))
     add(p('A specification sheet usually runs all of its numbers together in '
           'one table, and that is where a good deal of later trouble starts. '
           'Four different kinds of quantity are in there. Some are imposed '
@@ -1088,7 +1617,7 @@ def build(A):
            'V<sub>out</sub> &mdash; worth %(pc).0f&nbsp;%% of the ride-out '
            'time here, as Section&nbsp;%(ref)s shows.')
           % dict(V, pc=100 * (1 - V['thold'] / V['tholdVo']),
-                 ref=SR('The output capacitor bank'))))
+                 ref=SR('The output bank, as sized'))))
 
     add(tbl('What this design chose. Each of these could have been chosen '
             'differently, and the section named is where the consequence '
@@ -1163,137 +1692,261 @@ def build(A):
             widths=[CW * 0.24, CW * 0.13, CW * 0.18, CW * 0.45],
             key='spec-derived'))
 
-    add(h2('The equivalent input range'))
-    add(p('This is the step most often got wrong. With morphing the tank does '
-          'not see 90&nbsp;Vac at the bottom and %(Vacmax).0f&nbsp;Vac at the '
-          'top. It sees an <b>equivalent</b> input given by the bridge mode:'
-          % V))
-    # matplotlib mathtext has no cases environment and no \text
-    add(eq(r'V_{ac,eq}=2\,V_{ac}\;\;\mathrm{(full\;bridge)}'
-           r'\;\;\;\;\;\;\;\;V_{ac,eq}=V_{ac}\;\;\mathrm{(half\;bridge)}'))
-    add(p('At the half-bridge edge the mains is 245&nbsp;V<sub>pk</sub> and '
-          'the tank sees %(Veqlo).1f&nbsp;Vac equivalent; at the full-bridge '
-          'edge the mains is 235&nbsp;V<sub>pk</sub> in full bridge and the '
-          'tank sees %(Veqhi).1f&nbsp;Vac equivalent. <b>These two edges are '
-          'the design corners, not the ends of the mains range:</b> the low '
-          'edge is the worst case for gain and ZVS, the high edge for '
-          'switching frequency.' % V))
+    add(h2('What the design came out as'))
+    add(tbl('Principal values.',
+            [['Block', 'Values'],
+             ['Tank', 'C<sub>r</sub> %(Cr).0f nF, L<sub>r</sub> %(Lr).0f '
+              '&micro;H, L<sub>m</sub> %(Lm).0f &micro;H, '
+              '&lambda; %(lam).2f, f<sub>r</sub> %(fr).1f kHz, '
+              'f<sub>o</sub> %(fo).1f kHz' % V],
+             ['Transformer', 'N<sub>p</sub>:N<sub>s</sub> '
+              '%(NpSet)d:%(Ns)d, n %(n).2f, n<sub>T</sub> %(nT).2f, '
+              'L<sub>open</sub> %(Lopen).1f &micro;H, '
+              'L<sub>short</sub> %(Lshort).1f &micro;H, '
+              'A<sub>e</sub> &ge; %(Aereq).0f mm&sup2; at '
+              'B<sub>pk</sub> 0.20 T' % V],
+             ['Frequency', 'f<sub>sw</sub> %(fswA).1f kHz at the low corner, '
+              '%(fswB).1f kHz at the high corner' % V],
+             ['Output', '%(Cout1).0f &micro;F &times; %(nC).0f = '
+              '%(Cout).1f mF, ripple %(dVo).2f V (%(dVopc).2f %%), '
+              'hold-up %(thold).2f ms' % V],
+             ['Controller', 'R<sub>T</sub> %(RT).0f k&Omega;, '
+              'C<sub>T</sub> %(CT).0f pF, R<sub>CS</sub> %(RCS).1f m&Omega;, '
+              'R<sub>CFG</sub> %(RCFG).0f k&Omega;, '
+              'R<sub>BM</sub> %(RBM).0f k&Omega;' % V],
+             ['Loop', 'f<sub>cross</sub> %(fcross).2f Hz, '
+              '&Phi;<sub>M</sub> %(PM).2f&deg;, '
+              'third harmonic %(D3).2f %%' % V]],
+            widths=[CW * 0.18, CW * 0.82]))
 
-    add(h2('Turns ratio and reflected voltage'))
-    add(p('The turns ratio only ever appears multiplied by the effective '
-          'output voltage, so what matters is the <b>reflected voltage</b>:'))
-    add(eq(r'V_{refl}=n\,V_{o,eff}=n\left(V_{out}+N_{rect}V_{f}\right)'))
-    add(p('This design uses n&nbsp;=&nbsp;%(n).2f, giving '
-          'V<sub>refl</sub>&nbsp;=&nbsp;%(Vrefl).0f&nbsp;V. Two ratios have '
-          'to be kept apart: <b>n</b> is the equivalent-model ratio used in '
-          'the gain equation, while <b>n<sub>T</sub>&nbsp;=&nbsp;%(nT).2f</b> '
-          'is the physical turns ratio of a transformer whose leakage is '
-          'integrated into L<sub>r</sub>. Confusing them shifts the whole '
-          'gain curve. The transformer drawing must therefore specify open- '
-          'and short-circuit inductance as well as turns.' % V))
+    # ------------------------------------------------ what a margin ratio is
+    add(h2('What a verification margin is'))
+    add(p('Every check in this note has the same shape. Take the quantity '
+          'the design actually achieves, X<sub>act</sub>, divide by the '
+          'quantity it is required to achieve, X<sub>req</sub>, and call the '
+          'answer k:'))
+    add(eq(r'k\;=\;\frac{X_{\mathrm{act}}}{X_{\mathrm{req}}}\qquad\Longrightarrow\qquad \mathrm{pass\;when}\;k>1', key='margin'))
+    add(p('That is the whole definition. k&nbsp;=&nbsp;1.05 is five per cent '
+          'of room, k&nbsp;=&nbsp;0.9 is ten per cent short, and the number '
+          'is read directly as a factor rather than as a difference.'))
+    add(p('The reason for forcing every check into this one shape is that the '
+          'quantities disagree about which direction is good. T<sub>ZC</sub> '
+          'should be <i>large</i>, f<sub>o</sub> should be <i>small</i>, a '
+          'loss should be small and a hold-up time should be long. Written as '
+          'raw numbers, a reviewer has to remember the direction of each one. '
+          'Written as a ratio in this form, they all point the same way and '
+          'they are all dimensionless, so a frequency check and a power check '
+          'can sit in the same column and be compared: the smallest k in the '
+          'table is the thinnest thing in the design, whatever it happens to '
+          'be about.'))
+    _kb = V['kPloss'] * A.SH['P.mos_dc']          # the budget, recovered
+    _ks = V['kPSR'] * A.SH['P.SR'] / 2.0
+    add(tbl('The verification margins of this design, with the ratio each one '
+            'is. Nothing here is a new calculation &mdash; every numerator '
+            'and denominator has already appeared above.',
+            [['Check', 'k = has / needs', 'Substituted', 'k'],
+             ['ZVS at the worst point of the sweep',
+              'T<sub>ZC,min</sub> / t<sub>D</sub>',
+              '%(zTzc).0f ns / %(tD).0f ns' % dict(V, **ZVS_WORST),
+              '%(zk).3f' % dict(V, **ZVS_WORST)],
+             ['Oscillator floor clears the lower resonance',
+              'f<sub>Min</sub> / f<sub>o</sub>',
+              '%(fMin).2f kHz / %(fo).2f kHz' % V, '<b>%(kfloor).3f</b>' % V],
+             ['Oscillator ceiling clears the operating maximum',
+              'f<sub>Max</sub> / f<sub>sw,max</sub>',
+              '%(fMax).2f kHz / %(fswmaxop).2f kHz' % V, '%(kceil).3f' % V],
+             ['Over-current threshold clears the tank peak',
+              'I<sub>OCP1</sub> / I<sub>Lr,pk</sub>',
+              '%(I).2f A / %(Icomp).2f A' % dict(V, I=A.SH['I.OCP1']),
+              '%(kOCP).3f' % V],
+             ['Hold-up achieved against hold-up required',
+              't<sub>hold</sub> / T<sub>hold</sub>',
+              '%(thold).2f ms / %(Thold).0f ms' % V, '%(khold).3f' % V],
+             ['Secondary loss against its budget',
+              'P<sub>budget</sub> / P<sub>SR,leg</sub>',
+              '%(b).2f W / %(a).2f W' % dict(b=_ks, a=A.SH['P.SR'] / 2.0),
+              '%(kPSR).3f' % V],
+             ['Primary loss against its budget',
+              'P<sub>budget</sub> / P<sub>mos,dc</sub>',
+              '%(b).2f W / %(a).2f W' % dict(b=_kb, a=A.SH['P.mos_dc']),
+              '<b>%(kPloss).3f</b>' % V]],
+            widths=[CW * 0.34, CW * 0.18, CW * 0.26, CW * 0.10],
+            key='margins'))
+    add(note('<b>k below 1 is a result, not a failed build.</b> '
+             'k<sub>Ploss</sub> = %(kPloss).3f says the standing primary '
+             'device spends %(a).2f&nbsp;W against a %(b).0f&nbsp;W budget. '
+             'The budget is itself a choice, so the ratio could be made to '
+             'pass by writing %(c).0f&nbsp;W into the numerator &mdash; at '
+             'which point the check stops checking anything. It is left as it '
+             'is, and Section&nbsp;%(ref)s says why the decision was taken '
+             'anyway. A margin table is only worth reading if the numbers in '
+             'it were allowed to come out badly.'
+             % dict(V, a=A.SH['P.mos_dc'], b=_kb,
+                    c=A.SH['P.mos_dc'] * 1.05,
+                    ref=SR('Semiconductor requirements'))))
+    add(note('<b>Two of these are not interchangeable with a percentage.</b> '
+             'k<sub>floor</sub> = %(kfloor).3f looks like a comfortable '
+             '2&nbsp;%% until you notice what moves it: the transformer '
+             'open-circuit tolerance and the oscillator idle time both land '
+             'on it, and neither is known to 2&nbsp;%% yet. The same is true '
+             'of k<sub>ZVS</sub>, whose numerator came from a sweep and not '
+             'from a formula. The rest of the table is arithmetic on values '
+             'that are already settled.' % V))
 
-    add(h2('The resonant tank'))
-    add(p('The equivalent ac load resistance for a centre-tapped secondary '
-          'is'))
-    add(eq(r'R_{ac}=\frac{4}{\pi^{2}}\,'
-           r'\frac{n^{2}V_{o,eff}^{2}}{P_{in,LLC}}'))
-    add(p('with P<sub>in,LLC</sub> the power into the resonant stage. The '
-          '4 is the usual 8 with the <i>line-peak</i> power 2P in the '
-          'denominator rather than the average &mdash; see the note below '
-          '&mdash; and it makes R<sub>ac</sub> = %(Rac).2f&nbsp;&Omega; '
-          'here. The gain requirement at the low equivalent corner and the '
-          'ZVS requirement together cap the quality factor at '
-          'Q<sub>ZVS</sub>&nbsp;=&nbsp;%(QZVS).3f, and '
-          'R<sub>ac</sub>Q<sub>ZVS</sub>&nbsp;=&nbsp;%(Z0).2f&nbsp;&Omega; '
-          'is the impedance the tank is <i>sized</i> from &mdash; it is what '
-          'fixes C<sub>r</sub> in the table below. The parts finally chosen '
-          'land well under that cap: &radic;(L<sub>r</sub>/C<sub>r</sub>) '
-          '&nbsp;=&nbsp;%(Z0s).2f&nbsp;&Omega;, so the tank actually runs at '
-          'Q<sub>pk</sub>&nbsp;=&nbsp;Z<sub>0</sub>/R<sub>ac</sub>&nbsp;'
-          '=&nbsp;%(Qpk).3f. <b>Sitting under the limit rather than on it is '
-          'where most of the ZVS margin comes from</b>, and it is a choice, '
-          'not an accident of rounding.' % V))
-    add(tbl('Tank: calculated against selected.',
-            [['Quantity', 'Calculated', 'Selected', 'Direction'],
-             ['C<sub>r</sub>', '%(Crc).2f nF' % V, '%(Cr).0f nF' % V,
-              'rounded <b>up</b>'],
-             ['L<sub>r</sub>', '%(Lrc).2f &micro;H' % V,
-              '%(Lr).0f &micro;H' % V, 'rounded down'],
-             ['L<sub>m</sub>', '%(Lmc).2f &micro;H' % V,
-              '%(Lm).0f &micro;H' % V, '<b>not a rounding</b> &mdash; see '
-              'below'],
-             ['&lambda;<sub>act</sub> / f<sub>r</sub> / f<sub>o</sub>',
+    # ------------------------------------------------ the chain, step by step
+    add(h2('Following the numbers through'))
+    add(p('The table above is the destination. This is the road: every '
+          'quantity in the order it was actually computed, with what it was '
+          'computed from. Read down the &ldquo;from&rdquo; column and it is '
+          'a chain &mdash; nothing in it appears before the things it needs, '
+          'which is the whole reason the design procedure is in that order.'))
+    add(tbl('The design, step by step. Every value is recomputed from the '
+            'reference implementation; none is transcribed.',
+            [['#', 'Quantity', 'Value', 'Eq.', 'From'],
+             ['1', 'Input power P<sub>in</sub>', '%(Pin).1f W' % V, '&mdash;',
+              'P<sub>out</sub> %(Pout).1f W plus the bridge, EMI and LLC '
+              'loss budgets' % V],
+             ['2', 'Power into the tank P<sub>in,LLC</sub>',
+              '%(PinLLC).1f W' % dict(V, PinLLC=A.SH['P.in_LLC']),
               '&mdash;',
-              '%(lam).3f / %(fr).1f kHz / %(fo).1f kHz' % V,
-              'from the selected parts']],
-            widths=[CW * 0.26, CW * 0.20, CW * 0.28, CW * 0.26]))
-    add(note('<b>Those three calculated figures are not one tank.</b> '
-             'C<sub>r</sub> comes from the design impedance above. '
-             'L<sub>r</sub> is then whatever pairs with the <i>selected</i> '
-             'C<sub>r</sub> at the target f<sub>r</sub>, which is why it is '
-             'not R<sub>ac</sub>Q<sub>ZVS</sub>/2&pi;f<sub>r</sub>. And the '
-             'L<sub>m</sub> figure is L<sub>r</sub> divided by the &lambda; '
-             'that <i>no load at the high corner</i> would ask for &mdash; a '
-             'requirement this design knowingly does not meet '
-             '(Section&nbsp;'
-             + SR('The other bound on &lambda;, and where it has no solution')
-             + '), so it is not a value to round towards. L<sub>m</sub> is '
-             'chosen together with n instead, so that '
-             'n<sub>T</sub>&nbsp;=&nbsp;n&radic;(1+&lambda;<sub>act</sub>) '
-             'lands on a ratio that can actually be wound. <b>What the table does say is the direction.</b> Never round L<sub>m</sub> up: that lowers &lambda; and takes the ZVS margin with it. C<sub>r</sub> above its calculated value and L<sub>m</sub> below has the opposite effect &mdash; it lowers Q<sub>pk</sub> and holds &lambda;.'))
+              'P<sub>in</sub> less the bridge and EMI budgets'],
+             ['3', 'Equivalent input, low corner', '%(Veqlo).1f Vac' % V,
+              ER('Veq'),
+              '245 V<sub>pk</sub> in half bridge, &divide;&radic;2'],
+             ['4', 'Equivalent input, high corner', '%(Veqhi).1f Vac' % V,
+              ER('Veq'),
+              '235 V<sub>pk</sub> in full bridge, &times;2&divide;&radic;2'],
+             ['5', 'Turns ratio n', '%(n).3f' % V,
+              ER('nnT'),
+              'chosen with L<sub>m</sub> so that n<sub>T</sub> lands on a '
+              'windable ratio &mdash; the plain calculation gives '
+              '%(ncalc).3f' % dict(V, ncalc=A.SH['n.calc'])],
+             ['6', 'Reflected voltage', '%(Vrefl).1f V' % V,
+              ER('Vrefl'),
+              'n V<sub>o,eff</sub>'],
+             ['7', 'Gain demanded at the low corner',
+              '%(Mhb).4f' % dict(V, Mhb=A.SH['M.HBmin']),
+              ER('Mreq'),
+              '2 n V<sub>o,eff</sub> / (&radic;2 &times; %(Veqlo).1f)' % V],
+             ['8', 'Gain demanded at the high corner',
+              '%(Mfb).4f' % dict(V, Mfb=A.SH['M.FBthr']),
+              ER('Mreq'),
+              'the same expression at %(Veqhi).1f Vac' % V],
+             ['9', 'AC load resistance R<sub>ac</sub>',
+              '%(Rac).2f &Omega;' % V,
+              ER('Rac'),
+              '(4/&pi;&sup2;) n&sup2; V<sub>o,eff</sub>&sup2; / '
+              'P<sub>in,LLC</sub> &mdash; the 4 is the line peak'],
+             ['10', 'Quality-factor cap Q<sub>ZVS</sub>',
+              '%(QZVS).4f' % V,
+              ER('zvs'),
+              'the smaller of the gain and ZVS limits at the low corner'],
+             ['11', 'Design impedance', '%(Z0).2f &Omega;' % V,
+              '&mdash;',
+              'R<sub>ac</sub> Q<sub>ZVS</sub>'],
+             ['12', 'C<sub>r</sub>', '%(Crc).2f &rarr; %(Cr).0f nF' % V,
+              ER('fr'),
+              '1/(2&pi; f<sub>r</sub> &times; design impedance), then '
+              'rounded up hard to buy Q margin'],
+             ['13', 'L<sub>r</sub>', '%(Lrc).2f &rarr; %(Lr).0f &micro;H' % V,
+              ER('fr'),
+              'whatever pairs with the selected C<sub>r</sub> at '
+              'f<sub>r</sub> = %(frt).0f kHz' % V],
+             ['14', '&lambda; required', '%(lamTD).3f' % V,
+              ER('lam'),
+              'the largest of four candidates &mdash; two of them carry '
+              'f<sub>sw,max</sub> in a denominator'],
+             ['15', 'L<sub>m</sub>', '%(Lmc).2f &rarr; %(Lm).0f &micro;H' % V,
+              '&mdash;',
+              'not that ratio: chosen with n, knowingly missing the no-load '
+              'condition'],
+             ['16', 'Realised &lambda;<sub>act</sub>', '%(lam).3f' % V,
+              '&mdash;',
+              'L<sub>r</sub>/L<sub>m</sub> of the selected parts'],
+             ['17', 'Realised f<sub>r</sub>, f<sub>o</sub>',
+              '%(fr).1f / %(fo).1f kHz' % V,
+              ER('fr') + ', ' + ER('fo'),
+              'from C<sub>r</sub>, L<sub>r</sub> and L<sub>r</sub>+'
+              'L<sub>m</sub>'],
+             ['18', 'Realised Q<sub>pk</sub>', '%(Qpk).3f' % V,
+              ER('M'),
+              '&radic;(L<sub>r</sub>/C<sub>r</sub>) = %(Z0s).2f &Omega;, '
+              'divided by R<sub>ac</sub> &mdash; well under the cap' % V],
+             ['19', 'Physical turns ratio n<sub>T</sub>', '%(nT).3f' % V,
+              ER('nnT'),
+              'n &radic;(1+&lambda;<sub>act</sub>), landing on %(NpSet)d:'
+              '%(Ns)d' % V]],
+            widths=[CW * 0.055, CW * 0.22, CW * 0.165, CW * 0.06,
+                    CW * 0.50],
+            key='chain'))
+    add(p('Six of those rows do the real work, and they are worth seeing '
+          'opened out. Each one is the equation named beside it, with this '
+          'design&rsquo;s numbers put in:'))
+    ext(bullets([
+        '<b>Row 5, the turns ratio.</b> Equation&nbsp;%(e)s is inverted: '
+        'n&nbsp;=&nbsp;n<sub>T</sub>/&radic;(1+&lambda;<sub>act</sub>) '
+        '&nbsp;=&nbsp; %(nT).3f/&radic;(1+%(lam).3f) &nbsp;=&nbsp; '
+        '%(nT).3f/%(rt).4f &nbsp;=&nbsp; <b>%(n).3f</b>. The wound ratio is '
+        'the input here, not the output, because %(NpSet)d:%(Ns)d is what can '
+        'be built.' % dict(V, e=ER('nnT'), rt=(1 + V['lam']) ** 0.5),
+        '<b>Row 7, the gain the tank is asked for.</b> Equation&nbsp;%(e)s '
+        'at &theta;&nbsp;=&nbsp;90&deg;: M&nbsp;=&nbsp;2&thinsp;n&thinsp;'
+        'V<sub>o,eff</sub>/(&radic;2&thinsp;V<sub>ac,eq</sub>) &nbsp;=&nbsp; '
+        '2&times;%(n).3f&times;%(Vout).1f / (1.4142&times;%(Veqlo).2f) '
+        '&nbsp;=&nbsp; %(num).1f/%(den).1f &nbsp;=&nbsp; <b>%(M).4f</b>.'
+        % dict(V, e=ER('Mreq'), num=2 * V['n'] * V['Vout'],
+               den=2 ** 0.5 * V['Veqlo'], M=A.SH['M.HBmin']),
+        '<b>Row 9, the load the tank sees.</b> Equation&nbsp;%(e)s: '
+        'R<sub>ac</sub>&nbsp;=&nbsp;(4/&pi;&sup2;)&thinsp;n&sup2;&thinsp;'
+        'V<sub>o,eff</sub>&sup2;/P<sub>in,LLC</sub> &nbsp;=&nbsp; '
+        '0.4053&times;%(n2).2f&times;%(Vo2).0f / %(PL).1f &nbsp;=&nbsp; '
+        '<b>%(Rac).2f&nbsp;&Omega;</b>. Note the 4, not the textbook 8: '
+        'P<sub>in,LLC</sub> is the line-peak power.'
+        % dict(V, e=ER('Rac'), n2=V['n'] ** 2, Vo2=V['Vout'] ** 2,
+               PL=A.SH['P.in_LLC']),
+        '<b>Row 12, the resonant capacitor.</b> The design impedance and the '
+        'target f<sub>r</sub> give it through equation&nbsp;%(e)s rearranged: '
+        'C<sub>r</sub>&nbsp;=&nbsp;1/(2&pi;&thinsp;f<sub>r</sub>&thinsp;'
+        'R<sub>ac</sub>Q<sub>ZVS</sub>) &nbsp;=&nbsp; '
+        '1/(2&pi;&times;%(frt)s&nbsp;kHz&times;%(Z0).2f&nbsp;&Omega;) &nbsp;=&nbsp; '
+        '%(Crc).2f&nbsp;nF, taken to <b>%(Cr).0f&nbsp;nF</b>.'
+        % dict(V, e=ER('fr'), frt='%.0f' % V['frt']),
+        '<b>Row 13, the resonant inductor.</b> Same equation, now solved for '
+        'L with the <i>selected</i> C<sub>r</sub>: L<sub>r</sub>&nbsp;=&nbsp;'
+        '1/((2&pi;f<sub>r</sub>)&sup2;C<sub>r</sub>) &nbsp;=&nbsp; '
+        '1/((2&pi;&times;%(frt)s&nbsp;kHz)&sup2;&times;%(Cr).0f&nbsp;nF) &nbsp;=&nbsp; '
+        '%(Lrc).2f&nbsp;&micro;H, taken to '
+        '<b>%(Lr).0f&nbsp;&micro;H</b>. This is why L<sub>r</sub> is not '
+        'R<sub>ac</sub>Q<sub>ZVS</sub>/2&pi;f<sub>r</sub>: C<sub>r</sub> '
+        'moved first.' % dict(V, e=ER('fr'), frt='%.0f' % V['frt']),
+        '<b>Row 18, the quality factor the tank actually runs at.</b> '
+        'Z<sub>0</sub>&nbsp;=&nbsp;&radic;(L<sub>r</sub>/C<sub>r</sub>) '
+        '&nbsp;=&nbsp; &radic;(%(Lr).0f&nbsp;&micro;H / %(Cr).0f&nbsp;nF) &nbsp;=&nbsp; '
+        '%(Z0s).2f&nbsp;&Omega;, and '
+        'Q<sub>pk</sub>&nbsp;=&nbsp;Z<sub>0</sub>/R<sub>ac</sub> '
+        '&nbsp;=&nbsp; %(Z0s).2f/%(Rac).2f &nbsp;=&nbsp; <b>%(Qpk).3f</b>, '
+        'against the %(QZVS).3f cap of row 10.' % dict(V, e=ER('M')),
+    ]))
+    add(note('<b>Steps 12, 15 and 18 are where the judgement is.</b> '
+             'Everything else in that table is arithmetic that any two '
+             'engineers would reproduce identically. C<sub>r</sub> was taken '
+             'to %(Cr).0f&nbsp;nF against a calculated %(Crc).1f&nbsp;nF and '
+             'L<sub>m</sub> to %(Lm).0f&nbsp;&micro;H against a calculated '
+             '%(Lmc).1f&nbsp;&micro;H, and the two together are why the tank '
+             'runs at Q<sub>pk</sub> = %(Qpk).3f instead of at the '
+             '%(QZVS).3f cap. That gap is most of the ZVS margin this design '
+             'has.' % V))
 
-    add(note('<b>The same expression, evaluated somewhere else.</b> Every '
-             'LLC text writes R<sub>ac</sub> = '
-             '(8/&pi;&sup2;)n&sup2;V<sub>o</sub>&sup2;/P, and so does this '
-             'one. A two-stage converter has only one output power, so that '
-             'is the end of it. Here the drawn power is '
-             'p(&theta;) = 2P&thinsp;sin&sup2;&thinsp;&theta;, so '
-             'R<sub>ac</sub> varies over the line cycle as well, and a '
-             'single number has to be pinned to a chosen instant. This note '
-             'pins it to the <b>line peak</b>, where p = 2P and the tank is '
-             'most heavily loaded &mdash; putting 2P in the denominator of '
-             'the same expression is what turns the 8 into a 4. <b>It is not '
-             'a different formula and it has nothing to do with half bridge '
-             'against full bridge</b>; the bridge factor lives in the '
-             'equivalent input voltage, not in the load. Q then means the '
-             'quality factor at the line peak, and every other phase scales '
-             'from it as Q(&theta;) = Q<sub>pk</sub>sin&sup2;&thinsp;&theta;. '
-             'Taking the two-stage number across instead understates the '
-             'loading by two, and every tank value that follows is wrong.'))
-
-    add(h2('ZVS verification'))
-    add(p('The closed-form ZVS estimate found in most design guides is a '
-          'fitted approximation, and it is evaluated at the design '
-          'Q<sub>ZVS</sub> rather than at the Q the converter actually runs '
-          'at. Measured against a full sweep it can err in <b>either</b> '
-          'direction &mdash; on this tank it reads %(TzcCF).0f&nbsp;ns against '
-          'the swept %(Tzc).0f&nbsp;ns, so it understates the margin by '
-          '%(TzcCFmag).0f&nbsp;%%, while on another tank it overstates by '
-          'about 23&nbsp;%%. Optimistic is the dangerous direction, because it '
-          'reports ZVS margin that is not there.'
-          % dict(V, TzcCFmag=abs(V['TzcCFpc']))))
-    add(note('<b>And it has to be told which &lambda; to use.</b> The shortcut '
-             'is written with a bare &lambda;, and it means the <i>design</i> '
-             '&lambda; &mdash; the largest of the four candidates, '
-             '%(lamreq).3f here &mdash; together with the design '
-             'Q<sub>ZVS</sub>. Read the same expression with '
-             '&lambda;<sub>act</sub>&nbsp;=&nbsp;%(lam).3f, which is what the '
-             'symbol means everywhere after the tank is chosen, and the phase '
-             'comes out <b>negative</b> (%(TzcCFact).0f&nbsp;ns) &mdash; a '
-             'capacitive answer for a tank that is comfortably inductive. The '
-             'sweep below carries no such ambiguity: it uses '
-             '&lambda;<sub>act</sub> and the Q of the moment, which is what '
-             'the hardware has.'
-             % dict(V, lamreq=A.SH['λ'])))
-    add(p('The reliable procedure is to sweep &theta;, input voltage and load '
-          'with the <b>selected</b> tank and take the minimum. The result for '
-          'this design is given in Table&nbsp;%s.' % TR('zvs')))
+    # ------------------------------------------------ transformer as built
     add(tbl('T<sub>ZC</sub> [ns] over the operating space, selected tank. The '
             'dead time is %(tD).0f ns.' % V,
             _zvs_grid(A),
             widths=[CW * 0.16] + [CW * 0.168] * 5, key='zvs',
             align={1: 'CENTER', 2: 'CENTER', 3: 'CENTER', 4: 'CENTER',
                    5: 'CENTER'}))
+    add(h2('ZVS over the whole operating space'))
+    add(p('The closed form of Section&nbsp;' + SR('ZVS verification') + ' reads %(TzcCF).0f&nbsp;ns on this tank against a swept %(Tzc).0f&nbsp;ns, so it understates the margin by %(mag).0f&nbsp;%%; on another tank in the same family it overstates by about 23&nbsp;%%. Read with &lambda;<sub>act</sub>&nbsp;=&nbsp;%(lam).3f instead of the design &lambda;&nbsp;=&nbsp;%(lamreq).3f it returns %(TzcCFact).0f&nbsp;ns &mdash; capacitive, for a tank that is comfortably inductive. So the sweep is what this design is held to.'
+          % dict(V, mag=abs(V['TzcCFpc']), lamreq=A.SH['λ'])))
     _z = dict(V, **ZVS_WORST)
     if ZVS_WORST['same']:
         add(p('The worst point in that sweep is full load at the low '
@@ -1326,19 +1979,13 @@ def build(A):
                  'that is not there</b>, which is the same trap as trusting '
                  'the closed form.'))
 
-    add(h2('Which side of resonance the converter runs on'))
-    add(p('Below f<sub>r</sub> the secondary current is a truncated sine with '
-          'a dead interval and the conduction ratio d = '
-          'f<sub>sw</sub>/f<sub>r</sub> is less than one; above f<sub>r</sub> '
-          'the current is continuous and d clamps at one. The rms figures '
-          'that ratings and losses are built on carry d, so this is not a '
-          'stylistic distinction.'))
-    add(p('<b>Which side the converter lives on is not a separate choice. The '
-          'turns ratio decides it.</b> The demand is M<sub>req</sub> = '
-          '2nV<sub>o,eff</sub>/(&radic;2&nbsp;V<sub>eq</sub>), so a larger n '
-          'asks for more gain, and more gain means further below resonance. '
-          'Two candidate transformers on the same tank can end up on opposite '
-          'sides of f<sub>r</sub> at the same mains voltage.'))
+    add(h2('Which side of resonance this design runs on'))
+    add(p('Section&nbsp;' + SR('Which side of resonance the converter runs on') + ' says the turns ratio decides this. With '
+          'n<sub>T</sub>&nbsp;=&nbsp;%(nT).2f the answer comes out as '
+          'below: the tank spends part of every line cycle above f<sub>r</sub> '
+          'at all but the lowest line conditions, so the secondary loses '
+          'zero-current turn-off for part of the cycle and the rectifier '
+          'body diode and SR dead time have to be looked at.' % V))
     add(tbl('Peak f<sub>sw</sub> over the half cycle against f<sub>r</sub> = '
             '%(fr).1f kHz. %(nAbove)d of the seven line conditions cross into '
             'above-resonance operation for part of the cycle.' % V,
@@ -1348,29 +1995,12 @@ def build(A):
                 '<b>above</b>' if ab else 'below']
                for nm, veq, pk, ab in V['fswPk']],
             widths=[CW * 0.30, CW * 0.18, CW * 0.22, CW * 0.30]))
-    add(note('Worth settling before the transformer is ordered. Comparing '
-             'candidate turns ratios on gain margin alone hides it, and the '
-             'two sides do not stress the secondary the same way: below '
-             'resonance the rectifiers turn off at zero current, above it '
-             'they do not.'))
-
-    add(h2('Currents over the line cycle'))
-    add(p('Ratings come from the worst switching cycle; losses come from the '
-          'line-cycle rms. They are different numbers and must not be '
-          'confused. Two further rules apply to a single-stage converter in '
-          'particular.'))
-    ext(bullets([
-        'The <b>composite</b> tank current is what the primary devices and '
-        'the sense resistor see. It is the sum of the reflected load current '
-        'and the magnetising current, and its peak is neither the sum nor the '
-        'larger of the two peaks, because they occur at different instants.',
-        'Below resonance the secondary conducts for only '
-        'd&nbsp;=&nbsp;f<sub>sw</sub>/f<sub>r</sub> of each half period. '
-        'Omitting that conduction ratio over-estimates the rms by about '
-        '12&nbsp;% at the worst point in this design.']))
-    add(fig('an_tank_current',
-            'The composite tank current, and why its peak is not the sum of '
-            'the two component peaks.', width=CW * 0.74))
+    add(h2('The currents this design has to carry'))
+    add(p('Ratings come from the worst switching cycle and losses from the '
+          'line-cycle rms, so both are listed and they are different numbers. '
+          'The row to watch is the composite tank peak: it is what the '
+          'primary devices and R<sub>CS</sub> actually see, and it is neither '
+          'the sum of the two component peaks nor the larger of them.'))
     add(tbl('Currents at the low equivalent corner, full load, '
             '&theta; = 90&deg;.',
             [['Quantity', 'Value', 'Where it is used'],
@@ -1394,596 +2024,20 @@ def build(A):
               'output bank ripple current']],
             widths=[CW * 0.36, CW * 0.20, CW * 0.44]))
 
-    add(h2('The transformer'))
-    add(p('The tank has fixed L<sub>r</sub>, L<sub>m</sub> and a ratio; the '
-          'transformer has turns, an open-circuit inductance and a leakage. '
-          'Getting from one to the other is where most of the errors in a '
-          'resonant design are made, because <b>two different turns ratios '
-          'and two different inductances carry almost the same names</b>.'))
-
-    add(h2('Two ratios, two inductances'))
-    add(p('When all of the leakage is referred to the primary, the tank sees '
-          'an ideal transformer of ratio n, a series L<sub>r</sub> and a '
-          'shunt L<sub>m</sub>. That n is <b>not</b> the wound ratio. With k '
-          'the coupling coefficient,'))
-    add(eq(r'n \;=\; k\,n_{T},\qquad k \;=\; \sqrt{\frac{L_{m}}{L_{m}+L_{r}}}'
-           r'\;=\;\frac{1}{\sqrt{1+\lambda}}'))
-    add(p('so n<sub>T</sub> = n &radic;(1+&lambda;). At &lambda; &asymp; 0.5 '
-          'the two differ by more than 20&nbsp;%%, which is far more than any '
-          'gain margin. Here n = %(n).3f while the winding is '
-          'n<sub>T</sub> = %(nT).1f.' % V))
-    add(p('The same split appears in the inductances. The tank model uses '
-          'L<sub>r</sub> and L<sub>m</sub>; the physical transformer is '
-          'described by a magnetising inductance L<sub>&mu;</sub> with '
-          'leakage on both sides:'))
-    add(eq(r'L_{\mu}=\sqrt{L_{m}\,(L_{m}+L_{r})}\,,\qquad '
-           r'L_{L1}=L_{m}+L_{r}-L_{\mu}\,,\qquad '
-           r'L_{L2}=\frac{L_{L1}}{n_{T}^{2}}'))
-    add(fig('an_ref_integrated',
-            'The same transformer drawn both ways. Above, the leakage split '
-            'between the two sides; below, all of it referred to the primary '
-            'so that the tank sees L<sub>r</sub>, a shunt inductance and an '
-            'ideal transformer whose ratio is no longer the wound one. '
-            'The source calls the total primary inductance L<sub>p</sub>, '
-            'which is L<sub>open</sub> here, and its M<sub>V</sub> is '
-            '&radic;(1+&lambda;) &mdash; so n<sub>T</sub>/M<sub>V</sub> is '
-            'n. (ON Semiconductor AN-4151; the wound ratio relabelled '
-            'n<sub>T</sub> to match this note.)', width=CW * 0.62))
-    add(note('That three-element form assumes the leakage splits evenly '
-             'between the two sides. The real split is set by the winding '
-             'arrangement rather than by the design, and it does not matter: '
-             'the tank sees only the two quantities a meter can read.'))
-
-    add(h2('What the transformer specification must say'))
-    add(p('Only two inductances are measurable at terminals, and they are '
-          'exactly the two the tank needs:'))
-    add(eq(r'L_{open}=L_{\mu}+L_{L1}=L_{m}+L_{r},\qquad '
-           r'L_{short}=L_{L1}+\frac{L_{\mu}\,n_{T}^{2}L_{L2}}'
-           r'{L_{\mu}+n_{T}^{2}L_{L2}}=L_{r}'))
-    add(p('L<sub>open</sub> is read at the primary with every other winding '
-          'open, L<sub>short</sub> with the secondary shorted. <b>Specify '
-          'those two and the turns, never L<sub>&mu;</sub></b> &mdash; no '
-          'terminal pair exposes L<sub>&mu;</sub>, so a supplier cannot test '
-          'it, and a part that meets it can still miss the tank. State the '
-          'turns ratio in words as well: at one or two secondary turns the '
-          'self-inductance of that winding is dominated by the loop of the '
-          'lead-out, so &radic;(L<sub>1</sub>/L<sub>2</sub>) does not recover '
-          'the ratio.'))
-
-    add(h2('Peak flux is set by the secondary, not the primary'))
-    add(p('Below resonance the secondary conducts for a resonant half period '
-          'and the output voltage stands across the secondary winding for all '
-          'of it. Above resonance it conducts for a shorter switching half '
-          'period, so f<sub>r</sub> is the worst case everywhere on the line '
-          'cycle:'))
-    add(eq(r'B_{pk}=\frac{V_{out,eff}}{4\,f_{r}\,N_{s}\,A_{e}}'
-           r'\qquad\Longrightarrow\qquad '
-           r'A_{e}\;\geq\;\frac{V_{out,eff}}{4\,f_{r}\,N_{s}\,B_{max}}'))
-    add(p('<b>N<sub>p</sub> does not appear.</b> Adding primary turns does '
-          'not reduce the flux; only adding secondary turns does. That is an '
-          'uncomfortable result for a low-voltage, high-current output, where '
-          'the secondary wants to be a single turn. With '
-          'B<sub>max</sub> = 0.20&nbsp;T this design needs '
-          'A<sub>e</sub> &ge; %(Aereq).0f&nbsp;mm&sup2; with %(Ns)d '
-          'secondary turns. Halving the secondary turns doubles it, which is '
-          'why a single-turn secondary is expensive in core area even though '
-          'it is the obvious choice for the current.' % V))
-    add(note('Computing the same flux from an inductance is correct only with '
-             'the <b>physical</b> L<sub>&mu;</sub>: B<sub>pk</sub> = '
-             'L<sub>&mu;</sub> i<sub>&mu;,pk</sub> / (N<sub>p</sub> '
-             'A<sub>e</sub>) reduces exactly to the expression above. Using '
-             'the tank model L<sub>m</sub> with the real N<sub>p</sub> '
-             'understates the flux by &radic;(1+&lambda;), '
-             '%(pc).0f&nbsp;%% here, because the L<sub>m</sub> branch carries '
-             'n V<sub>out</sub> while the winding reflects '
-             'n<sub>T</sub> V<sub>out</sub>.'
-             % dict(pc=100 * ((1 + V['lam']) ** 0.5 - 1))))
-
-    add(h2('The saturation test is not the peak winding current'))
-    add(p('A DC-overlap test leaves every other winding open, so none of the '
-          'primary ampere-turns is cancelled by the secondary and the same '
-          'current makes far more flux than it does in operation. Ask for the '
-          'current that reproduces the operating flux in that test:'))
-    add(eq(r'I_{eq}=\frac{B_{pk}\,N_{p}\,A_{e}}{L_{open}}'))
-    add(p('Handing the supplier the peak tank current instead asks for a flux '
-          'density no ferrite reaches, and the answer comes back as an '
-          'oversized core or as a query. Here I<sub>eq</sub> is '
-          '%(Isateq).1f&nbsp;A against a tank peak of %(Icomp).1f&nbsp;A, and '
-          'the specification carries %(Isatspec).0f&nbsp;A.' % V))
-
-    add(h2('The specification, and what it is not allowed to leave out'))
-    add(tbl('Transformer specification for the worked design.',
-            [['Item', 'Value', 'Condition'],
-             ['Turns ratio',
-              'N<sub>p</sub> : N<sub>s</sub> = %(NpSet)d : %(Ns)d' % V,
-              'two secondary windings, centre tap outside the part'],
-             ['Open-circuit inductance',
-              '%(Lopen).1f &micro;H, &minus;%(Ldrop).1f %% at worst'
-              % V,
-              'primary, all other windings open'],
-             ['Leakage inductance', '%(Lshort).1f &micro;H &plusmn;10 %%' % V,
-              'primary, secondary shorted'],
-             ['DC overlap', '&ge; 90 %% of initial inductance' % V,
-              'test current %(Isatspec).0f A' % V],
-             ['Primary current', '%(Iprilc).1f A rms / %(Icomp).1f A pk' % V,
-              'line-cycle rms, composite peak'],
-             ['Secondary current, each winding',
-              '%(Idio).1f A rms / %(Isec).0f A pk' % V, 'line-cycle rms'],
-             ['Core area', 'A<sub>e</sub> &ge; %(Aereq).0f mm&sup2;' % V,
-              'holds B<sub>pk</sub> at or below 0.20 T'],
-             ['Switching frequency', '%(fswA).0f to %(fswB).0f kHz' % V,
-              'at full load']],
-            widths=[CW * 0.28, CW * 0.34, CW * 0.38]))
-    add(note('<b>The open-circuit tolerance is not a round number, and it '
-             'is not free to be one.</b> f<sub>o</sub> goes as '
-             '1/&radic;L<sub>open</sub>, so a low part raises the frequency '
-             'floor towards the oscillator clamp. This tank tolerates a '
-             '%(Ldrop).1f&nbsp;%% fall and no more; a specification written '
-             'as &plusmn;10&nbsp;%% would let a compliant part hard switch. '
-             'Section&nbsp;' % V
-             + SR('Controller network') + ' derives the figure and gives the '
-             'two ways out. Ask the supplier for the asymmetric limit, or '
-             'buy the room in the oscillator first and then ask for '
-             '&plusmn;10&nbsp;%.'))
-    add(note('Core, bobbin, wire and winding order are the supplier choice, '
-             'and insulation and creepage follow the applicable safety '
-             'standard. '
-             'Nothing above constrains them; everything above is measurable '
-             'at the terminals.'))
-
-    add(h2('If one transformer is not practical'))
-    add(p('At a low output voltage and high current the secondary is a single '
-          'heavy turn and the core comes out large, which can lose against '
-          'a height or footprint limit. The transformer can then be built as '
-          'N<sub>x</sub> identical units with <b>primaries in series and '
-          'secondaries in parallel</b>. Series primaries carry the same '
-          'current, so the paralleled secondaries share automatically without '
-          'ballasting.'))
-    ext(bullets([
-        'Open-circuit and leakage inductance divide by N<sub>x</sub>, and so '
-        'do the secondary currents. <b>The primary current does not divide.</b>',
-        'The DC-overlap test current does not change: flux and primary '
-        'ampere-turns scale together.',
-        'The wound ratio of the assembly becomes '
-        'N<sub>x</sub>N<sub>p</sub>/N<sub>s</sub>, so <b>the achievable '
-        'ratios are quantised in steps of N<sub>x</sub>/N<sub>s</sub></b>. '
-        'That has to be honoured when the tank is chosen, not discovered '
-        'afterwards.']))
-
-    add(h2('The input capacitor'))
-    add(p('With no bulk capacitor, C<sub>in</sub> is a film capacitor that '
-          'absorbs switching ripple and nothing else. Making it large is not '
-          'conservative: it holds charge across the zero crossing and '
-          'distorts the line current, so it is a THD term, not a filter '
-          'term.'))
-    add(eq(r'C_{in}\;=\;3\,\frac{\mathrm{nF}}{\mathrm{W}}\times P_{in}'))
-    add(p('That is a <b>lower</b> bound, so round up to the next standard '
-          'value &mdash; %(Cin).0f&nbsp;nF here &mdash; and rate it for the '
-          'full line voltage.' % V))
-
-    add(h2('The output capacitor bank'))
-    add(p('Two conditions apply, and the larger wins. The ripple condition '
-          'is'))
-    add(eq(r'C_{out}\;\geq\;\frac{P_{out}}'
-           r'{2\pi f_{l,min}\,\Delta v\,V_{out}^{2}}'))
-    add(p('and the hold-up condition is'))
-    add(eq(r'C_{out}\;\geq\;\frac{2P_{out}T_{hold}}'
-           r'{\left(V_{out}-\frac{1}{2}\Delta v_{pp}\right)^{2}'
-           r'-V_{o,min}^{2}}'))
-    add(note('<b>Hold-up starts at the worst line phase, and that belongs in '
-             'the sizing.</b> If the mains disappears at the trough of the '
-             '2f<sub>l</sub> ripple the bank is already '
-             '%(dVo).2f/2&nbsp;V below nominal when it starts, which is why '
-             'V<sub>out</sub> above carries the &minus;&frac12;&Delta;v '
-             'term. The difference is not small: from V<sub>out</sub> the '
-             'selected bank would ride out %(tholdVo).2f&nbsp;ms, from the '
-             'trough it rides out %(thold).2f&nbsp;ms. &Delta;v<sub>pp</sub> '
-             'above is the ripple the bank actually produces '
-             '(%(dVo).2f&nbsp;V), not the %(dv).0f&nbsp;%% allowed &mdash; '
-             'which makes the condition mildly circular and is why it is '
-             'evaluated once the bank is chosen.' % V))
-    add(p('Here they give %(Crip).1f&nbsp;mF and %(Chold).1f&nbsp;mF, so '
-          '<b>ripple wins</b> &mdash; but only by %(ripK).2f times, which is '
-          'close enough that the choice is worth re-checking whenever the '
-          'specification moves. Which one wins is a question about the '
-          'specification and not about the output voltage: both conditions '
-          'scale as 1/V<sub>out</sub>&sup2;, so V<sub>out</sub> cancels when '
-          'they are divided. Writing k&nbsp;=&nbsp;V<sub>o,min</sub>/'
-          'V<sub>out</sub>, ripple dominates when' % V))
-    add(eq(r'\left(1-\frac{\Delta v}{2}\right)^{2}-k^{2}'
-           r'\;>\;4\pi f_{l}\,\Delta v\,T_{hold}'))
-    add(p('which here is %(ripLHS).3f against %(ripRHS).3f, agreeing with '
-          'the two capacitances above. This screening form uses the '
-          '<i>allowed</i> &Delta;v rather than the achieved ripple, because '
-          'it is asked before the bank exists. Loosening &Delta;v to '
-          '10&nbsp;%% would hand the decision to hold-up instead.' % V))
-    add(fig('f19_cout_criterion',
-            'Both sizing conditions fall as 1/V<sub>out</sub>&sup2;, so only '
-            'the specification separates them. Right: hold-up asks for the '
-            'same energy either side of the boost stage &mdash; what changes '
-            'is the capacitance that holds it.'))
-    add(tbl('The selected output bank.',
-            [['Item', 'Value', 'Note'],
-             ['Capacitor', '%(Cout1).0f &micro;F' % V,
-              'electrolytic, rated for the ripple current'],
-             ['Number in parallel', '%(nC).0f' % V,
-              'set by capacitance, not by current'],
-             ['Bank', '<b>%(Cout).1f mF</b>' % V, '&mdash;'],
-             ['Ripple current, bank', '%(ICout).2f A rms' % V,
-              'includes the 2f<sub>l</sub> component'],
-             ['Ripple current, each', '%(Icout1).2f A rms' % V,
-              'comfortable'],
-             ['Achieved ripple', '%(dVo).2f V  (%(dVopc).2f %%)' % V,
-              'against %(dv).0f %% allowed' % V],
-             ['Achieved hold-up', '%(thold).2f ms' % V,
-              'against %(Thold).0f ms required, worst phase' % V],
-             ['High-frequency bypass', '%(Ccer).0f &micro;F ceramic' % V,
-              'R&amp;N %(RN).1f mV' % V]],
-            widths=[CW * 0.30, CW * 0.24, CW * 0.46]))
-    ext(bullets([
-        'Include the <b>2f<sub>l</sub> component</b> in the ripple current. '
-        'Taking only the switching-frequency part gives '
-        '%(ICouthf).1f&nbsp;A against the true %(ICout).1f&nbsp;A: the '
-        '2f<sub>l</sub> envelope carries %(ICout2f).1f&nbsp;A of its own, '
-        'and the two are orthogonal.' % V,
-        'With a centre-tapped secondary, judge the capacitor ripple current '
-        'at the <b>output node</b>, not per winding.',
-        'Use the ESR at the <b>switching frequency</b>. An electrolytic '
-        'tan&thinsp;&delta; is quoted at 120&nbsp;Hz and is five to ten times '
-        'larger there.']))
-    add(note('<b>A risk this architecture creates.</b> The controller '
-             'start-up window is finite, and a %(Cout).1f&nbsp;mF bank is a '
-             'far heavier start-up load than the few millifarads a '
-             'conventional design presents. Cold start into the full bank '
-             'should be one of the first things measured on hardware.' % V))
-
-    add(h2('Semiconductor requirements'))
-    add(p('This note states requirements rather than selecting parts, because '
-          'the choice depends on package, thermal design and cost. Four rules '
-          'decide whether the requirement is stated correctly at all.'))
-    ext(bullets([
-        'Rate the primary switches on the <b>composite tank peak</b> '
-        '(%(Icomp).2f&nbsp;A), not on the reflected load current '
-        '(%(Itr).2f&nbsp;A). Using the load component alone under-rates the '
-        'device by about 12&nbsp;%%.' % V,
-        'Divide currents by the number of devices actually in parallel before '
-        'judging stress. Tabulated currents are <b>per switch position</b> on '
-        'the primary and <b>per leg</b> on the secondary; a centre-tapped leg '
-        'carries the whole secondary current, not half of it.',
-        'Compute loss from R<sub>DS(on)</sub> at <b>T<sub>j,max</sub></b>, '
-        'not at 25&nbsp;&deg;C. The datasheet maximum is process spread at '
-        '25&nbsp;&deg;C; temperature is a separate multiplier, roughly 1.8 '
-        'for a 600&nbsp;V superjunction device and 1.9 for a low-voltage '
-        'synchronous rectifier. Using the 25&nbsp;&deg;C value to size a '
-        'heatsink is optimistic by about a factor of two.',
-        'A curve plotted against T<sub>a</sub> may still be read as '
-        'T<sub>j</sub> <b>if it is a pulse test</b> &mdash; the die does not '
-        'self-heat during the pulse. For any non-pulsed curve this is not '
-        'valid.']))
-    add(tbl('Semiconductor requirements for the worked design.',
-            [['Item', 'Requirement'],
-             ['Primary drain-source voltage',
-              '&ge; %(VDS).0f V, so a 600 V class part' % V],
-             ['Primary body diode',
-              'fast recovery: in full bridge the body diode conducts before '
-              'turn-on'],
-             ['Primary R<sub>DS(on)</sub> per device',
-              '&le; %(Rdreq).1f m&Omega; <b>hot</b> to meet the loss budget'
-              % V],
-             ['Primary C<sub>o(tr)</sub>',
-              'small enough that the tank can swing the node inside '
-              '%(tD).0f ns' % V],
-             ['Secondary drain-source voltage',
-              '&ge; %(VDSs).0f V including the centre-tap doubling' % V],
-             ['Secondary rectifier current',
-              '%(Idio).2f A rms per leg, %(Isec).1f A peak' % V],
-             ['Secondary package',
-              'check the lead and clip rating, not only the die']],
-            widths=[CW * 0.36, CW * 0.64]))
-    add(note('<b>An honest limitation of this design.</b> In half-bridge '
-             'morphing the standing device carries %(Iprilc).1f&nbsp;A rms '
-             'continuously and dissipates %(Ploss).2f&nbsp;W, which needs '
-             'R<sub>th(j-a)</sub>&nbsp;&le;&nbsp;%(Rth).1f&nbsp;&deg;C/W. No '
-             'single 600&nbsp;V device meets a 3&nbsp;W budget in that '
-             'position: it would need about 25&nbsp;m&Omega; hot, and the '
-             'best available parts are around 17&nbsp;m&Omega; at '
-             '25&nbsp;&deg;C. The budget miss is a recorded decision, to be '
-             'resolved by thermal measurement on the first prototype, not an '
-             'unnoticed error.' % V))
-
-    add(h2('Controller network'))
-    add(fig('bom_pin_config',
-            'The controller and its passive network. HVSU is fed from the AC '
-            'side of the bridge; the auxiliary winding drives ZCD through a '
-            'divider; R<sub>T</sub> and C<sub>T</sub> set the oscillator '
-            'limits; R<sub>CFG</sub> and R<sub>BM</sub> are read at power-up.',
-            width=CW))
-    add(p('Decide first what the auxiliary winding is for, because it '
-          'changes one of the rules below. In the usual arrangement it does '
-          'two jobs &mdash; it senses the zero crossing and it supplies '
-          'V<sub>CC</sub> &mdash; and the second job caps its turns ratio, '
-          'since the rectified auxiliary voltage at OVP2 must stay under the '
-          'V<sub>CC</sub> rating. That cap is often the binding constraint on '
-          'the winding. Where V<sub>CC</sub> is supplied from elsewhere, as it '
-          'is here, the cap does not exist: the winding senses only, its '
-          'voltage is set by whatever ratio the ZCD divider is designed '
-          'around, and the sole remaining constraint is that the turns come '
-          'out whole. A ratio check carried over from the self-supplied case '
-          'will read as a failure in that arrangement and should be marked '
-          'not applicable rather than satisfied.'))
-    add(p('The values below follow from the design already fixed. The one '
-          'that deserves the most attention is R<sub>T</sub>, because it sets '
-          'the oscillator floor and that floor must stay above '
-          'f<sub>o</sub>.'))
-    add(tbl('Controller network for the worked design.',
-            [['Part', 'Value', 'Result'],
-             ['C<sub>T</sub> / R<sub>T</sub>',
-              '%(CT).0f pF / %(RT).0f k&Omega;' % V,
-              'f<sub>Min</sub> %(fMin).1f kHz, f<sub>Max</sub> %(fMax).1f kHz'
-              % V],
-             ['R<sub>CS</sub>', '%(RCS).1f m&Omega; (%(RCS1).0f m&Omega; '
-              '&times; 5 in parallel)' % V,
-              'OCP1 at %(kOCP).3f &times; the composite peak' % V],
-             ['R<sub>CFG</sub>', '%(RCFG).0f k&Omega;' % V,
-              'V<sub>BO</sub> %(VBO).1f V, morphing enabled' % V],
-             ['R<sub>BM</sub>', '%(RBM).0f k&Omega;' % V,
-              'burst-mode entry point'],
-             ['ZCD divider', '%(RZH).0f k&Omega; / %(RZL).0f k&Omega;' % V,
-              'OVP1 %(OVP1).2f V, OVP2 %(OVP2).2f V' % V],
-             ['C<sub>in</sub>', '%(Cin).0f nF film' % V,
-              'about 3.2 nF/W &mdash; there is no bulk capacitor'],
-             ['Compensation',
-              '%(CFo).0f nF / %(CF).0f nF / %(RF).0f k&Omega; / %(Cfx).2f nF'
-              % V,
-              'f<sub>cross</sub> %(fcross).2f Hz, &Phi;<sub>M</sub> '
-              '%(PM).2f&deg;' % V]],
-            widths=[CW * 0.20, CW * 0.34, CW * 0.46]))
-    add(note('<b>The thinnest margin in this design.</b> f<sub>Min</sub> must '
-             'sit above f<sub>o</sub>, or nothing but the anti-capacitive '
-             'protection stands between the converter and the capacitive '
-             'region. Here it clears by <b>%(kfloor).3f times</b> &mdash; '
-             '%(fMin).1f&nbsp;kHz against %(fo).1f&nbsp;kHz. That margin '
-             'depends on the oscillator idle time, which the draft datasheet '
-             'states inconsistently, so it must be confirmed by measuring '
-             'f<sub>sw</sub>(&theta;) on hardware.' % V))
-    add(p('That ratio is also what the transformer tolerance has to fit '
-          'inside, and this is easy to miss because the two live in different '
-          'documents. Since f<sub>o</sub> = 1/(2&pi;&radic;(L<sub>open</sub>'
-          'C<sub>r</sub>)), a <b>low</b> open-circuit inductance raises '
-          'f<sub>o</sub>. The fall that can be tolerated is'))
-    add(eq(r'\frac{\Delta L}{L}\;=\;1-\frac{1}{k_{floor}^{2}}'))
-    add(p('which is <b>%(Ldrop).1f&nbsp;%%</b> for this tank. A transformer '
-          'specification asking for &plusmn;10&nbsp;%% therefore does '
-          '<b>not</b> fit inside it: at the bottom of that tolerance the '
-          'converter hard switches. Either the tolerance is tightened on the '
-          'low side, or R<sub>T</sub> is reduced to lift f<sub>Min</sub> and '
-          'buy the room. <b>Check this before the transformer is ordered</b>, '
-          'not after.' % V))
-
-    add(h2('Voltage loop and compensation'))
-    add(fig('comp_network_st',
-            'The secondary-side error amplifier and the optocoupler. '
-            'R<sub>I</sub> and R<sub>O</sub> set the regulated output, '
-            'R<sub>f</sub>C<sub>f</sub> and C<sub>fo</sub> shape the '
-            'compensator, and R<sub>P</sub> and R<sub>B</sub> bias the shunt '
-            'regulator and the optocoupler diode.',
-            width=CW * 0.68))
-    add(p('The output is a capacitor fed by a constant-power source, so the '
-          'control-to-output transfer is a <b>pure integrator</b>: '
-          '&minus;90&deg; at every frequency. That makes the loop easy to '
-          'compensate and hard to place, because the crossover is set by a '
-          'constraint that has nothing to do with stability.'))
-    add(p('Any 2f<sub>l</sub> ripple that survives the loop and reaches the '
-          'feedback pin becomes a power command that varies over the line '
-          'cycle, and therefore input current distortion &mdash; mostly third '
-          'harmonic. Raising the crossover reduces output ripple and '
-          '<b>increases</b> distortion. The two constraints pull in opposite '
-          'directions, and the practical answer is in the high teens of '
-          'hertz. This design crosses at <b>%(fcross).2f&nbsp;Hz</b> with '
-          '%(PM).2f&deg; of phase margin and %(D3).2f&nbsp;%% third '
-          'harmonic.' % V))
-    add(p('The compensator is a Type&nbsp;II network placed by the Venable '
-          'K-factor method. With &alpha;<sub>v</sub> the ratio between the '
-          'error-amplifier gain at 2f<sub>l</sub> and the gain the loop needs '
-          'there,'))
-    add(eq(r'K_{v}=\frac{1}{2\alpha_{v}}\left[(1+\alpha_{v}^{2})\tan\Phi_{M}'
-           r'+\sqrt{(1+\alpha_{v}^{2}\tan\Phi_{M})^{2}'
-           r'+4\alpha_{v}^{2}}\;\right]'))
-    add(p('K<sub>v</sub> then places the zero and the pole symmetrically '
-          'about the crossover, which is what makes the phase bump land where '
-          'it is needed:'))
-    add(eq(r'f_{MB}=\frac{1}{2\pi}\sqrt{\frac{G_{o}K_{v}EA_{o}}{\Gamma_{v}}},'
-           r'\qquad f_{p}=K_{v}f_{MB},\qquad f_{z}=\frac{f_{MB}}{K_{v}}'))
-    add(p('Here K<sub>v</sub> = %(Kv).3f, EA<sub>o</sub> = '
-          '%(EAo).1f&nbsp;rad/s and f<sub>MB</sub> = %(fMB).1f&nbsp;Hz, '
-          'giving f<sub>z</sub> = %(fz).2f&nbsp;Hz and f<sub>p</sub> = '
-          '%(fp).1f&nbsp;Hz. A third, high-frequency pole f<sub>px</sub> is '
-          'added at about %(fpx).0f&nbsp;Hz to roll off switching noise.'
-          % V))
-
-    add(h2('Gain margin, and why it needs checking'))
-    add(p('Phase margin alone does not close the stability argument. Above '
-          'f<sub>px</sub> this network has one zero against two poles, so the '
-          'phase heads for &minus;270&deg; and <b>&minus;180&deg; is crossed '
-          'at a finite frequency</b>. That crossing needs no root search '
-          'either: setting the zero and pole phase contributions equal and '
-          'taking the tangent of both sides leaves one square root,'))
-    add(eq(r'f_{180}=\sqrt{\,f_{p}f_{px}-f_{z}(f_{p}+f_{px})\,}'
-           r'\,,\qquad GM=-20\log_{10}|T(f_{180})|'))
-    add(p('<b>A negative radicand is the answer, not an error</b>: it means '
-          'the phase never reaches &minus;180&deg; and the gain margin is '
-          'infinite. Here f<sub>180</sub> = %(f180).0f&nbsp;Hz and '
-          'GM = %(GM).1f&nbsp;dB, against 6&nbsp;dB as a floor and '
-          '10&nbsp;dB as a comfortable target. With a crossover in the tens '
-          'of hertz the margin is usually large in this topology &mdash; '
-          'which is a reason to compute it, not a reason to assume it.'
-          % V))
-
-    add(h2('Feedback ripple against the burst threshold'))
-    add(p('A crossover this low leaves 2f<sub>l</sub> ripple on the feedback '
-          'pin. Because that pin is a power command, the ripple walks the '
-          'commanded power up and down every half line cycle; if it straddles '
-          'the burst-entry threshold the converter chatters in and out of '
-          'burst. The ripple amplitude at the burst point is'))
-    add(eq(r'\Delta V_{FB}\;=\;\frac{P_{in,BM}}{V_{out}}\,'
-           r'\frac{1}{2\pi f_{l}\,C_{out}}\;G_{EA}(2f_{l})'))
-    add(p('which is %(dVFBBM).0f&nbsp;mV here. Lowering R<sub>BM</sub> by '
-          '&Delta;R<sub>BM</sub> = &Delta;V<sub>FB</sub>/(2 &times; '
-          '0.01&nbsp;V/k&Omega;) = %(dRBM).2f&nbsp;k&Omega; moves the burst '
-          'entry point below the ripple. <b>Raising the crossover would '
-          'shrink the ripple but worsen the distortion</b>, so trading it '
-          'against R<sub>BM</sub> is the practical answer rather than '
-          'speeding up the loop.' % V))
-
-    add(fig('an_loop_bode',
-            'Open-loop gain and phase margin of the selected compensation '
-            'network.', width=CW * 0.72))
-    add(note('<b>A loop this slow cannot recover from a large load step.</b> '
-             'The controller&rsquo;s anti-saturation circuit does that '
-             'instead, which is why the optocoupler bias resistor must sit '
-             'inside its permitted window. Checking the window is not '
-             'optional.'))
-
-    # =============================================================== 6
-    add(h1('Design example'))
-    add(p('Everything above is method. This chapter is the one design carried '
-          'all the way through: what the numbers came out as, how the parts '
-          'around the controller are chosen, and what has to be true on the '
-          'bench before any of it is believed. It is written so that it can be '
-          'read on its own once the method is understood.'))
-    add(p('The specification is the one in Section&nbsp;'
-          + SR('Specification and power budget')
-          + ': <b>90 to %(Vacmax).0f&nbsp;Vac in, %(Vout).0f&nbsp;V / '
-            '%(Iout).1f&nbsp;A = %(Pout).1f&nbsp;W out</b>, centre-tapped '
-            'synchronous rectification, no bulk capacitor and no boost '
-            'stage.' % V))
-
-    add(h2('What the design came out as'))
-    add(tbl('Principal values.',
-            [['Block', 'Values'],
-             ['Tank', 'C<sub>r</sub> %(Cr).0f nF, L<sub>r</sub> %(Lr).0f '
-              '&micro;H, L<sub>m</sub> %(Lm).0f &micro;H, '
-              '&lambda; %(lam).2f, f<sub>r</sub> %(fr).1f kHz, '
-              'f<sub>o</sub> %(fo).1f kHz' % V],
-             ['Transformer', 'N<sub>p</sub>:N<sub>s</sub> '
-              '%(NpSet)d:%(Ns)d, n %(n).2f, n<sub>T</sub> %(nT).2f, '
-              'L<sub>open</sub> %(Lopen).1f &micro;H, '
-              'L<sub>short</sub> %(Lshort).1f &micro;H, '
-              'A<sub>e</sub> &ge; %(Aereq).0f mm&sup2; at '
-              'B<sub>pk</sub> 0.20 T' % V],
-             ['Frequency', 'f<sub>sw</sub> %(fswA).1f kHz at the low corner, '
-              '%(fswB).1f kHz at the high corner' % V],
-             ['Output', '%(Cout1).0f &micro;F &times; %(nC).0f = '
-              '%(Cout).1f mF, ripple %(dVo).2f V (%(dVopc).2f %%), '
-              'hold-up %(thold).2f ms' % V],
-             ['Controller', 'R<sub>T</sub> %(RT).0f k&Omega;, '
-              'C<sub>T</sub> %(CT).0f pF, R<sub>CS</sub> %(RCS).1f m&Omega;, '
-              'R<sub>CFG</sub> %(RCFG).0f k&Omega;, '
-              'R<sub>BM</sub> %(RBM).0f k&Omega;' % V],
-             ['Loop', 'f<sub>cross</sub> %(fcross).2f Hz, '
-              '&Phi;<sub>M</sub> %(PM).2f&deg;, '
-              'third harmonic %(D3).2f %%' % V]],
-            widths=[CW * 0.18, CW * 0.82]))
-    add(tbl('Verification margins. Every ratio is defined so that it must '
-            'exceed 1.',
-            [['Check', 'Ratio', 'Comment'],
-             ['ZVS, worst point of the sweep',
-              '%(zk).3f' % dict(V, **ZVS_WORST),
-              '%(zTzc).0f ns against %(tD).0f ns, at %(zLoad).0f %% load'
-              % dict(V, **ZVS_WORST)],
-             ['Oscillator floor above f<sub>o</sub>', '%(kfloor).3f' % V,
-              'thinnest margin in the design'],
-             ['Oscillator ceiling above f<sub>sw,max</sub>',
-              '%(kceil).3f' % V, '&mdash;'],
-             ['Over-current threshold', '%(kOCP).3f' % V,
-              'judged on the composite peak'],
-             ['Hold-up', '%(khold).3f' % V,
-              '%(thold).2f ms against %(Thold).0f ms' % V],
-             ['Secondary loss budget', '%(kPSR).3f' % V,
-              'nearly exhausted'],
-             ['Primary loss budget', '<b>%(kPloss).3f</b>' % V,
-              '<b>not met</b> &mdash; accepted, see Section '
-              + SR('Semiconductor requirements')]],
-            widths=[CW * 0.36, CW * 0.14, CW * 0.50]))
-
-    # ------------------------------------------------ the chain, step by step
-    add(h2('Following the numbers through'))
-    add(p('The table above is the destination. This is the road: every '
-          'quantity in the order it was actually computed, with what it was '
-          'computed from. Read down the &ldquo;from&rdquo; column and it is '
-          'a chain &mdash; nothing in it appears before the things it needs, '
-          'which is the whole reason the design procedure is in that order.'))
-    add(tbl('The design, step by step. Every value is recomputed from the '
-            'reference implementation; none is transcribed.',
-            [['#', 'Quantity', 'Value', 'From'],
-             ['1', 'Input power P<sub>in</sub>', '%(Pin).1f W' % V,
-              'P<sub>out</sub> %(Pout).1f W plus the bridge, EMI and LLC '
-              'loss budgets' % V],
-             ['2', 'Power into the tank P<sub>in,LLC</sub>',
-              '%(PinLLC).1f W' % dict(V, PinLLC=A.SH['P.in_LLC']),
-              'P<sub>in</sub> less the bridge and EMI budgets'],
-             ['3', 'Equivalent input, low corner', '%(Veqlo).1f Vac' % V,
-              '245 V<sub>pk</sub> in half bridge, &divide;&radic;2'],
-             ['4', 'Equivalent input, high corner', '%(Veqhi).1f Vac' % V,
-              '235 V<sub>pk</sub> in full bridge, &times;2&divide;&radic;2'],
-             ['5', 'Turns ratio n', '%(n).3f' % V,
-              'chosen with L<sub>m</sub> so that n<sub>T</sub> lands on a '
-              'windable ratio &mdash; the plain calculation gives '
-              '%(ncalc).3f' % dict(V, ncalc=A.SH['n.calc'])],
-             ['6', 'Reflected voltage', '%(Vrefl).1f V' % V,
-              'n V<sub>o,eff</sub>'],
-             ['7', 'Gain demanded at the low corner',
-              '%(Mhb).4f' % dict(V, Mhb=A.SH['M.HBmin']),
-              '2 n V<sub>o,eff</sub> / (&radic;2 &times; %(Veqlo).1f)' % V],
-             ['8', 'Gain demanded at the high corner',
-              '%(Mfb).4f' % dict(V, Mfb=A.SH['M.FBthr']),
-              'the same expression at %(Veqhi).1f Vac' % V],
-             ['9', 'AC load resistance R<sub>ac</sub>',
-              '%(Rac).2f &Omega;' % V,
-              '(4/&pi;&sup2;) n&sup2; V<sub>o,eff</sub>&sup2; / '
-              'P<sub>in,LLC</sub> &mdash; the 4 is the line peak'],
-             ['10', 'Quality-factor cap Q<sub>ZVS</sub>',
-              '%(QZVS).4f' % V,
-              'the smaller of the gain and ZVS limits at the low corner'],
-             ['11', 'Design impedance', '%(Z0).2f &Omega;' % V,
-              'R<sub>ac</sub> Q<sub>ZVS</sub>'],
-             ['12', 'C<sub>r</sub>', '%(Crc).2f &rarr; %(Cr).0f nF' % V,
-              '1/(2&pi; f<sub>r</sub> &times; design impedance), then '
-              'rounded up hard to buy Q margin'],
-             ['13', 'L<sub>r</sub>', '%(Lrc).2f &rarr; %(Lr).0f &micro;H' % V,
-              'whatever pairs with the selected C<sub>r</sub> at '
-              'f<sub>r</sub> = %(frt).0f kHz' % V],
-             ['14', '&lambda; required', '%(lamTD).3f' % V,
-              'the largest of four candidates &mdash; two of them carry '
-              'f<sub>sw,max</sub> in a denominator'],
-             ['15', 'L<sub>m</sub>', '%(Lmc).2f &rarr; %(Lm).0f &micro;H' % V,
-              'not that ratio: chosen with n, knowingly missing the no-load '
-              'condition'],
-             ['16', 'Realised &lambda;<sub>act</sub>', '%(lam).3f' % V,
-              'L<sub>r</sub>/L<sub>m</sub> of the selected parts'],
-             ['17', 'Realised f<sub>r</sub>, f<sub>o</sub>',
-              '%(fr).1f / %(fo).1f kHz' % V,
-              'from C<sub>r</sub>, L<sub>r</sub> and L<sub>r</sub>+'
-              'L<sub>m</sub>'],
-             ['18', 'Realised Q<sub>pk</sub>', '%(Qpk).3f' % V,
-              '&radic;(L<sub>r</sub>/C<sub>r</sub>) = %(Z0s).2f &Omega;, '
-              'divided by R<sub>ac</sub> &mdash; well under the cap' % V],
-             ['19', 'Physical turns ratio n<sub>T</sub>', '%(nT).3f' % V,
-              'n &radic;(1+&lambda;<sub>act</sub>), landing on %(NpSet)d:'
-              '%(Ns)d' % V]],
-            widths=[CW * 0.05, CW * 0.25, CW * 0.19, CW * 0.51],
-            key='chain'))
-    add(note('<b>Steps 12, 15 and 18 are where the judgement is.</b> '
-             'Everything else in that table is arithmetic that any two '
-             'engineers would reproduce identically. C<sub>r</sub> was taken '
-             'to %(Cr).0f&nbsp;nF against a calculated %(Crc).1f&nbsp;nF and '
-             'L<sub>m</sub> to %(Lm).0f&nbsp;&micro;H against a calculated '
-             '%(Lmc).1f&nbsp;&micro;H, and the two together are why the tank '
-             'runs at Q<sub>pk</sub> = %(Qpk).3f instead of at the '
-             '%(QZVS).3f cap. That gap is most of the ZVS margin this design '
-             'has.' % V))
-
-    # ------------------------------------------------ transformer as built
+    add(tbl('Tank: calculated against selected.',
+            [['Quantity', 'Calculated', 'Selected', 'Direction'],
+             ['C<sub>r</sub>', '%(Crc).2f nF' % V, '%(Cr).0f nF' % V,
+              'rounded <b>up</b>'],
+             ['L<sub>r</sub>', '%(Lrc).2f &micro;H' % V,
+              '%(Lr).0f &micro;H' % V, 'rounded down'],
+             ['L<sub>m</sub>', '%(Lmc).2f &micro;H' % V,
+              '%(Lm).0f &micro;H' % V, '<b>not a rounding</b> &mdash; see '
+              'below'],
+             ['&lambda;<sub>act</sub> / f<sub>r</sub> / f<sub>o</sub>',
+              '&mdash;',
+              '%(lam).3f / %(fr).1f kHz / %(fo).1f kHz' % V,
+              'from the selected parts']],
+            widths=[CW * 0.26, CW * 0.20, CW * 0.28, CW * 0.26]))
     add(h2('The transformer, as built'))
     add(p('The tank asks for L<sub>r</sub> = %(Lr).0f&nbsp;&micro;H, '
           'L<sub>m</sub> = %(Lm).0f&nbsp;&micro;H and n<sub>T</sub> = '
@@ -2019,6 +2073,34 @@ def build(A):
               '%(Icomp).1f A tank peak' % V]],
             widths=[CW * 0.24, CW * 0.15, CW * 0.15, CW * 0.46],
             key='trafo-built'))
+    add(p('Three of those rows are computed rather than specified, and this '
+          'is the arithmetic:'))
+    ext(bullets([
+        '<b>Peak flux.</b> Equation&nbsp;%(e)s, at f<sub>r</sub> because that '
+        'is the worst case anywhere on the line cycle: B<sub>pk</sub>'
+        '&nbsp;=&nbsp;V<sub>o,eff</sub>/(4&thinsp;f<sub>r</sub>'
+        '&thinsp;N<sub>s</sub>&thinsp;A<sub>e</sub>) &nbsp;=&nbsp; '
+        '%(Vout).1f&nbsp;V/(4&times;%(fr).2f&nbsp;kHz&times;%(Ns)d&times;'
+        '%(Aemm).1f&nbsp;mm&sup2;) &nbsp;=&nbsp; '
+        '<b>%(Bpk).0f&nbsp;mT</b>. N<sub>p</sub> is absent, which is the '
+        'whole point of that equation.' % dict(V, e=ER('Bpk')),
+        '<b>Core area needed.</b> The same equation solved for A<sub>e</sub> '
+        'at B<sub>max</sub>&nbsp;=&nbsp;0.20&nbsp;T: A<sub>e</sub>'
+        '&nbsp;&ge;&nbsp;%(Vout).1f&nbsp;V/(4&times;%(fr).2f&nbsp;kHz&times;'
+        '%(Ns)d&times;0.20&nbsp;T) &nbsp;=&nbsp; <b>%(Aereq).0f&nbsp;mm&sup2;</b>. '
+        'EE6405 gives %(Aemm).1f, so the margin is %(kAe).3f &mdash; and '
+        'halving N<sub>s</sub> would double the requirement to '
+        '%(Ae2).0f&nbsp;mm&sup2;, which EE6405 does not meet.'
+        % dict(V, Ae2=2 * V['Aereq']),
+        '<b>Saturation test current.</b> Equation&nbsp;%(e)s, per unit: '
+        'I<sub>eq</sub>&nbsp;=&nbsp;B<sub>pk</sub>N<sub>p</sub>A<sub>e</sub>/'
+        'L<sub>open</sub> &nbsp;=&nbsp; %(B).4f&nbsp;T&times;%(Np)d&times;'
+        '%(Aemm).1f&nbsp;mm&sup2; / %(Lu).2f&nbsp;&micro;H '
+        '&nbsp;=&nbsp; %(Isateq).2f&nbsp;A, specified as '
+        '<b>%(Isatspec).1f&nbsp;A</b>. The tank peak is %(Icomp).1f&nbsp;A '
+        'and handing that over instead would ask for nearly twice the flux.'
+        % dict(V, e=ER('Isat'), B=V['Bpk'] / 1e3,
+               Lu=V['Lopen'] / V['nser'])]))
     add(note('<b>The quantisation is a constraint on the tank, not a detail '
              'of the build.</b> With %(nser)d units in series the assembly '
              'ratio is %(nser)d&thinsp;N<sub>p</sub>/N<sub>s</sub>, so the '
@@ -2029,6 +2111,33 @@ def build(A):
              'being chosen.' % dict(V, nTx=V['nT'] + 0.4)))
 
     # ------------------------------------------------ output bank as sized
+    add(p('Reduced to what a supplier can measure at the terminals, that '
+          'becomes the sheet below. Nothing on it is a construction '
+          'instruction, and L<sub>&mu;</sub> is deliberately absent &mdash; '
+          'Section&nbsp;' + SR('What the transformer specification must say')
+          + ' says why.'))
+    add(tbl('Transformer specification for the worked design.',
+            [['Item', 'Value', 'Condition'],
+             ['Turns ratio',
+              'N<sub>p</sub> : N<sub>s</sub> = %(NpSet)d : %(Ns)d' % V,
+              'two secondary windings, centre tap outside the part'],
+             ['Open-circuit inductance',
+              '%(Lopen).1f &micro;H, &minus;%(Ldrop).1f %% at worst'
+              % V,
+              'primary, all other windings open'],
+             ['Leakage inductance', '%(Lshort).1f &micro;H &plusmn;10 %%' % V,
+              'primary, secondary shorted'],
+             ['DC overlap', '&ge; 90 %% of initial inductance' % V,
+              'test current %(Isatspec).0f A' % V],
+             ['Primary current', '%(Iprilc).1f A rms / %(Icomp).1f A pk' % V,
+              'line-cycle rms, composite peak'],
+             ['Secondary current, each winding',
+              '%(Idio).1f A rms / %(Isec).0f A pk' % V, 'line-cycle rms'],
+             ['Core area', 'A<sub>e</sub> &ge; %(Aereq).0f mm&sup2;' % V,
+              'holds B<sub>pk</sub> at or below 0.20 T'],
+             ['Switching frequency', '%(fswA).0f to %(fswB).0f kHz' % V,
+              'at full load']],
+            widths=[CW * 0.28, CW * 0.34, CW * 0.38]))
     add(h2('The output bank, as sized'))
     add(p('Both conditions of Section&nbsp;%(ref)s are evaluated here, on the '
           'specification of the first table in this note.'
@@ -2047,6 +2156,26 @@ def build(A):
               '%(Cout1).0f &micro;F &times; %(nC).0f, the next assembly up '
               'from %(Crip).1f mF' % V]],
             widths=[CW * 0.30, CW * 0.18, CW * 0.52], key='bank-sized'))
+    ext(bullets([
+        '<b>The ripple condition</b>, equation&nbsp;%(e)s: C<sub>out</sub>'
+        '&nbsp;&ge;&nbsp;P<sub>out</sub>/(2&pi;f<sub>l,min</sub>&thinsp;'
+        '&Delta;v&thinsp;V<sub>out</sub>&sup2;) &nbsp;=&nbsp; '
+        '%(Pout).1f&nbsp;W/(2&pi;&times;%(flmin).0f&nbsp;Hz&times;%(dvf).2f&times;'
+        '%(Vo2).0f&nbsp;V&sup2;) &nbsp;=&nbsp; <b>%(Crip).2f&nbsp;mF</b>, with &Delta;v '
+        'as a fraction and V<sub>out</sub> in volts.'
+        % dict(V, e=ER('Crip'), dvf=V['dv'] / 100.0, Vo2=V['Vout'] ** 2),
+        '<b>The hold-up condition</b>, equation&nbsp;%(e)s, starting half a '
+        'ripple low: C<sub>out</sub>&nbsp;&ge;&nbsp;2P<sub>out</sub>'
+        'T<sub>hold</sub>/((V<sub>out</sub>&minus;&frac12;&Delta;v'
+        '<sub>pp</sub>)&sup2;&minus;V<sub>o,min</sub>&sup2;) &nbsp;=&nbsp; '
+        '2&times;%(Pout).1f&nbsp;W&times;%(Th).3f&nbsp;s/(%(Vs).2f&sup2;&minus;'
+        '%(Vomin).0f&sup2;) &nbsp;=&nbsp; <b>%(Chold).2f&nbsp;mF</b>. '
+        'Starting at V<sub>out</sub> instead would have asked for only '
+        '%(Cnaive).2f&nbsp;mF.'
+        % dict(V, e=ER('Chold'), Th=V['Thold'] / 1e3,
+               Vs=V['Vout'] - V['dVo'] / 2,
+               Cnaive=2 * V['Pout'] * V['Thold'] / 1e3
+               / (V['Vout'] ** 2 - V['Vomin'] ** 2) * 1e3)]))
     add(p('The two are only %(ripK).3f apart, which is close enough that the '
           'screening inequality is worth carrying: with k = '
           'V<sub>o,min</sub>/V<sub>out</sub> = %(k).3f it reads %(lhs).3f '
@@ -2130,6 +2259,31 @@ def build(A):
                     + A.SH['P.RCS'] + A.SH['P.Cout'], b=A.SH['P.d_LLC'])))
 
     # ------------------------------------------------ the loop as built
+    add(h2('What the semiconductors have to be'))
+    add(p('Requirements, not part numbers: what to select depends on package, '
+          'thermal design and cost, and the four rules of Section&nbsp;'
+          + SR('Semiconductor requirements') + ' decide whether these are '
+          'stated correctly in the first place.'))
+    add(tbl('Semiconductor requirements for the worked design.',
+            [['Item', 'Requirement'],
+             ['Primary drain-source voltage',
+              '&ge; %(VDS).0f V, so a 600 V class part' % V],
+             ['Primary body diode',
+              'fast recovery: in full bridge the body diode conducts before '
+              'turn-on'],
+             ['Primary R<sub>DS(on)</sub> per device',
+              '&le; %(Rdreq).1f m&Omega; <b>hot</b> to meet the loss budget'
+              % V],
+             ['Primary C<sub>o(tr)</sub>',
+              'small enough that the tank can swing the node inside '
+              '%(tD).0f ns' % V],
+             ['Secondary drain-source voltage',
+              '&ge; %(VDSs).0f V including the centre-tap doubling' % V],
+             ['Secondary rectifier current',
+              '%(Idio).2f A rms per leg, %(Isec).1f A peak' % V],
+             ['Secondary package',
+              'check the lead and clip rating, not only the die']],
+            widths=[CW * 0.36, CW * 0.64]))
     add(h2('The voltage loop, as built'))
     add(p('Section&nbsp;%(ref)s gives the method. These are the numbers it '
           'produces on this converter, in the order they are found.'
@@ -2182,12 +2336,33 @@ def build(A):
             widths=[CW * 0.36, CW * 0.24, CW * 0.40], key='loop-result'))
 
     # ------------------------------------------------ the controller network
-    add(h2('The parts around the controller, one at a time'))
-    add(p('Section&nbsp;' + SR('Controller network') + ' listed these as a '
-          'table of results. This is where each one comes from. Five pins '
-          'carry a passive part that has to be sized, and every one of them '
-          'is sized against something already fixed &mdash; so the order '
-          'below is the order they have to be done in.'))
+    add(h2('The parts around the controller'))
+    add(p('These are the results. The sections after this one derive each '
+          'value in the order it has to be done, because every one of them '
+          'is sized against something already fixed.'))
+    add(tbl('Controller network for the worked design.',
+            [['Part', 'Value', 'Result'],
+             ['C<sub>T</sub> / R<sub>T</sub>',
+              '%(CT).0f pF / %(RT).0f k&Omega;' % V,
+              'f<sub>Min</sub> %(fMin).1f kHz, f<sub>Max</sub> %(fMax).1f kHz'
+              % V],
+             ['R<sub>CS</sub>', '%(RCS).1f m&Omega; (%(RCS1).0f m&Omega; '
+              '&times; 5 in parallel)' % V,
+              'OCP1 at %(kOCP).3f &times; the composite peak' % V],
+             ['R<sub>CFG</sub>', '%(RCFG).0f k&Omega;' % V,
+              'V<sub>BO</sub> %(VBO).1f V, morphing enabled' % V],
+             ['R<sub>BM</sub>', '%(RBM).0f k&Omega;' % V,
+              'burst-mode entry point'],
+             ['ZCD divider', '%(RZH).0f k&Omega; / %(RZL).0f k&Omega;' % V,
+              'OVP1 %(OVP1).2f V, OVP2 %(OVP2).2f V' % V],
+             ['C<sub>in</sub>', '%(Cin).0f nF film' % V,
+              'about 3.2 nF/W &mdash; there is no bulk capacitor'],
+             ['Compensation',
+              '%(CFo).0f nF / %(CF).0f nF / %(RF).0f k&Omega; / %(Cfx).2f nF'
+              % V,
+              'f<sub>cross</sub> %(fcross).2f Hz, &Phi;<sub>M</sub> '
+              '%(PM).2f&deg;' % V]],
+            widths=[CW * 0.20, CW * 0.34, CW * 0.46]))
 
     add(h2('The oscillator: C<sub>T</sub> first, then R<sub>T</sub>'))
     add(p('The VCO charges C<sub>T</sub> from the sum of a fixed current '
@@ -2195,7 +2370,7 @@ def build(A):
           'I<sub>EA</sub>, up to V<sub>ref</sub>&nbsp;=&nbsp;1.5&nbsp;V, then '
           'adds a fixed idle time:'))
     add(eq(r'\frac{T_{sw}}{2}=\frac{C_{T}V_{ref}}'
-           r'{\frac{V_{ref}}{R_{T}}+I_{EA}}+T_{idle}'))
+           r'{\frac{V_{ref}}{R_{T}}+I_{EA}}+T_{idle}', key='Tsw'))
     add(p('<b>I<sub>EA</sub> is the only actuator in the converter.</b> More '
           'current means a higher frequency, which means less power. '
           'Everything the control loop does, it does through this one term.'))
@@ -2205,9 +2380,9 @@ def build(A):
            r'\frac{(1-2T_{idle}f_{sw,max})(1-2T_{idle}f_{sw,min})}'
            r'{f_{sw,max}-f_{sw,min}}\,,\qquad '
            r'C_{T,min}=\frac{1}{R_{T,max}}'
-           r'\left(\frac{1}{2f_{sw,min}}-T_{idle}\right)'))
+           r'\left(\frac{1}{2f_{sw,min}}-T_{idle}\right)', key='CT'))
     add(eq(r'R_{T,ceil}=\frac{1}{C_{T}}'
-           r'\left(\frac{1}{2f_{sw,min}}-T_{idle}\right)'))
+           r'\left(\frac{1}{2f_{sw,min}}-T_{idle}\right)', key='RTceil'))
     add(p('with f<sub>sw,min</sub> set to f<sub>o</sub> &mdash; the frequency '
           'floor of the whole design, for the reason in Section&nbsp;'
           + SR('Two divergences that cancel') + '. Here that window is '
@@ -2229,7 +2404,16 @@ def build(A):
     add(p('The three frequencies the selected pair actually produce are'))
     add(eq(r'f_{Min}=\frac{1}{2(C_{T}R_{T}+T_{idle})}\,,\qquad '
            r'f_{Max}=\frac{1}{2\left(\frac{C_{T}}'
-           r'{\frac{I_{EA,max}}{V_{ref}}+\frac{1}{R_{T}}}+T_{idle}\right)}'))
+           r'{\frac{I_{EA,max}}{V_{ref}}+\frac{1}{R_{T}}}+T_{idle}\right)}', key='fMinMax'))
+    add(p('Putting the selected pair into the first of those, with '
+          'T<sub>idle</sub>&nbsp;=&nbsp;%(Tidle).0f&nbsp;ns: '
+          'f<sub>Min</sub>&nbsp;=&nbsp;1/[2(%(CT).0f&nbsp;pF&times;%(RT).0f&nbsp;k&Omega; '
+          '+ %(Ts).2f&nbsp;&micro;s)] &nbsp;=&nbsp; 1/(2&times;%(tot).3f&nbsp;&micro;s) '
+          '&nbsp;=&nbsp; <b>%(fMin).2f&nbsp;kHz</b>, which is what has to '
+          'clear f<sub>o</sub>.'
+          % dict(V, Ts=V['Tidle'] / 1e3,
+                 tot=V['CT'] * 1e-12 * V['RT'] * 1e3 * 1e6
+                 + V['Tidle'] / 1e3)))
     add(tbl('Oscillator: what the two parts produce, and the limits each '
             'result has to clear.',
             [['Quantity', 'Value', 'Limit', 'Margin'],
@@ -2268,10 +2452,12 @@ def build(A):
           'wins:'))
     add(eq(r'R_{CS,max1}=\frac{16.8\,\Omega\!\cdot\!\mathrm{W}}{P_{in}}'
            r'\qquad\qquad '
-           r'R_{CS,max2}=\frac{0.55\,\mathrm{V}}{I_{Lr,pk}}'))
+           r'R_{CS,max2}=\frac{0.55\,\mathrm{V}}{I_{Lr,pk}}', key='RCS'))
     add(p('The first is the maximum-power law of Section&nbsp;'
           + SR('The feedback pin is a power command')
-          + '; the second is the OCP1 trip point. Here they give '
+          + '; the second is the OCP1 trip point. Opened out, equation&nbsp;'
+          + ER('RCS') + ' is two divisions &mdash; 16.8/P<sub>in</sub> and '
+            '0.55/I<sub>Lr,pk</sub> &mdash; and they give '
             '%(a).2f and %(b).2f&nbsp;m&Omega;, so the power law binds. '
             'Dissipation then fixes how many resistors that has to be split '
             'over &mdash; %(P).2f&nbsp;W at the worst switching cycle, so '
@@ -2303,7 +2489,7 @@ def build(A):
     add(h2('Burst mode: one resistor, read once at power-up'))
     add(eq(r'R_{BM}=16.7\,\frac{\mathrm{k}\Omega}{\mathrm{V}^{2}}'
            r'\,R_{CS}\,P_{in,BM}\,,\qquad '
-           r'V_{BM,eq}=\frac{R_{BM}}{100\,\mathrm{k}\Omega}+0.5\,\mathrm{V}'))
+           r'V_{BM,eq}=\frac{R_{BM}}{100\,\mathrm{k}\Omega}+0.5\,\mathrm{V}', key='RBM'))
     add(p('Entering burst at %(PinBM).0f&nbsp;W of input power &mdash; about '
           '%(rBM).0f&nbsp;%% of rated &mdash; asks for %(calc).2f&nbsp;'
           'k&Omega;, so <b>R<sub>BM</sub> = %(RBM).0f&nbsp;k&Omega;</b> and '
@@ -2321,7 +2507,7 @@ def build(A):
     add(p('One resistor does two unrelated jobs, and both are read once at '
           'power-up:'))
     add(eq(r'V_{BO,pk}=R_{CFG}\times 4\,\frac{\mathrm{V}}{\mathrm{k}\Omega}'
-           r'\,,\qquad V_{BO,rms}=\frac{V_{BO,pk}}{\sqrt{2}}'))
+           r'\,,\qquad V_{BO,rms}=\frac{V_{BO,pk}}{\sqrt{2}}', key='VBO'))
     add(p('The brown-out threshold is compared against the <i>peak</i> of the '
           'mains, so it has to be converted before it is compared with an rms '
           'specification &mdash; a &radic;2 that is easy to drop. Asking for '
@@ -2361,10 +2547,10 @@ def build(A):
     add(eq(r'R_{ZCD,L}=\frac{2.3\,\mathrm{V}}{I_{bias}}\,,\qquad '
            r'R_{ZCD,H}=R_{ZCD,L}\left('
            r'\frac{n_{aux}}{n_{sec}}\frac{V_{OVP1,out}}{2.3\,\mathrm{V}}'
-           r'-1\right)'))
+           r'-1\right)', key='RZCD'))
     add(eq(r'V_{OVP1}=\frac{2.3\,\mathrm{V}}{n_{aux}/n_{sec}}'
            r'\left(\frac{R_{ZCD,H}}{R_{ZCD,L}}+1\right)\,,\qquad '
-           r'V_{OVP2}=\frac{2.5}{2.3}\,V_{OVP1}'))
+           r'V_{OVP2}=\frac{2.5}{2.3}\,V_{OVP1}', key='OVP'))
     add(p('Aiming OVP1 %(pc).0f&nbsp;%% above the output gives '
           '%(t).2f&nbsp;V as a target. With '
           'n<sub>aux</sub>/n<sub>sec</sub> = %(naux).1f the calculated pair is '
