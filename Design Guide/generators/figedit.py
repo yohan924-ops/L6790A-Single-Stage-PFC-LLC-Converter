@@ -6,10 +6,13 @@ Two legitimate reasons to touch a borrowed figure, and no others:
   1. the panel it came from carried its label somewhere the crop cannot
      reach - a table header row, say - so the crop is unusable without it;
   2. the source uses a symbol for the opposite quantity to this document,
-     which is worse than useless to a reader.
+     which is worse than useless to a reader;
+  3. the panel contradicts itself and the user has said, in so many words, to
+     correct it - which has happened exactly once, for the second-half
+     freewheeling path, and the caption then says the panel is redrawn.
 
-Anything that changes what the figure ASSERTS is off limits. Every edit made
-here is listed in EDITS below, so what was changed is always readable.
+Anything else that changes what the figure ASSERTS is off limits. Every edit
+made here is listed in EDITS below, so what was changed is always readable.
 
     python figedit.py                 apply every edit, in order
 """
@@ -17,6 +20,7 @@ import io
 import os
 import sys
 
+import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8',
@@ -126,6 +130,164 @@ def mirror():
     print('  figures/an/ updated: %d of %d written' % (n, len(WROTE)))
 
 
+def fix_freewheel_2nd_half(src, dst):
+    """Redraw the second-half freewheeling current path.
+
+    The source (Infineon AN 2012-09 Figure 2.8) labels this panel
+    "freewheeling, second half" but sends the current BACKWARDS through S1 and
+    S4 and out of the + terminal.  S1 and S4 are off in that half and their
+    body diodes are reverse biased while S2 and S3 hold the two mid-points at
+    0 and Vin, so no current can take that path; and the direction drawn has
+    the input absorbing power, where freewheeling still draws it.  What the
+    panel actually shows is the dead time at the end of the half, where the
+    negative tank current commutates in the S1/S4 body diodes.
+
+    The path drawn here is the one the circuit takes: + rail, S3, the right
+    mid-point, Lm, the tank, the left mid-point, S2, - rail - which is the
+    source's own Figure 2.6 with the secondary loop open, exactly as its
+    Figure 2.7 is Figure 2.5 with the secondary loop open.
+
+    Editing a borrowed figure's arrows is normally forbidden.  This one is
+    done on the user's explicit instruction (2026-09-18) and the caption says
+    the panel is redrawn.
+
+    Coordinates are measured from the file, not guessed:
+        top rail  y  30   bottom rail y 291   tank wire y 125
+        left leg  x 818   right leg   x 922   return wire y 207   Lm x 1091
+    The red sits beside its wire, at the offsets the source itself uses.
+    """
+    RED = (255, 0, 0)
+    ON, OFF, WIDE = 8, 3, 4              # the source's dash: 8 on, 3 off, 4 thick
+
+    def dash(d, x0, y0, x1, y1):
+        step = ON + OFF
+        if y0 == y1:
+            rng = range(x0, x1, step if x1 > x0 else -step)
+            for x in rng:
+                xe = x + ON - 1 if x1 > x0 else x - ON + 1
+                d.rectangle([min(x, xe), y0 - WIDE // 2,
+                             max(x, xe), y0 + WIDE // 2 - 1], fill=RED)
+        else:
+            rng = range(y0, y1, step if y1 > y0 else -step)
+            for y in rng:
+                ye = y + ON - 1 if y1 > y0 else y - ON + 1
+                d.rectangle([x0 - WIDE // 2, min(y, ye),
+                             x0 + WIDE // 2 - 1, max(y, ye)], fill=RED)
+
+    def head(d, x, y, way, L=17, W=9):
+        pts = {'R': [(x, y - W), (x, y + W), (x + L, y)],
+               'L': [(x, y - W), (x, y + W), (x - L, y)],
+               'D': [(x - W, y), (x + W, y), (x, y + L)],
+               'U': [(x - W, y), (x + W, y), (x, y - L)]}[way]
+        d.polygon(pts, fill=RED)
+
+    im = Image.open(os.path.join(FIGS, src)).convert('RGB')
+    a = np.asarray(im).copy()
+    q = a.astype(int)                    # uint8 subtraction wraps; the mask needs signed
+    xx = np.arange(a.shape[1])[None, :]
+    # a loose mask: the anti-aliased edge of a dash is pink, and leaving it
+    # behind shows as a ghost of the old path.  Left panel (x < 700) is correct.
+    old = ((q[:, :, 0] - q[:, :, 1] > 18) |
+           (q[:, :, 0] - q[:, :, 2] > 18)) & (xx >= 700)
+    a[old] = (255, 255, 255)
+    for y in range(28, 32):              # the old red crossed the top rail
+        a[y, 820:842] = a[y, 780]
+
+    im = Image.fromarray(a.astype('uint8'))
+    d = ImageDraw.Draw(im)
+    TOPY, BOTY, TANKY, RETY = 17, 300, 111, 216      # red levels beside each wire
+    LEGL, LEGR, LMX = 830, 929, 1084                 # red columns beside each part
+    dash(d, 772, TOPY, LEGR, TOPY);    head(d, 872, TOPY, 'R')    # + rail, in
+    dash(d, LEGR, TOPY, LEGR, RETY);   head(d, LEGR, 186, 'D')    # through S3
+    dash(d, LEGR, RETY, LMX, RETY);    head(d, 1032, RETY, 'R')   # to the transformer
+    dash(d, LMX, RETY, LMX, TANKY);    head(d, LMX, 140, 'U')     # up through Lm
+    dash(d, LMX, TANKY, LEGL, TANKY);  head(d, 906, TANKY, 'L')   # back through Lr, Cr
+    dash(d, LEGL, TANKY, LEGL, BOTY);  head(d, LEGL, 272, 'D')    # through S2
+    dash(d, LEGL, BOTY, 781, BOTY);    head(d, 800, BOTY, 'L')    # - rail, out
+    im.save(os.path.join(FIGS, dst))
+    print('  %-26s second-half freewheeling path redrawn' % dst)
+
+
+def mark_modes(name):
+    """Bracket the four intervals on the below-resonance panel.
+
+    Readers kept reading the two circuit figures as a four-step sequence. The
+    waveform figure already settles it, but the second half's freewheeling
+    sits at the very right edge and is easy to miss, so mark all four.
+
+    Every x is MEASURED off the traces - a bracket that drifted off its bump
+    would be worse than no bracket. A rectifier is conducting exactly where
+    its trace has LEFT its own zero line, which is immune to whatever the
+    other traces are doing at that height; the half ends where the gate falls.
+    """
+    GRN, MAG = (0, 140, 70), (214, 0, 120)
+    p = os.path.join(FIGS, name)
+    a = np.asarray(Image.open(p).convert('RGB')).astype(int)
+    h, w = a.shape[:2]
+    navy = (a[:, :, 2] - a[:, :, 0] > 25) & (a.sum(axis=2) < 520)
+    X0, X1 = int(w * 0.713), w - 21          # the below-resonance plot area
+
+    def groups(rows):
+        out, s, prev = [], None, None
+        for y in rows:
+            if s is None or y != prev + 1:
+                if s is not None:
+                    out.append(s)
+                s = y
+            prev = y
+        if s is not None:
+            out.append(s)
+        return out
+
+    def gaps(base):
+        """x runs where the trace has left its zero line"""
+        on = navy[base - 2:base + 3, X0:X1].any(axis=0)
+        miss = np.where(~on)[0]
+        out, s = [], None
+        for i, x in enumerate(miss):
+            if s is None:
+                s = x
+            elif x != miss[i - 1] + 1:
+                out.append((s + X0, miss[i - 1] + X0)); s = x
+        if s is not None:
+            out.append((s + X0, miss[-1] + X0))
+        return [r for r in out if r[1] - r[0] > 10]
+
+    zeros = groups([y for y in range(h // 2, h)
+                    if navy[y, X0:X1].sum() > (X1 - X0) * 0.45])
+    lows = groups([y for y in range(h // 4, h // 2)
+                   if navy[y, X0:X1].sum() > (X1 - X0) * 0.35])[:2]
+    if len(zeros) != 2 or len(lows) != 2:
+        raise SystemExit('mark_modes: found %d zero lines and %d gate lines'
+                         % (len(zeros), len(lows)))
+
+    src = Image.open(p).convert('RGB')
+    im = Image.new('RGB', (src.width, src.height + 46), 'white')
+    im.paste(src, (0, 0))                    # room for the lower bracket
+    d = ImageDraw.Draw(im)
+    f = _font(17)
+
+    def span(xa, xb, y, colour, text):
+        d.line([(xa, y), (xb, y)], fill=colour, width=3)
+        for x in (xa, xb):
+            d.line([(x, y - 6), (x, y + 6)], fill=colour, width=3)
+        bb = d.textbbox((0, 0), text, font=f)
+        d.text(((xa + xb) / 2 - (bb[2] - bb[0]) / 2, y + 4), text,
+               font=f, fill=colour)
+
+    told = []
+    for base, low in zip(zeros, lows):
+        c = np.where(navy[low - 16:low - 4, X0:X1].any(axis=0))[0] + X0
+        gate = (c.min(), c.max())            # this half, gate high
+        over = lambda r: min(r[1], gate[1]) - max(r[0], gate[0])
+        pd = max(gaps(base), key=over)       # the conducting run inside it
+        span(pd[0], pd[1], base + 13, GRN, 'power delivery')
+        span(pd[1], gate[1], base + 36, MAG, 'freewheeling')
+        told.append('%d..%d..%d' % (pd[0], pd[1], gate[1]))
+    im.save(p)
+    print('  %-26s 4 intervals marked  (%s)' % (name, ' | '.join(told)))
+
+
 def patch(src, dst, boxes, size=26, color=NAVY, bg='white'):
     """Paint over a region and write replacement text centred in it.
 
@@ -156,6 +318,9 @@ def main():
          [(0.175, 'AT resonance   fsw = fr'),
           (0.505, 'ABOVE resonance   fsw > fr'),
           (0.835, 'BELOW resonance   fsw < fr')])
+    #    and bracket the four intervals of the below-resonance panel: readers
+    #    kept missing that the second half freewheels too.
+    mark_modes('an_ref_modes_i.png')
 
     # 2. The two operation circuits are captioned only "Figure 2.5" and so on
     #    in the source, which says nothing. Name what each one is.
@@ -169,15 +334,10 @@ def main():
     band('an_ref_op_power_raw.png', 'an_ref_op_power.png',
          [(0.25, 'POWER DELIVERY   1st half:  S1,S4 on'),
           (0.75, 'POWER DELIVERY   2nd half:  S2,S3 on')], h=48, size=27)
-    #    The right panel is NOT labelled with a switch pair, because the
-    #    source draws its arrows through S1 and S4 in reverse - the dead-time
-    #    path, not freewheeling with S2,S3 on.  Traced at high zoom against
-    #    the source PDF; the caption carries the finding.  Do not "fix" the
-    #    arrows: this is a borrowed figure and it may not be made to say
-    #    something it does not say.
-    band('an_ref_op_free_raw.png', 'an_ref_op_free.png',
+    fix_freewheel_2nd_half('an_ref_op_free_raw.png', 'an_ref_op_free_fix.png')
+    band('an_ref_op_free_fix.png', 'an_ref_op_free.png',
          [(0.25, 'FREEWHEELING   1st half:  S1,S4 still on'),
-          (0.75, 'FREEWHEELING   2nd half:  see the caption')], h=48, size=27)
+          (0.75, 'FREEWHEELING   2nd half:  S2,S3 still on')], h=48, size=27)
 
     # 3. The source writes n for the WOUND ratio. In this document n is the
     #    equivalent-model ratio and the wound one is n_T - and this is the
