@@ -28,11 +28,27 @@ NAVY = (3, 35, 75)
 
 
 def _font(px, bold=True):
-    name = 'arialbd.ttf' if bold else 'arial.ttf'
-    try:
-        return ImageFont.truetype(os.path.join(WIN, name), px)
-    except Exception:
-        return ImageFont.load_default()
+    """Arial where it exists, Liberation Sans where it does not.
+
+    The old version fell back to ImageFont.load_default(), which is a fixed
+    bitmap face that IGNORES px.  On a machine without Arial - this one -
+    every header came out about a fifth of the intended size and nothing
+    said so; the figures just looked wrong next to the ones built on
+    Windows.  Liberation Sans is metric-compatible with Arial, so the two
+    machines now produce the same artwork.  A real fallback is an error.
+    """
+    cand = [os.path.join(WIN, 'arialbd.ttf' if bold else 'arial.ttf'),
+            '/usr/share/fonts/truetype/liberation/LiberationSans-%s.ttf'
+            % ('Bold' if bold else 'Regular'),
+            '/usr/share/fonts/truetype/dejavu/DejaVuSans%s.ttf'
+            % ('-Bold' if bold else '')]
+    for f in cand:
+        try:
+            return ImageFont.truetype(f, px)
+        except Exception:
+            pass
+    raise SystemExit('figedit: no scalable font found, tried:\n  '
+                     + '\n  '.join(cand))
 
 
 def band(src, dst, labels, h=54, size=30, color=NAVY):
@@ -143,12 +159,25 @@ def main():
 
     # 2. The two operation circuits are captioned only "Figure 2.5" and so on
     #    in the source, which says nothing. Name what each one is.
+    #    Name the switch pair as well as the half.  "first half" alone let the
+    #    two figures be read as a four-step sequence (power, power, free,
+    #    free), which is not the order: freewheeling follows power delivery
+    #    INSIDE one half, with the same pair still on.  Infineon's own text,
+    #    section 2.2: "Freewheeling operation, which can occur following the
+    #    power delivery operation".  The pairs match the gate traces in
+    #    an_ref_modes_i.
     band('an_ref_op_power_raw.png', 'an_ref_op_power.png',
-         [(0.25, 'POWER DELIVERY   first half'),
-          (0.75, 'POWER DELIVERY   second half')], h=48, size=27)
+         [(0.25, 'POWER DELIVERY   1st half:  S1,S4 on'),
+          (0.75, 'POWER DELIVERY   2nd half:  S2,S3 on')], h=48, size=27)
+    #    The right panel is NOT labelled with a switch pair, because the
+    #    source draws its arrows through S1 and S4 in reverse - the dead-time
+    #    path, not freewheeling with S2,S3 on.  Traced at high zoom against
+    #    the source PDF; the caption carries the finding.  Do not "fix" the
+    #    arrows: this is a borrowed figure and it may not be made to say
+    #    something it does not say.
     band('an_ref_op_free_raw.png', 'an_ref_op_free.png',
-         [(0.25, 'FREEWHEELING   first half'),
-          (0.75, 'FREEWHEELING   second half')], h=48, size=27)
+         [(0.25, 'FREEWHEELING   1st half:  S1,S4 still on'),
+          (0.75, 'FREEWHEELING   2nd half:  see the caption')], h=48, size=27)
 
     # 3. The source writes n for the WOUND ratio. In this document n is the
     #    equivalent-model ratio and the wound one is n_T - and this is the

@@ -241,8 +241,11 @@ def build(A):
           'does to the current, and the current is where the difference is '
           'visible.'))
     add(p('Before the waveforms, the two things the circuit can be doing. '
-          'Every operating mode is one of these or both of them in sequence, '
-          'and the currents follow from which one is running.'))
+          'Below resonance a half cycle is both of them, and in this order: '
+          'power delivery first, freewheeling after it, <b>with the same '
+          'pair of switches on throughout</b>. At resonance the half cycle '
+          'is power delivery alone; above resonance it is power delivery cut '
+          'short.'))
     add(fig('an_ref_op_power',
             '<b>Power delivery.</b> The tank is excited by the bridge and '
             'the resonant current exceeds the magnetising current, so the '
@@ -258,11 +261,35 @@ def build(A):
             'secondary and the rectifiers are off. With the secondary '
             'disconnected L<sub>m</sub> is no longer clamped and joins the '
             'resonance &mdash; this interval rings at f<sub>o</sub>. '
-            '(Infineon AN 2012-09, headings added.)', width=CW))
+            '<b>The right-hand panel is the source figure unaltered, and its '
+            'arrows run backwards through S<sub>1</sub> and S<sub>4</sub></b> '
+            '&mdash; current leaving through the input terminal. That is the '
+            'dead-time path, not freewheeling with S<sub>2</sub>,S<sub>3</sub> '
+            'on. Freewheeling in the second half is the right-hand panel of '
+            'Figure&nbsp;%s with the secondary loop open. '
+            '(Infineon AN 2012-09 Figures 2.7 and 2.8, headings added.)'
+            % FR('an_ref_op_power'), width=CW))
     add(note('<b>Those two circuits are the two resonances.</b> The '
              'expressions at the top of this section are not abstractions: '
              'each one is the tank of one of these two pictures. Which one '
              'is running, and for how long, is the whole of what follows.'))
+    add(note('<b>Four panels, two half cycles &mdash; not four steps.</b> '
+             'The two figures are grouped by what the circuit is doing, not '
+             'by time. In time the order is power delivery with '
+             'S<sub>1</sub>,S<sub>4</sub> on, then freewheeling with '
+             'S<sub>1</sub>,S<sub>4</sub> <i>still</i> on, then the dead '
+             'time, then those two again with S<sub>2</sub>,S<sub>3</sub>. '
+             'Power delivery and freewheeling are the two parts of <i>one</i> '
+             'half cycle, so the left panel of Figure&nbsp;%s is followed by '
+             'the left panel of Figure&nbsp;%s &mdash; not by its right one. '
+             '<b>And ZVS is in neither circuit.</b> It happens in the dead '
+             'time that follows, when both switches of a leg are off and the '
+             'tank current carries the mid-point across the rail; '
+             'Figure&nbsp;%s shows it as the step in V<sub>ds</sub> in the '
+             'gap between the two gate pulses. Freewheeling is what settles '
+             'how much current is there to do it.'
+             % (FR('an_ref_op_power'), FR('an_ref_op_free'),
+                FR('an_ref_modes_i'))))
 
     add(fig('an_ref_modes_i',
             'The three cases side by side. Gate signals, the drain voltage, '
