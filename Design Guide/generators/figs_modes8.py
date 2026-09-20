@@ -159,9 +159,16 @@ YT, YB = 4.75, 2.95                 # tank goes out on YT, comes back on YB
 XCR, XLR, XLM, XTR = 8.70, 10.05, 11.30, 12.75
 YMID = (YT + YB) / 2.0
 VP, VN = YMID + 2.60, YMID - 2.60   # output rails, symmetric about the tank
-XP = XTR - 0.58                     # primary lead line, bumps face the core
-XS = XTR + 0.58                     # secondary lead line, bumps face it too
+#  Windings sit close to the core - a transformer symbol with a gap wider
+#  than its own turns reads as two unrelated inductors.  The lead lines are
+#  placed so the turns stop about one turn-radius short of the core bars.
+XP = XTR - 0.34                     # primary lead line, turns face the core
+XS = XTR + 0.34                     # secondary lead line, turns face it too
 LEAD = 0.06                         # straight bit before the first turn
+#  Turn counts are picked so every winding on the sheet has a turn radius
+#  between 0.13 and 0.15 - fewer, bigger turns read at the size a panel is
+#  actually printed, where eight primary turns came out as a fine ripple.
+NP_T_N, NS_T_N = 6, 3               # turns drawn: primary, each half of N_s
 #  Centre tap, the way this design actually rectifies: the tap is V_o+ and
 #  the two winding ends are pulled to the return through one device each.
 #  Order matters - with the near leg fed from the LOWER end and the far one
@@ -266,7 +273,7 @@ def _skeleton(ax, states):
     hcap(ax, XCR, YT, 0.30)
     txt(ax, XCR, YT + 0.66, 'C$_r$', size=11.5)
     wire(ax, [(XCR + 0.11, YT), (XLR - 0.45, YT)])
-    hcoil(ax, XLR, YT, 0.90, 4)
+    hcoil(ax, XLR, YT, 0.90, 3)
     txt(ax, XLR, YT + 0.66, 'L$_r$', size=11.5)
     wire(ax, [(XLR + 0.45, YT), (XP, YT)])
     wire(ax, [(XR, YB), (XP, YB)])
@@ -282,21 +289,21 @@ def _skeleton(ax, states):
     # ---- the transformer, centre-tapped secondary
     for xx in (XTR - 0.13, XTR + 0.13):
         ax.plot([xx, xx], [YB - 0.38, YT + 0.38], color=GREY, lw=2.4, zorder=3)
-    coil(ax, XP, YB + LEAD, YT - LEAD, n=6, side=+1)
+    coil(ax, XP, YB + LEAD, YT - LEAD, n=NP_T_N, side=+1)
     wire(ax, [(XP, YB), (XP, YB + LEAD)])
     wire(ax, [(XP, YT - LEAD), (XP, YT)])
     # A dot beside a coil has to clear the widest loop AND stay nearer its
     # own coil than the next one; there is no such spot here.  Above the
     # terminal there is, and it is unambiguous.
-    dot(ax, XP, YT + 0.26, NAVY, 4.8)
+    dot(ax, XP - 0.17, YT - 0.17, NAVY, 4.8)
     txt(ax, XP, YB - 0.70, 'N$_p$', size=11.5)
 
-    coil(ax, XS, YMID + LEAD, YT - LEAD, n=3, side=-1)
-    coil(ax, XS, YB + LEAD, YMID - LEAD, n=3, side=-1)
+    coil(ax, XS, YMID + LEAD, YT - LEAD, n=NS_T_N, side=-1)
+    coil(ax, XS, YB + LEAD, YMID - LEAD, n=NS_T_N, side=-1)
     wire(ax, [(XS, YB), (XS, YB + LEAD)])
     wire(ax, [(XS, YMID - LEAD), (XS, YMID + LEAD)])
     wire(ax, [(XS, YT - LEAD), (XS, YT)])
-    dot(ax, XS, YT + 0.26, NAVY, 4.8)
+    dot(ax, XS + 0.17, YT - 0.17, NAVY, 4.8)
     dot(ax, XS, YMID)
     txt(ax, XS + 0.42, (YMID + YT) / 2.0, 'N$_{s1}$', size=11, ha='left')
     txt(ax, XS + 0.42, (YMID + YB) / 2.0, 'N$_{s2}$', size=11, ha='left')
@@ -361,10 +368,10 @@ HOPS = [(XR, YT), (XCT, YT)]
 #  for the vertical ones and (x, y, span, turns) for L_r.  A segment that
 #  covers one of these is replaced by the winding's own polyline.
 VCOILS = [(XLM, YB + 0.24, YT - 0.24, 5, -1),
-          (XP, YB + LEAD, YT - LEAD, 6, +1),
-          (XS, YMID + LEAD, YT - LEAD, 3, -1),
-          (XS, YB + LEAD, YMID - LEAD, 3, -1)]
-HCOILS = [(XLR, YT, 0.90, 4)]
+          (XP, YB + LEAD, YT - LEAD, NP_T_N, +1),
+          (XS, YMID + LEAD, YT - LEAD, NS_T_N, -1),
+          (XS, YB + LEAD, YMID - LEAD, NS_T_N, -1)]
+HCOILS = [(XLR, YT, 0.90, 3)]
 
 
 def bd(x, y, h=DEVH):
