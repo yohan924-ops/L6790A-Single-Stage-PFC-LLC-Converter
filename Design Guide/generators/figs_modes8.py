@@ -303,7 +303,13 @@ def _skeleton(ax, states):
     wire(ax, [(XS, YB), (XS, YB + LEAD)])
     wire(ax, [(XS, YMID - LEAD), (XS, YMID + LEAD)])
     wire(ax, [(XS, YT - LEAD), (XS, YT)])
+    # Both halves are drawn as separate windings, so both carry a polarity
+    # dot.  They are one continuous winding in the same sense, so N_s2's
+    # dot is at ITS start, which is the tap: the finish of N_s1.  That is
+    # what makes the lower end conduct while the upper one blocks.  The
+    # tap's own junction dot is on the lead line and sits clear of it.
     dot(ax, XS + 0.17, YT - 0.17, NAVY, 4.8)
+    dot(ax, XS + 0.17, YMID - 0.20, NAVY, 4.8)
     dot(ax, XS, YMID)
     txt(ax, XS + 0.42, (YMID + YT) / 2.0, 'N$_{s1}$', size=11, ha='left')
     txt(ax, XS + 0.42, (YMID + YB) / 2.0, 'N$_{s2}$', size=11, ha='left')
