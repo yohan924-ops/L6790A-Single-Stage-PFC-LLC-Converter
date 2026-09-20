@@ -238,6 +238,13 @@ def xfmr(ax, x, y, hp=1.80, hs=None, np_t=6, ns_t=3, ct=False, gap=0.34,
     """
     hs = hp if hs is None else hs
     xp, xs = x - gap, x + gap
+    #  The dot offsets are a FRACTION of the turn radius, not a constant.
+    #  Fixed at 0.17 they were fine on the mode panels, whose turns are
+    #  small, and on a transformer drawn three times that size the tap's
+    #  junction dot and the lower half's polarity dot merged into one blob.
+    rp = abs(hp - 2 * lead) / (2.0 * max(np_t, 1))
+    rs = abs((hs / (2.0 if ct else 1.0)) - 2 * lead) / (2.0 * max(ns_t, 1))
+    op, os_ = max(0.17, 0.55 * rp), max(0.17, 0.55 * rs)
     ytp, ybp = y + hp / 2.0, y - hp / 2.0
     yts, ybs = y + hs / 2.0, y - hs / 2.0
     for xx in (x - core, x + core):
@@ -251,7 +258,7 @@ def xfmr(ax, x, y, hp=1.80, hs=None, np_t=6, ns_t=3, ct=False, gap=0.34,
     #  still sits nearer its own winding than the next one.  Above the
     #  terminal there is, and it is unambiguous.
     if dots:
-        dot(ax, xp - 0.17, ytp - 0.17, NAVY, 4.8)
+        dot(ax, xp - op, ytp - op, NAVY, 4.8)
     if lp:
         txt(ax, xp - 0.42, y, lp, size=size, ha='right')
 
@@ -264,8 +271,8 @@ def xfmr(ax, x, y, hp=1.80, hs=None, np_t=6, ns_t=3, ct=False, gap=0.34,
         wire(ax, [(xs, y - lead), (xs, y + lead)])
         wire(ax, [(xs, yts - lead), (xs, yts)])
         if dots:
-            dot(ax, xs + 0.17, yts - 0.17, NAVY, 4.8)
-            dot(ax, xs + 0.17, y - 0.20, NAVY, 4.8)
+            dot(ax, xs + os_, yts - os_, NAVY, 4.8)
+            dot(ax, xs + os_, y - os_ * 1.25, NAVY, 4.8)
         dot(ax, xs, y)
         out['s_tap'] = (xs, y)
         if ls:
@@ -276,7 +283,7 @@ def xfmr(ax, x, y, hp=1.80, hs=None, np_t=6, ns_t=3, ct=False, gap=0.34,
         wire(ax, [(xs, ybs), (xs, ybs + lead)])
         wire(ax, [(xs, yts - lead), (xs, yts)])
         if dots:
-            dot(ax, xs + 0.17, yts - 0.17, NAVY, 4.8)
+            dot(ax, xs + os_, yts - os_, NAVY, 4.8)
         if ls:
             txt(ax, xs + 0.42, y, ls, size=size, ha='left')
     return out
@@ -343,7 +350,7 @@ def _with_hops(pts, r=0.20):
     return out
 
 
-def path(ax, pts, load=True, heads=(), lw=3.8):
+def path(ax, pts, load=True, heads=(), lw=3.8, head=18):
     """The conducting path, laid over the drawing.
 
     load=True  -> solid magenta, power is being delivered
@@ -363,6 +370,9 @@ def path(ax, pts, load=True, heads=(), lw=3.8):
     ax.plot(xs, ys, color=col, lw=lw + 1.4, alpha=0.42 if load else 0.60,
             zorder=1.5, solid_capstyle='round',
             ls='-' if load else (0, (3.4, 2.0)))
+    #  `head` is in points, so it does NOT shrink with the drawing.  A
+    #  scale tuned on a full-page panel swallows a small inductor whole on
+    #  a half-width one, which is what it did to the boost reactor.
     for h in heads:
         i, f = h if isinstance(h, tuple) else (h, 0.62)
         p0, p1 = np.array(pts[i - 1], float), np.array(pts[i], float)
@@ -372,6 +382,6 @@ def path(ax, pts, load=True, heads=(), lw=3.8):
             continue
         m = p0 + f * d
         ax.add_patch(FancyArrowPatch(m - d / n * 0.13, m + d / n * 0.13,
-                                     arrowstyle='-|>', mutation_scale=18,
+                                     arrowstyle='-|>', mutation_scale=head,
                                      color=col, lw=2.5, zorder=8,
                                      shrinkA=0, shrinkB=0))

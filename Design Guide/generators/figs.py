@@ -109,12 +109,25 @@ def note(ax, x, y, text, color=NAVY, size=10.5, ha='left', va='center',
 
 
 def save(fig, name):
+    #  Anything written over the drawing gets a white halo, decided by
+    #  looking at what was actually drawn rather than by remembering at
+    #  each call site.  figcheck.py uses the same test to report them.
+    try:
+        import figcheck
+        figcheck.shield(fig)
+    except Exception:                                   # noqa: BLE001
+        pass
     t = getattr(fig, '_foot', None)
     if t:
-        # below the lowest thing already drawn, whatever tight_layout decided
+        #  Below the lowest thing already drawn - INCLUDING figure-level
+        #  text.  Measuring only the axes put this caption straight on top
+        #  of two verdict lines written with fig.text, which are not in any
+        #  axes and so were invisible to the measurement.
         fig.canvas.draw()
         r = fig.canvas.get_renderer()
-        lo = min(a.get_tightbbox(r).y0 for a in fig.axes)
+        lo = min([a.get_tightbbox(r).y0 for a in fig.axes]
+                 + [x.get_window_extent(r).y0 for x in fig.texts
+                    if x.get_visible() and x.get_text().strip()])
         y = lo / fig.bbox.height - 0.055
         fig.text(0.5, y, t, ha='center', va='top', fontsize=10.5, color=GREY,
                  wrap=True)

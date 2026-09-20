@@ -25,6 +25,7 @@ typed in from a picture.
 """
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.patheffects as pe
 
 import schem as S
 import schemx as X
@@ -33,6 +34,22 @@ from l6790 import M, zvs_edge, phase
 
 
 # ----------------------------------------------------------------- helpers
+#  Anything written over the drawing carries a white halo.  Without one a
+#  callout laid across a curve or a wire is unreadable exactly where it
+#  matters, and figcheck.py counts that as a fault.
+HALO = [pe.withStroke(linewidth=3.6, foreground='white')]
+
+
+def _call(ax, xy, xytext, t, color=MAG, size=10.5, ha='left', rad=None,
+          **kw):
+    ap = dict(arrowstyle='-|>', color=color, lw=1.4)
+    if rad is not None:
+        ap['connectionstyle'] = 'arc3,rad=%s' % rad
+    return ax.annotate(t, xy=xy, xytext=xytext, fontsize=size, color=color,
+                       ha=ha, arrowprops=ap, path_effects=HALO,
+                       zorder=9, **kw)
+
+
 def _ax(fig, rect, x0, x1, y0, y1):
     ax = fig.add_axes(rect)
     S.frame(ax, x0, x1, y0, y1)
@@ -59,33 +76,54 @@ def _sq(t, duty=0.5, phase_=0.0):
     return np.where(((t + phase_) % 1.0) < duty, 1.0, 0.0)
 
 
+def _diode_along(ax, a, b, s=0.17, color=NAVY, lw=2.2, z=4):
+    """A diode ON the segment a->b, conducting in that direction.
+
+    Built from the direction vector, not from a rotated marker.  The first
+    version used matplotlib's rotatable triangle marker and every diode in
+    every bridge came out pointing the wrong way - the sort of thing that
+    makes a reader stop trusting the rest of the drawing.  The bar also has
+    to sit AT the apex, not at the midpoint, or the triangle covers it and
+    the symbol stops being a diode at all.
+    """
+    a = np.asarray(a, float)
+    b = np.asarray(b, float)
+    d = b - a
+    u = d / np.hypot(*d)                        # along, anode -> cathode
+    v = np.array([-u[1], u[0]])                 # across
+    m = a + d * 0.5
+    tip, base = m + u * s, m - u * s
+    ax.fill(*zip(base + v * s * 0.86, base - v * s * 0.86, tip),
+            color=color, zorder=z)
+    ax.plot([tip[0] + v[0] * s * 0.86, tip[0] - v[0] * s * 0.86],
+            [tip[1] + v[1] * s * 0.86, tip[1] - v[1] * s * 0.86],
+            color=color, lw=lw, zorder=z, solid_capstyle='butt')
+    return tip, base
+
+
 def _bridge(ax, xm, ym, w=1.55, h=1.35, names=('D$_1$', 'D$_3$',
-                                                'D$_2$', 'D$_4$')):
+                                               'D$_2$', 'D$_4$'),
+            size=9.5):
     """A diode bridge as a diamond.  -> (ac_left, ac_right, plus, minus)
 
     Drawn as two columns it needs one of the ac leads to cross the other
     column to reach its node, and a crossing in a four-device figure is a
     crossing too many.  On the diamond every terminal is a corner.
+
+    All four conduct TOWARDS the + corner: that is what a bridge is, and
+    it is the one thing in this drawing a reader will check.
     """
     L, Rt, P, Mn = (xm - w, ym), (xm + w, ym), (xm, ym + h), (xm, ym - h)
-    for (a, b, nm, dx, dy) in ((L, P, names[0], -0.42, 0.30),
-                               (Rt, P, names[1], 0.42, 0.30),
-                               (Mn, L, names[2], -0.42, -0.30),
-                               (Mn, Rt, names[3], 0.42, -0.30)):
-        mx, my = (a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0
-        ang = np.degrees(np.arctan2(b[1] - a[1], b[0] - a[0]))
+    for a, b, nm, dx, dy in ((L, P, names[0], -0.48, 0.34),
+                             (Rt, P, names[1], 0.48, 0.34),
+                             (Mn, L, names[2], -0.48, -0.34),
+                             (Mn, Rt, names[3], 0.48, -0.34)):
         S.wire(ax, [a, b])
-        ax.plot([mx], [my], marker=(3, 0, ang - 90), ms=11, color=NAVY,
-                zorder=4)
-        nx, ny = b[1] - a[1], -(b[0] - a[0])
-        nn = np.hypot(nx, ny)
-        ax.plot([mx + 0.17 * nx / nn, mx - 0.17 * nx / nn],
-                [my + 0.17 * ny / nn, my - 0.17 * ny / nn],
-                color=NAVY, lw=2.2, zorder=4,
-                solid_capstyle='butt')
-        S.label(ax, mx + dx, my + dy, nm, size=9.5, color=GREY)
-    for p in (L, Rt, P, Mn):
-        S.dot(ax, *p)
+        _diode_along(ax, a, b)
+        mx, my = (a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0
+        S.label(ax, mx + dx, my + dy, nm, size=size, color=GREY)
+    for pt in (L, Rt, P, Mn):
+        S.dot(ax, *pt)
     return L, Rt, P, Mn
 
 
@@ -114,11 +152,12 @@ def an_rac(save, foot):
     S.wire(ax, [(2.5, -0.3), t['p_bot']])
     S.label(ax, 3.7, -1.05, 'n : 1', size=10.5, color=GREY)
 
-    XT, XJ = 5.9, 9.3              # the lower end's riser, the diode common
+    XJ = 9.3                       # where the two rectifiers join
     S.wire(ax, [t['s_top'], (6.9, 3.3)])
-    S.wire(ax, [t['s_bot'], (XT - 0.20, -0.3)])
-    S.hop(ax, XT, -0.3)
-    S.wire(ax, [(XT + 0.20, -0.3), (6.9, -0.3)])
+    #  A hop used to sit here, left over from a routing that put the tap's
+    #  riser at XT.  The tap leaves on the far side now, so that bump was
+    #  a crossing symbol over nothing at all.
+    S.wire(ax, [t['s_bot'], (6.9, -0.3)])
     for y, nm, dy in ((3.3, 'D$_1$', 0.56), (-0.3, 'D$_2$', 0.56)):
         di, do = S.diode(ax, 7.6, y, None, s=0.30)
         S.wire(ax, [(6.9, y), di])
@@ -188,30 +227,35 @@ def an_integrated(save, foot):
     S.sqsrc(ax, 0.5, 1.8, None)
     S.label(ax, 0.5, 1.10, 'v$_{in}$', size=11)
     S.wire(ax, [(0.5, 2.18), (0.5, 3.4), (1.7, 3.4)])
-    S.wire(ax, [(0.5, 1.42), (0.5, 0.1), (9.9, 0.1)])
+    S.wire(ax, [(0.5, 1.42), (0.5, 0.1), (10.4, 0.1)])
     p, q = S.cap(ax, 2.2, 3.4, 'C$_r$', s=0.30, tdy=0.46)
     S.wire(ax, [(1.7, 3.4), p])
     c, d = S.ind(ax, 3.7, 3.4, 'L$_{lkp}$', s=0.95)
     S.wire(ax, [q, c])
-    S.wire(ax, [d, (5.3, 3.4)])
-    S.shunt(ax, 5.3, 3.4, 0.1, 'ind', None, frac=0.62)
-    S.label(ax, 4.90, 1.75, 'L$_m$', size=11, ha='right')
-    S.dot(ax, 5.3, 3.4)
-    t = X.xfmr(ax, 7.1, 1.75, hp=3.3, hs=3.3, np_t=5, ns_t=4, gap=0.52,
+    S.wire(ax, [d, (5.1, 3.4)])
+    S.shunt(ax, 5.1, 3.4, 0.1, 'ind', None, frac=0.50)
+    S.label(ax, 4.62, 1.75, 'L$_m$', size=11, ha='right')
+    S.dot(ax, 5.1, 3.4)
+    t = X.xfmr(ax, 7.5, 1.75, hp=3.3, hs=3.3, np_t=5, ns_t=4, gap=0.52,
                lp=None, ls=None)
-    S.wire(ax, [(5.3, 3.4), t['p_top']])
+    S.wire(ax, [(5.1, 3.4), t['p_top']])
     S.wire(ax, [t['p_bot'], (t['p_bot'][0], 0.1)])
-    S.label(ax, 7.1, -0.48, 'n$_T$ : 1', size=10.5, color=GREY)
-    e, f = S.ind(ax, 8.6, 3.4, 'L$_{lks}$', s=0.95)
-    S.wire(ax, [t['s_top'], (8.1, 3.4), e])
-    S.wire(ax, [f, (9.9, 3.4)])
+    S.label(ax, 7.5, -0.48, 'n$_T$ : 1', size=10.5, color=GREY)
+    #  L_lks starts clear of the secondary's polarity dot.  At 8.6 its
+    #  first turn sat on top of the dot, and a dot under a coil is the one
+    #  thing a transformer symbol cannot afford to be unclear about.
+    e, f = S.ind(ax, 9.3, 3.4, 'L$_{lks}$', s=0.95)
+    S.wire(ax, [t['s_top'], e])
+    S.wire(ax, [f, (10.4, 3.4)])
     S.wire(ax, [t['s_bot'], (t['s_bot'][0], 0.1)])
-    S.wire(ax, [(9.9, 3.4), (12.6, 3.4)])
-    S.wire(ax, [(9.9, 0.1), (12.6, 0.1)])
+    S.wire(ax, [(10.4, 3.4), (12.6, 3.4)])
+    S.wire(ax, [(10.4, 0.1), (12.6, 0.1)])
     S.shunt(ax, 11.3, 3.4, 0.1, 'cap', None, frac=0.22)
     S.shunt(ax, 12.6, 3.4, 0.1, 'res', 'R$_o$', frac=0.40)
     S.label(ax, 13.8, 1.75, 'V$_O$', size=11, ha='left')
-    S.label(ax, 9.55, 1.75, 'v$_{RI}$', size=10.5, color=GREY, ha='right')
+    S.wire(ax, [(10.70, 3.20), (10.70, 0.30)], GREY, 1.0)
+    S.label(ax, 10.52, 1.75, 'v$_{RI}$', size=10.5, color=GREY,
+            ha='right')
 
     S.arrow(ax, (7.2, -0.95), (7.2, -1.9), None, color=MAG)
 
@@ -227,14 +271,14 @@ def an_integrated(save, foot):
     S.wire(ax2, [(1.7, 3.4), p])
     c, d = S.ind(ax2, 4.2, 3.4, 'L$_r$', s=1.05)
     S.wire(ax2, [q, c])
-    S.wire(ax2, [d, (5.3, 3.4)])
-    S.shunt(ax2, 5.3, 3.4, 0.1, 'ind', None, frac=0.62)
-    S.label(ax2, 4.90, 1.75, 'L$_p$ $-$ L$_r$', size=11, ha='right')
-    S.dot(ax2, 5.3, 3.4)
-    t2 = X.xfmr(ax2, 7.1, 1.75, hp=3.3, hs=3.3, np_t=5, ns_t=5, gap=0.52)
-    S.wire(ax2, [(5.3, 3.4), t2['p_top']])
+    S.wire(ax2, [d, (5.1, 3.4)])
+    S.shunt(ax2, 5.1, 3.4, 0.1, 'ind', None, frac=0.50)
+    S.label(ax2, 4.62, 1.75, 'L$_p$ $-$ L$_r$', size=11, ha='right')
+    S.dot(ax2, 5.1, 3.4)
+    t2 = X.xfmr(ax2, 7.5, 1.75, hp=3.3, hs=3.3, np_t=5, ns_t=5, gap=0.52)
+    S.wire(ax2, [(5.1, 3.4), t2['p_top']])
     S.wire(ax2, [t2['p_bot'], (t2['p_bot'][0], 0.1)])
-    S.label(ax2, 7.1, -0.48, '1 : M$_v$   ideal', size=10.5, color=GREY)
+    S.label(ax2, 7.5, -0.48, '1 : M$_v$   ideal', size=10.5, color=GREY)
     S.wire(ax2, [t2['s_top'], (9.9, 3.4)])
     S.wire(ax2, [t2['s_bot'], (t2['s_bot'][0], 0.1)])
     S.shunt(ax2, 9.9, 3.4, 0.1, 'res', 'R$_{ac}$', frac=0.44)
@@ -327,9 +371,8 @@ def an_pfc_cap(save, foot):
     aw.axhline(0, color=GREY, lw=0.9)
     aw.legend(loc='lower right', frameon=False, fontsize=10, ncol=3)
     for xc in (0.5, 2.5):
-        aw.annotate('conducts only here', xy=(xc - 0.02, 0.30),
-                    xytext=(xc + 0.16, 1.24), fontsize=10, color=MAG,
-                    arrowprops=dict(arrowstyle='-|>', color=MAG, lw=1.4))
+        _call(aw, (xc - 0.02, 0.30), (xc + 0.16, 1.24),
+              'conducts only here', size=10)
 
     foot(fig, 'The capacitor holds the output near the crest, so the diodes '
               'are reverse biased for most of the cycle and the mains is '
@@ -354,7 +397,7 @@ def an_pfc_boost(save, foot):
         S.label(ax, 6.4, 5.80, ttl, size=11, color=MAG if on else GRN)
         xe = _mains_bridge(ax, 0.4, 4.1, 1.6, 4.0, -0.6)
 
-        c, d = S.ind(ax, 8.0, 4.0, 'L', s=1.00)
+        c, d = S.ind(ax, 8.0, 4.0, 'L', s=1.00, tdy=0.62)
         S.wire(ax, [(xe, 4.0), c])
         S.wire(ax, [d, (9.6, 4.0)])
         S.dot(ax, 9.6, 4.0)
@@ -362,26 +405,30 @@ def an_pfc_boost(save, foot):
         S.wire(ax, [(9.6, 4.0), di])
         S.wire(ax, [do, (12.0, 4.0)])
         X.mosfet(ax, 9.6, 2.0, 'Q', 'on' if on else 'off', h=1.40,
-                 gate=0.58, body=False, coss=False, name_at='gate', size=10)
+                 gate=0.78, body=False, coss=False, name_at='gate', size=10)
         S.wire(ax, [(9.6, 4.0), (9.6, 2.70)])
         S.wire(ax, [(9.6, 1.30), (9.6, -0.6)])
         S.wire(ax, [(xe, -0.6), (13.4, -0.6)])
         S.shunt(ax, 12.0, 4.0, -0.6, 'cap', 'C', frac=0.30)
         S.shunt(ax, 13.4, 4.0, -0.6, 'res', None, frac=0.46)
-        S.label(ax, 14.2, 1.7, 'load', size=10.5, ha='left')
-        S.label(ax, 11.4, 4.60, 'V$_{bus}$', size=11)
+        S.label(ax, 13.4, -1.15, 'load', size=10.5)
+        S.label(ax, 12.0, -1.15, 'V$_{bus}$', size=11)
 
         #  Only the boost loop is highlighted.  The bridge carries the same
         #  current in both panels, so colouring it would say nothing.
         X.register(hops=[], vcoils=[], hcoils=[(8.0, 4.0, 1.00, 4)])
+        #  Heads go on clear stretches, and the head size is in POINTS, so
+        #  it does not shrink with a half-width panel: at 18 it swallowed
+        #  the reactor's first turn whole.
         if on:
             X.path(ax, [(xe, 4.0), (9.6, 4.0), (9.6, 2.70), (9.6, 1.30),
                         (9.6, -0.6), (xe, -0.6)],
-                   load=True, heads=((1, 0.30), (4, 0.62)))
+                   load=True, head=13, heads=((1, 0.08), (5, 0.45)))
         else:
             X.path(ax, [(xe, 4.0), (9.6, 4.0), (12.0, 4.0), (12.0, -0.6),
                         (xe, -0.6)],
-                   load=True, heads=((1, 0.30), (2, 0.70), (4, 0.55)))
+                   load=True, head=13,
+                   heads=((1, 0.08), (2, 0.80), (4, 0.45)))
         X.register()
 
     foot(fig, 'The switch is modulated so the average reactor current '
@@ -425,10 +472,9 @@ def an_pfc_ccm(save, foot):
         sp.set_visible(False)
     ax.axhline(0, color=GREY, lw=0.9)
     ax.legend(loc='upper right', frameon=False, fontsize=10.5)
-    ax.annotate('the switching ripple never reaches zero - continuous '
-                'conduction', xy=(0.30, cur[int(0.30 * 6000)]),
-                xytext=(0.13, 1.16), fontsize=10, color=MAG,
-                arrowprops=dict(arrowstyle='-|>', color=MAG, lw=1.4))
+    _call(ax, (0.30, cur[int(0.30 * len(t))]), (0.10, 1.18),
+          'the switching ripple never reaches zero -\ncontinuous conduction',
+          size=10)
     foot(fig, 'Continuous conduction mode: the reactor current never falls '
               'to zero inside a switching period, so its average is the '
               'quantity the control loop shapes.')
@@ -588,20 +634,18 @@ def an_llc_waves(save, foot):
     axs[4].plot(T, g1 * 0.9, color=NAVY, lw=1.5)
     axs[4].fill_between(T, 1.3, 1.3 + g2 * 0.9, color=YEL, lw=0)
     axs[4].plot(T, 1.3 + g2 * 0.9, color=NAVY, lw=1.5)
-    axs[4].text(0.25, 1.02, 'S$_1$,S$_4$', ha='center', fontsize=9.6,
-                color=GREY)
-    axs[4].text(0.75, 2.32, 'S$_2$,S$_3$', ha='center', fontsize=9.6,
-                color=GREY, va='top')
+    axs[4].text(0.25, 0.45, 'S$_1$,S$_4$', ha='center', va='center',
+                fontsize=9.6, color=NAVY, path_effects=HALO, zorder=9)
+    axs[4].text(0.75, 1.75, 'S$_2$,S$_3$', ha='center', va='center',
+                fontsize=9.6, color=NAVY, path_effects=HALO, zorder=9)
 
     for a in axs:
         for x in (e[1], e[2], e[4], e[5], e[6]):
             a.axvline(x, color=GREY, lw=0.7, ls=(0, (2, 3)), zorder=0)
 
-    axs[1].annotate('S$_1$ turns on with its own current still negative - '
-                    'that is ZVS',
-                    xy=(0.004, s1[2]), xytext=(0.19, -1.02),
-                    fontsize=10, color=MAG,
-                    arrowprops=dict(arrowstyle='-|>', color=MAG, lw=1.4))
+    _call(axs[1], (0.004, s1[2]), (0.13, -0.78),
+          'S$_1$ turns on with its own current still negative - that is ZVS',
+          size=10)
 
     foot(fig, 'Below resonance. i_Lr leaves i_Lm while the secondary '
               'conducts and rejoins it when the rectifier current reaches '
@@ -666,19 +710,19 @@ def an_three_cases(save, foot):
                             arrowprops=dict(arrowstyle='<->', color=CYA,
                                             lw=1.6))
             axs[3].text((e[1] + e[2]) / 2.0, 1.32, 'freewheeling',
-                        ha='center', fontsize=9.4, color=CYA)
+                        ha='center', fontsize=9.4, color=CYA,
+                        path_effects=HALO, zorder=9)
         else:
             axs[3].text(0.5, 1.30, 'no freewheeling interval left',
-                        ha='center', fontsize=9.4, color=CYA)
+                        ha='center', fontsize=9.4, color=CYA,
+                        path_effects=HALO, zorder=9)
         if trunc:
-            axs[3].annotate('still conducting when the half period ends -\n'
-                            'the switches commutate it, so the rectifier '
-                            'has to recover',
-                            xy=(e[1], io[int(e[1] * len(t)) - 2]
-                                / max(io.max(), 1e-9)),
-                            xytext=(0.06, -1.00), fontsize=9.2, color=GRN,
-                            arrowprops=dict(arrowstyle='-|>', color=GRN,
-                                            lw=1.2))
+            _call(axs[3], (e[1], io[int(e[1] * len(t)) - 2]
+                           / max(io.max(), 1e-9)),
+                  (0.04, -0.62),
+                  'still conducting when the half\nperiod ends - the '
+                  'switches\ncommutate it, so the rectifier\nhas to recover',
+                  color=GRN, size=9.0)
 
     foot(fig, 'Below resonance the rectifier current reaches zero before the '
               'half period does and the rest of it circulates. At resonance '
@@ -699,10 +743,10 @@ def _edge_curves(lam, qs):
 def an_cap_ind(save, foot):
     """The same converter either side of the boundary, and how it shows."""
     import figs_modes8 as F
-    fig = plt.figure(figsize=(12.0, 7.4))
+    fig = plt.figure(figsize=(12.0, 8.0))
     lam, q = 0.55, 0.766
 
-    ax = fig.add_axes([0.085, 0.585, 0.855, 0.370])
+    ax = fig.add_axes([0.085, 0.620, 0.855, 0.350])
     fn = np.linspace(0.34, 2.4, 1200)
     g = np.array([M(f, q, lam) for f in fn])
     edge = zvs_edge(q, lam)
@@ -712,16 +756,16 @@ def an_cap_ind(save, foot):
     ax.axvspan(edge, fn[-1], color=GRN, alpha=0.11, lw=0)
     ax.axvline(edge, color=GREY, lw=1.6, ls=(0, (5, 3)))
     ax.plot([pk], [g.max()], marker='*', ms=15, color=NAVY, zorder=5)
-    ax.annotate('gain peak - NOT the boundary', xy=(pk, g.max()),
-                xytext=(pk + 0.42, g.max() - 0.06), fontsize=10, color=NAVY,
-                arrowprops=dict(arrowstyle='-|>', color=NAVY, lw=1.3))
+    _call(ax, (pk, g.max()), (pk + 0.40, g.max() - 0.04),
+          'gain peak - NOT the boundary', color=NAVY, size=10)
     ax.text(edge + 0.02, ax.get_ylim()[0] + 0.06,
             '  boundary: arg Z$_{in}$ = 0', fontsize=10, color=GREY,
             ha='left')
-    ax.text((fn[0] + edge) / 2.0, g.max() * 0.35, 'capacitive\nhard '
-            'switching', ha='center', fontsize=11.5, color=MAG)
-    ax.text(edge + 0.62, g.max() * 0.35, 'inductive\nZVS', ha='center',
-            fontsize=11.5, color=GRN)
+    ax.text((fn[0] + edge) / 2.0, g.max() * 0.30, 'capacitive\nhard '
+            'switching', ha='center', fontsize=11.5, color=MAG,
+            path_effects=HALO, zorder=9)
+    ax.text(edge + 0.62, g.max() * 0.30, 'inductive\nZVS', ha='center',
+            fontsize=11.5, color=GRN, path_effects=HALO, zorder=9)
     ax.set_xlabel('f$_{sw}$ / f$_r$', fontsize=11, color=NAVY)
     ax.set_ylabel('M', fontsize=11, color=NAVY)
     ax.tick_params(labelsize=9.5, colors=GREY)
@@ -741,17 +785,17 @@ def an_cap_ind(save, foot):
     for c, (fnx, nm, col) in enumerate(((edge * 0.80, 'capacitive', MAG),
                                         (edge * 1.45, 'inductive', GRN))):
         phi = phase(fnx, q, lam)               # arg Z_in, radians
-        fig.text(0.085 + c * 0.470 + 0.192, 0.455, nm, ha='center',
+        fig.text(0.085 + c * 0.470 + 0.192, 0.505, nm, ha='center',
                  fontsize=12.5, color=col, fontweight='bold')
-        fig.text(0.085 + c * 0.470 + 0.192, 0.432,
+        fig.text(0.085 + c * 0.470 + 0.192, 0.482,
                  'f$_{sw}$/f$_r$ = %.2f,   arg Z$_{in}$ = %+.0f$\\degree$'
                  % (fnx, np.degrees(phi)), ha='center', fontsize=10,
                  color=GREY)
         tt = np.linspace(0, 2, 2000)
         vd = np.where((tt % 1.0) < 0.5, 1.0, -1.0)
         cur = np.sin(2 * np.pi * tt - phi)
-        y = 0.400
-        for nmx, h in (('v$_d$', 0.115), ('i$_{Lr}$', 0.150)):
+        y = 0.452
+        for nmx, h in (('v$_d$', 0.108), ('i$_{Lr}$', 0.140)):
             y -= h + 0.036
             a = _wave_ax(fig, [0.085 + c * 0.470, y, 0.385, h], 0, 2,
                          -1.35, 1.35, nmx if c == 0 else None)
@@ -764,13 +808,13 @@ def an_cap_ind(save, foot):
                            zorder=6)
                 a.axvline(0.0, color=GREY, lw=0.8, ls=(0, (2, 3)))
                 a.axvline(1.0, color=GREY, lw=0.8, ls=(0, (2, 3)))
-        tail = ('POSITIVE at turn-on.\nThe current was already flowing the '
-                'other way through the\nswitch about to close, so its body '
-                'diode has to recover.'
+        tail = ('POSITIVE at turn-on - the current was already\nflowing '
+                'the other way, so the body diode of the\nswitch about to '
+                'close has to recover.'
                 if np.sin(-phi) > 0 else
-                'NEGATIVE at turn-on.\nThe current had already swung the '
-                'node over, so the\nswitch closes on zero volts - ZVS.')
-        fig.text(0.085 + c * 0.470 + 0.192, 0.088, tail, ha='center',
+                'NEGATIVE at turn-on - the current had already\nswung the '
+                'node over, so the switch closes\non zero volts.  ZVS.')
+        fig.text(0.085 + c * 0.470 + 0.192, 0.112, tail, ha='center',
                  va='top', fontsize=9.6, color=col, linespacing=1.5)
 
     foot(fig, 'The boundary is where the tank input impedance phase crosses '
@@ -809,13 +853,11 @@ def an_loadshift(save, foot):
             label='the boundary itself')
     ax.axhline(1.0, color=GREY, lw=1.0, ls=(0, (2, 3)))
     ax.text(2.33, 1.03, 'unity gain', ha='right', fontsize=9.8, color=GREY)
-    ax.annotate('loading it moves the boundary UP in frequency',
-                xy=(edges[-1][0], edges[-1][1]),
-                xytext=(edges[0][0] + 0.30, 1.72), fontsize=10.5, color=NAVY,
-                arrowprops=dict(arrowstyle='-|>', color=NAVY, lw=1.4,
-                                connectionstyle='arc3,rad=0.22'))
+    _call(ax, (edges[-1][0], edges[-1][1]), (edges[0][0] + 0.34, 1.74),
+          'loading it moves the boundary UP in frequency', color=NAVY,
+          rad=0.22)
     ax.annotate('', xy=(edges[0][0], edges[0][1]),
-                xytext=(edges[0][0] + 0.30, 1.70),
+                xytext=(edges[0][0] + 0.32, 1.72),
                 arrowprops=dict(arrowstyle='-|>', color=NAVY, lw=1.4,
                                 connectionstyle='arc3,rad=-0.22'))
     ax.set_xlim(0.34, 2.4)
@@ -868,10 +910,9 @@ def an_peakgain(save, foot):
     ax.tick_params(labelsize=9.5, colors=GREY)
     for sp in ('top', 'right'):
         ax.spines[sp].set_visible(False)
-    ax.annotate('pick a required peak gain and a Q, and m is decided',
-                xy=(0.62, max(M(f, 0.62, 1.0 / (3.0 - 1.0)) for f in fn)),
-                xytext=(0.80, 2.08), fontsize=10.5, color=MAG,
-                arrowprops=dict(arrowstyle='-|>', color=MAG, lw=1.4))
+    _call(ax, (0.62, max(M(f, 0.62, 1.0 / (3.0 - 1.0)) for f in fn)),
+          (0.80, 1.66), 'pick a required peak gain and a Q,\n'
+          'and m is decided', rad=-0.2)
     foot(fig, 'm = L_p / L_r. A single-stage converter needs a wide gain '
               'range at a Q that is not small, which is what pushes m down '
               'to about 3 - the shape of these curves is the reason the '

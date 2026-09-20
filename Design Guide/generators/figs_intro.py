@@ -91,10 +91,15 @@ def an_llc_stage(save, foot):
     S.label(ax, 13.4, 2.0, 'V$_{out}$', weight='bold')
 
     S.note = None
-    ax.annotate('the square wave the tank is driven with',
-                xy=(2.55, 1.45), xytext=(3.0, 3.55), fontsize=10.5,
-                color=MAG, ha='left',
-                arrowprops=dict(arrowstyle='-|>', color=MAG, lw=1.6))
+    #  The callout used to start above the tank and reach down across it,
+    #  so its text lay over the shading and over C_r, L_r and the tank's
+    #  own name.  Below the half bridge there is clear air and a shorter
+    #  leader.
+    ax.annotate('the square wave the tank\nis driven with',
+                xy=(2.32, 1.30), xytext=(2.95, -0.55), fontsize=10.5,
+                color=MAG, ha='left', linespacing=1.4,
+                arrowprops=dict(arrowstyle='-|>', color=MAG, lw=1.6,
+                                connectionstyle='arc3,rad=0.18'))
     foot(fig, 'Three reactive elements and a square wave. The switches only '
               'set the frequency; the tank decides how much power flows and '
               'the transformer sets the voltage.')
@@ -254,7 +259,7 @@ def an_architectures(save, foot):
         return x
 
     ax = axs[0]
-    S.frame(ax, -0.2, 13.6, -1.9, 1.5, 'two stages, the usual arrangement')
+    S.frame(ax, -0.2, 15.4, -1.9, 1.5, 'two stages, the usual arrangement')
     chain(ax, [(1.5, 'mains', 'white', GREY),
                (1.6, 'bridge', LT, GREY),
                (2.3, 'boost PFC', LT, GREY),
@@ -268,7 +273,7 @@ def an_architectures(save, foot):
                 arrowprops=dict(arrowstyle='-|>', color=MAG, lw=1.5))
 
     ax = axs[1]
-    S.frame(ax, -0.2, 13.6, -1.9, 1.5, 'one stage')
+    S.frame(ax, -0.2, 15.4, -1.9, 1.5, 'one stage')
     chain(ax, [(1.5, 'mains', 'white', GREY),
                (1.6, 'bridge', LT, GREY),
                (2.5, 'PF LLC', CYA, NAVY),
