@@ -276,13 +276,15 @@ def mark_modes(name):
                font=f, fill=colour)
 
     told = []
+    step = iter(('1 power delivery', '2 freewheeling',
+                 '3 power delivery', '4 freewheeling'))
     for base, low in zip(zeros, lows):
         c = np.where(navy[low - 16:low - 4, X0:X1].any(axis=0))[0] + X0
         gate = (c.min(), c.max())            # this half, gate high
         over = lambda r: min(r[1], gate[1]) - max(r[0], gate[0])
         pd = max(gaps(base), key=over)       # the conducting run inside it
-        span(pd[0], pd[1], base + 13, GRN, 'power delivery')
-        span(pd[1], gate[1], base + 36, MAG, 'freewheeling')
+        span(pd[0], pd[1], base + 13, GRN, next(step))
+        span(pd[1], gate[1], base + 36, MAG, next(step))
         told.append('%d..%d..%d' % (pd[0], pd[1], gate[1]))
     im.save(p)
     print('  %-26s 4 intervals marked  (%s)' % (name, ' | '.join(told)))
@@ -332,12 +334,12 @@ def main():
     #    power delivery operation".  The pairs match the gate traces in
     #    an_ref_modes_i.
     band('an_ref_op_power_raw.png', 'an_ref_op_power.png',
-         [(0.25, 'POWER DELIVERY   1st half:  S1,S4 on'),
-          (0.75, 'POWER DELIVERY   2nd half:  S2,S3 on')], h=48, size=27)
+         [(0.25, 'STEP 1   POWER DELIVERY,  S1,S4 on'),
+          (0.75, 'STEP 3   POWER DELIVERY,  S2,S3 on')], h=48, size=27)
     fix_freewheel_2nd_half('an_ref_op_free_raw.png', 'an_ref_op_free_fix.png')
     band('an_ref_op_free_fix.png', 'an_ref_op_free.png',
-         [(0.25, 'FREEWHEELING   1st half:  S1,S4 still on'),
-          (0.75, 'FREEWHEELING   2nd half:  S2,S3 still on')], h=48, size=27)
+         [(0.25, 'STEP 2   FREEWHEELING,  S1,S4 still on'),
+          (0.75, 'STEP 4   FREEWHEELING,  S2,S3 still on')], h=48, size=27)
 
     # 3. The source writes n for the WOUND ratio. In this document n is the
     #    equivalent-model ratio and the wound one is n_T - and this is the
