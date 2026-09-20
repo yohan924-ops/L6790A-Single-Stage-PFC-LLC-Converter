@@ -80,43 +80,50 @@ def hcap(ax, x, y, s=0.30, gap=0.11, color=NAVY, lw=2.2, z=4):
         ax.plot([x + dx] * 2, [y - s, y + s], color=color, lw=lw, zorder=z)
 
 
-def coil_pts(x, y0, y1, n=5, side=-1, m=26):
-    """A vertical winding as ONE polyline, bottom to top.
+#  A winding is a stack of half circles whose diameters lie on the lead
+#  line.  Two of them meet tangent-to-tangent pointing opposite ways, which
+#  is a cusp, and a cusp rendered with a join turns into a little hook at
+#  every turn - the thing that made these look frayed.  So the arcs are
+#  separated by a break: one plot call, no joins, and the round caps close
+#  the seam.  The highlight uses the same points and gets the same breaks.
+BRK = (np.nan, np.nan)
 
-    The drawing and the current highlight both come from this, so the
-    highlight follows the loops instead of running down their chord - which
-    is what a straight highlight under a coil looks like, and it is the
-    reason the windings went to pieces once the highlight moved underneath.
-    """
+
+def coil_pts(x, y0, y1, n=5, side=-1, m=26):
+    """A vertical winding, bottom to top, with a break between turns."""
     r = abs(y1 - y0) / (2.0 * n)
     lo = min(y0, y1)
     a = np.linspace(-np.pi / 2, np.pi / 2, m)
     pts = []
     for k in range(n):
         cy = lo + r * (2 * k + 1)
+        if pts:
+            pts.append(BRK)
         pts += list(zip(x + side * r * np.cos(a), cy + r * np.sin(a)))
     return pts
 
 
-def hcoil_pts(x, y, s=0.90, n=5, m=26):
-    """A horizontal winding as one polyline, left to right."""
+def hcoil_pts(x, y, s=0.90, n=4, m=26):
+    """A horizontal winding, left to right, with a break between turns."""
     r = s / (2.0 * n)
     a = np.linspace(np.pi, 0, m)
     pts = []
     for k in range(n):
         cx = x - s / 2 + r * (2 * k + 1)
+        if pts:
+            pts.append(BRK)
         pts += list(zip(cx + r * np.cos(a), y + r * np.sin(a)))
     return pts
 
 
 def coil(ax, x, y0, y1, n=5, side=-1, color=NAVY, lw=2.0, z=4):
     xs, ys = zip(*coil_pts(x, y0, y1, n, side))
-    ax.plot(xs, ys, color=color, lw=lw, zorder=z, solid_joinstyle='round')
+    ax.plot(xs, ys, color=color, lw=lw, zorder=z, solid_capstyle='round')
 
 
-def hcoil(ax, x, y, s=0.90, n=5, color=NAVY, lw=2.0, z=4):
+def hcoil(ax, x, y, s=0.90, n=4, color=NAVY, lw=2.0, z=4):
     xs, ys = zip(*hcoil_pts(x, y, s, n))
-    ax.plot(xs, ys, color=color, lw=lw, zorder=z, solid_joinstyle='round')
+    ax.plot(xs, ys, color=color, lw=lw, zorder=z, solid_capstyle='round')
 
 
 def vdiode(ax, x, y, s=0.26, up=True, color=NAVY, lw=2.2, z=4):
@@ -152,7 +159,9 @@ YT, YB = 4.75, 2.95                 # tank goes out on YT, comes back on YB
 XCR, XLR, XLM, XTR = 8.70, 10.05, 11.30, 12.75
 YMID = (YT + YB) / 2.0
 VP, VN = YMID + 2.60, YMID - 2.60   # output rails, symmetric about the tank
-XS = XTR + 0.40                     # the secondary winding line
+XP = XTR - 0.58                     # primary lead line, bumps face the core
+XS = XTR + 0.58                     # secondary lead line, bumps face it too
+LEAD = 0.06                         # straight bit before the first turn
 #  Centre tap, the way this design actually rectifies: the tap is V_o+ and
 #  the two winding ends are pulled to the return through one device each.
 #  Order matters - with the near leg fed from the LOWER end and the far one
@@ -257,15 +266,15 @@ def _skeleton(ax, states):
     hcap(ax, XCR, YT, 0.30)
     txt(ax, XCR, YT + 0.66, 'C$_r$', size=11.5)
     wire(ax, [(XCR + 0.11, YT), (XLR - 0.45, YT)])
-    hcoil(ax, XLR, YT, 0.90)
+    hcoil(ax, XLR, YT, 0.90, 4)
     txt(ax, XLR, YT + 0.66, 'L$_r$', size=11.5)
-    wire(ax, [(XLR + 0.45, YT), (XTR - 0.40, YT)])
-    wire(ax, [(XR, YB), (XTR - 0.40, YB)])
+    wire(ax, [(XLR + 0.45, YT), (XP, YT)])
+    wire(ax, [(XR, YB), (XP, YB)])
 
     # L_m across the winding, bulging away from the transformer
-    coil(ax, XLM, YB + 0.28, YT - 0.28, n=5, side=-1)
-    wire(ax, [(XLM, YT), (XLM, YT - 0.28)])
-    wire(ax, [(XLM, YB + 0.28), (XLM, YB)])
+    coil(ax, XLM, YB + 0.24, YT - 0.24, n=5, side=-1)
+    wire(ax, [(XLM, YT), (XLM, YT - 0.24)])
+    wire(ax, [(XLM, YB + 0.24), (XLM, YB)])
     dot(ax, XLM, YT)
     dot(ax, XLM, YB)
     txt(ax, XLM - 0.50, YMID, 'L$_m$', size=11.5, ha='right')
@@ -273,20 +282,24 @@ def _skeleton(ax, states):
     # ---- the transformer, centre-tapped secondary
     for xx in (XTR - 0.13, XTR + 0.13):
         ax.plot([xx, xx], [YB - 0.38, YT + 0.38], color=GREY, lw=2.4, zorder=3)
-    coil(ax, XTR - 0.40, YB, YT, n=5, side=-1)
+    coil(ax, XP, YB + LEAD, YT - LEAD, n=6, side=+1)
+    wire(ax, [(XP, YB), (XP, YB + LEAD)])
+    wire(ax, [(XP, YT - LEAD), (XP, YT)])
     # A dot beside a coil has to clear the widest loop AND stay nearer its
     # own coil than the next one; there is no such spot here.  Above the
     # terminal there is, and it is unambiguous.
-    dot(ax, XTR - 0.40, YT + 0.26, NAVY, 4.8)
-    txt(ax, XTR - 0.40, YB - 0.70, 'N$_p$', size=11.5)
+    dot(ax, XP, YT + 0.26, NAVY, 4.8)
+    txt(ax, XP, YB - 0.70, 'N$_p$', size=11.5)
 
-    coil(ax, XS, YMID + 0.08, YT, n=3, side=+1)
-    coil(ax, XS, YB, YMID - 0.08, n=3, side=+1)
-    wire(ax, [(XS, YMID - 0.08), (XS, YMID + 0.08)])
+    coil(ax, XS, YMID + LEAD, YT - LEAD, n=3, side=-1)
+    coil(ax, XS, YB + LEAD, YMID - LEAD, n=3, side=-1)
+    wire(ax, [(XS, YB), (XS, YB + LEAD)])
+    wire(ax, [(XS, YMID - LEAD), (XS, YMID + LEAD)])
+    wire(ax, [(XS, YT - LEAD), (XS, YT)])
     dot(ax, XS, YT + 0.26, NAVY, 4.8)
     dot(ax, XS, YMID)
-    txt(ax, XS + 0.62, (YMID + YT) / 2.0, 'N$_{s1}$', size=11, ha='left')
-    txt(ax, XS + 0.62, (YMID + YB) / 2.0, 'N$_{s2}$', size=11, ha='left')
+    txt(ax, XS + 0.42, (YMID + YT) / 2.0, 'N$_{s1}$', size=11, ha='left')
+    txt(ax, XS + 0.42, (YMID + YB) / 2.0, 'N$_{s2}$', size=11, ha='left')
 
     # ---- secondary: centre tap out to V_o+, one rectifier per winding end
     wire(ax, [(XS, YB), (XQ1, YB)])                       # lower end, near leg
@@ -340,18 +353,18 @@ def _skeleton(ax, states):
 #  the tank current does not reverse because a switch opened.
 P_HI, P_LO = (0.25, HI), (0.25, LO)
 A, B = (XL, YT), (XR, YB)
-NP_T, NP_B = (XTR - 0.40, YT), (XTR - 0.40, YB)
+NP_T, NP_B = (XP, YT), (XP, YB)
 NS_T, NS_B, NS_C = (XS, YT), (XS, YB), (XS, YMID)
 LM_T, LM_B = (XLM, YT), (XLM, YB)
 HOPS = [(XR, YT), (XCT, YT)]
 #  Every winding the current can run through, as (x, ylo, yhi, turns, side)
 #  for the vertical ones and (x, y, span, turns) for L_r.  A segment that
 #  covers one of these is replaced by the winding's own polyline.
-VCOILS = [(XLM, YB + 0.28, YT - 0.28, 5, -1),
-          (XTR - 0.40, YB, YT, 5, -1),
-          (XS, YMID + 0.08, YT, 3, +1),
-          (XS, YB, YMID - 0.08, 3, +1)]
-HCOILS = [(XLR, YT, 0.90, 5)]
+VCOILS = [(XLM, YB + 0.24, YT - 0.24, 5, -1),
+          (XP, YB + LEAD, YT - LEAD, 6, +1),
+          (XS, YMID + LEAD, YT - LEAD, 3, -1),
+          (XS, YB + LEAD, YMID - LEAD, 3, -1)]
+HCOILS = [(XLR, YT, 0.90, 4)]
 
 
 def bd(x, y, h=DEVH):
