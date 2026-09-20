@@ -1161,6 +1161,10 @@ FIGS = {'f02': f02_two_resonances, 'f03': f03_gain_walk,
 FIGS.update({k: (lambda f=f: f(save, foot))
              for k, f in figs_intro.FIGS.items()})
 
+import figs_ref                                                      # noqa: E402
+# the drawings that replaced the borrowed screenshots
+FIGS.update({k: (lambda f=f: f(save, foot)) for k, f in figs_ref.FIGS.items()})
+
 import figs_modes                                                    # noqa: E402
 FIGS['an_above_below'] = lambda: figs_modes.an_above_below(
     save, foot, R, sweep, FR)
