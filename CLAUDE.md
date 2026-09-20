@@ -121,7 +121,7 @@ ST 평가보드는 **48 V 중간 버스를 만든 뒤 후단 벅 3개**로 나�
 | `Reference/EVLHV101SSR50W Design Guide.sm` | HVLED101 단일단 플라이백 SMath. **본 시트의 레이아웃 원본** | 원본 |
 | `Reference/Smath Bode Plot Example/` | `Bode.sm` · `MyBode.sm` · `Project Admittance Copy.sm`. **시트 §16.6 보드선도의 기법 원본** | 원본 |
 | **`Reference/Visio-LLC drawing.pdf`** | **본 설계 회로도(벡터).** 3코어 · 1차 직렬 · 2차 병렬 · 센터탭 저측 정류 · 보조 3직렬. **벡터라 배선을 넷리스트로 뽑을 수 있다** — 점프 아크 13개가 배선을 끊으므로 그것을 이어야 한다 | 원본 |
-| `Reference/` (그 외) | ECCE Wenbo 1.65 kW 단일단 논문, Infineon AN 2013-03, onsemi AN-4151, **TDK SRX/SRV LLC 트랜스포머 가이드, Infineon ICL5102(LCC) AN, Toshiba PFC AN(AKX00080 — PFC 그림 3장), Infineon AN 2012-09(공진 LLC 동작·설계 — above/below 파형 3열의 출처이고 표기가 우리와 같다), TI SDAA419**(권선비 보정 인수 — 가이드 §3.10 인용, `HISTORY.md` 2026-09-04) | 원본 |
+| `Reference/` (그 외) | ECCE Wenbo 1.65 kW 단일단 논문, Infineon AN 2013-03, onsemi AN-4151, **TDK SRX/SRV LLC 트랜스포머 가이드, Infineon ICL5102(LCC) AN, Toshiba PFC AN(AKX00080 — PFC 그림 3장), Infineon AN 2012-09(공진 LLC 동작·설계 — above/below 파형 3열의 출처이고 표기가 우리와 같다), TI SDAA419**(권선비 보정 인수 — 가이드 §3.10 인용, `HISTORY.md` 2026-09-04), **Toshiba `Resonant Circuits and Soft Switching`(2019, 32쪽)** — 그 AN §3.2 가 하프브리지 LLC 반주기를 8개 모드로 쪼갠다. 우리 STEP 1~4 와 데드타임의 **독립 출처 확인**이고, 다만 "freewheeling" 이라는 말은 데드타임의 바디 다이오드에 쓴다 (시트 §6.1 항목 8c) | 원본 |
 | `HISTORY.md` | **근거 문서** — 검증 이력, 정오표 C.1–C.17, 하드웨어 분석, 사고 기록, 시트 §8 **사건** 타임라인 | — |
 
 ### 2.1 산출물의 성격 (사용자 정의)
@@ -406,7 +406,19 @@ LOUT2를 정적 High로 두어 2번 레그 로우사이드를 계속 도통시�
     **그리고 "프리휠링" 이라는 말이 두 구간에 쓰인다는 주의 상자를 넣었다** — 여기서는
     STEP 2·4(2차 꺼짐 · L.m 복귀 · 스위치 쌍 그대로)이고, 위상천이 풀브리지 계열 자료는 같은
     말을 **데드타임**에 쓴다. **데드타임은 주파수와 무관하게 매 주기에 있고 STEP 2·4 는
-    below 에서만 있다가 `f.r` 에서 0 이 된다** — 다른 자료와 대조하기 전에 어느 구간인지부터 볼 것
+    below 에서만 있다가 `f.r` 에서 0 이 된다** — 다른 자료와 대조하기 전에 어느 구간인지부터 볼 것.
+    **2026-09-20 에 Toshiba `Resonant Circuits and Soft Switching`(2019) 가 도착해 대조했고,
+    순서는 독립 출처로 확인됐다.** 그 AN §3.2 의 8개 모드가 우리 STEP 과 하나씩 맞는다 —
+    mode 1-1·1-2 = STEP 1(Q1 on · D1 도통) · **mode 2 = STEP 2**(Q1 **그대로 on** · `i.o1` = 0 ·
+    2차 꺼짐) · mode 3·4 = 데드타임(Coss 충방전 → 바디 다이오드, **ZVS 는 여기**) ·
+    mode 5-1·5-2 = STEP 3 · **mode 6 = STEP 4** · mode 7·8 = 데드타임. Figure 3.7 과 3.12 가
+    **서로 거울상이고 둘 다 1차에 점선(자화 전류) 고리만 있고 2차 고리가 없다** — "S2·S3 에는
+    프리휠링이 없다"는 의문에 대한 독립 반증이다. **다만 그 문서는 mode 2·6 에 이름을 안 붙이고,
+    "freewheeling" 이라는 말을 데드타임의 바디 다이오드에 쓴다**(mode 5-1: "Q2 turns on while
+    DQ2 is freewheeling under the ZVS condition"). 즉 **물리는 같고 이름표만 다른 구간에 붙은 것**이며,
+    위에서 말한 두 용법 중 둘째가 위상천이 풀브리지만의 것이 아니라 LLC 자료에도 있다는 뜻이다 —
+    AN 의 주의 상자를 그 예까지 적도록 고쳤다(양 판 12쪽). **그 AN §3.1 은 비교 대상이 아니다** —
+    거기는 `i.Q1`·`i.Q2`·`i.Cr` 만 보는 4단계 개관이라 2차를 아예 안 다루고 프리휠링 구간이 없다
 8d. **Infineon AN 2012-09 의 Figure 2.8 은 캡션과 맞지 않는다** (2026-09-17, 위를 확인하다 발견).
     "freewheeling, 2nd half" 라고 돼 있는데 화살표가 **S1·S4 를 거꾸로** 타고 흐른다
     (전류가 + 단자로 되돌아 나간다). S2·S3 가 켜진 프리휠링이라면 Figure 2.6 과 같은 경로에서
