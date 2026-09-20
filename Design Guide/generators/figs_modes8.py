@@ -199,14 +199,6 @@ def mosfet(ax, x, y, name, state, h=DEVH):
     wire(ax, [(x + DX_C, yb), (x + DX_C, y - 0.12)], cc, 1.4)
     wire(ax, [(x + DX_C, y + 0.12), (x + DX_C, yt)], cc, 1.4)
     vcap(ax, x + DX_C, y, 0.28, 0.12, color=cc, lw=2.0)
-    if state in ('charge', 'discharge'):
-        d = 1.0 if state == 'charge' else -1.0
-        ax.add_patch(FancyArrowPatch((x + DX_C + 0.48, y - d * 0.34),
-                                     (x + DX_C + 0.48, y + d * 0.66),
-                                     arrowstyle='-|>', mutation_scale=12,
-                                     color=cc, lw=1.7, zorder=6,
-                                     shrinkA=0, shrinkB=0))
-
     txt(ax, x - XGATE - 0.14, y, name, size=11.5, weight='bold',
         color=NAVY if state != 'off' else GREY, ha='right')
     return (x, yt), (x, yb)
@@ -215,7 +207,7 @@ def mosfet(ax, x, y, name, state, h=DEVH):
 def _skeleton(ax, states):
     """Everything that is the same in every panel."""
     ax.set_xlim(-0.75, XEND + 2.05)
-    ax.set_ylim(-1.35, 10.30)
+    ax.set_ylim(-1.75, 10.30)
     ax.set_xticks([])
     ax.set_yticks([])
     ax.set_aspect('equal')
@@ -263,14 +255,16 @@ def _skeleton(ax, states):
     for xx in (XTR - 0.13, XTR + 0.13):
         ax.plot([xx, xx], [YB - 0.38, YT + 0.38], color=GREY, lw=2.4, zorder=3)
     coil(ax, XTR - 0.40, YB, YT, n=5, side=-1)
-    # the polarity dots sit OUTSIDE the widest loop, not on top of it
-    dot(ax, XTR - 0.40 - 0.18 - 0.17, YT - 0.15, NAVY, 4.8)
+    # A dot beside a coil has to clear the widest loop AND stay nearer its
+    # own coil than the next one; there is no such spot here.  Above the
+    # terminal there is, and it is unambiguous.
+    dot(ax, XTR - 0.40, YT + 0.26, NAVY, 4.8)
     txt(ax, XTR - 0.40, YB - 0.70, 'N$_p$', size=11.5)
 
     coil(ax, XS, YMID + 0.08, YT, n=3, side=+1)
     coil(ax, XS, YB, YMID - 0.08, n=3, side=+1)
     wire(ax, [(XS, YMID - 0.08), (XS, YMID + 0.08)])
-    dot(ax, XS + 0.14 + 0.17, YT - 0.13, NAVY, 4.8)
+    dot(ax, XS, YT + 0.26, NAVY, 4.8)
     dot(ax, XS, YMID)
     txt(ax, XS + 0.62, (YMID + YT) / 2.0, 'N$_{s1}$', size=11, ha='left')
     txt(ax, XS + 0.62, (YMID + YB) / 2.0, 'N$_{s2}$', size=11, ha='left')
@@ -393,19 +387,29 @@ def path(ax, pts, load=True, heads=(), lw=3.8):
 
     load=True  -> solid magenta, power is being delivered
     load=False -> dashed cyan, only the magnetising current circulates
-    heads: indices into pts; an arrowhead goes on the segment ENDING there
+    heads: (index, fraction) pairs - the segment ENDING at index, and how
+    far along it the arrowhead goes.  The fraction is not cosmetic: at the
+    default 0.62 the right leg's arrow landed exactly on the wire hop and
+    the left leg's inside the MOSFET symbol, because those are where 62 %
+    of those particular runs falls.
     """
     col = MAG if load else CYA
     xs, ys = zip(*_with_hops(pts))
-    ax.plot(xs, ys, color=col, lw=lw, alpha=0.45 if load else 0.62, zorder=7,
-            solid_capstyle='round', ls='-' if load else (0, (4.0, 2.4)))
-    for i in heads:
+    # UNDER the schematic, not over it.  Laid on top, a 3.8-wide highlight
+    # swallowed the chord of every coil it ran through and struck out the
+    # device names; underneath it reads as a glow round the wire and every
+    # symbol stays whole.
+    ax.plot(xs, ys, color=col, lw=lw + 1.4, alpha=0.42 if load else 0.60,
+            zorder=1.5, solid_capstyle='round',
+            ls='-' if load else (0, (3.4, 2.0)))
+    for h in heads:
+        i, f = h if isinstance(h, tuple) else (h, 0.62)
         p0, p1 = np.array(pts[i - 1], float), np.array(pts[i], float)
         d = p1 - p0
         n = np.hypot(*d)
         if n < 1e-9:
             continue
-        m = p0 + 0.62 * d
+        m = p0 + f * d
         ax.add_patch(FancyArrowPatch(m - d / n * 0.13, m + d / n * 0.13,
                                      arrowstyle='-|>', mutation_scale=18,
                                      color=col, lw=2.5, zorder=8,
@@ -417,7 +421,7 @@ MODES = [
     dict(n=1, t='POWER DELIVERY', sub='S1, S4 on  ·  D1 conducts  ·  lower half of N$_s$',
          sw=dict(S1=ON, S2=OFF, S3=OFF, S4=ON), d=(1, 0),
          pri=PRI_FWD_XFMR, load=True, lm=True, sec=SEC_LO,
-         note='L$_m$ is clamped, so i$_{Lm}$ ramps straight and i$_{Lr}$ - i$_{Lm}$ is the half sine that crosses.',
+         note=('L$_m$ is clamped, so i$_{Lm}$ is a straight ramp and i$_{Lr}$ - i$_{Lm}$ is the half sine that crosses.\ni$_{Lm}$ passes through zero inside this interval, which is why the L$_m$ branch carries no arrow.'),
          say='The tank rings at f$_r$. L$_m$ is clamped by the output, so '
              'i$_{Lm}$ ramps straight and the difference i$_{Lr}$ - i$_{Lm}$ '
              'is the half sine that crosses to the secondary.'),
@@ -434,7 +438,7 @@ MODES = [
          d=(0, 0), pri=PRI_FWD_LM, load=False, lm=False, sec=None,
          coss=True,
          swing=(':  V$_{in}$ $\\rightarrow$ 0', ':  0 $\\rightarrow$ V$_{in}$'),
-         note='All four channels off. The arrow on each C$_{oss}$ is its V$_{ds}$:  magenta rising, cyan falling.',
+         note=('All four channels off, so the current is in the four C$_{oss}$ and what it does is carry the midpoints across.\nMagenta means that C$_{oss}$ is charging and its V$_{ds}$ rising;  cyan means discharging.'),
          say='The same magnetising current keeps flowing and has nowhere to '
              'go but the device capacitances. Node A falls from V$_{in}$ to '
              '0 and node B rises from 0 to V$_{in}$.'),
@@ -442,7 +446,7 @@ MODES = [
                                                  'clamp',
          sw=dict(S1=OFF, S2='diode', S3='diode', S4=OFF), d=(0, 0),
          pri=PRI_FWD_DIODE, load=False, lm=False, sec=None,
-         heads=(4, 8, 12),
+         heads=((6, 0.62), (7, 0.45), (14, 0.55)),
          zvs='S2 and S3 now stand at V$_{ds}$ = 0.\nGATE THEM ON HERE.',
          note='V$_{ds}$ = 0 on S2 and S3 now, because their own body diodes are clamping them. Gate them on HERE.',
          say='Once the swing finishes the current cannot stop, so it takes '
@@ -451,7 +455,7 @@ MODES = [
     dict(n=5, t='POWER DELIVERY', sub='S2, S3 on  ·  D2 conducts  ·  upper half of N$_s$',
          sw=dict(S1=OFF, S2=ON, S3=ON, S4=OFF), d=(0, 1),
          pri=PRI_REV_XFMR, load=True, lm=True, sec=SEC_HI,
-         note='The mirror of 1. Just after turn-on the old current still runs back through the two channels.',
+         note=('The mirror of 1. Just after turn-on the old current still runs back through the two channels,\nand i$_{Lm}$ ramps through zero again - so again no arrow on the L$_m$ branch.'),
          say='The mirror image of interval 1. For the first moments after '
              'turn-on the old current is still running the other way through '
              'the two channels; power delivery starts when i$_{Lr}$ '
@@ -469,14 +473,14 @@ MODES = [
          d=(0, 0), pri=PRI_REV_LM, load=False, lm=False, sec=None,
          coss=True,
          swing=(':  0 $\\rightarrow$ V$_{in}$', ':  V$_{in}$ $\\rightarrow$ 0'),
-         note='The mirror of 3. Node B falls, node A rises, and the same magnetising current moves the charge.',
+         note=('The mirror of 3. Node B falls, node A rises, and the same magnetising current moves the charge.\nSame colours:  magenta charging, cyan discharging.'),
          say='The mirror image of interval 3. Node B falls and node A rises, '
              'and the charge is moved by the magnetising current again.'),
     dict(n=8, t='DEAD TIME (b)  —  ZVS', sub='body diodes of S1 and S4 '
                                                  'clamp',
          sw=dict(S1='diode', S2=OFF, S3=OFF, S4='diode'), d=(0, 0),
          pri=PRI_REV_DIODE, load=False, lm=False, sec=None,
-         heads=(4, 8, 12),
+         heads=((7, 0.45), (9, 0.45), (14, 0.55)),
          zvs='S1 and S4 now stand at V$_{ds}$ = 0.\nGATE THEM ON HERE.',
          note='The same for S1 and S4, and the period closes. ZVS is in 4 and 8 - and in none of the other six.',
          say='The mirror image of interval 4, and the period closes. ZVS '
@@ -498,12 +502,16 @@ def panel(ax, m):
         st[k] = bool(v)
     _skeleton(ax, st)
 
-    path(ax, m['pri'], load=m['load'], heads=m.get('heads', (2, 4, 6)))
-    if m['lm']:                       # the magnetising branch, split off
-        path(ax, [LM_T, LM_B] if m['pri'] is PRI_FWD_XFMR else [LM_B, LM_T],
-             load=False, heads=(1,), lw=3.2)
+    path(ax, m['pri'], load=m['load'],
+         heads=m.get('heads', ((2, 0.90), (3, 0.45), (6, 0.90))))
+    if m['lm']:
+        # The magnetising current does flow here - but it ramps THROUGH zero
+        # inside this interval, so it has no one direction and gets no
+        # arrowhead.  Only the load component keeps its sign all the way.
+        path(ax, [LM_T, LM_B], load=False, lw=3.2)
     if m['sec']:
-        path(ax, m['sec'], load=True, heads=(2, 4, 7))
+        path(ax, m['sec'], load=True,
+             heads=((2, 0.62), (4, 0.75), (7, 0.45)))
 
     sa, sb = m.get('swing', ('', ''))
     txt(ax, NODE_A[0], NODE_A[1], 'A' + sa, size=11, weight='bold', color=PUR,
@@ -512,7 +520,8 @@ def panel(ax, m):
         ha='left', halo=True)
 
     zvs = bool(m.get('zvs'))
-    ax.text(-0.55, -0.80, m['note'], ha='left', va='center', fontsize=10.6,
+    ax.text(-0.55, -1.02, m['note'], ha='left', va='center',
+            fontsize=10.6, linespacing=1.45,
             color=GRN if zvs else GREY, fontweight='bold' if zvs else 'normal')
 
     ax.text(-0.55, 9.55, '%d' % m['n'], ha='left', va='center', fontsize=21,
@@ -691,27 +700,35 @@ def waveforms(axes, lam, fsw_over_fr, ilr_pk, ilm_pk, td_draw=0.045):
 
 
 # ------------------------------------------------------------- the sheets
-LEGEND = [('load current  -  power crosses to the secondary', MAG, '-'),
-          ('magnetising current only  -  nothing crosses', CYA, (0, (4, 2.4))),
-          ('gated on', YEL, None),
-          ('body diode conducting  -  V$_{ds}$ = 0, the ZVS window', GRN,
-           None)]
-LEG_X = (0.028, 0.288, 0.532, 0.628)
+LEGEND = [('load current', MAG, 'solid'),
+          ('magnetising current only', CYA, 'dash'),
+          ('gated on', YEL, 'fill'),
+          ('body diode conducting = the ZVS window', GRN, 'outline'),
+          ('C$_{oss}$ charging, V$_{ds}$ rising', MAG, 'cap'),
+          ('C$_{oss}$ discharging', CYA, 'cap')]
+LEG_X = (0.030, 0.144, 0.310, 0.397, 0.608, 0.726)
 
 
-def _legend(fig, y=0.012):
-    for x, (what, col, ls) in zip(LEG_X, LEGEND):
-        if ls is None:
+def _legend(fig, y=0.010):
+    for x, (what, col, kind) in zip(LEG_X, LEGEND):
+        if kind in ('solid', 'dash'):
+            fig.add_artist(plt.Line2D(
+                [x, x + 0.026], [y + 0.010] * 2, transform=fig.transFigure,
+                color=col, lw=3.2, clip_on=False,
+                ls='-' if kind == 'solid' else (0, (4, 2.4))))
+            dx = 0.032
+        elif kind == 'cap':
+            for dy in (0.004, 0.016):
+                fig.add_artist(plt.Line2D(
+                    [x, x + 0.016], [y + dy] * 2, transform=fig.transFigure,
+                    color=col, lw=2.4, clip_on=False))
+            dx = 0.022
+        else:
             fig.patches.append(plt.Rectangle(
                 (x, y + 0.003), 0.015, 0.013, transform=fig.transFigure,
-                fc=col if col is YEL else 'white', ec=col, lw=2.0,
+                fc=col if kind == 'fill' else 'white', ec=col, lw=2.0,
                 zorder=5, clip_on=False))
             dx = 0.021
-        else:
-            fig.add_artist(plt.Line2D([x, x + 0.026], [y + 0.010] * 2,
-                                      transform=fig.transFigure, color=col,
-                                      lw=3.2, ls=ls, clip_on=False))
-            dx = 0.032
         fig.text(x + dx, y + 0.010, what, fontsize=9.6, color=GREY,
                  va='center')
 
