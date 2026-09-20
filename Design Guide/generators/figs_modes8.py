@@ -80,24 +80,43 @@ def hcap(ax, x, y, s=0.30, gap=0.11, color=NAVY, lw=2.2, z=4):
         ax.plot([x + dx] * 2, [y - s, y + s], color=color, lw=lw, zorder=z)
 
 
-def coil(ax, x, y0, y1, n=5, side=-1, color=NAVY, lw=2.0, z=4):
-    """n half loops on the vertical line x, bulging to `side`."""
+def coil_pts(x, y0, y1, n=5, side=-1, m=26):
+    """A vertical winding as ONE polyline, bottom to top.
+
+    The drawing and the current highlight both come from this, so the
+    highlight follows the loops instead of running down their chord - which
+    is what a straight highlight under a coil looks like, and it is the
+    reason the windings went to pieces once the highlight moved underneath.
+    """
     r = abs(y1 - y0) / (2.0 * n)
-    a = np.linspace(-np.pi / 2, np.pi / 2, 40)
+    lo = min(y0, y1)
+    a = np.linspace(-np.pi / 2, np.pi / 2, m)
+    pts = []
     for k in range(n):
-        cy = min(y0, y1) + r * (2 * k + 1)
-        ax.plot(x + side * r * np.cos(a), cy + r * np.sin(a), color=color,
-                lw=lw, zorder=z)
+        cy = lo + r * (2 * k + 1)
+        pts += list(zip(x + side * r * np.cos(a), cy + r * np.sin(a)))
+    return pts
+
+
+def hcoil_pts(x, y, s=0.90, n=5, m=26):
+    """A horizontal winding as one polyline, left to right."""
+    r = s / (2.0 * n)
+    a = np.linspace(np.pi, 0, m)
+    pts = []
+    for k in range(n):
+        cx = x - s / 2 + r * (2 * k + 1)
+        pts += list(zip(cx + r * np.cos(a), y + r * np.sin(a)))
+    return pts
+
+
+def coil(ax, x, y0, y1, n=5, side=-1, color=NAVY, lw=2.0, z=4):
+    xs, ys = zip(*coil_pts(x, y0, y1, n, side))
+    ax.plot(xs, ys, color=color, lw=lw, zorder=z, solid_joinstyle='round')
 
 
 def hcoil(ax, x, y, s=0.90, n=5, color=NAVY, lw=2.0, z=4):
-    """n half loops along the horizontal run centred on x."""
-    r = s / (2.0 * n)
-    a = np.linspace(np.pi, 0, 40)
-    for k in range(n):
-        cx = x - s / 2 + r * (2 * k + 1)
-        ax.plot(cx + r * np.cos(a), y + r * np.sin(a), color=color, lw=lw,
-                zorder=z)
+    xs, ys = zip(*hcoil_pts(x, y, s, n))
+    ax.plot(xs, ys, color=color, lw=lw, zorder=z, solid_joinstyle='round')
 
 
 def vdiode(ax, x, y, s=0.26, up=True, color=NAVY, lw=2.2, z=4):
@@ -325,6 +344,14 @@ NP_T, NP_B = (XTR - 0.40, YT), (XTR - 0.40, YB)
 NS_T, NS_B, NS_C = (XS, YT), (XS, YB), (XS, YMID)
 LM_T, LM_B = (XLM, YT), (XLM, YB)
 HOPS = [(XR, YT), (XCT, YT)]
+#  Every winding the current can run through, as (x, ylo, yhi, turns, side)
+#  for the vertical ones and (x, y, span, turns) for L_r.  A segment that
+#  covers one of these is replaced by the winding's own polyline.
+VCOILS = [(XLM, YB + 0.28, YT - 0.28, 5, -1),
+          (XTR - 0.40, YB, YT, 5, -1),
+          (XS, YMID + 0.08, YT, 3, +1),
+          (XS, YB, YMID - 0.08, 3, +1)]
+HCOILS = [(XLR, YT, 0.90, 5)]
 
 
 def bd(x, y, h=DEVH):
@@ -350,9 +377,9 @@ PRI_REV_DIODE = ([P_LO, (XR, LO)] + bd(XR, SH[1]) + [B, LM_B, LM_T, A]
 #  dot, which is the tap for the lower half - so the LOWER end conducts in
 #  the first half and the upper end in the second.
 SEC_LO = [NS_C, (XCT, YMID), (XCT, VP), (XLD, VP), (XLD, VN), (XQ1, VN),
-          (XQ1, YB), NS_B]
+          (XQ1, YB), NS_B, NS_C]
 SEC_HI = [NS_C, (XCT, YMID), (XCT, VP), (XLD, VP), (XLD, VN), (XQ2, VN),
-          (XQ2, YT), NS_T]
+          (XQ2, YT), NS_T, NS_C]
 
 
 def _arc(hx, hy, r, going_right):
@@ -360,24 +387,46 @@ def _arc(hx, hy, r, going_right):
     return [(hx + r * np.cos(t), hy + r * np.sin(t)) for t in a]
 
 
-def _with_hops(pts, r=0.20):
-    """Make the highlight climb the same hops the wire does.
+def _detour(p0, p1, r=0.20):
+    """What the highlight does between two points instead of a straight run.
 
-    Drawn straight, the highlight runs through the crossing and the panel
-    then claims a connection that is not there - which matters most in
-    exactly the panels where both wires are live.
+    A run can hold more than one thing to follow - the tank wire crosses the
+    right leg AND goes through L_r - so every feature on the segment is
+    collected and laid down in travel order.  Returning at the first match
+    left L_r flattened under a straight band.
     """
+    (x0, y0), (x1, y1) = p0, p1
+    segs = []
+    if abs(y0 - y1) < 1e-9:                                   # horizontal
+        lo, hi = min(x0, x1), max(x0, x1)
+        for hx, hy in HOPS:
+            if abs(y0 - hy) < 1e-9 and lo < hx - r and hx + r < hi:
+                segs.append((hx, [(hx - r, hy)] + _arc(hx, hy, r, True)
+                             + [(hx + r, hy)]))
+        for cx, cy, span, n in HCOILS:
+            if abs(y0 - cy) < 1e-9 and lo <= cx - span / 2.0 \
+                    and cx + span / 2.0 <= hi:
+                segs.append((cx, hcoil_pts(cx, cy, span, n)))
+        flip = x1 < x0
+    elif abs(x0 - x1) < 1e-9:                                 # vertical
+        lo, hi = min(y0, y1), max(y0, y1)
+        for cx, cl, ch, n, side in VCOILS:
+            if abs(x0 - cx) < 1e-9 and lo <= cl and ch <= hi:
+                segs.append((cl, coil_pts(cx, cl, ch, n, side)))
+        flip = y1 < y0
+    else:
+        return []
+    segs.sort(key=lambda t: t[0])
+    out = []
+    for _, pts in segs:
+        out += pts
+    return out[::-1] if flip else out
+
+
+def _with_hops(pts, r=0.20):
     out = [pts[0]]
     for p0, p1 in zip(pts, pts[1:]):
-        for hx, hy in HOPS:
-            if abs(p0[1] - hy) < 1e-9 and abs(p1[1] - hy) < 1e-9 \
-                    and min(p0[0], p1[0]) < hx - r \
-                    and hx + r < max(p0[0], p1[0]):
-                right = p1[0] > p0[0]
-                out.append((hx - r if right else hx + r, hy))
-                out += _arc(hx, hy, r, right)
-                out.append((hx + r if right else hx - r, hy))
-                break
+        out += _detour(p0, p1, r)
         out.append(p1)
     return out
 
@@ -421,7 +470,7 @@ MODES = [
     dict(n=1, t='POWER DELIVERY', sub='S1, S4 on  ·  D1 conducts  ·  lower half of N$_s$',
          sw=dict(S1=ON, S2=OFF, S3=OFF, S4=ON), d=(1, 0),
          pri=PRI_FWD_XFMR, load=True, lm=True, sec=SEC_LO,
-         note=('L$_m$ is clamped, so i$_{Lm}$ is a straight ramp and i$_{Lr}$ - i$_{Lm}$ is the half sine that crosses.\ni$_{Lm}$ passes through zero inside this interval, which is why the L$_m$ branch carries no arrow.'),
+         note=('L$_m$ is clamped, so i$_{Lm}$ is a straight ramp and i$_{Lr}$ - i$_{Lm}$ is the half sine that crosses.\nWhat is traced is the load component; i$_{Lm}$ flows in L$_m$ too, but it reverses inside this interval.'),
          say='The tank rings at f$_r$. L$_m$ is clamped by the output, so '
              'i$_{Lm}$ ramps straight and the difference i$_{Lr}$ - i$_{Lm}$ '
              'is the half sine that crosses to the secondary.'),
@@ -455,7 +504,7 @@ MODES = [
     dict(n=5, t='POWER DELIVERY', sub='S2, S3 on  ·  D2 conducts  ·  upper half of N$_s$',
          sw=dict(S1=OFF, S2=ON, S3=ON, S4=OFF), d=(0, 1),
          pri=PRI_REV_XFMR, load=True, lm=True, sec=SEC_HI,
-         note=('The mirror of 1. Just after turn-on the old current still runs back through the two channels,\nand i$_{Lm}$ ramps through zero again - so again no arrow on the L$_m$ branch.'),
+         note=('The mirror of 1. Just after turn-on the old current still runs back through the two channels.\nAgain only the load component is traced - i$_{Lm}$ reverses inside this interval as well.'),
          say='The mirror image of interval 1. For the first moments after '
              'turn-on the old current is still running the other way through '
              'the two channels; power delivery starts when i$_{Lr}$ '
@@ -504,11 +553,6 @@ def panel(ax, m):
 
     path(ax, m['pri'], load=m['load'],
          heads=m.get('heads', ((2, 0.90), (3, 0.45), (6, 0.90))))
-    if m['lm']:
-        # The magnetising current does flow here - but it ramps THROUGH zero
-        # inside this interval, so it has no one direction and gets no
-        # arrowhead.  Only the load component keeps its sign all the way.
-        path(ax, [LM_T, LM_B], load=False, lw=3.2)
     if m['sec']:
         path(ax, m['sec'], load=True,
              heads=((2, 0.62), (4, 0.75), (7, 0.45)))
