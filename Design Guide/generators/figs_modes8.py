@@ -125,25 +125,39 @@ def hop(ax, x, y, r=0.20, color=NAVY, lw=LW, z=5):
 #  One proportion table.  Nothing below computes a coordinate twice, and the
 #  current paths are built from these names, so moving anything moves the
 #  highlights with it.
-HI, LO = 7.60, 0.40                 # primary rails
-XL, XR = 1.95, 5.60                 # the two leg wires
-SH = (6.10, 1.80)                   # switch centres, high and low
-DEVH = 1.50                         # drain node to source node
+HI, LO = 7.70, 0.30                 # primary rails
+XL, XR = 1.95, 5.80                 # the two leg wires
+SH = (6.20, 1.70)                   # switch centres, high and low
+DEVH = 1.80                         # drain node to source node
 YT, YB = 4.75, 2.95                 # tank goes out on YT, comes back on YB
-XCR, XLR, XLM, XTR = 8.30, 9.65, 10.90, 12.35
+XCR, XLR, XLM, XTR = 8.70, 10.05, 11.30, 12.75
 YMID = (YT + YB) / 2.0
 VP, VN = YMID + 2.60, YMID - 2.60   # output rails, symmetric about the tank
-XD1, XD2, XCO, XLD = 14.20, 15.80, 17.25, 18.65
+XS = XTR + 0.40                     # the secondary winding line
+#  Centre tap, the way this design actually rectifies: the tap is V_o+ and
+#  the two winding ends are pulled to the return through one device each.
+#  Order matters - with the near leg fed from the LOWER end and the far one
+#  from the upper, the only crossing left in the whole secondary is the
+#  tap's riser under the upper end's wire.
+XQ1, XCT, XQ2 = 14.70, 15.80, 16.90
+XCO, XLD = 18.25, 19.65
 XEND = XLD
 
-DX_D, DX_C = 0.74, 1.38             # body diode and C_oss, right of the leg
-XGATE = 0.88                        # gate lead reaches this far left
+DX_D, DX_C = 0.80, 1.50             # body diode and C_oss, right of the leg
+XGATE = 1.00                        # gate lead reaches this far left
 
 
 def mosfet(ax, x, y, name, state, h=DEVH):
     """One switch: the MOSFET, its body diode and its C_oss, in parallel.
 
-    state picks which of the three is doing the work -
+    Enhancement mode, so the channel is THREE separate bars with gaps you
+    can see, each with its own lead - drain to the top bar, source to the
+    bottom one, bulk to the middle one.  Drawn tight the first time, the
+    three merged into one column and the symbol read as a depletion device.
+    The gate is a plate standing off the channel across the oxide gap and
+    touching nothing.
+
+    state picks which of the three parallel paths is doing the work -
         on          gated on and carrying          (channel)
         diode       gated off, body diode carrying (the ZVS window)
         charge      gated off, C_oss charging,   V_ds rising
@@ -158,43 +172,42 @@ def mosfet(ax, x, y, name, state, h=DEVH):
 
     if live:                                   # a soft halo, not a filled box
         ax.add_patch(FancyBboxPatch(
-            (x - 0.94, yb), 1.08, h,
+            (x - 1.02, yb), 1.16, h,
             boxstyle='round,pad=0.10,rounding_size=0.16', fc=YEL, alpha=0.40,
             ec='none', zorder=1))
 
-    # the MOSFET itself: gate on the left, channel, drain up, source down
-    xg, xc = x - 0.52, x - 0.34
-    wire(ax, [(x - XGATE, y), (xg, y)], cm, 1.5)
-    ax.plot([xg, xg], [y - 0.36, y + 0.36], color=cm, lw=2.2, zorder=4)
-    for y0, y1 in ((y + 0.14, y + 0.36), (y - 0.11, y + 0.11),
-                   (y - 0.36, y - 0.14)):
-        ax.plot([xc, xc], [y0, y1], color=cm, lw=2.2, zorder=4)
-    wire(ax, [(xc, y + 0.30), (x, y + 0.30), (x, yt)], cm)
-    wire(ax, [(xc, y - 0.30), (x, y - 0.30), (x, yb)], cm)
-    wire(ax, [(xc, y), (x, y), (x, y - 0.30)], cm)          # bulk to source
-    ax.add_patch(FancyArrowPatch((x - 0.12, y), (xc + 0.04, y),
-                                 arrowstyle='-|>', mutation_scale=9,
-                                 color=cm, lw=1.4, zorder=5,
+    xg, xc = x - 0.62, x - 0.38
+    wire(ax, [(x - XGATE, y), (xg, y)], cm, 1.5)          # gate lead
+    ax.plot([xg, xg], [y - 0.58, y + 0.58], color=cm, lw=2.3, zorder=4)
+    for y0, y1 in ((y + 0.30, y + 0.58), (y - 0.14, y + 0.14),
+                   (y - 0.58, y - 0.30)):                 # three bars
+        ax.plot([xc, xc], [y0, y1], color=cm, lw=2.3, zorder=4)
+    wire(ax, [(xc, y + 0.44), (x, y + 0.44), (x, yt)], cm)      # drain
+    wire(ax, [(xc, y - 0.44), (x, y - 0.44), (x, yb)], cm)      # source
+    wire(ax, [(xc, y), (x, y), (x, y - 0.44)], cm)             # bulk, tied
+    ax.add_patch(FancyArrowPatch((x - 0.13, y), (xc + 0.05, y),
+                                 arrowstyle='-|>', mutation_scale=10,
+                                 color=cm, lw=1.5, zorder=5,
                                  shrinkA=0, shrinkB=0))
 
     # body diode and C_oss hang off the same two nodes
     wire(ax, [(x, yt), (x + DX_C, yt)], OFF_C, 1.4)
     wire(ax, [(x, yb), (x + DX_C, yb)], OFF_C, 1.4)
     wire(ax, [(x + DX_D, yb), (x + DX_D, yt)], cd, 2.0 if cd == GRN else 1.4)
-    vdiode(ax, x + DX_D, y, 0.24, up=True, color=cd,
+    vdiode(ax, x + DX_D, y, 0.26, up=True, color=cd,
            lw=2.2 if cd == GRN else 1.6)
-    wire(ax, [(x + DX_C, yb), (x + DX_C, y - 0.11)], cc, 1.4)
-    wire(ax, [(x + DX_C, y + 0.11), (x + DX_C, yt)], cc, 1.4)
-    vcap(ax, x + DX_C, y, 0.26, 0.11, color=cc, lw=2.0)
+    wire(ax, [(x + DX_C, yb), (x + DX_C, y - 0.12)], cc, 1.4)
+    wire(ax, [(x + DX_C, y + 0.12), (x + DX_C, yt)], cc, 1.4)
+    vcap(ax, x + DX_C, y, 0.28, 0.12, color=cc, lw=2.0)
     if state in ('charge', 'discharge'):
         d = 1.0 if state == 'charge' else -1.0
-        ax.add_patch(FancyArrowPatch((x + DX_C + 0.46, y - d * 0.30),
-                                     (x + DX_C + 0.46, y + d * 0.58),
+        ax.add_patch(FancyArrowPatch((x + DX_C + 0.48, y - d * 0.34),
+                                     (x + DX_C + 0.48, y + d * 0.66),
                                      arrowstyle='-|>', mutation_scale=12,
                                      color=cc, lw=1.7, zorder=6,
                                      shrinkA=0, shrinkB=0))
 
-    txt(ax, x - XGATE - 0.12, y, name, size=11.5, weight='bold',
+    txt(ax, x - XGATE - 0.14, y, name, size=11.5, weight='bold',
         color=NAVY if state != 'off' else GREY, ha='right')
     return (x, yt), (x, yb)
 
@@ -246,57 +259,66 @@ def _skeleton(ax, states):
     dot(ax, XLM, YB)
     txt(ax, XLM - 0.50, YMID, 'L$_m$', size=11.5, ha='right')
 
-    # ---- the transformer
-    for xx in (XTR - 0.12, XTR + 0.12):
-        ax.plot([xx, xx], [YB - 0.34, YT + 0.34], color=GREY, lw=2.4, zorder=3)
+    # ---- the transformer, centre-tapped secondary
+    for xx in (XTR - 0.13, XTR + 0.13):
+        ax.plot([xx, xx], [YB - 0.38, YT + 0.38], color=GREY, lw=2.4, zorder=3)
     coil(ax, XTR - 0.40, YB, YT, n=5, side=-1)
-    coil(ax, XTR + 0.40, YB, YT, n=5, side=+1)
-    dot(ax, XTR - 0.62, YT - 0.18, NAVY, 4.6)
-    dot(ax, XTR + 0.62, YT - 0.18, NAVY, 4.6)
-    txt(ax, XTR - 0.40, YB - 0.66, 'N$_p$', size=11.5)
-    txt(ax, XTR + 0.40, YB - 0.66, 'N$_s$', size=11.5)
+    # the polarity dots sit OUTSIDE the widest loop, not on top of it
+    dot(ax, XTR - 0.40 - 0.18 - 0.17, YT - 0.15, NAVY, 4.8)
+    txt(ax, XTR - 0.40, YB - 0.70, 'N$_p$', size=11.5)
 
-    # ---- secondary: bridge rectifier, output capacitor, load
-    wire(ax, [(XTR + 0.40, YT), (XD1, YT)])
-    wire(ax, [(XTR + 0.40, YB), (XD1 - 0.20, YB)])
-    hop(ax, XD1, YB)
-    wire(ax, [(XD1 + 0.20, YB), (XD2, YB)])
-    dot(ax, XD1, YT)
-    dot(ax, XD2, YB)
-    wire(ax, [(XD1, VP), (XLD, VP)])
-    wire(ax, [(XD1, VN), (XLD, VN)])
+    coil(ax, XS, YMID + 0.08, YT, n=3, side=+1)
+    coil(ax, XS, YB, YMID - 0.08, n=3, side=+1)
+    wire(ax, [(XS, YMID - 0.08), (XS, YMID + 0.08)])
+    dot(ax, XS + 0.14 + 0.17, YT - 0.13, NAVY, 4.8)
+    dot(ax, XS, YMID)
+    txt(ax, XS + 0.62, (YMID + YT) / 2.0, 'N$_{s1}$', size=11, ha='left')
+    txt(ax, XS + 0.62, (YMID + YB) / 2.0, 'N$_{s2}$', size=11, ha='left')
 
-    y_up, y_dn = (YT + VP) / 2.0, (VN + YB) / 2.0
-    for x, ymid, up_name, dn_name, side in ((XD1, YT, 'D1', 'D2', -1),
-                                            (XD2, YB, 'D3', 'D4', +1)):
-        for nm, y0, y1, yc in ((up_name, ymid, VP, y_up),
-                               (dn_name, VN, ymid, y_dn)):
-            on = bool(states[nm])
-            c = NAVY if on else OFF_C
-            wire(ax, [(x, y0), (x, y1)], c, 2.0 if on else 1.4)
-            vdiode(ax, x, yc, 0.26, up=True, color=c)
-            txt(ax, x + side * 0.36, yc, nm, size=11,
-                ha='left' if side > 0 else 'right',
-                color=NAVY if on else GREY)
+    # ---- secondary: centre tap out to V_o+, one rectifier per winding end
+    wire(ax, [(XS, YB), (XQ1, YB)])                       # lower end, near leg
+    wire(ax, [(XS, YT), (XCT - 0.20, YT)])                # upper end, far leg
+    hop(ax, XCT, YT)
+    wire(ax, [(XCT + 0.20, YT), (XQ2, YT)])
+    wire(ax, [(XS, YMID), (XCT, YMID), (XCT, VP)])        # the tap itself
+    dot(ax, XQ1, YB)
+    dot(ax, XQ2, YT)
+    dot(ax, XCT, VP)
+    # Set on one line it is wider than any gap left on this side, and
+    # it landed on N_s2 twice and on the riser once. Two lines fit the
+    # pocket between the winding labels and the riser.
+    txt(ax, (XQ1 + XCT) / 2.0 - 0.10, YMID + 0.45, 'centre\ntap',
+        size=9.6, color=GREY)
+    wire(ax, [(XCT, VP), (XLD, VP)])
+    wire(ax, [(XQ1, VN), (XLD, VN)])
 
-    wire(ax, [(XCO, VN), (XCO, YMID - 0.11)])
-    wire(ax, [(XCO, YMID + 0.11), (XCO, VP)])
-    vcap(ax, XCO, YMID, 0.30)
-    txt(ax, XCO + 0.46, YMID, 'C$_o$', size=11.5, ha='left')
+    y_d = (VN + YB) / 2.0
+    for x, ytop, nm, side in ((XQ1, YB, 'D1', -1), (XQ2, YT, 'D2', +1)):
+        on = bool(states[nm])
+        c = NAVY if on else OFF_C
+        wire(ax, [(x, VN), (x, ytop)], c, 2.0 if on else 1.4)
+        vdiode(ax, x, y_d, 0.28, up=True, color=c)
+        txt(ax, x + side * 0.38, y_d, nm, size=11,
+            ha='left' if side > 0 else 'right', color=NAVY if on else GREY)
+
+    wire(ax, [(XCO, VN), (XCO, YMID - 0.12)])
+    wire(ax, [(XCO, YMID + 0.12), (XCO, VP)])
+    vcap(ax, XCO, YMID, 0.32)
+    txt(ax, XCO + 0.48, YMID, 'C$_o$', size=11.5, ha='left')
     dot(ax, XCO, VP)
     dot(ax, XCO, VN)
 
     wire(ax, [(XLD, VN), (XLD, YMID - 0.58)])
     wire(ax, [(XLD, YMID + 0.58), (XLD, VP)])
     resbox(ax, XLD, YMID)
-    txt(ax, XLD + 0.36, YMID, 'R$_o$', size=11.5, ha='left')
-    xv = XLD + 1.28
+    txt(ax, XLD + 0.38, YMID, 'R$_o$', size=11.5, ha='left')
+    xv = XLD + 1.30
     ax.add_patch(FancyArrowPatch((xv, VN), (xv, VP), arrowstyle='<|-|>',
                                  mutation_scale=12, color=GREY, lw=1.4,
                                  zorder=4, shrinkA=0, shrinkB=0))
     txt(ax, xv + 0.22, YMID, 'V$_o$', size=11.5, weight='bold', ha='left')
-    txt(ax, XLD + 0.32, VP + 0.36, '+', size=13, weight='bold')
-    txt(ax, XLD + 0.32, VN - 0.36, '−', size=14, weight='bold')
+    txt(ax, XLD + 0.34, VP + 0.38, '+', size=13, weight='bold')
+    txt(ax, XLD + 0.34, VN - 0.38, '−', size=14, weight='bold')
 
 
 # ------------------------------------------------------------ current paths
@@ -306,9 +328,9 @@ def _skeleton(ax, states):
 P_HI, P_LO = (0.25, HI), (0.25, LO)
 A, B = (XL, YT), (XR, YB)
 NP_T, NP_B = (XTR - 0.40, YT), (XTR - 0.40, YB)
-NS_T, NS_B = (XTR + 0.40, YT), (XTR + 0.40, YB)
+NS_T, NS_B, NS_C = (XS, YT), (XS, YB), (XS, YMID)
 LM_T, LM_B = (XLM, YT), (XLM, YB)
-HOPS = [(XR, YT), (XD1, YB)]
+HOPS = [(XR, YT), (XCT, YT)]
 
 
 def bd(x, y, h=DEVH):
@@ -328,11 +350,15 @@ PRI_REV_LM = [P_HI, (XR, HI), B, LM_B, LM_T, A, (XL, LO), P_LO]
 PRI_REV_DIODE = ([P_LO, (XR, LO)] + bd(XR, SH[1]) + [B, LM_B, LM_T, A]
                  + bd(XL, SH[0]) + [(XL, HI), P_HI])
 
-# secondary: D1+D4 when current enters the primary dot, D2+D3 when it leaves
-SEC_14 = [NS_T, (XD1, YT), (XD1, VP), (XLD, VP), (XLD, VN), (XD2, VN),
-          (XD2, YB), NS_B]
-SEC_23 = [NS_B, (XD2, YB), (XD2, VP), (XLD, VP), (XLD, VN), (XD1, VN),
-          (XD1, YT), NS_T]
+#  Secondary, centre tapped.  Current always LEAVES the tap into the load
+#  and comes back through one rectifier into one winding end; which end is
+#  set by the dot.  Current entering the primary dot leaves the secondary
+#  dot, which is the tap for the lower half - so the LOWER end conducts in
+#  the first half and the upper end in the second.
+SEC_LO = [NS_C, (XCT, YMID), (XCT, VP), (XLD, VP), (XLD, VN), (XQ1, VN),
+          (XQ1, YB), NS_B]
+SEC_HI = [NS_C, (XCT, YMID), (XCT, VP), (XLD, VP), (XLD, VN), (XQ2, VN),
+          (XQ2, YT), NS_T]
 
 
 def _arc(hx, hy, r, going_right):
@@ -388,15 +414,15 @@ def path(ax, pts, load=True, heads=(), lw=3.8):
 
 ON, OFF = 'on', 'off'
 MODES = [
-    dict(n=1, t='POWER DELIVERY', sub='S1, S4 on  ·  D1, D4 conduct',
-         sw=dict(S1=ON, S2=OFF, S3=OFF, S4=ON), d=(1, 0, 0, 1),
-         pri=PRI_FWD_XFMR, load=True, lm=True, sec=SEC_14,
+    dict(n=1, t='POWER DELIVERY', sub='S1, S4 on  ·  D1 conducts  ·  lower half of N$_s$',
+         sw=dict(S1=ON, S2=OFF, S3=OFF, S4=ON), d=(1, 0),
+         pri=PRI_FWD_XFMR, load=True, lm=True, sec=SEC_LO,
          note='L$_m$ is clamped, so i$_{Lm}$ ramps straight and i$_{Lr}$ - i$_{Lm}$ is the half sine that crosses.',
          say='The tank rings at f$_r$. L$_m$ is clamped by the output, so '
              'i$_{Lm}$ ramps straight and the difference i$_{Lr}$ - i$_{Lm}$ '
              'is the half sine that crosses to the secondary.'),
     dict(n=2, t='FREEWHEELING', sub='S1, S4 STILL on  ·  secondary off',
-         sw=dict(S1=ON, S2=OFF, S3=OFF, S4=ON), d=(0, 0, 0, 0),
+         sw=dict(S1=ON, S2=OFF, S3=OFF, S4=ON), d=(0, 0),
          pri=PRI_FWD_LM, load=False, lm=False, sec=None,
          note='i$_{Lr}$ has fallen to i$_{Lm}$. Every rectifier is off, L$_m$ is free again, and the tank rings at f$_o$.',
          say='i$_{Lr}$ has fallen to i$_{Lm}$, so nothing is left for the '
@@ -405,7 +431,7 @@ MODES = [
     dict(n=3, t='DEAD TIME (a)', sub='all four off  ·  C$_{oss}$ swaps '
                                      'the midpoints over',
          sw=dict(S1='charge', S4='charge', S2='discharge', S3='discharge'),
-         d=(0, 0, 0, 0), pri=PRI_FWD_LM, load=False, lm=False, sec=None,
+         d=(0, 0), pri=PRI_FWD_LM, load=False, lm=False, sec=None,
          coss=True,
          swing=(':  V$_{in}$ $\\rightarrow$ 0', ':  0 $\\rightarrow$ V$_{in}$'),
          note='All four channels off. The arrow on each C$_{oss}$ is its V$_{ds}$:  magenta rising, cyan falling.',
@@ -414,7 +440,7 @@ MODES = [
              '0 and node B rises from 0 to V$_{in}$.'),
     dict(n=4, t='DEAD TIME (b)  —  ZVS', sub='body diodes of S2 and S3 '
                                                  'clamp',
-         sw=dict(S1=OFF, S2='diode', S3='diode', S4=OFF), d=(0, 0, 0, 0),
+         sw=dict(S1=OFF, S2='diode', S3='diode', S4=OFF), d=(0, 0),
          pri=PRI_FWD_DIODE, load=False, lm=False, sec=None,
          heads=(4, 8, 12),
          zvs='S2 and S3 now stand at V$_{ds}$ = 0.\nGATE THEM ON HERE.',
@@ -422,16 +448,16 @@ MODES = [
          say='Once the swing finishes the current cannot stop, so it takes '
              'the body diodes of the pair that is about to turn on. Their '
              'V$_{ds}$ is zero: turn on now and the turn-on loss is zero.'),
-    dict(n=5, t='POWER DELIVERY', sub='S2, S3 on  ·  D2, D3 conduct',
-         sw=dict(S1=OFF, S2=ON, S3=ON, S4=OFF), d=(0, 1, 1, 0),
-         pri=PRI_REV_XFMR, load=True, lm=True, sec=SEC_23,
+    dict(n=5, t='POWER DELIVERY', sub='S2, S3 on  ·  D2 conducts  ·  upper half of N$_s$',
+         sw=dict(S1=OFF, S2=ON, S3=ON, S4=OFF), d=(0, 1),
+         pri=PRI_REV_XFMR, load=True, lm=True, sec=SEC_HI,
          note='The mirror of 1. Just after turn-on the old current still runs back through the two channels.',
          say='The mirror image of interval 1. For the first moments after '
              'turn-on the old current is still running the other way through '
              'the two channels; power delivery starts when i$_{Lr}$ '
              'reverses.'),
     dict(n=6, t='FREEWHEELING', sub='S2, S3 STILL on  ·  secondary off',
-         sw=dict(S1=OFF, S2=ON, S3=ON, S4=OFF), d=(0, 0, 0, 0),
+         sw=dict(S1=OFF, S2=ON, S3=ON, S4=OFF), d=(0, 0),
          pri=PRI_REV_LM, load=False, lm=False, sec=None,
          note='The mirror of 2, and the easy one to miss:  it ends at the right-hand edge of a waveform plot.',
          say='The mirror image of interval 2, and the one that is easy to '
@@ -440,7 +466,7 @@ MODES = [
     dict(n=7, t='DEAD TIME (a)', sub='all four off  ·  C$_{oss}$ swaps '
                                      'the midpoints back',
          sw=dict(S2='charge', S3='charge', S1='discharge', S4='discharge'),
-         d=(0, 0, 0, 0), pri=PRI_REV_LM, load=False, lm=False, sec=None,
+         d=(0, 0), pri=PRI_REV_LM, load=False, lm=False, sec=None,
          coss=True,
          swing=(':  0 $\\rightarrow$ V$_{in}$', ':  V$_{in}$ $\\rightarrow$ 0'),
          note='The mirror of 3. Node B falls, node A rises, and the same magnetising current moves the charge.',
@@ -448,7 +474,7 @@ MODES = [
              'and the charge is moved by the magnetising current again.'),
     dict(n=8, t='DEAD TIME (b)  —  ZVS', sub='body diodes of S1 and S4 '
                                                  'clamp',
-         sw=dict(S1='diode', S2=OFF, S3=OFF, S4='diode'), d=(0, 0, 0, 0),
+         sw=dict(S1='diode', S2=OFF, S3=OFF, S4='diode'), d=(0, 0),
          pri=PRI_REV_DIODE, load=False, lm=False, sec=None,
          heads=(4, 8, 12),
          zvs='S1 and S4 now stand at V$_{ds}$ = 0.\nGATE THEM ON HERE.',
@@ -468,7 +494,7 @@ NODE_B = (XR + DX_C + 0.55, YB - 0.52)           # below the return wire
 
 def panel(ax, m):
     st = dict(m['sw'])
-    for k, v in zip(('D1', 'D2', 'D3', 'D4'), m['d']):
+    for k, v in zip(('D1', 'D2'), m['d']):
         st[k] = bool(v)
     _skeleton(ax, st)
 
@@ -643,8 +669,8 @@ def waveforms(axes, lam, fsw_over_fr, ilr_pk, ilm_pk, td_draw=0.045):
 
     # what the rectifiers carry
     ar.axhline(0, color=GREY, lw=0.9)
-    for lo, hi, col, nm in ((0.0, 0.5, MAG, 'D1 + D4'),
-                            (0.5, 1.0, PUR, 'D2 + D3')):
+    for lo, hi, col, nm in ((0.0, 0.5, MAG, 'D1'),
+                            (0.5, 1.0, PUR, 'D2')):
         m = (T >= lo) & (T <= hi)
         ar.fill_between(T[m], 0, IO[m], color=col, alpha=0.22, lw=0)
         ar.plot(T[m], IO[m], color=col, lw=2.3)
