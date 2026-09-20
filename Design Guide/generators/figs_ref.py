@@ -885,3 +885,35 @@ FIGS = {'an_rac': an_rac, 'an_integrated': an_integrated,
         'an_llc_waves': an_llc_waves, 'an_three_cases': an_three_cases,
         'an_cap_ind': an_cap_ind, 'an_loadshift': an_loadshift,
         'an_peakgain': an_peakgain}
+
+
+# ---------------------------------------- 12  the two conducting intervals
+def _pair(save, name, nums, figsize=(17.2, 5.4)):
+    """Two mode panels side by side, for the places in the note that need
+    only the conducting intervals.
+
+    The full eight-panel sheets carry the dead time as well, which is the
+    thing the borrowed figures had no picture of at all.  These two are the
+    drop-in pair: same drawing, same colours, the intervals the surrounding
+    text is about and nothing else.
+    """
+    import figs_modes8 as F
+    fig, axs = plt.subplots(1, 2, figsize=figsize)
+    for ax, n in zip(axs, nums):
+        F.panel(ax, F.MODES[n - 1])
+    fig.subplots_adjust(left=0.004, right=0.996, top=0.995, bottom=0.075,
+                        wspace=0.02)
+    F._legend(fig, y=0.012)
+    save(fig, name)
+
+
+def an_op_power(save, foot):
+    _pair(save, 'an_op_power', (1, 5))
+
+
+def an_op_free(save, foot):
+    _pair(save, 'an_op_free', (2, 6))
+
+
+FIGS['an_op_power'] = an_op_power
+FIGS['an_op_free'] = an_op_free

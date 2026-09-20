@@ -15,6 +15,17 @@ Anything else that changes what the figure ASSERTS is off limits. Every edit
 made here is listed in EDITS below, so what was changed is always readable.
 
     python figedit.py                 apply every edit, in order
+
+
+    2026-09-20: the figures this module edited are no longer in the note.
+    Every borrowed figure was redrawn - figs_ref.py - so `fix_freewheel_2nd_half`
+    and `mark_modes` have nothing left to correct, and the reason they
+    existed is now moot: our own drawing gets the current path right the
+    first time, so there is no wrong arrow to redraw.  The functions stay
+    because they are the record of what was wrong with those figures, and
+    `trim`, `_font` and `mirror` are still used for any reference image that
+    is cropped in future.  The `__main__` block below still refers to the
+    an_ref_* crops; only the `_raw` ones are kept now.
 """
 import io
 import os

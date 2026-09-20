@@ -76,9 +76,11 @@ def build(A):
           'nothing but chop the input into a square wave of adjustable '
           'frequency &mdash; there is no duty cycle to set and no inductor '
           'current to program.'))
-    add(fig('an_ref_llc',
-            'An LLC half bridge: a square-wave generator, the resonant '
-            'network, and a rectifier. (ON Semiconductor AN-4151.)',
+    add(fig('an_llc_stage',
+            'An LLC stage: a square-wave generator, the resonant network, a '
+            'transformer and a rectifier. The switches only set the '
+            'frequency &mdash; the tank decides how much power flows and '
+            'the transformer sets the voltage.',
             width=CW * 0.82))
     add(p('The three tank elements are named in the order they appear in '
           '&ldquo;LLC&rdquo;: the series inductance L<sub>r</sub>, the '
@@ -150,11 +152,13 @@ def build(A):
           'entire reason for the topology.</b> Section&nbsp;%s shows the '
           'mechanism and what it demands of the design.'
           % SR('ZVS and ZCS are not the same thing')))
-    add(fig('an_ref_waveforms',
-            'Typical waveforms. I<sub>p</sub> is the tank current and '
-            'I<sub>m</sub> the magnetising current; the switch turns on while '
-            'the difference between them is still flowing, which is what '
-            'discharges the mid-point. (ON Semiconductor AN-4151.)',
+    add(fig('an_llc_waves',
+            'One switching period below resonance. i<sub>Lr</sub> is the tank '
+            'current and i<sub>Lm</sub> the magnetising current; the '
+            'difference between them is what crosses to the secondary, and '
+            'it is gone once the two meet. The switch turns on with its own '
+            'current still negative, which is what discharges the '
+            'mid-point.',
             width=CW * 0.62))
     add(p('The two frequencies that bound this are the subject of '
           'Section&nbsp;' + SR('The two resonances')
@@ -175,19 +179,22 @@ def build(A):
     add(p('Every gain curve in every LLC note comes from three reductions '
           'applied in order. They are worth doing once, because each one '
           'discards something and it is useful to know what.'))
-    add(fig('an_ref_rac',
-            'Why the rectifier and the load collapse into one resistance. '
-            'The rectifier draws a square current wave and the output is '
-            'stiff, so on a fundamental basis the whole of it looks '
-            'resistive. (ON Semiconductor AN-4151.)', width=CW * 0.66))
-    add(fig('an_ref_fha',
-            'The result: one ac network. Its voltage transfer is the gain M '
-            'and its damping is Q. <b>The R<sub>ac</sub> written here uses '
-            'the average output power</b>, which is the only power a '
-            'two-stage converter has. Put the line-peak power into the same '
+    add(fig('an_rac',
+            'Why the rectifier and the load collapse into one resistance. The '
+            'output is stiff, so the voltage the tank sees is a square; the '
+            'tank filters everything but the fundamental, so the current is '
+            'a sine. A sine of current in phase with a square of voltage '
+            'takes the same fundamental power a resistor would.', width=CW * 0.66))
+    add(fig('an_fha_steps',
+            'The reduction, in three steps: as built, then the secondary '
+            'referred to the primary, then the fundamental only. What is '
+            'left is one ac network whose voltage transfer is the gain M '
+            'and whose damping is Q. <b>R<sub>ac</sub> is written from the '
+            'average output power</b>, which is the only power a two-stage '
+            'converter has. Put the line-peak power into the same '
             'expression instead and the result halves; Section&nbsp;'
             + SR('The resonant tank')
-            + ' says why. (ON Semiconductor AN-4151.)', width=CW * 0.60))
+            + ' says why.', width=CW * 0.60))
     ext(bullets([
         '<b>Refer the secondary to the primary.</b> The ideal transformer '
         'disappears and the load resistance is multiplied by n&sup2;.',
@@ -246,58 +253,51 @@ def build(A):
           'pair of switches on throughout</b>. At resonance the half cycle '
           'is power delivery alone; above resonance it is power delivery cut '
           'short.'))
-    add(fig('an_ref_op_power',
-            '<b>Power delivery.</b> The tank is excited by the bridge and '
-            'the resonant current exceeds the magnetising current, so the '
-            'difference passes through the transformer to the rectifier and '
-            'the load. The voltage across L<sub>m</sub> is the reflected '
-            'output, so L<sub>m</sub> is clamped and takes no part in the '
-            'resonance &mdash; which is why this interval resonates at '
-            'f<sub>r</sub>. (Infineon AN 2012-09, headings added.)',
-            width=CW))
-    add(fig('an_ref_op_free',
-            '<b>Freewheeling.</b> The resonant current has fallen to the '
-            'magnetising current, so nothing is left to pass to the '
-            'secondary and the rectifiers are off. With the secondary '
+    add(fig('an_op_power',
+            '<b>Power delivery</b>, the two halves. The tank is excited by '
+            'the bridge and the resonant current exceeds the magnetising '
+            'current, so the difference passes through the transformer to '
+            'the rectifier and the load. The voltage across L<sub>m</sub> '
+            'is the reflected output, so L<sub>m</sub> is clamped and takes '
+            'no part in the resonance &mdash; which is why this interval '
+            'resonates at f<sub>r</sub>. Each switch is drawn with its body '
+            'diode and its C<sub>oss</sub> beside it, greyed here because '
+            'neither is doing anything yet.', width=CW))
+    add(fig('an_op_free',
+            '<b>Freewheeling</b>, the two halves. The resonant current has '
+            'fallen to the magnetising current, so nothing is left to pass '
+            'to the secondary and the rectifiers are off. With the secondary '
             'disconnected L<sub>m</sub> is no longer clamped and joins the '
-            'resonance &mdash; this interval rings at f<sub>o</sub>. '
-            '<b>The right-hand panel is redrawn.</b> The source sends its '
-            'current backwards through S<sub>1</sub> and S<sub>4</sub> and '
-            'out of the + terminal. Nothing can take that path in this half: '
-            'S<sub>1</sub> and S<sub>4</sub> are off, and with '
-            'S<sub>2</sub>,S<sub>3</sub> holding the two mid-points at 0 and '
-            'V<sub>in</sub> their body diodes are reverse biased. It is the '
-            'dead-time path, not this one. What is drawn here is the primary '
-            'loop of the right-hand panel of Figure&nbsp;%s with the '
-            'secondary open &mdash; the same relation the left-hand panel '
-            'has to its own. (After Infineon AN 2012-09 Figures 2.7 and 2.8; '
-            'second panel redrawn, headings added.)'
-            % FR('an_ref_op_power'), width=CW))
+            'resonance &mdash; this interval rings at f<sub>o</sub>. Note '
+            'that the same pair of switches is still on as in '
+            'Figure&nbsp;%s: freewheeling is the second part of that half '
+            'cycle, not a new one.' % FR('an_op_power'), width=CW))
     add(note('<b>Those two circuits are the two resonances.</b> The '
              'expressions at the top of this section are not abstractions: '
              'each one is the tank of one of these two pictures. Which one '
              'is running, and for how long, is the whole of what follows.'))
     add(note('<b>Go by the step number on each panel, not by the order on '
              'the page.</b> The two figures are grouped by what the circuit '
-             'is doing, so their four panels are not in time order: steps 1 '
-             'and 3 are in Figure&nbsp;%s, steps 2 and 4 in Figure&nbsp;%s. '
-             'One switching period is <b>1</b> power delivery with '
+             'is doing, so their panels are not in time order: steps 1 and 5 '
+             'are in Figure&nbsp;%s, steps 2 and 6 in Figure&nbsp;%s. One '
+             'switching period is <b>1</b> power delivery with '
              'S<sub>1</sub>,S<sub>4</sub> on, <b>2</b> freewheeling with '
-             'S<sub>1</sub>,S<sub>4</sub> <i>still</i> on, the dead time, '
-             '<b>3</b> power delivery with S<sub>2</sub>,S<sub>3</sub> on, '
-             '<b>4</b> freewheeling with those <i>still</i> on, the dead '
-             'time. Power delivery and freewheeling are the two parts of '
+             'S<sub>1</sub>,S<sub>4</sub> <i>still</i> on, <b>3</b> and '
+             '<b>4</b> the dead time, <b>5</b> power delivery with '
+             'S<sub>2</sub>,S<sub>3</sub> on, <b>6</b> freewheeling with '
+             'those <i>still</i> on, <b>7</b> and <b>8</b> the dead time '
+             'again. Power delivery and freewheeling are the two parts of '
              '<i>one</i> half cycle &mdash; the pair of switches does not '
-             'change between 1 and 2, nor between 3 and 4. <b>ZVS is in none '
-             'of the four.</b> It is in the dead time after 2 and after 4, '
-             'when both switches of a leg are off and the tank current '
-             'carries the mid-point across the rail; Figure&nbsp;%s shows it '
-             'as the step in V<sub>ds</sub> in the gap between the gate '
-             'pulses, and its brackets carry the same four numbers.'
-             % (FR('an_ref_op_power'), FR('an_ref_op_free'),
-                FR('an_ref_modes_i'))))
+             'change between 1 and 2, nor between 5 and 6. <b>ZVS is in '
+             'neither of the four panels here.</b> It is in the dead time, '
+             'steps 3 to 4 and 7 to 8, when both switches of a leg are off '
+             'and the tank current carries the mid-point across the rail; '
+             'Figure&nbsp;%s shows it as the step in v<sub>d</sub> in the '
+             'gap between the gate pulses.'
+             % (FR('an_op_power'), FR('an_op_free'),
+                FR('an_llc_waves'))))
     add(note('<b>The word &ldquo;freewheeling&rdquo; is used for two '
-             'different intervals.</b> Here it is steps 2 and 4: the '
+             'different intervals.</b> Here it is steps 2 and 6: the '
              'secondary is off, L<sub>m</sub> has rejoined the resonance, and '
              'the same pair of switches is still on. Other notes use the same '
              'word for the <b>dead time</b>, where the current circulates in '
@@ -311,41 +311,39 @@ def build(A):
              'without delivering '
              'power, which is why one word gets stretched over both, but they '
              'are not the same interval: <b>the dead time is in every '
-             'switching period at any frequency, while steps 2 and 4 exist '
+             'switching period at any frequency, while steps 2 and 6 exist '
              'only below resonance</b> and shrink to nothing at f<sub>r</sub>. '
              'Check which one a source means before comparing numbers.'))
 
-    add(fig('an_ref_modes_i',
-            'The three cases side by side. Gate signals, the drain voltage, '
-            'the resonant current I<sub>Lr</sub> with the magnetising '
-            'current I<sub>Lm</sub> dashed over it, and the current in each '
-            'pair of rectifiers. Note T<sub>r</sub>/2 and T<sub>s</sub>/2 '
-            'marked on the third panel: that gap is the whole story. The four '
-            'intervals of that panel are bracketed and numbered to match the '
-            'panels of the two figures above &mdash; each half is power '
-            'delivery and then freewheeling, and the second half&rsquo;s is '
-            'easy to miss because it ends at the right edge. '
-            '(Infineon AN 2012-09; column headings and interval brackets '
-            'added.)', width=CW))
+    add(fig('an_three_cases',
+            'The three cases side by side. Gate signals, the bridge voltage, '
+            'the resonant current i<sub>Lr</sub> with the magnetising '
+            'current i<sub>Lm</sub> dashed over it, and the rectifier '
+            'current. What changes across the three columns is how the '
+            'resonant half period compares with the switching half period: '
+            'below resonance there is time left over and it is spent '
+            'freewheeling, at resonance the two coincide, and above '
+            'resonance the half period ends first and cuts the rectifier '
+            'current off while it is still flowing.', width=CW))
     ext(bullets([
-        '<b>At f<sub>r</sub> (left).</b> The resonant half period and the '
-        'switching half period are the same length. I<sub>Lr</sub> meets '
-        'I<sub>Lm</sub> exactly as the bridge changes and the rectifier '
+        '<b>Below f<sub>r</sub> (left).</b> The resonant half period is the '
+        'shorter one. i<sub>Lr</sub> finishes its half sine early and '
+        '<b>lands on i<sub>Lm</sub></b>; from that instant the two are one '
+        'current, the rectifier current has already fallen to zero, and no '
+        'power crosses to the secondary. That interval is called '
+        'freewheeling.',
+        '<b>At f<sub>r</sub> (centre).</b> The resonant half period and the '
+        'switching half period are the same length. i<sub>Lr</sub> meets '
+        'i<sub>Lm</sub> exactly as the bridge changes and the rectifier '
         'current reaches zero exactly then too. Nothing is wasted at either '
         'end &mdash; this is the most efficient point an LLC has, and it is '
         'where a conventional design puts its nominal input.',
-        '<b>Above f<sub>r</sub> (centre).</b> The switching half period ends '
+        '<b>Above f<sub>r</sub> (right).</b> The switching half period ends '
         'first, so the resonant half sine is <b>cut off part way</b>: '
-        'I<sub>Lr</sub> is still well above I<sub>Lm</sub> when the bridge '
+        'i<sub>Lr</sub> is still well above i<sub>Lm</sub> when the bridge '
         'changes. The primary switches turn off more current, and the '
         'rectifier is interrupted while still conducting &mdash; hard '
-        'commutation on the secondary.',
-        '<b>Below f<sub>r</sub> (right).</b> The resonant half period is the '
-        'shorter one, marked T<sub>r</sub>/2 against T<sub>s</sub>/2. '
-        'I<sub>Lr</sub> finishes its half sine early and <b>lands on '
-        'I<sub>Lm</sub></b>; from that instant the two are one current, the '
-        'rectifier current has already fallen to zero, and no power crosses '
-        'to the secondary. That interval is called freewheeling.']))
+        'commutation on the secondary.']))
     add(p('<b>That freewheeling interval is what f<sub>o</sub> is.</b> '
           'While it lasts the secondary is not conducting, so nothing '
           'clamps '
@@ -424,15 +422,14 @@ def build(A):
           'load the bridge works into, not a part.'))
     add(p('That phase is the whole of soft switching, which is why the '
           'distinction matters more than it sounds:'))
-    add(fig('an_ref_cap_ind',
-            'The same converter either side of the peak gain, and the '
-            'waveforms that tell them apart. Above, where the boundary sits '
-            'on the gain curve. Below, the bridge voltage V<sub>d</sub>, the '
-            'tank current I<sub>p</sub> and the current in one switch '
-            'I<sub>DS1</sub>. On the left the tank is capacitive and the '
-            'switch current shows a reverse-recovery spike; on the right it '
-            'is inductive and the same instant is a clean ZVS transition. '
-            '(ON Semiconductor AN-4151.)', width=CW * 0.58))
+    add(fig('an_cap_ind',
+            'The same converter either side of the boundary. Above, where the '
+            'boundary sits on the gain curve &mdash; note that it is not at '
+            'the peak, but a little above it. Below, the bridge voltage '
+            'v<sub>d</sub> and the tank current, drawn at the phase the '
+            'tank actually presents at each frequency. On the left the '
+            'current leads and is positive when the switch closes; on the '
+            'right it lags and is still negative, which is ZVS.', width=CW * 0.58))
     ext(bullets([
         '<b>Inductive: current lags.</b> When a switch turns off, the '
         'current is still flowing in the direction that pushes the bridge '
@@ -488,11 +485,11 @@ def build(A):
              'condition directly instead &mdash; the time the tank current '
              'takes to reach zero after the bridge changes.'
              % dict(V, zvsref=SR('ZVS verification'), **_edge_numbers(A))))
-    add(fig('an_ref_loadshift',
-            'The capacitive boundary is not fixed. Loading the converter '
-            'pushes the gain peak, and with it the edge of the capacitive '
-            'region, to a higher frequency. (Monolithic Power Systems, '
-            'Understanding LLC Operation part 2.)', width=CW * 0.62))
+    add(fig('an_loadshift',
+            'The boundary is not fixed. Loading the converter pushes it to a '
+            'higher frequency, so a frequency that is inductive at light '
+            'load can be capacitive at overload. The dashed curve is the '
+            'boundary itself, traced out as Q varies.', width=CW * 0.62))
     ext(bullets([
         'A converter can be <b>below f<sub>r</sub> and still inductive</b> '
         '&mdash; that is the ordinary boosting region, and it is where an '
@@ -598,11 +595,10 @@ def build(A):
         'the peak with margin, that ZVS holds at the worst point rather than '
         'the nominal one, and that the currents and the flux are ones real '
         'parts can carry.']))
-    add(fig('an_ref_peakgain',
+    add(fig('an_peakgain',
             'Step 4, and the reason m and Q cannot be chosen separately: the '
             'peak gain a tank can reach depends on both. Picking a required '
-            'gain and a Q leaves only a band of usable m. (ON Semiconductor '
-            'AN-4151.)', width=CW * 0.52))
+            'gain and a Q leaves only a band of usable m.', width=CW * 0.52))
     add(note('<b>That is the first half.</b> Everything above is the LLC on '
              'its own: a tank, a gain curve, and a frequency that moves the '
              'operating point along it. Nothing in it has anything to do '
@@ -619,12 +615,11 @@ def build(A):
           'the diodes can only conduct during the short window in which the '
           'mains is above that. All of the charge the load will use over the '
           'whole cycle has to arrive inside that window.'))
-    add(fig('an_ref_pfc_cap',
-            'A capacitor-input rectifier and what it draws. V<sub>C</sub> '
-            'stays near the peak, so the diodes conduct only in the two '
-            'narrow windows where the mains is above it, and the current I '
-            'inside them is correspondingly tall. (Toshiba, Power Factor '
-            'Correction Circuits.)', width=CW * 0.66))
+    add(fig('an_pfc_cap',
+            'A capacitor-input rectifier and what it draws. v<sub>C</sub> '
+            'stays near the crest, so the diodes conduct only in the narrow '
+            'windows where the mains is above it, and the current inside '
+            'them is correspondingly tall.', width=CW * 0.66))
     add(p('The consequences are all consequences of that one fact. The peak '
           'current is several times what a resistor of the same average power '
           'would draw, so the wiring, the fuse, the bridge and the source all '
@@ -667,11 +662,11 @@ def build(A):
           'one at once. The standard implementation is a <b>boost converter '
           'placed straight after the bridge</b>, switching fast enough that '
           'the mains looks frozen within one switching cycle.'))
-    add(fig('an_ref_pfc_boost',
-            'A boost corrector, with the current path traced for each half '
-            'of the line cycle: red while the switch is on and the reactor '
-            'charges, green while it is off and the reactor delivers to the '
-            'bus. (Toshiba, Power Factor Correction Circuits.)',
+    add(fig('an_pfc_boost',
+            'A boost corrector, with the current path traced for each half of '
+            'the switching period: the reactor charges from the line while '
+            'the switch is on, and delivers to the bus in series with the '
+            'line while it is off.',
             width=CW * 0.62))
     ext(bullets([
         '<b>Why boost.</b> The input is a rectified sine that passes through '
@@ -687,11 +682,11 @@ def build(A):
         'slow voltage loop is not a compromise here; it is a requirement.',
         '<b>The multiplier</b> joins them: shape from the mains, level from '
         'the output. That is the whole of the control law.']))
-    add(fig('an_ref_pfc_ccm',
+    add(fig('an_pfc_ccm',
             'The result, in continuous conduction mode. Switching ripple '
-            'rides on the reactor current; its average follows the input '
-            'voltage, which is what the two loops were arranged to produce. '
-            '(Toshiba, Power Factor Correction Circuits.)', width=CW * 0.66))
+            'rides on the reactor current and never brings it to zero; its '
+            'average follows the input voltage, which is what the two loops '
+            'were arranged to produce.', width=CW * 0.66))
     add(note('<b>This comes back later.</b> Take the boost stage away and '
              'the same conflict returns in a sharper form: the outer loop is '
              'then the <i>only</i> loop, its output is a power command, and '
@@ -706,11 +701,12 @@ def build(A):
           'where that something sits is the whole of the next section.'))
 
     add(h2('Why they are normally two stages'))
-    add(fig('an_ref_acdc',
+    add(fig('an_two_stage',
             'The usual two-stage arrangement, with the waveform at every '
             'node. The correction happens in the first block and the LLC '
-            'works from the dc bus it produces. (Monolithic Power Systems, '
-            'Understanding LLC Operation part 2.)', width=CW))
+            'works from the dc bus it produces &mdash; and the buffer that '
+            'absorbs the twice-line-frequency pulsation sits between them, '
+            'at 400&nbsp;V.', width=CW))
     add(p('The bus capacitor between a boost PFC and an LLC does two jobs at '
           'once, and they are usually confused with each other:'))
     ext(bullets([
@@ -1331,16 +1327,15 @@ def build(A):
     add(eq(r'L_{\mu}=\sqrt{L_{m}\,(L_{m}+L_{r})}\,,\qquad '
            r'L_{L1}=L_{m}+L_{r}-L_{\mu}\,,\qquad '
            r'L_{L2}=\frac{L_{L1}}{n_{T}^{2}}', key='Lmu'))
-    add(fig('an_ref_integrated',
+    add(fig('an_integrated',
             'The same transformer drawn both ways. Above, the leakage split '
-            'between the two sides; below, all of it referred to the primary '
-            'so that the tank sees L<sub>r</sub>, a shunt inductance and an '
-            'ideal transformer whose ratio is no longer the wound one. '
-            'The source calls the total primary inductance L<sub>p</sub>, '
-            'which is L<sub>open</sub> here, and its M<sub>V</sub> is '
+            'between the two sides; below, all of it referred to the '
+            'primary so that the tank sees L<sub>r</sub>, a shunt '
+            'inductance and an ideal transformer whose ratio is no longer '
+            'the wound one. L<sub>p</sub> is the total primary inductance, '
+            'L<sub>open</sub> elsewhere in this note, and M<sub>V</sub> is '
             '&radic;(1+&lambda;) &mdash; so n<sub>T</sub>/M<sub>V</sub> is '
-            'n. (ON Semiconductor AN-4151; the wound ratio relabelled '
-            'n<sub>T</sub> to match.)', width=CW * 0.62))
+            'n.', width=CW * 0.62))
     add(note('That three-element form assumes the leakage splits evenly '
              'between the two sides. The real split is set by the winding '
              'arrangement rather than by the design, and it does not matter: '
