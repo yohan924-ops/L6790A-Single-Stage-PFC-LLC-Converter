@@ -43,109 +43,11 @@ import matplotlib.pyplot as plt
 import matplotlib.patheffects as pe
 from matplotlib.patches import Rectangle, FancyArrowPatch, FancyBboxPatch
 
-NAVY, YEL, MAG = '#03234B', '#FFD200', '#E6007E'
-CYA, GRN, PUR = '#3CB4E6', '#49B170', '#8C0078'
-GREY, LT = '#464650', '#E8E8E9'
-OFF_C = '#C2C5CC'         # a device or branch that is carrying nothing
-LW = 1.6
-
-
-# --------------------------------------------------------------- primitives
-def wire(ax, pts, color=NAVY, lw=LW, z=2, **kw):
-    xs, ys = zip(*pts)
-    ax.plot(xs, ys, color=color, lw=lw, zorder=z, solid_capstyle='round', **kw)
-
-
-def dot(ax, x, y, color=NAVY, ms=5.0, z=6):
-    ax.plot([x], [y], 'o', color=color, ms=ms, zorder=z)
-
-
-def txt(ax, x, y, t, size=10.5, color=NAVY, ha='center', va='center',
-        weight='normal', z=8, halo=False):
-    ax.text(x, y, t, ha=ha, va=va, fontsize=size, color=color,
-            fontweight=weight, zorder=z,
-            path_effects=[pe.withStroke(linewidth=3.4, foreground='white')]
-            if halo else None)
-
-
-def vcap(ax, x, y, s=0.30, gap=0.11, color=NAVY, lw=2.2, z=4):
-    """A capacitor across a vertical branch: two horizontal plates."""
-    for dy in (gap, -gap):
-        ax.plot([x - s, x + s], [y + dy] * 2, color=color, lw=lw, zorder=z)
-
-
-def hcap(ax, x, y, s=0.30, gap=0.11, color=NAVY, lw=2.2, z=4):
-    """A capacitor in a horizontal run: two vertical plates."""
-    for dx in (gap, -gap):
-        ax.plot([x + dx] * 2, [y - s, y + s], color=color, lw=lw, zorder=z)
-
-
-#  A winding is a stack of half circles whose diameters lie on the lead
-#  line.  Two of them meet tangent-to-tangent pointing opposite ways, which
-#  is a cusp, and a cusp rendered with a join turns into a little hook at
-#  every turn - the thing that made these look frayed.  So the arcs are
-#  separated by a break: one plot call, no joins, and the round caps close
-#  the seam.  The highlight uses the same points and gets the same breaks.
-BRK = (np.nan, np.nan)
-
-
-def coil_pts(x, y0, y1, n=5, side=-1, m=26):
-    """A vertical winding, bottom to top, with a break between turns."""
-    r = abs(y1 - y0) / (2.0 * n)
-    lo = min(y0, y1)
-    a = np.linspace(-np.pi / 2, np.pi / 2, m)
-    pts = []
-    for k in range(n):
-        cy = lo + r * (2 * k + 1)
-        if pts:
-            pts.append(BRK)
-        pts += list(zip(x + side * r * np.cos(a), cy + r * np.sin(a)))
-    return pts
-
-
-def hcoil_pts(x, y, s=0.90, n=4, m=26):
-    """A horizontal winding, left to right, with a break between turns."""
-    r = s / (2.0 * n)
-    a = np.linspace(np.pi, 0, m)
-    pts = []
-    for k in range(n):
-        cx = x - s / 2 + r * (2 * k + 1)
-        if pts:
-            pts.append(BRK)
-        pts += list(zip(cx + r * np.cos(a), y + r * np.sin(a)))
-    return pts
-
-
-def coil(ax, x, y0, y1, n=5, side=-1, color=NAVY, lw=2.0, z=4):
-    xs, ys = zip(*coil_pts(x, y0, y1, n, side))
-    ax.plot(xs, ys, color=color, lw=lw, zorder=z, solid_capstyle='round')
-
-
-def hcoil(ax, x, y, s=0.90, n=4, color=NAVY, lw=2.0, z=4):
-    xs, ys = zip(*hcoil_pts(x, y, s, n))
-    ax.plot(xs, ys, color=color, lw=lw, zorder=z, solid_capstyle='round')
-
-
-def vdiode(ax, x, y, s=0.26, up=True, color=NAVY, lw=2.2, z=4):
-    """Triangle and bar on a vertical branch; `up` = conducts upward."""
-    d = 1 if up else -1
-    tri = [(x - s * 0.72, y - d * s * 0.62), (x + s * 0.72, y - d * s * 0.62),
-           (x, y + d * s * 0.62)]
-    ax.fill(*zip(*tri), color=color, zorder=z)
-    ax.plot([x - s * 0.72, x + s * 0.72], [y + d * s * 0.62] * 2, color=color,
-            lw=lw, zorder=z)
-
-
-def resbox(ax, x, y, w=0.46, h=1.15, color=NAVY, z=4):
-    ax.add_patch(Rectangle((x - w / 2, y - h / 2), w, h, fc='white', ec=color,
-                           lw=1.8, zorder=z))
-
-
-def hop(ax, x, y, r=0.20, color=NAVY, lw=LW, z=5):
-    """A horizontal wire crossing a vertical one without joining it."""
-    a = np.linspace(0, np.pi, 40)
-    ax.plot(x + r * np.cos(a), y + r * np.sin(a), color=color, lw=lw, zorder=z)
-
+#  The symbols live in schemx.py so the rest of the note draws the same
+#  MOSFET, the same windings and the same current highlight as these panels.
+from schemx import (NAVY, YEL, MAG, CYA, GRN, PUR, GREY, LT, OFF_C, LW, BRK,
+                    wire, dot, txt, vcap, hcap, coil_pts, hcoil_pts, coil,
+                    hcoil, vdiode, resbox, hop, mosfet, path, register)
 
 # ------------------------------------------------------------- the geometry
 #  One proportion table.  Nothing below computes a coordinate twice, and the
@@ -180,63 +82,6 @@ XEND = XLD
 
 DX_D, DX_C = 0.80, 1.50             # body diode and C_oss, right of the leg
 XGATE = 1.00                        # gate lead reaches this far left
-
-
-def mosfet(ax, x, y, name, state, h=DEVH):
-    """One switch: the MOSFET, its body diode and its C_oss, in parallel.
-
-    Enhancement mode, so the channel is THREE separate bars with gaps you
-    can see, each with its own lead - drain to the top bar, source to the
-    bottom one, bulk to the middle one.  Drawn tight the first time, the
-    three merged into one column and the symbol read as a depletion device.
-    The gate is a plate standing off the channel across the oxide gap and
-    touching nothing.
-
-    state picks which of the three parallel paths is doing the work -
-        on          gated on and carrying          (channel)
-        diode       gated off, body diode carrying (the ZVS window)
-        charge      gated off, C_oss charging,   V_ds rising
-        discharge   gated off, C_oss discharging, V_ds falling
-        off         nothing
-    """
-    yt, yb = y + h / 2, y - h / 2
-    live = state == 'on'
-    cm = NAVY if live else OFF_C
-    cd = GRN if state == 'diode' else OFF_C
-    cc = {'charge': MAG, 'discharge': CYA}.get(state, OFF_C)
-
-    if live:                                   # a soft halo, not a filled box
-        ax.add_patch(FancyBboxPatch(
-            (x - 1.02, yb), 1.16, h,
-            boxstyle='round,pad=0.10,rounding_size=0.16', fc=YEL, alpha=0.40,
-            ec='none', zorder=1))
-
-    xg, xc = x - 0.62, x - 0.38
-    wire(ax, [(x - XGATE, y), (xg, y)], cm, 1.5)          # gate lead
-    ax.plot([xg, xg], [y - 0.58, y + 0.58], color=cm, lw=2.3, zorder=4)
-    for y0, y1 in ((y + 0.30, y + 0.58), (y - 0.14, y + 0.14),
-                   (y - 0.58, y - 0.30)):                 # three bars
-        ax.plot([xc, xc], [y0, y1], color=cm, lw=2.3, zorder=4)
-    wire(ax, [(xc, y + 0.44), (x, y + 0.44), (x, yt)], cm)      # drain
-    wire(ax, [(xc, y - 0.44), (x, y - 0.44), (x, yb)], cm)      # source
-    wire(ax, [(xc, y), (x, y), (x, y - 0.44)], cm)             # bulk, tied
-    ax.add_patch(FancyArrowPatch((x - 0.13, y), (xc + 0.05, y),
-                                 arrowstyle='-|>', mutation_scale=10,
-                                 color=cm, lw=1.5, zorder=5,
-                                 shrinkA=0, shrinkB=0))
-
-    # body diode and C_oss hang off the same two nodes
-    wire(ax, [(x, yt), (x + DX_C, yt)], OFF_C, 1.4)
-    wire(ax, [(x, yb), (x + DX_C, yb)], OFF_C, 1.4)
-    wire(ax, [(x + DX_D, yb), (x + DX_D, yt)], cd, 2.0 if cd == GRN else 1.4)
-    vdiode(ax, x + DX_D, y, 0.26, up=True, color=cd,
-           lw=2.2 if cd == GRN else 1.6)
-    wire(ax, [(x + DX_C, yb), (x + DX_C, y - 0.12)], cc, 1.4)
-    wire(ax, [(x + DX_C, y + 0.12), (x + DX_C, yt)], cc, 1.4)
-    vcap(ax, x + DX_C, y, 0.28, 0.12, color=cc, lw=2.0)
-    txt(ax, x - XGATE - 0.14, y, name, size=11.5, weight='bold',
-        color=NAVY if state != 'off' else GREY, ha='right')
-    return (x, yt), (x, yb)
 
 
 def _skeleton(ax, states):
@@ -378,6 +223,7 @@ VCOILS = [(XLM, YB + 0.24, YT - 0.24, 5, -1),
           (XS, YMID + LEAD, YT - LEAD, NS_T_N, -1),
           (XS, YB + LEAD, YMID - LEAD, NS_T_N, -1)]
 HCOILS = [(XLR, YT, 0.90, 3)]
+register(HOPS, VCOILS, HCOILS)
 
 
 def bd(x, y, h=DEVH):
@@ -406,89 +252,6 @@ SEC_LO = [NS_C, (XCT, YMID), (XCT, VP), (XLD, VP), (XLD, VN), (XQ1, VN),
           (XQ1, YB), NS_B, NS_C]
 SEC_HI = [NS_C, (XCT, YMID), (XCT, VP), (XLD, VP), (XLD, VN), (XQ2, VN),
           (XQ2, YT), NS_T, NS_C]
-
-
-def _arc(hx, hy, r, going_right):
-    a = np.linspace(np.pi, 0, 24) if going_right else np.linspace(0, np.pi, 24)
-    return [(hx + r * np.cos(t), hy + r * np.sin(t)) for t in a]
-
-
-def _detour(p0, p1, r=0.20):
-    """What the highlight does between two points instead of a straight run.
-
-    A run can hold more than one thing to follow - the tank wire crosses the
-    right leg AND goes through L_r - so every feature on the segment is
-    collected and laid down in travel order.  Returning at the first match
-    left L_r flattened under a straight band.
-    """
-    (x0, y0), (x1, y1) = p0, p1
-    segs = []
-    if abs(y0 - y1) < 1e-9:                                   # horizontal
-        lo, hi = min(x0, x1), max(x0, x1)
-        for hx, hy in HOPS:
-            if abs(y0 - hy) < 1e-9 and lo < hx - r and hx + r < hi:
-                segs.append((hx, [(hx - r, hy)] + _arc(hx, hy, r, True)
-                             + [(hx + r, hy)]))
-        for cx, cy, span, n in HCOILS:
-            if abs(y0 - cy) < 1e-9 and lo <= cx - span / 2.0 \
-                    and cx + span / 2.0 <= hi:
-                segs.append((cx, hcoil_pts(cx, cy, span, n)))
-        flip = x1 < x0
-    elif abs(x0 - x1) < 1e-9:                                 # vertical
-        lo, hi = min(y0, y1), max(y0, y1)
-        for cx, cl, ch, n, side in VCOILS:
-            if abs(x0 - cx) < 1e-9 and lo <= cl and ch <= hi:
-                segs.append((cl, coil_pts(cx, cl, ch, n, side)))
-        flip = y1 < y0
-    else:
-        return []
-    segs.sort(key=lambda t: t[0])
-    out = []
-    for _, pts in segs:
-        out += pts
-    return out[::-1] if flip else out
-
-
-def _with_hops(pts, r=0.20):
-    out = [pts[0]]
-    for p0, p1 in zip(pts, pts[1:]):
-        out += _detour(p0, p1, r)
-        out.append(p1)
-    return out
-
-
-def path(ax, pts, load=True, heads=(), lw=3.8):
-    """The conducting path, laid over the drawing.
-
-    load=True  -> solid magenta, power is being delivered
-    load=False -> dashed cyan, only the magnetising current circulates
-    heads: (index, fraction) pairs - the segment ENDING at index, and how
-    far along it the arrowhead goes.  The fraction is not cosmetic: at the
-    default 0.62 the right leg's arrow landed exactly on the wire hop and
-    the left leg's inside the MOSFET symbol, because those are where 62 %
-    of those particular runs falls.
-    """
-    col = MAG if load else CYA
-    xs, ys = zip(*_with_hops(pts))
-    # UNDER the schematic, not over it.  Laid on top, a 3.8-wide highlight
-    # swallowed the chord of every coil it ran through and struck out the
-    # device names; underneath it reads as a glow round the wire and every
-    # symbol stays whole.
-    ax.plot(xs, ys, color=col, lw=lw + 1.4, alpha=0.42 if load else 0.60,
-            zorder=1.5, solid_capstyle='round',
-            ls='-' if load else (0, (3.4, 2.0)))
-    for h in heads:
-        i, f = h if isinstance(h, tuple) else (h, 0.62)
-        p0, p1 = np.array(pts[i - 1], float), np.array(pts[i], float)
-        d = p1 - p0
-        n = np.hypot(*d)
-        if n < 1e-9:
-            continue
-        m = p0 + f * d
-        ax.add_patch(FancyArrowPatch(m - d / n * 0.13, m + d / n * 0.13,
-                                     arrowstyle='-|>', mutation_scale=18,
-                                     color=col, lw=2.5, zorder=8,
-                                     shrinkA=0, shrinkB=0))
 
 
 ON, OFF = 'on', 'off'

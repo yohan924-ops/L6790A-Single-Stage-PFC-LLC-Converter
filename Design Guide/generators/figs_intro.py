@@ -49,18 +49,25 @@ def an_llc_stage(save, foot):
     S.wire(ax, [(2.2, -0.9), (9.0, -0.9)])
 
     # transformer
-    t = S.xfmr(ax, 8.05, 1.45, hp=1.9, hs=1.9, gap=0.34)
+    t = S.xfmr(ax, 8.05, 1.45, hp=1.9, hs=1.9, gap=0.34, ct=True,
+               np_t=5, ns_t=2)
     S.wire(ax, [(6.55, 1.45), (6.55, 2.40), (t['p_top'][0], 2.40),
                 t['p_top']])
     S.wire(ax, [t['p_bot'], (t['p_bot'][0], -0.9)])
     S.label(ax, 8.05, 3.30, 'n : 1', size=10.5, color=GREY)
 
     # secondary, centre tap
+    XTAP = 9.05
     S.wire(ax, [t['s_top'], (9.6, t['s_top'][1])])
     di, do = S.diode(ax, 10.3, t['s_top'][1], s=0.30)
     S.wire(ax, [(9.6, t['s_top'][1]), di])
     S.wire(ax, [do, (11.6, t['s_top'][1])])
-    S.wire(ax, [t['s_bot'], (9.6, t['s_bot'][1])])
+    #  The tap leaves on its own riser, so the lower end's wire has to cross
+    #  it.  Run flat through the riser and the drawing shorts the lower half
+    #  winding to the return - which is what it did before this hop.
+    S.wire(ax, [t['s_bot'], (XTAP - 0.20, t['s_bot'][1])])
+    S.hop(ax, XTAP, t['s_bot'][1])
+    S.wire(ax, [(XTAP + 0.20, t['s_bot'][1]), (9.6, t['s_bot'][1])])
     di2, do2 = S.diode(ax, 10.3, t['s_bot'][1], s=0.30)
     S.wire(ax, [(9.6, t['s_bot'][1]), di2])
     S.wire(ax, [do2, (11.6, t['s_bot'][1])])
@@ -70,8 +77,7 @@ def an_llc_stage(save, foot):
     S.label(ax, 10.3, t['s_top'][1] + 0.42, 'rectifier', size=10, color=GREY)
 
     # centre tap return
-    S.wire(ax, [(8.39, 1.45), (8.39, -0.9), (14.3, -0.9)])
-    S.dot(ax, 8.39, 1.45)
+    S.wire(ax, [t['s_tap'], (XTAP, 1.45), (XTAP, -0.9), (14.3, -0.9)])
 
     ca, cb = S.cap(ax, 12.8, 0.28, None, horiz=False, s=0.34)
     S.wire(ax, [(12.8, 1.45), (12.8, 0.62)])

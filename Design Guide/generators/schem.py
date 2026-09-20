@@ -13,6 +13,12 @@ points so a chain can be wired without arithmetic in the caller.
 import numpy as np
 from matplotlib.patches import Rectangle, FancyArrowPatch
 
+#  The symbols themselves come from schemx, which is the kit the eight-mode
+#  panels established and the reader has already been shown.  This module
+#  keeps only the composition helpers - frames, shading, block chains.
+import schemx as X
+from schemx import hop, coil, hcoil, mosfet, path, register   # noqa: F401
+
 NAVY, YEL, MAG = '#03234B', '#FFD200', '#E6007E'
 CYA, GRN, PUR = '#3CB4E6', '#49B170', '#8C0078'
 GREY, LT = '#464650', '#E8E8E9'
@@ -104,13 +110,17 @@ def res(ax, x, y, t=None, horiz=True, s=0.70, color=NAVY, tdy=None):
            ((x, y - h / 2), (x, y + h / 2))
 
 
-def sw(ax, x, y, t, on=False, w=0.62, h=0.52):
-    """a switch drawn as a labelled box"""
-    ax.add_patch(Rectangle((x - w / 2, y - h / 2), w, h,
-                           fc=(YEL if on else 'white'),
-                           ec=(MAG if on else GREY), lw=(2.2 if on else 1.4),
-                           zorder=3))
-    label(ax, x, y, t, size=9.5, weight='bold', z=4)
+def sw(ax, x, y, t, on=False, w=0.62, h=1.30, gate=0.56, side='gate'):
+    """A switch: the MOSFET symbol, not a box with a name in it.
+
+    The box was the first thing a reviewer rejected, and rightly - a block
+    diagram may use boxes but a schematic may not.  `w` is accepted and
+    ignored so the older call sites still read; the span that matters is h,
+    drain node to source node.
+    """
+    X.mosfet(ax, x, y, t, 'on' if on else 'plain', h=h, gate=gate,
+             body=False, coss=False,
+             name_at='right' if side == 'right' else 'gate', size=10)
     return (x, y - h / 2), (x, y + h / 2)
 
 
@@ -158,36 +168,16 @@ def sqsrc(ax, x, y, t=None, r=0.38, color=NAVY):
     return (x - r, y), (x + r, y)
 
 
-def xfmr(ax, x, y, hp=1.15, hs=1.15, gap=0.30, lp=None, ls=None, dots=True):
-    """two windings and a core.
-
-    -> dict with p_top p_bot s_top s_bot, all terminal points
-    """
-    xl, xr = x - gap, x + gap
-    for xx in (x - 0.09, x + 0.09):
-        ax.plot([xx, xx], [y - max(hp, hs) / 2 - 0.10,
-                           y + max(hp, hs) / 2 + 0.10],
-                color=GREY, lw=2.0, zorder=2)
-    _coil(ax, xl, y, hp, side=-1)
-    _coil(ax, xr, y, hs, side=+1)
-    if dots:
-        dot(ax, xl - 0.20, y + hp / 2 - 0.10, NAVY, 4.4)
-        dot(ax, xr + 0.20, y + hs / 2 - 0.10, NAVY, 4.4)
-    if lp:
-        label(ax, xl - 0.34, y, lp, ha='right')
-    if ls:
-        label(ax, xr + 0.34, y, ls, ha='left')
-    return dict(p_top=(xl, y + hp / 2), p_bot=(xl, y - hp / 2),
-                s_top=(xr, y + hs / 2), s_bot=(xr, y - hs / 2))
+def xfmr(ax, x, y, hp=1.15, hs=1.15, gap=0.30, lp=None, ls=None, dots=True,
+         ct=False, np_t=4, ns_t=3):
+    """Two windings and a core; the kit draws it.  -> dict of terminals."""
+    return X.xfmr(ax, x, y, hp=hp, hs=hs, np_t=np_t, ns_t=ns_t, ct=ct,
+                  gap=gap, lp=lp, ls=ls, dots=dots, size=10)
 
 
 def _coil(ax, x, y, h, side, n=4):
-    r = h / (2.0 * n)
-    a = np.linspace(-np.pi / 2, np.pi / 2, 40)
-    for k in range(n):
-        cy = y - h / 2 + r * (2 * k + 1)
-        ax.plot(x + side * r * np.cos(a), cy + r * np.sin(a), color=NAVY,
-                lw=2.0, zorder=3)
+    """One winding, drawn by the kit so it matches the mode panels."""
+    X.coil(ax, x, y - h / 2, y + h / 2, n=n, side=side)
 
 
 def gnd(ax, x, y, s=0.22, color=NAVY):
