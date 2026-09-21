@@ -797,7 +797,9 @@ def an_three_cases(save, foot):
              (1.0 - 2 * td, 'at resonance', 'f$_{sw}$ = f$_r$'),
              (1.30, 'above resonance', 'f$_{sw}$ > f$_r$')]
     names = ['gates', 'v$_d$', 'i$_{Lr}$, i$_{Lm}$', 'i$_D$']
-    hgt = [0.115, 0.145, 0.205, 0.155]
+    #  i_D gets the tallest row: the callout about reverse recovery
+    #  lives above its trace and needs the room.
+    hgt = [0.115, 0.145, 0.190, 0.215]
     for c, (ratio, ttl, sub) in enumerate(cases):
         t, e, ilm, ilr, io, trunc = _cycle(ratio, lam, 18.32, 12.41,
                                           td=td)
@@ -824,7 +826,7 @@ def an_three_cases(save, foot):
         m = max(abs(ilr).max(), 1e-9)
         axs[2].plot(T, ilr / m, color=MAG, lw=1.9)
         axs[2].plot(T, ilm / m, color=CYA, lw=1.7, ls=(0, (4, 2.4)))
-        axs[3].set_ylim(-0.12, 1.25)
+        axs[3].set_ylim(-0.12, 2.15)
         axs[3].plot(T, io / max(io.max(), 1e-9), color=GRN, lw=1.9)
         for a in axs:
             for xv in (e[1], e[2], e[4], e[5], e[6]):
@@ -832,23 +834,32 @@ def an_three_cases(save, foot):
         #  The interval the freewheeling happens in is what changes across
         #  the three columns, so it is the thing to mark.
         if not trunc and e[2] - e[1] > 0.004:
-            axs[3].annotate('', xy=(e[1], 1.12), xytext=(e[2], 1.12),
-                            arrowprops=dict(arrowstyle='<->', color=CYA,
-                                            lw=1.6))
+            #  A bracket, not a double arrow: the interval is short, and a
+            #  '<->' with its two heads meeting in the middle printed as a
+            #  diamond that meant nothing.
+            for xv in (e[1], e[2]):
+                axs[3].plot([xv, xv], [1.06, 1.22], color=CYA, lw=1.4)
+            axs[3].plot([e[1], e[2]], [1.14, 1.14], color=CYA, lw=1.4)
             axs[3].text((e[1] + e[2]) / 2.0, 1.32, 'freewheeling',
                         ha='center', fontsize=9.4, color=CYA,
                         path_effects=HALO, zorder=9)
-        else:
-            axs[3].text(0.5, 1.30, 'no freewheeling interval left',
+        elif not trunc:
+            #  The truncated column says this inside its callout instead:
+            #  two separate lines up there and the callout's arrow ran
+            #  through one of them whatever it was placed.
+            axs[3].text(0.5, 1.24, 'no freewheeling interval left',
                         ha='center', fontsize=9.4, color=CYA,
                         path_effects=HALO, zorder=9)
         if trunc:
-            _call(axs[3], (e[1], io[int(e[1] * len(t)) - 2]
-                           / max(io.max(), 1e-9)),
-                  (0.04, -0.62),
-                  'still conducting when the half\nperiod ends - the '
-                  'switches\ncommutate it, so the rectifier\nhas to recover',
-                  color=GRN, size=9.0)
+            #  Above the trace, in the band the taller row leaves free -
+            #  set beside the cut it sat on the very half-sine it names.
+            _call(axs[3], (e[1] + 0.006, io[int(e[1] * len(t)) - 2]
+                           / max(io.max(), 1e-9) + 0.04),
+                  (0.98, 2.10),
+                  'no freewheeling interval left: still conducting\n'
+                  'when the half period ends, so the switches\n'
+                  'commutate it - reverse recovery',
+                  color=GRN, size=9.0, ha='right', va='top')
 
     foot(fig, 'Below resonance the rectifier current reaches zero before the '
               'half period does and the rest of it circulates. At resonance '
@@ -1564,7 +1575,7 @@ def an_core_section(save, foot):
 
 
 # ------------------------------------------- 14  flyback against the LLC
-def _batt(ax, x, ytop, ybot, t=None):
+def _batt(ax, x, ytop, ybot, t=None, size=11):
     """A dc source between two nodes, wired to both.  -> (top, bottom)
 
     Two cells, long plate on the + side.  The plates are drawn at zorder 4
@@ -1578,22 +1589,26 @@ def _batt(ax, x, ytop, ybot, t=None):
     S.wire(ax, [(x, ytop), (x, yc + 1.5 * s)])
     S.wire(ax, [(x, yc - 1.5 * s), (x, ybot)])
     if t:
-        S.label(ax, x - 1.5 * s - 0.34, yc, t, size=11, ha='right')
+        S.label(ax, x - 1.5 * s - 0.34, yc, t, size=size, ha='right')
     return (x, ytop), (x, ybot)
 
 
-def _sec(ax, top, bot, ys, xd, xc, xr, yt):
+def _sec(ax, top, bot, ys, xd, xc, xr, yt, size=10.5):
     """rectifier, output capacitor and load, hung on one secondary"""
     di, do = S.diode(ax, xd, yt, None, horiz=True)
     S.wire(ax, [top, di])
-    S.label(ax, xd, yt + 0.72, 'D', size=10.5, color=GREY)
+    S.label(ax, xd, yt + 0.55 * X.scale(ax) + 0.30, 'D', size=size,
+            color=GREY)
     S.wire(ax, [do, (xr, yt)])
     S.wire(ax, [bot, (bot[0], ys), (xr, ys)])
     S.shunt(ax, xc, yt, ys, 'cap', None)
-    S.label(ax, xc - 0.42, (yt + ys) / 2.0, 'C$_o$', size=10.5, ha='right')
+    S.label(ax, xc - 0.34 * X.scale(ax) - 0.20, (yt + ys) / 2.0, 'C$_o$',
+            size=size, ha='right')
     S.dot(ax, xc, yt)
     S.dot(ax, xc, ys)
-    S.shunt(ax, xr, yt, ys, 'res', 'R$_o$')
+    S.shunt(ax, xr, yt, ys, 'res', None)
+    S.label(ax, xr + 0.30 * X.scale(ax) + 0.22, (yt + ys) / 2.0, 'R$_o$',
+            size=size, ha='left')
 
 
 def an_flyback_llc(save, foot):
@@ -1635,7 +1650,13 @@ def an_flyback_llc(save, foot):
              'branch', ha='center', va='top', fontsize=11.0, color=NAVY,
              fontweight='bold', linespacing=1.35)
 
-    YT, YB, YS = 4.2, -1.2, 0.0
+    #  Everything but the transformer at TWICE the kit size, and every
+    #  designator at 14 pt: the panels are printed small, and at kit size
+    #  the reviewer could not read a capacitor from a resistor or an S
+    #  from an S.  The transformers keep their explicit height - they were
+    #  the one thing in the panel that was already right.
+    MULT, FS = 2.0, 14
+    YT, YB, YS = 4.4, -1.7, 0.0
     #  The two circuits get DIFFERENT widths, and that is deliberate.  They
     #  sit in separate columns, so nothing has to line up across the gap,
     #  and sharing one layout cost both of them: the flyback was three
@@ -1644,41 +1665,47 @@ def an_flyback_llc(save, foot):
     #  name landing on the riser beside it.  The axes limits are shared, so
     #  the scale still is - a symbol is the same size in both panels - but
     #  each circuit is laid out to the width it actually needs.
-    LIM = (-2.6, 13.4, -2.2, 5.0)
+    LIM = (-2.6, 13.4, -2.9, 5.5)
 
     # ========================================================= the flyback
     ax = _ax(fig, [0.030, 0.655, 0.462, 0.280], *LIM)
+    ax._sym_mult = MULT
     XT_F = 4.30
     #  The secondary polarity dot is at the BOTTOM here and at the top in
     #  the LLC panel.  That one dot is the whole difference: inverted, the
     #  rectifier can only conduct while the switch is OFF, which is what
     #  makes the two winding currents exclusive and the rest of this
     #  figure follow from it.
-    t1 = X.xfmr(ax, XT_F, 2.1, hp=3.2, hs=3.2, gap=0.52, s_dot='bot')
+    t1 = X.xfmr(ax, XT_F, 2.5, hp=3.2, hs=3.2, gap=0.52, s_dot='bot')
     #  Read the lead lines back rather than assuming x +- gap: xfmr widens
     #  the gap when the turns would otherwise lie on the core bars, and
     #  everything hung off the primary lead has to move with it.
     XP_F, XS_F = t1['p_top'][0], t1['s_top'][0]
     S.wire(ax, [t1['p_top'], (XP_F, YT), (0.80, YT)])
-    _batt(ax, 0.80, YT, YB, 'V$_{in}$')
+    _batt(ax, 0.80, YT, YB, 'V$_{in}$', size=FS)
     S.wire(ax, [(0.80, YB), (XP_F, YB)])
     #  The flyback had no ground at all while the LLC beside it had one,
     #  so the two panels disagreed about what the return rail was.  Same
     #  symbol, same place on both: under the source's negative terminal.
-    S.gnd(ax, 0.80, YB, lead=0.34)
-    X.mosfet(ax, XP_F, -0.25, 'S', state='plain', h=1.30, gate=0.95,
-             body=False, coss=False, size=11)
-    S.wire(ax, [t1['p_bot'], (XP_F, 0.40)])
-    S.wire(ax, [(XP_F, -0.90), (XP_F, YB)])
-    _sec(ax, t1['s_top'], t1['s_bot'], YS, 6.80, 8.50, 9.90, 3.7)
+    S.gnd(ax, 0.80, YB, lead=0.45)
+    #  The switch sits between the primary's lower terminal and the rail,
+    #  so its height is what that gap allows: 0.9 down to -1.7 leaves 2.0
+    #  with a short lead each end.
+    X.mosfet(ax, XP_F, -0.40, 'S', state='plain', h=2.0, gate=1.5,
+             body=False, coss=False, size=FS)
+    S.wire(ax, [t1['p_bot'], (XP_F, 0.60)])
+    S.wire(ax, [(XP_F, -1.40), (XP_F, YB)])
+    _sec(ax, t1['s_top'], t1['s_bot'], YS, 6.80, 8.60, 10.20,
+         t1['s_top'][1], size=FS)
     #  Mid-coil, not at the top: the top turn is where the polarity dot is.
-    S.label(ax, XP_F - 0.38, 2.55, 'i$_p$', size=11, color=MAG, ha='right')
-    S.label(ax, XS_F + 0.43, 2.55, 'i$_s$', size=11, color=GRN, ha='left')
-    ax.text(5.0, -2.00, 'switch and rectifier are never on together',
+    S.label(ax, XP_F - 0.42, 2.55, 'i$_p$', size=FS, color=MAG, ha='right')
+    S.label(ax, XS_F + 0.47, 2.55, 'i$_s$', size=FS, color=GRN, ha='left')
+    ax.text(6.0, -2.62, 'switch and rectifier are never on together',
             ha='center', va='center', fontsize=10.2, color=GREY)
 
     # ============================================================= the LLC
     ax2 = _ax(fig, [0.508, 0.655, 0.462, 0.280], *LIM)
+    ax2._sym_mult = MULT
     XT_L = 7.30
     #  A half-bridge LEG, drawn out, because the gate row below has to refer
     #  to something.  With a bare square-wave source on the page the reader
@@ -1686,42 +1713,47 @@ def an_flyback_llc(save, foot):
     #  labelled rail and a ground rather than a battery: that is how a leg
     #  is normally drawn, and the two units it saves on the left are what
     #  the tank needs on the right.
-    XLEG, YM, XRAIL = -0.60, 1.65, -1.80
-    t2 = X.xfmr(ax2, XT_L, 2.1, hp=3.2, hs=3.2, gap=0.52)
+    XLEG, YM, XRAIL = -0.60, 1.65, -1.90
+    t2 = X.xfmr(ax2, XT_L, 2.5, hp=3.2, hs=3.2, gap=0.52)
     XP_L, XS_L = t2['p_top'][0], t2['s_top'][0]
+    YPT = t2['p_top'][1]                     # the primary's upper terminal
     S.wire(ax2, [(XRAIL, YT), (XLEG, YT)])
     S.dot(ax2, XRAIL, YT)
-    S.label(ax2, XRAIL + 0.45, YT + 0.52, 'V$_{in}$', size=11, ha='left')
+    S.label(ax2, XRAIL + 0.45, YT + 0.60, 'V$_{in}$', size=FS, ha='left')
     S.wire(ax2, [(XRAIL, YB), (XP_L, YB)])
     #  Below the rail, not on it.  Drawn at the rail's own height the
     #  widest bar lies along the wire and the symbol reads as a blob.
-    S.gnd(ax2, XRAIL, YB, lead=0.34)
-    X.mosfet(ax2, XLEG, 2.75, 'S$_1$', state='plain', h=1.30, gate=0.95,
-             body=False, coss=False, size=11)
-    X.mosfet(ax2, XLEG, 0.55, 'S$_2$', state='plain', h=1.30, gate=0.95,
-             body=False, coss=False, size=11)
-    S.wire(ax2, [(XLEG, YT), (XLEG, 3.40)])
-    S.wire(ax2, [(XLEG, 2.10), (XLEG, 1.20)])          # the midpoint leg
-    S.wire(ax2, [(XLEG, -0.10), (XLEG, YB)])
+    S.gnd(ax2, XRAIL, YB, lead=0.45)
+    #  Two switches of 2.0 between rails 6.1 apart: 0.1 of lead at each
+    #  rail and 0.5 either side of the midpoint node.
+    X.mosfet(ax2, XLEG, 3.30, 'S$_1$', state='plain', h=2.0, gate=1.5,
+             body=False, coss=False, size=FS)
+    X.mosfet(ax2, XLEG, 0.00, 'S$_2$', state='plain', h=2.0, gate=1.5,
+             body=False, coss=False, size=FS)
+    S.wire(ax2, [(XLEG, YT), (XLEG, 4.30)])
+    S.wire(ax2, [(XLEG, 2.30), (XLEG, 1.00)])          # the midpoint leg
+    S.wire(ax2, [(XLEG, -1.00), (XLEG, YB)])
     S.dot(ax2, XLEG, YB)
 
     c, d = S.cap(ax2, 1.30, YM, None)
-    S.label(ax2, 1.30, YM - 0.85, 'C$_r$', size=10.5, color=GREY)
-    a, b = S.ind(ax2, 2.80, YM, None, s=1.35)
-    S.label(ax2, 2.80, YM - 0.85, 'L$_r$', size=10.5, color=GREY)
+    S.label(ax2, 1.30, YM - 1.05, 'C$_r$', size=FS - 1, color=GREY)
+    a, b = S.ind(ax2, 2.95, YM, None, s=1.35)
+    S.label(ax2, 2.95, YM - 1.05, 'L$_r$', size=FS - 1, color=GREY)
     S.wire(ax2, [(XLEG, YM), c])
     S.dot(ax2, XLEG, YM)
     S.wire(ax2, [d, a])
-    S.wire(ax2, [b, (4.00, YM), (4.00, 3.7), (XP_L, 3.7)])
+    S.wire(ax2, [b, (4.10, YM), (4.10, YPT), (XP_L, YPT)])
 
     S.wire(ax2, [t2['p_bot'], (XP_L, YB)])
     #  L_m is drawn as its own shunt because its current is one of the four
     #  rows below; without it on the page i_mu has no branch to be the
     #  current of.  Its name goes beside the COIL, at the coil's own height:
     #  above the coil it landed on the riser corner and on i_p.
-    S.shunt(ax2, 5.10, 3.7, YB, 'ind', None, frac=0.42)
-    S.label(ax2, 5.55, YM - 0.40, 'L$_m$', size=10.5, ha='left')
-    S.dot(ax2, 5.10, 3.7)
+    S.shunt(ax2, 5.10, YPT, YB, 'ind', None, frac=0.42)
+    #  In the channel between the riser at 4.10 and the coil at 5.10 -
+    #  to the right of the coil it sat against the primary's lead line.
+    S.label(ax2, 4.60, YM - 0.40, 'L$_m$', size=FS - 1, ha='center')
+    S.dot(ax2, 5.10, YPT)
     S.dot(ax2, 5.10, YB)
 
     #  A BLOCK here, not a diode.  This design rectifies with a centre tap
@@ -1731,12 +1763,14 @@ def an_flyback_llc(save, foot):
     #  flyback panel the rectifier is drawn out because its orientation is
     #  the entire mechanism; here any full-wave rectifier does the same
     #  thing to this argument.
-    bl, _ = S.box(ax2, 11.20, 1.85, 2.6, 4.2, 'rectifier\n+ load', size=10.5)
-    S.wire(ax2, [t2['s_top'], (bl[0], 3.7)])
-    S.wire(ax2, [t2['s_bot'], (XS_L, YS), (bl[0], YS)])
-    S.label(ax2, XP_L - 0.38, 2.55, 'i$_p$', size=11, color=MAG, ha='right')
-    S.label(ax2, XS_L + 0.43, 2.55, 'i$_s$', size=11, color=GRN, ha='left')
-    ax2.text(5.4, -2.00, 'both windings conduct at once',
+    bl, _ = S.box(ax2, 11.20, 2.50, 2.6, 4.2, 'rectifier\n+ load', size=FS - 1)
+    S.wire(ax2, [t2['s_top'], (bl[0], t2['s_top'][1])])
+    #  straight into the block at the terminal's own height: routed down
+    #  to the return line it ended below the block, in the air
+    S.wire(ax2, [t2['s_bot'], (bl[0], t2['s_bot'][1])])
+    S.label(ax2, XP_L - 0.42, 2.95, 'i$_p$', size=FS, color=MAG, ha='right')
+    S.label(ax2, XS_L + 0.47, 2.95, 'i$_s$', size=FS, color=GRN, ha='left')
+    ax2.text(5.4, -2.60, 'both windings conduct at once',
              ha='center', va='center', fontsize=10.2, color=GREY)
 
     # ======================================================== the four rows

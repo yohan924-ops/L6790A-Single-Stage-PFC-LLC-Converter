@@ -98,8 +98,15 @@ REF_FIGSPAN = 46.0
 TURN_R, WIND_R = 0.21, 0.42
 
 
-def scale(ax):
+def scale(ax, xfmr=False):
     """The size factor for every symbol drawn on this axes.
+
+    A figure may ask for its symbols bigger than the rules give by
+    setting ax._sym_mult (2026-09-21: the transformer-comparison figure,
+    whose panels are small on the page and whose transformers are drawn
+    to an explicit height).  The transformer itself does not take the
+    multiplier - pass xfmr=True - because it is sized by its own hp/hs
+    and was the one symbol in that figure the reviewer called right.
 
     Two rules, and the larger wins:
 
@@ -127,7 +134,8 @@ def scale(ax):
         floor = (span / w) / REF_FIGSPAN if w > 1e-6 else 0.0
     except Exception:                                    # noqa: BLE001
         floor = 0.0
-    return max(own, floor)
+    m = 1.0 if xfmr else float(getattr(ax, '_sym_mult', 1.0))
+    return max(own, floor) * m
 
 
 def note_symbol(ax, kind, x, y, w, h):
@@ -382,7 +390,7 @@ def xfmr(ax, x, y, hp=1.80, hs=None, np_t=None, ns_t=None, ct=False,
     #  Turn COUNT follows from the winding height and one turn radius, so
     #  every winding in the document is drawn with the same size turn.
     #  Fixing the count instead makes a tall winding's turns bigger.
-    r = WIND_R * scale(ax)
+    r = WIND_R * scale(ax, xfmr=True)
     #  A schematic winding is a few bumps, not a spring.  Filling the whole
     #  core height at a fixed turn radius put ten and more turns on a
     #  transformer drawn as tall as its circuit, and the symbol then
