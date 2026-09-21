@@ -722,12 +722,8 @@ S.row('- Flux-equivalent DC test current:', 'I.sat_eq',
            'UNDER-specifies the test. The answer must come out equal to '
            'I.Lm_pk, because with the secondary open the whole primary '
            'current IS magnetizing current - check_trans_spec tests that.')
-S.row('- Test current on the vendor specification:', 'I.sat_spec',
-      "1.5*I.sat_eq", 'A', 1,
-      note='margin over I.sat_eq, rounded UP to a whole ampere on the '
-           'specification sheet. Compare it with I.Lr_pk as well: the '
-           'winding really carries that peak, and in every variant here '
-           'this test current clears it.')
+#  I.sat_spec is NOT here: it needs V.OVP2_act, which section 14 defines.
+#  It is worked out there, right under the OVP thresholds it comes from.
 S.row('- Secondary rms current per transformer:', 'I.sec_x', 'I.diode_lc/N.x', 'A', 2)
 S.row('- Primary rms current (same in all - series):', 'I.pri_x', 'I.pri_lc', 'A', 3)
 
@@ -965,6 +961,23 @@ S.row('- OVP1 the fitted divider really gives:', 'V.OVP1_act',
            'selected parts.')
 S.row('- OVP2 the fitted divider really gives:', 'V.OVP2_act',
       "2.5*'V/n.aux*r.ZCD", 'V', 2, note='[98]')
+#  The saturation test current belongs here and not in section 12, because
+#  the number it has to be safe against is this one.  Below resonance the
+#  magnetizing conduction window is fixed at T_r/2, so the magnetizing
+#  current does NOT depend on f.sw - it is proportional to the OUTPUT
+#  VOLTAGE alone.  The worst output the controller ever allows is OVP2, so
+#  that is the worst core flux the transformer ever sees, and the test
+#  current is simply the magnetizing peak there.  There is no arbitrary
+#  margin factor and there must not be one: a round number chosen by hand
+#  hides which circuit limit the part is actually being tested against.
+S.row('- Output-voltage overshoot the core must survive:', 'k.OVsat',
+      'V.OVP2_act/V.o_eff', None, 4)
+S.row('- Test current on the vendor specification:', 'I.sat_spec',
+      'I.sat_eq*k.OVsat', 'A', 2,
+      note='rounded UP to a whole ampere on the specification sheet. It is '
+           'well under the tank peak I.Lr_pk and that is correct - with the '
+           'secondary OPEN there is no ampere-turn cancellation, so this '
+           'current makes the same core flux that I.Lr_pk makes in service.')
 S.const('- ZCD voltage at the end of start-up:', 'V.ZCD_SUend', "1.35*'V", 'V', 2)
 S.row('- Output voltage where start-up hands over:', 'V.out_SUend',
       "V.ZCD_SUend/(2.3*'V)*V.OVP1_act", 'V', 2)

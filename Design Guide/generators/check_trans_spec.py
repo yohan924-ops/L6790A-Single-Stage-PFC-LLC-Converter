@@ -79,6 +79,7 @@ def derive(s):
         ILm_pk=g('I.Lm_pk'),
         # 개방 시험(다른 권선 OPEN)에서 동작 자속 B.pk 와 같은 자속을 만드는 DC 전류
         Ieq=g('I.sat_eq'), Isat_spec=g('I.sat_spec'),
+        kOVsat=g('k.OVsat'),
         fmin=khz(s, 'f.Min'), fmax=khz(s, 'f.sw.b'),
         kfloor=g('k.floor'),
         nT=g('n.T_act'),
@@ -186,14 +187,15 @@ def main():
         print('  %-20s %-12.4g 자화피크 %-12.4g %s'
               % ('I.sat_eq = I.Lm_pk?', d['Ieq'], d['ILm_pk'],
                  'same' if ok else '** 분모 인덕턴스가 틀렸다'))
-        #  자속 등가와 별개로, 권선은 합성 탱크 피크를 실제로 흘린다.  시험
-        #  전류가 그보다 낮으면 사양서를 받는 쪽에서 반드시 묻는다.
-        ok = spec['Isat'] >= d['Ipri_pk']
+        #  시험 전류가 탱크 피크보다 낮은 것은 정상이고 요구사항이 아니다 -
+        #  개방시험은 전류 시험이 아니라 자속 시험이다.  판정해야 하는 것은
+        #  "OVP2 에서의 자화전류를 덮는가" 이고, 그것이 이 설계의 근거다.
+        want = d['ILm_pk'] * d['kOVsat']
+        ok = spec['Isat'] >= want - 0.5
         bad += 0 if ok else 1
-        print('  %-20s 사양서 %-12g 탱크피크 %-12.4g %s  (여유 %.0f %%)'
-              % ('I.sat vs I.Lr_pk', spec['Isat'], d['Ipri_pk'],
-                 'same' if ok else '** 실제 피크보다 낮다',
-                 100 * (spec['Isat'] / d['Ipri_pk'] - 1)))
+        print('  %-20s 사양서 %-12g OVP2자화 %-12.4g %s  (OVP2 는 V.out 의 %.3f 배)'
+              % ('I.sat vs OVP2', spec['Isat'], want,
+                 'same' if ok else '** OVP2 자속을 못 덮는다', d['kOVsat']))
     print()
     print('불일치 %d 건' % bad)
     return 1 if bad else 0
