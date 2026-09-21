@@ -45,14 +45,35 @@ CYA, GRN, PUR = '#3CB4E6', '#49B170', '#8C0078'
 GREY, LT = '#464650', '#E8E8E9'
 
 # The four guide figures carry Korean labels and matplotlib's default font has
-# no CJK glyphs - they come out as boxes with no error, only a warning. Put a
-# Korean face first and keep a Latin one behind it for the deck figures.
+# no CJK glyphs - they come out as boxes with no error, only a warning. Keep a
+# Korean face in the chain behind the Latin one; matplotlib falls back per
+# glyph, so Latin comes from the first family and Hangul from the second.
 _KR = next((n for n in ('Malgun Gothic', 'NanumBarunGothic', 'Gulim')
             if any(f.name == n for f in matplotlib.font_manager.fontManager.ttflist)),
            None)
 
+#  THE FIGURES ARE SET IN THE SAME FACE AS THE TEXT AROUND THEM.  The note's
+#  body is Liberation Sans (an_pdf.use_unicode), and matplotlib's default
+#  DejaVu Sans is a visibly different, wider letterform - a drawing set in it
+#  reads as a screenshot lifted from somewhere else, which is exactly what
+#  this document spent a week getting away from.  Liberation Sans is metric-
+#  compatible with Arial and carries the Greek and the operators the labels
+#  need, so mathtext is pointed at it too and only the symbols it does not
+#  have fall back.
+_SANS = next((n for n in ('Liberation Sans', 'Arial', 'Helvetica')
+              if any(f.name == n
+                     for f in matplotlib.font_manager.fontManager.ttflist)),
+             'DejaVu Sans')
+
 plt.rcParams.update({
-    'font.family': ([_KR] if _KR else []) + ['DejaVu Sans'],
+    'font.family': [_SANS] + ([_KR] if _KR else []) + ['DejaVu Sans'],
+    'mathtext.fontset': 'custom',
+    #  mathtext.cal is left at 'cursive' by default and a custom fontset
+    #  resolves it, so every figure printed a findfont warning for a
+    #  family nothing in this document uses.
+    'mathtext.rm': _SANS, 'mathtext.sf': _SANS, 'mathtext.cal': _SANS,
+    'mathtext.it': _SANS + ':italic', 'mathtext.bf': _SANS + ':bold',
+    'mathtext.fallback': 'stixsans',
     'axes.unicode_minus': False,
     'font.size': 11, 'axes.titlesize': 12.5, 'axes.labelsize': 12,
     'axes.edgecolor': GREY, 'axes.labelcolor': NAVY, 'text.color': NAVY,
