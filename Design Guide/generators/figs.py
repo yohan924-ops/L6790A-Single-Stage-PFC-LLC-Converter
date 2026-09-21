@@ -244,22 +244,22 @@ def f04_three_regions():
     _pk = max(np.linspace(FN0, 1.0, 900), key=lambda x: gain_fn(x, QPK, LAM))
     ax.plot([_pk], [gain_fn(_pk, QPK, LAM)], marker='*', ms=15, color=NAVY,
             mec='white', mew=1.2, zorder=6)
-    ax.annotate('capacitive edge AT THIS LOAD, %.1f kHz\n'
+    ax.annotate('capacitive edge AT THIS LOAD, %.2f f$_r$\n'
                 'arg Z$_{in}$ = 0 here - it moves right as load rises\n'
-                'the gain peak (star, %.1f kHz) is the usual\n'
+                'the gain peak (star, %.2f f$_r$) is the usual\n'
                 'stand-in and sits low, so it flatters the margin'
-                % (_edge * FR / 1e3, _pk * FR / 1e3),
+                % (_edge, _pk),
                 (_edge, 1.35), xytext=(1.13, 1.70), va='top',
                 color=MAG, fontsize=9.0,
                 bbox=dict(boxstyle='round,pad=0.25', fc='white', ec=MAG,
                           lw=1.0, alpha=0.95),
                 arrowprops=dict(arrowstyle='-|>', color=MAG, lw=1.4))
-    ax.annotate('f$_o$ = %.1f kHz\nthe NO-LOAD edge' % (FO / 1e3), (FN0, 0.30),
+    ax.annotate('f$_o$ = %.2f f$_r$\nthe NO-LOAD edge' % FN0, (FN0, 0.30),
                 xytext=(0.47, 0.06), color=PUR, fontsize=9.8,
                 bbox=dict(boxstyle='round,pad=0.25', fc='white', ec=PUR,
                           lw=1.0, alpha=0.95),
                 arrowprops=dict(arrowstyle='-|>', color=PUR, lw=1.4))
-    ax.annotate('f$_r$ = %.1f kHz' % (FR / 1e3), (1.0, 0.22),
+    ax.annotate('f$_r$  (gain = 1 at any load)', (1.0, 0.22),
                 xytext=(1.12, 0.26), color=GREY, fontsize=10.5,
                 bbox=dict(boxstyle='round,pad=0.25', fc='white', ec=GREY,
                           lw=1.0, alpha=0.95),
@@ -363,7 +363,7 @@ def f11_power_balance():
     ax.set_xlabel('line phase  θ  [deg]      (half cycle = %.1f ms at 47 Hz)'
                   % (1000 / (2 * 47)))
     ax.set_ylabel('power  [W]')
-    ax.legend(loc='upper left', fontsize=9.5)
+    ax.legend(loc='upper right', fontsize=9.5)
     for x in (45, 135):
         ax.axvline(x, color=GREY, ls=':', lw=1.3)
     note(ax, 90, 2 * POUT * 0.90, 'surplus → the bank CHARGES', color=GRN,
@@ -902,7 +902,7 @@ def _sw(ax, x, y, label, state):
 
 
 def _bridge(ax, states, path, title, vlabel):
-    """states: dict Q1..Q4 -> on|off|static.  path: list of (x, y) to trace."""
+    """states: dict S1..S4 -> on|off|static.  path: list of (x, y) to trace."""
     ax.set_xlim(-0.55, 6.25)
     ax.set_ylim(-0.85, 4.35)
     ax.set_xticks([])
@@ -920,7 +920,7 @@ def _bridge(ax, states, path, title, vlabel):
             color=GREY)
 
     # legs
-    for x, (qh, ql) in ((_L1, ('Q1', 'Q2')), (_L2, ('Q3', 'Q4'))):
+    for x, (qh, ql) in ((_L1, ('S1', 'S2')), (_L2, ('S3', 'S4'))):
         ax.plot([x, x], [_LO, _HI], color=GREY, lw=1.4, zorder=1)
         _sw(ax, x, 2.55, qh, states[qh])
         _sw(ax, x, 0.80, ql, states[ql])
@@ -960,12 +960,12 @@ def f15_bridge_fb():
     aA, aB, aW = (fig.add_subplot(gs[0]), fig.add_subplot(gs[1]),
                   fig.add_subplot(gs[2]))
 
-    _bridge(aA, dict(Q1='on', Q2='off', Q3='off', Q4='on'),
+    _bridge(aA, dict(S1='on', S2='off', S3='off', S4='on'),
             [(_L1, _HI), (_L1, _MID), (_L2, _MID), (_L2, _LO)],
-            'first half period:  Q1 + Q4', 'v$_{tank}$ = + V$_{in}$')
-    _bridge(aB, dict(Q1='off', Q2='on', Q3='on', Q4='off'),
+            'first half period:  S1 + S4', 'v$_{tank}$ = + V$_{in}$')
+    _bridge(aB, dict(S1='off', S2='on', S3='on', S4='off'),
             [(_L2, _HI), (_L2, _MID), (_L1, _MID), (_L1, _LO)],
-            'second half period:  Q2 + Q3', 'v$_{tank}$ = - V$_{in}$')
+            'second half period:  S2 + S3', 'v$_{tank}$ = - V$_{in}$')
 
     t = np.linspace(0, 2, 1200)
     sq = np.where((t % 1) < 0.5, 1.0, -1.0)
@@ -991,7 +991,7 @@ def f15_bridge_fb():
 
 
 def f16_bridge_hb():
-    """HALF bridge - leg 2 stops, Q4 stands on, Cr blocks the DC"""
+    """HALF bridge - leg 2 stops, S4 stands on, Cr blocks the DC"""
     fig = plt.figure(figsize=(13.2, 5.4))
     gs = fig.add_gridspec(1, 3, width_ratios=[1, 1, 1.02], wspace=0.13)
     ask(fig, 'HALF bridge - leg 2 STOPS, and the tank sees half as much')
@@ -999,12 +999,12 @@ def f16_bridge_hb():
     aA, aB, aW = (fig.add_subplot(gs[0]), fig.add_subplot(gs[1]),
                   fig.add_subplot(gs[2]))
 
-    _bridge(aA, dict(Q1='on', Q2='off', Q3='off', Q4='static'),
+    _bridge(aA, dict(S1='on', S2='off', S3='off', S4='static'),
             [(_L1, _HI), (_L1, _MID), (_L2, _MID), (_L2, _LO)],
-            'first half period:  Q1  (Q4 standing)', 'v$_{tank}$ = + V$_{in}$')
-    _bridge(aB, dict(Q1='off', Q2='on', Q3='off', Q4='static'),
+            'first half period:  S1  (S4 standing)', 'v$_{tank}$ = + V$_{in}$')
+    _bridge(aB, dict(S1='off', S2='on', S3='off', S4='static'),
             [(_L1, _LO), (_L1, _MID), (_L2, _MID), (_L2, _LO)],
-            'second half period:  Q2  (Q4 standing)', 'v$_{tank}$ = 0')
+            'second half period:  S2  (S4 standing)', 'v$_{tank}$ = 0')
 
     t = np.linspace(0, 2, 1201)[:-1]
     sq = np.where((t % 1) < 0.5, 1.0, 0.0)
@@ -1026,7 +1026,7 @@ def f16_bridge_hb():
             transform=aW.transAxes, ha='center', va='top',
             fontsize=10, color=GREY)
 
-    foot(fig, 'Q3 never turns on and Q4 never turns off, so the leg-2 midpoint '
+    foot(fig, 'S3 never turns on and S4 never turns off, so the leg-2 midpoint '
               'IS ground. The bridge output now swings 0 to V$_{in}$; C$_r$ '
               'blocks the V$_{in}$/2 of DC, leaving the tank a '
               '\u00b1V$_{in}$/2 square wave. No extra hardware - the green '
@@ -1058,8 +1058,8 @@ def f17_morph_gates():
                     fontweight='bold', color=c)
             if static:
                 ax.text(1.0, y + 0.62 * s.max() + 0.24,
-                        'held HIGH  \u2014  Q4 conducts all the time'
-                        if s.max() > 0.5 else 'held LOW  \u2014  Q3 never turns on',
+                        'held HIGH  \u2014  S4 conducts all the time'
+                        if s.max() > 0.5 else 'held LOW  \u2014  S3 never turns on',
                         ha='center', va='center', fontsize=10, color=c,
                         bbox=dict(boxstyle='round,pad=0.3', fc='white', ec=c,
                                   lw=1.1, alpha=0.95))
@@ -1126,28 +1126,29 @@ def f19_cout_criterion():
     # nothing.
     def _use(c, v, vmin):
         return 0.5 * c * (v ** 2 - vmin ** 2)
-    bars = ((274e-6, 400., 320., 'two stage\n274 µF, 400 to 320 V',
+    bars = ((274e-6, 400., 320., 'two stage\n274 µF\n400 to 320 V',
              '1 capacitor', 'one bulk\nelectrolytic', NAVY),
             (CHLD * 1e-3, 25., 19.,
-             'single stage\n%.1f mF, 25 to 19 V' % CHLD,
+             'single stage\n%.1f mF\n25 to 19 V' % CHLD,
              '%d capacitors' % -(-CHLD // 0.47), 'hold-up\nminimum', PUR),
-            (75.2e-3, 25., 19., 'as built\n75.2 mF, 25 to 19 V',
+            (75.2e-3, 25., 19., 'as built\n75.2 mF\n25 to 19 V',
              '160 capacitors', 'ripple\ndecided this', MAG))
     en = [_use(c, v, vm) for c, v, vm, _, _, _, _ in bars]
-    aR.bar(range(3), en, width=0.56,
-           color=[b[6] for b in bars])
+    aR.bar(range(3), en, width=0.78,          # wide enough for the in-bar
+           color=[b[6] for b in bars])        # labels; 0.56 clipped them
     for x, (e, b) in enumerate(zip(en, bars)):
         aR.text(x, e + 0.35, '%.1f J' % e, ha='center', va='bottom',
                 fontsize=12.5, fontweight='bold', color=NAVY)
         aR.text(x, e / 2, b[4] + '\n\n' + b[5], ha='center', va='center',
-                fontsize=9.4, color='white', fontweight='bold')
+                fontsize=9.0, color='white', fontweight='bold')
     aR.set_xticks(range(3))
     aR.set_xticklabels([b[3] for b in bars], fontsize=9.4)
     aR.set_ylim(0, 13)
     aR.set_ylabel('energy the hold-up can actually use  [J]')
     aR.set_title('the hold-up energy does not go away', fontsize=11,
                  color=NAVY)
-    aR.grid(axis='x')
+    aR.grid(False)         # a vertical grid line through each bar centre
+                           # sat under every in-bar label and said nothing
 
     foot(fig, 'Removing the boost stage removes the 400 V bus, not the energy '
               'it held. The first two bars are the SAME 7.9 J - 12 ms at full '

@@ -232,6 +232,18 @@ def check(fig, name, margin=3.0):
     return bad
 
 
+def _white(t):
+    """A white halo on white glyphs erases them - the bar labels of the
+    output-bank figure came out as white blobs.  Such text is drawn on a
+    dark fill on purpose, so it is left alone."""
+    from matplotlib.colors import to_rgb
+    try:
+        r, g, b = to_rgb(t.get_color())
+    except ValueError:
+        return False
+    return min(r, g, b) > 0.9
+
+
 def _shielded(t):
     """Is this text already readable over line work?
 
@@ -292,7 +304,7 @@ def shield(fig):
     sch = {ax for ax in fig.axes if ax.get_aspect() in ('equal', 1, 1.0)}
     out = []
     for t, ax, n in ink(fig):
-        if ax in sch or _shielded(t):
+        if ax in sch or _shielded(t) or _white(t):
             continue
         t.set_path_effects([_pe.withStroke(linewidth=3.4,
                                            foreground='white')])

@@ -37,27 +37,27 @@ def build(A):
 
     # =============================================================== 1
     add(h1('Introduction'))
-    add(p('A conventional universal-input LLC power supply is two stages: a '
+    add(p('A conventional universal-input LLC power supply has two stages: a '
           'boost power-factor corrector that holds a 400&nbsp;V bus, and an '
           'LLC converter that steps that bus down. The capacitor between them '
-          'does two jobs at once. It buffers the energy a unity-power-factor '
-          'input cannot deliver smoothly, and it presents the LLC with an '
-          'almost constant input, so the resonant tank only has to cover a '
-          'narrow range.'))
-    add(p('A <b>single-stage PFC LLC</b> deletes both the boost stage and that '
-          'capacitor. The rectified mains feeds the resonant tank directly. '
-          'What results is a converter whose input is a 100/120&nbsp;Hz half '
-          'sine, whose gain is no longer a control variable, and whose output '
-          'capacitor must absorb everything the bus capacitor used to. It is '
-          'a genuinely different converter rather than an LLC with a stage '
-          'removed, and most of the design habits carried over from the '
-          'two-stage case are wrong here.'))
-    add(p('What follows is how such a converter works, and how to design one '
-          'with the STMicroelectronics <b>L6790A</b> controller. One worked '
-          'design runs through it from specification to component values: '
-          '<b>90 to 264&nbsp;Vac in, %(Vout).0f&nbsp;V / %(Iout).1f&nbsp;A = '
-          '%(Pout).1f&nbsp;W out</b>, a low-voltage, high-current dc rail.'
-          % V))
+          'does two jobs. It stores the energy that a unity-power-factor '
+          'input cannot deliver evenly, and it gives the LLC an almost '
+          'constant input, so the resonant tank only has to cover a narrow '
+          'range.'))
+    add(p('A <b>single-stage PFC LLC</b> removes both the boost stage and '
+          'that capacitor. The rectified mains feeds the resonant tank '
+          'directly. The result is a converter whose input is a '
+          '100/120&nbsp;Hz half sine, whose gain is no longer something the '
+          'controller can set, and whose output capacitor must absorb '
+          'everything the bus capacitor used to. It is a different converter, '
+          'not an LLC with one stage removed, and most of the design habits '
+          'from the two-stage case do not apply.'))
+    add(p('This note explains how such a converter works and how to design '
+          'one with the STMicroelectronics <b>L6790A</b> controller. One '
+          'worked design runs through it, from specification to component '
+          'values: <b>90 to 264&nbsp;Vac in, %(Vout).0f&nbsp;V / '
+          '%(Iout).1f&nbsp;A = %(Pout).1f&nbsp;W out</b>, a low-voltage, '
+          'high-current dc rail.' % V))
     add(note('<b>Scope.</b> Covered: the power stage, the resonant tank, the '
              'output bank, the controller network and the voltage loop. Not '
              'covered: EMI filtering, magnetics construction, layout and '
@@ -65,17 +65,17 @@ def build(A):
 
     # =============================================================== 2
     add(h1('The two converters this one is made of'))
-    add(p('Everything that follows is easier if the two halves are separate '
-          'in your head first. This section is ordinary LLC and ordinary '
-          'power factor correction; a reader who has built both can skip to '
-          'Section&nbsp;%s.' % SR('Why single stage, and what it costs')))
-
+    add(p('What comes later is easier to follow if the two halves are '
+          'understood separately first. This section covers an ordinary LLC '
+          'and ordinary power factor correction. A reader who has designed '
+          'both can skip to Section&nbsp;%s.'
+          % SR('Why single stage, and what it costs')))
     add(h2('What an LLC converter is'))
-    add(p('An LLC converter is a square-wave generator driving a resonant '
-          'network that feeds a transformer and a rectifier. The switches do '
-          'nothing but chop the input into a square wave of adjustable '
-          'frequency &mdash; there is no duty cycle to set and no inductor '
-          'current to program.'))
+    add(p('An LLC converter is a square-wave generator that drives a '
+          'resonant network; the network feeds a transformer and a rectifier. '
+          'The switches only chop the input into a square wave whose '
+          'frequency can be varied. There is no duty cycle to set and no '
+          'inductor current to program.'))
     add(fig('an_llc_stage',
             'An LLC stage: a square-wave generator, the resonant network, a '
             'transformer and a rectifier. The switches only set the '
@@ -85,79 +85,78 @@ def build(A):
     add(p('The three tank elements are named in the order they appear in '
           '&ldquo;LLC&rdquo;: the series inductance L<sub>r</sub>, the '
           'magnetising inductance L<sub>m</sub> of the transformer, and the '
-          'series capacitance C<sub>r</sub>. The middle element is not an '
-          'added part &mdash; it is the transformer&rsquo;s own magnetising '
-          'inductance, which is why an LLC has one fewer component than the '
-          'name suggests.'))
+          'series capacitance C<sub>r</sub>. The middle one is not a separate '
+          'part: it is the transformer&rsquo;s own magnetising inductance. So '
+          'only C<sub>r</sub> and L<sub>r</sub> are added components, and '
+          'L<sub>r</sub> is often the leakage inductance of the transformer '
+          'itself.'))
     ext(bullets([
-        '<b>The square wave sets the frequency, and nothing else.</b> Output '
-        'voltage is controlled by moving f<sub>sw</sub>, because the '
-        'impedance of the tank &mdash; and therefore its voltage division '
-        '&mdash; depends on frequency.',
-        '<b>The tank current is very nearly sinusoidal.</b> That is the '
-        'point: the switches turn on and off while the current is small or '
-        'while it is flowing through the body diode, so switching loss '
-        'largely disappears.',
-        '<b>The transformer does the voltage step and the isolation</b>, and '
-        'its leakage inductance can be used <i>as</i> L<sub>r</sub> rather '
-        'than fought. That is the usual construction at these powers.']))
-
+        '<b>The square wave sets the frequency, and nothing else.</b> The '
+        'output voltage is controlled by moving f<sub>sw</sub>, because the '
+        'impedance of the tank, and so its voltage division, depends on '
+        'frequency.',
+        '<b>The tank current is almost a sine wave.</b> That is the purpose: '
+        'the switches turn on and off while the current is small, or while it '
+        'flows through the body diode, so most of the switching loss '
+        'disappears.',
+        '<b>The transformer steps the voltage and provides isolation</b>, and '
+        'its leakage inductance can be used <i>as</i> L<sub>r</sub> instead '
+        'of being a problem. That is the usual construction at these power '
+        'levels.']))
     add(h2('Why an LLC, and not something simpler'))
-    add(p('An LLC is more work than a forward or a flyback and it does not '
-          'regulate by duty cycle, which is the reflex every designer has. '
-          'What it buys is worth the trouble at a few hundred watts and '
-          'above:'))
+    add(p('An LLC is more work than a forward or a flyback converter, and it '
+          'does not regulate by duty cycle, which is what most designers are '
+          'used to. At a few hundred watts and above, it is worth the extra '
+          'work for these reasons:'))
     ext(bullets([
         '<b>Soft switching over the whole load range, on both sides.</b> The '
-        'primary switches turn on at zero volts and the secondary '
-        'rectifiers, below resonance, turn off at zero current. A '
-        'phase-shifted full bridge loses ZVS at light load; an LLC does not, '
-        'because the magnetising current that does the work is there '
-        'whatever the load.',
-        '<b>Frequency can be pushed up.</b> Switching loss is what caps the '
-        'frequency of a hard-switched converter, and with it the size of the '
-        'magnetics and the filter. Take that loss away and hundreds of kHz '
-        'becomes reasonable.',
+        'primary switches turn on at zero voltage, and below resonance the '
+        'secondary rectifiers turn off at zero current. A phase-shifted full '
+        'bridge loses ZVS at light load; an LLC does not, because the '
+        'magnetising current that does the work is present at any load.',
+        '<b>The frequency can be raised.</b> In a hard-switched converter, '
+        'switching loss limits the frequency, and with it the size of the '
+        'magnetics and the filter. Remove that loss and hundreds of kHz '
+        'become practical.',
         '<b>The transformer leakage is used, not fought.</b> In a forward '
-        'converter leakage is a problem to be snubbed. Here it can <i>be</i> '
-        'L<sub>r</sub>, so the resonant inductor costs nothing and the '
-        'snubber disappears with it.',
+        'converter the leakage inductance is a problem that needs a snubber. '
+        'Here it can <i>be</i> L<sub>r</sub>, so the resonant inductor costs '
+        'nothing and the snubber is not needed.',
         '<b>No output inductor.</b> The rectifier feeds the output capacitor '
-        'directly, which removes a wound component and its loss from the '
-        'high-current side &mdash; the side where it hurts most.',
-        '<b>Quiet.</b> Currents are sinusoidal rather than trapezoidal and '
-        'the switching transitions are slow and damped, so the conducted and '
-        'radiated spectrum is far smaller than a hard-switched converter of '
-        'the same power.']))
-    add(p('The costs are equally real and worth stating in the same breath. '
-          'Regulation is by frequency, so the operating frequency moves with '
-          'line and load and the magnetics have to work over that whole '
-          'range. Circulating magnetising current flows whether or not the '
-          'load takes power, so light-load efficiency is not the strong '
-          'point. And the design does not fall out of a duty-cycle '
-          'expression &mdash; it comes from the gain curve, which is what '
-          'the rest of this section is about.'))
-
+        'directly. That removes a wound component, and its loss, from the '
+        'high-current side, where it hurts most.',
+        '<b>Low noise.</b> The currents are sine waves rather than '
+        'trapezoids, and the switching edges are slow and damped, so the '
+        'conducted and radiated emissions are much lower than in a '
+        'hard-switched converter of the same power.']))
+    add(p('The costs are real too. Regulation is by frequency, so the '
+          'operating frequency moves with line and load, and the magnetics '
+          'must work over that whole range. The magnetising current '
+          'circulates whether or not the load takes power, so light-load '
+          'efficiency is not a strong point. And the design does not come from '
+          'a duty-cycle expression: it comes from the gain curve, which is '
+          'what the rest of this section is about.'))
     add(h2('Why resonance buys anything'))
     add(p('In a hard-switched converter a switch turns on with the full input '
           'voltage across it, so the energy stored in its output capacitance '
-          'is dumped into the channel every cycle. That loss rises with '
-          'frequency, which is what caps the frequency and therefore the '
-          'size of the magnetics.'))
-    add(p('An LLC run <b>above its lower resonance</b> presents an inductive '
-          'load to the bridge. The tank current then lags the drive, and in '
-          'the dead time between the two switches that lagging current '
-          'discharges the mid-point capacitance on its own. The switch turns '
-          'on at zero volts. <b>That is zero-voltage switching, and it is the '
-          'entire reason for the topology.</b> Section&nbsp;%s shows the '
-          'mechanism and what it demands of the design.'
+          'is lost in the channel every cycle. That loss grows with '
+          'frequency. It is what limits the frequency, and with it the size '
+          'of the magnetics.'))
+    add(p('An LLC that runs <b>in its inductive region</b> presents an '
+          'inductive load to the bridge. The tank current then lags the '
+          'drive voltage. In the dead time between the two switches of a '
+          'leg, that lagging current discharges the mid-point capacitance by '
+          'itself, and the next switch turns on at zero volts. <b>That is '
+          'zero-voltage switching, and it is the whole reason for the '
+          'topology.</b> Section&nbsp;%s shows the mechanism and what it '
+          'requires of the design.'
           % SR('ZVS and ZCS are not the same thing')))
     add(fig('an_llc_waves',
             'One switching period below resonance. i<sub>Lr</sub> is the tank '
             'current and i<sub>Lm</sub> the magnetising current; the '
             'difference between them is what crosses to the secondary, and '
-            'it is gone once the two meet. The switch turns on with its own '
-            'current still negative, which is what discharges the '
+            'it is gone once the two meet. The switch turns on while its own '
+            'current is still negative, and that is what discharges the '
             'mid-point.',
             width=CW * 0.62))
     add(p('The two frequencies that bound this are the subject of '
@@ -165,34 +164,35 @@ def build(A):
           + ', and the operating regions they divide are in Section&nbsp;'
           + SR('The gain function and the three regions') + '.'))
     add(note('The condition is <i>inductive operation</i>, not a particular '
-             'frequency. Fall low enough and the tank turns capacitive: the '
-             'current leads, the dead time works against the transition '
-             'instead of for it, and the bridge hard switches into a low '
-             'impedance. It is the one failure mode that destroys parts '
-             'rather than just heating them. <b>Where that happens is not '
-             'a fixed frequency</b> &mdash; it is the peak of the gain '
-             'curve, which moves with load, and Section&nbsp;'
+             'frequency. Go low enough in frequency and the tank becomes '
+             'capacitive: the current leads, the dead time works against the '
+             'transition instead of for it, and the bridge hard-switches into '
+             'a low impedance. It is the one failure mode that destroys parts '
+             'rather than just heating them. <b>Where that happens is not a '
+             'fixed frequency</b>: the boundary moves with load, and '
+             'Section&nbsp;'
              + SR('The two boundaries are not the same boundary')
              + ' is about exactly that.'))
-
     add(h2('How the circuit becomes M(f<sub>n</sub>, Q)'))
-    add(p('Every gain curve in every LLC note comes from three reductions '
-          'applied in order. They are worth doing once, because each one '
-          'discards something and it is useful to know what.'))
+    add(p('Every gain curve in every LLC note comes from three '
+          'simplifications, applied in order. They are worth doing once, '
+          'because each one throws something away, and it is useful to know '
+          'what.'))
     add(fig('an_rac',
-            'Why the rectifier and the load collapse into one resistance. The '
-            'output is stiff, so the voltage the tank sees is a square; the '
-            'tank filters everything but the fundamental, so the current is '
-            'a sine. A sine of current in phase with a square of voltage '
-            'takes the same fundamental power a resistor would.', width=CW * 0.66))
+            'Why the rectifier and the load can be replaced by one '
+            'resistance. The output is stiff, so the voltage the tank sees is '
+            'a square wave; the tank filters everything except the '
+            'fundamental, so the current is a sine wave. A sine of current in '
+            'phase with a square of voltage delivers the same fundamental '
+            'power as a resistor would take.', width=CW * 0.66))
     add(fig('an_fha_steps',
-            'The reduction, in three steps: as built, then the secondary '
-            'referred to the primary, then the fundamental only. What is '
-            'left is one ac network whose voltage transfer is the gain M '
-            'and whose damping is Q. <b>R<sub>ac</sub> is written from the '
-            'average output power</b>, which is the only power a two-stage '
-            'converter has. Put the line-peak power into the same '
-            'expression instead and the result halves; Section&nbsp;'
+            'The reduction, in three steps: as built; then the secondary '
+            'referred to the primary; then the fundamental only. What is '
+            'left is one ac network. Its voltage transfer is the gain M and '
+            'its damping is Q. <b>R<sub>ac</sub> is written from the average '
+            'output power</b>, which is the only power a two-stage converter '
+            'has. Put the line-peak power into the same expression instead '
+            'and the result halves; Section&nbsp;'
             + SR('The resonant tank')
             + ' says why.', width=CW * 0.60))
     ext(bullets([
@@ -200,34 +200,35 @@ def build(A):
         'disappears and the load resistance is multiplied by n&sup2;.',
         '<b>Replace the rectifier and the output filter by one resistor.</b> '
         'The rectifier draws a square current wave and the output is stiff, '
-        'so on a fundamental basis the whole of it looks resistive.',
+        'so at the fundamental frequency the whole of it looks like a '
+        'resistor.',
         '<b>Keep only the fundamental of the drive.</b> The tank is a filter '
-        'centred near the switching frequency, so the harmonics of the square '
-        'wave contribute little. This is <i>first harmonic approximation</i>, '
-        'and it is why every LLC design ends with a simulation or a '
-        'measurement rather than with the equations.']))
-    add(p('What is left is one ac network, and it is a voltage divider whose '
-          'ratio changes with frequency. Two numbers describe it and both are '
-          'used on every page from here on:'))
+        'centred near the switching frequency, so the harmonics of the '
+        'square wave contribute little. This is the <i>first harmonic '
+        'approximation</i>, and it is why every LLC design ends with a '
+        'simulation or a measurement rather than with the equations.']))
+    add(p('What is left is one ac network: a voltage divider whose ratio '
+          'changes with frequency. Two numbers describe it, and both are used '
+          'on every page from here on:'))
     ext(bullets([
-        '<b>the gain M</b> &mdash; the voltage across R<sub>ac</sub> divided '
-        'by the fundamental driving it. Because C<sub>r</sub> and '
-        'L<sub>r</sub> cancel at the series resonance f<sub>r</sub>, '
-        '<b>M = 1 there whatever the load</b>. Below f<sub>r</sub> the '
-        'network can step up (M&nbsp;&gt;&nbsp;1) and above it steps down.',
-        '<b>the quality factor Q = Z<sub>0</sub>/R<sub>ac</sub></b>, with '
-        'Z<sub>0</sub> = &radic;(L<sub>r</sub>/C<sub>r</sub>) the '
+        '<b>The gain M</b>: the voltage across R<sub>ac</sub> divided by the '
+        'fundamental that drives it. Because C<sub>r</sub> and L<sub>r</sub> '
+        'cancel at the series resonance f<sub>r</sub>, <b>M = 1 there at any '
+        'load</b>. Below f<sub>r</sub> the network can step up '
+        '(M&nbsp;&gt;&nbsp;1); above it, it steps down.',
+        '<b>The quality factor Q = Z<sub>0</sub>/R<sub>ac</sub></b>, where '
+        'Z<sub>0</sub> = &radic;(L<sub>r</sub>/C<sub>r</sub>) is the '
         'characteristic impedance of the tank. Q says how heavily the tank '
         'is loaded: <b>Q rises with output power</b>. At Q = 0 (no load) the '
-        'gain curve is tall and peaked; loading it pulls the peak down and '
-        'flattens the curve.']))
+        'gain curve is tall and peaked; loading flattens the curve and pulls '
+        'the peak down.']))
     add(p('Frequency is always written normalised, '
           'f<sub>n</sub> = f<sub>sw</sub>/f<sub>r</sub>, so that one family '
           'of curves serves every tank. M(f<sub>n</sub>, Q) always means the '
           'gain of the right-hand circuit above.'))
 
     add(h2('The two resonances'))
-    add(p('Every LLC has two. When the secondary conducts, the reflected '
+    add(p('Every LLC has two. While the secondary conducts, the reflected '
           'output voltage clamps L<sub>m</sub> and it drops out of the '
           'circuit, leaving the series resonance'))
     add(eq(r'f_r=\frac{1}{2\pi\sqrt{L_rC_r}}', key='fr'))
@@ -235,24 +236,23 @@ def build(A):
           'with both inductances:'))
     add(eq(r'f_o=\frac{1}{2\pi\sqrt{(L_r+L_m)\,C_r}}', key='fo'))
     add(p('At f<sub>r</sub> the gain is exactly 1 for any load, because the '
-          'load term vanishes. At f<sub>o</sub> the no-load gain is '
-          'without limit. Between the two the tank can boost; above '
-          'f<sub>r</sub> it cannot. An LLC fed from a fixed dc bus runs close '
-          'to f<sub>r</sub> nearly all the time, and drops into that band '
-          'only when the bus sags.'))
+          'load term disappears. At f<sub>o</sub> the no-load gain is '
+          'unlimited. Between the two the tank can boost; above f<sub>r</sub> '
+          'it cannot. An LLC fed from a fixed dc bus runs close to '
+          'f<sub>r</sub> nearly all the time, and drops into that band only '
+          'when the bus sags.'))
     add(fig('f02_two_resonances',
             'The two resonances, and the band between them in which the tank '
             'can boost.', width=CW * 0.84))
 
-    add(p('Two expressions are not much use without knowing what each one '
-          'does to the current, and the current is where the difference is '
-          'visible.'))
-    add(p('Before the waveforms, the two things the circuit can be doing. '
-          'Below resonance a half cycle is both of them, and in this order: '
-          'power delivery first, freewheeling after it, <b>with the same '
-          'pair of switches on throughout</b>. At resonance the half cycle '
-          'is power delivery alone; above resonance it is power delivery cut '
-          'short.'))
+    add(p('The two expressions are not much use without knowing what each '
+          'one does to the current, because the current is where the '
+          'difference shows.'))
+    add(p('First, the two things the circuit can be doing. Below resonance a '
+          'half cycle contains both, in this order: power delivery first, '
+          'then freewheeling, <b>with the same pair of switches on '
+          'throughout</b>. At resonance the half cycle is power delivery '
+          'only; above resonance the power delivery is cut short.'))
     add(fig('an_modes_1234',
             '<b>One switching period, first half: steps 1 to 4.</b> '
             '<b>1</b>&nbsp;Power delivery &mdash; S<sub>1</sub>,S<sub>4</sub> '
@@ -301,124 +301,117 @@ def build(A):
              'running, and for how long, is the whole of what follows.'))
     add(note('<b>Power delivery and freewheeling are the two parts of '
              '<i>one</i> half cycle.</b> The pair of switches does not '
-             'change between 1 and 2, nor between 5 and 6: freewheeling is '
-             'the second part of that half cycle, not a new one. <b>ZVS is '
-             'in neither of them.</b> It happens in the dead time, steps '
-             '3&ndash;4 and 7&ndash;8, when both switches of a leg are off '
-             'and the tank current carries the mid-point across the rail. '
-             'Figure&nbsp;%s shows it as the step in v<sub>d</sub> in the '
-             'gap between the gate pulses, and Figure&nbsp;%s as the green '
-             'band (b), in which the mid-point has already arrived before '
-             'the gate rises.'
+             'change between 1 and 2, or between 5 and 6: freewheeling is '
+             'the second part of that half cycle, not a new one. <b>ZVS '
+             'happens in neither of them.</b> It happens in the dead time, '
+             'steps 3&ndash;4 and 7&ndash;8, when both switches of a leg are '
+             'off and the tank current carries the mid-point across to the '
+             'other rail. Figure&nbsp;%s shows it as the step in '
+             'v<sub>d</sub> in the gap between the gate pulses, and '
+             'Figure&nbsp;%s as the green band (b), in which the mid-point '
+             'has already arrived before the gate rises.'
              % (FR('an_llc_waves'), FR('an_modes_wave'))))
     add(note('<b>The word &ldquo;freewheeling&rdquo; is used for two '
-             'different intervals.</b> Here it is steps 2 and 6: the '
+             'different intervals.</b> Here it means steps 2 and 6: the '
              'secondary is off, L<sub>m</sub> has rejoined the resonance, and '
-             'the same pair of switches is still on. Other notes use the same '
-             'word for the <b>dead time</b>, where the current circulates in '
-             'the body diodes and delivers nothing &mdash; the phase-shift '
-             'full bridge literature does, and so does an LLC note: Toshiba '
-             '<i>Resonant Circuits and Soft Switching</i> (2019) writes '
-             '&ldquo;Q<sub>2</sub> turns on while D<sub>Q2</sub> is '
-             'freewheeling under the zero-voltage-switching condition&rdquo;, '
-             'and leaves the interval this document calls freewheeling '
-             '(its operating modes 2 and 6) unnamed. Both circulate current '
-             'without delivering '
-             'power, which is why one word gets stretched over both, but they '
-             'are not the same interval: <b>the dead time is in every '
-             'switching period at any frequency, while steps 2 and 6 exist '
-             'only below resonance</b> and shrink to nothing at f<sub>r</sub>. '
-             'Check which one a source means before comparing numbers.'))
-
+             'the same pair of switches is still on. Other documents use the '
+             'same word for the <b>dead time</b>, where the current '
+             'circulates in the body diodes and delivers nothing. The '
+             'phase-shift full bridge literature does this, and so does at '
+             'least one LLC note: Toshiba <i>Resonant Circuits and Soft '
+             'Switching</i> (2019) writes &ldquo;Q<sub>2</sub> turns on while '
+             'D<sub>Q2</sub> is freewheeling under the zero-voltage-switching '
+             'condition&rdquo;, and gives no name to the interval this '
+             'document calls freewheeling (its operating modes 2 and 6). '
+             'Both intervals circulate current without delivering power, '
+             'which is why one word is used for both. But they are not the '
+             'same interval: <b>the dead time exists in every switching '
+             'period at any frequency; steps 2 and 6 exist only below '
+             'resonance</b> and shrink to nothing at f<sub>r</sub>. Check '
+             'which one a source means before comparing numbers.'))
     add(fig('an_three_cases',
             'The three cases side by side. Gate signals, the bridge voltage, '
             'the resonant current i<sub>Lr</sub> with the magnetising '
             'current i<sub>Lm</sub> dashed over it, and the rectifier '
             'current. What changes across the three columns is how the '
-            'resonant half period compares with the switching half period: '
-            'below resonance there is time left over and it is spent '
-            'freewheeling, at resonance the two coincide, and above '
-            'resonance the half period ends first and cuts the rectifier '
-            'current off while it is still flowing.', width=CW))
+            'resonant half period compares with the switching half period. '
+            'Below resonance there is time left over, and it is spent '
+            'freewheeling; at resonance the two coincide; above resonance '
+            'the half period ends first and cuts off the rectifier current '
+            'while it is still flowing.', width=CW))
     ext(bullets([
-        '<b>Below f<sub>r</sub> (left).</b> The resonant half period is the '
-        'shorter one. i<sub>Lr</sub> finishes its half sine early and '
-        '<b>lands on i<sub>Lm</sub></b>; from that instant the two are one '
-        'current, the rectifier current has already fallen to zero, and no '
-        'power crosses to the secondary. That interval is called '
-        'freewheeling.',
-        '<b>At f<sub>r</sub> (centre).</b> The resonant half period and the '
-        'switching half period are the same length. i<sub>Lr</sub> meets '
-        'i<sub>Lm</sub> exactly as the bridge changes and the rectifier '
-        'current reaches zero exactly then too. Nothing is wasted at either '
-        'end &mdash; this is the most efficient point an LLC has, and it is '
-        'where a conventional design puts its nominal input.',
+        '<b>Below f<sub>r</sub> (left).</b> The resonant half period is '
+        'shorter than the switching half period. i<sub>Lr</sub> finishes its '
+        'half sine early and <b>lands on i<sub>Lm</sub></b>. From that '
+        'instant the two are one current, the rectifier current has already '
+        'reached zero, and no power crosses to the secondary. That interval '
+        'is called freewheeling.',
+        '<b>At f<sub>r</sub> (centre).</b> The two half periods are the same '
+        'length. i<sub>Lr</sub> meets i<sub>Lm</sub> exactly when the bridge '
+        'switches, and the rectifier current reaches zero at the same '
+        'instant. Nothing is wasted at either end. This is the most '
+        'efficient point an LLC has, and it is where a conventional design '
+        'puts its nominal input.',
         '<b>Above f<sub>r</sub> (right).</b> The switching half period ends '
         'first, so the resonant half sine is <b>cut off part way</b>: '
         'i<sub>Lr</sub> is still well above i<sub>Lm</sub> when the bridge '
-        'changes. The primary switches turn off more current, and the '
-        'rectifier is interrupted while still conducting &mdash; hard '
+        'switches. The primary switches turn off more current, and the '
+        'rectifier is interrupted while it is still conducting: hard '
         'commutation on the secondary.']))
     add(p('<b>That freewheeling interval is what f<sub>o</sub> is.</b> '
-          'While it lasts the secondary is not conducting, so nothing '
-          'clamps '
-          'L<sub>m</sub> and the tank is L<sub>r</sub> + L<sub>m</sub> in '
-          'series with C<sub>r</sub> &mdash; it is ringing, at '
-          'f<sub>o</sub>. It looks flat only because f<sub>o</sub> is so '
-          'much lower than f<sub>r</sub> that a fraction of its period is '
-          'very nearly a straight line. Lower the switching frequency '
-          'towards f<sub>o</sub> and that interval grows until it is the '
-          'whole half period, at which point the flat part is visibly a '
-          'piece of a slow sine and the converter has stopped delivering '
-          'power at all.'))
+          'While it lasts, the secondary does not conduct, so nothing clamps '
+          'L<sub>m</sub>, and the tank is L<sub>r</sub> + L<sub>m</sub> in '
+          'series with C<sub>r</sub>. It is ringing, at f<sub>o</sub>. It '
+          'looks flat only because f<sub>o</sub> is so much lower than '
+          'f<sub>r</sub> that a small part of its period is very nearly a '
+          'straight line. Lower the switching frequency towards '
+          'f<sub>o</sub> and that interval grows until it fills the whole '
+          'half period. Then the flat part is visibly a piece of a slow '
+          'sine, and the converter has stopped delivering power '
+          'altogether.'))
     add(note('<b>The two frequencies are not two operating points; they are '
-             'the two ends of one.</b> f<sub>r</sub> is where the flat '
-             'interval has just vanished. f<sub>o</sub> is where it has '
-             'taken over completely. Everything useful happens between '
-             'them, and the fraction of the half period that is flat is, '
-             'in practice, how much the tank is boosting.'))
-
-    add(note('<b>Symbols are not standard across the literature.</b> The '
-             'borrowed figures have been relabelled to match, and each '
-             'caption says so. Going the other way, to a manufacturer\u2019s '
-             'application note, check first which frequency that document '
-             'calls f<sub>o</sub> \u2014 at least one widely used guide '
-             'gives that name to the series resonance, the opposite of the '
-             'meaning here.'))
-
-    add(p('A conventional LLC picks one side and stays there &mdash; usually '
-          'just above f<sub>r</sub> at nominal input, where the gain is close '
-          'to 1 and the circulating current is smallest. Which side the '
-          'converter designed here runs on is a different question, and '
-          'it is answered in Section&nbsp;'
+             'the two ends of one range.</b> f<sub>r</sub> is where the flat '
+             'interval has just disappeared. f<sub>o</sub> is where it has '
+             'taken over completely. Everything useful happens between them, '
+             'and the fraction of the half period that is flat is, in '
+             'practice, a measure of how much the tank is boosting.'))
+    add(note('<b>Symbols are not standard across the literature.</b> Before '
+             'using a manufacturer\u2019s application note alongside this '
+             'one, check which frequency that document calls f<sub>o</sub>. '
+             'At least one widely used guide gives that name to the series '
+             'resonance, which is the opposite of the meaning here.'))
+    add(p('A conventional LLC picks one side and stays there, usually just '
+          'above f<sub>r</sub> at nominal input, where the gain is close to 1 '
+          'and the circulating current is smallest. Which side the converter '
+          'designed here runs on is a different question. It is answered in '
+          'Section&nbsp;'
           + SR('Which side of resonance this converter runs on')
-          + ' once the rest of the machinery is in place.'))
-
+          + ', once the rest of the method is in place.'))
     add(h2('The gain function and the three regions'))
     add(p('With the usual first-harmonic approximation the tank gain is'))
     add(eq(r'M(f_n,Q,\lambda)=\frac{1}'
            r'{\sqrt{\left(1+\lambda-\frac{\lambda}{f_n^{2}}\right)^{2}'
            r'+Q^{2}\left(f_n-\frac{1}{f_n}\right)^{2}}}', key='M'))
     add(p('with f<sub>n</sub>, Q and &lambda; as defined in the conventions. '
-          'Two checks are worth making on it by eye before trusting any curve '
+          'Two checks can be made on it by eye before trusting any curve '
           'drawn from it. At f<sub>n</sub>&nbsp;=&nbsp;1 the second term '
-          'under the root vanishes and the first becomes 1, so '
-          '<b>M&nbsp;=&nbsp;1 whatever Q</b> &mdash; that is the series '
-          'resonance, and it is why every gain curve passes through the '
-          'same point. <b>At no load</b> &mdash; Q&nbsp;=&nbsp;0, '
-          'so the second term is gone &mdash; raising f<sub>n</sub> without '
-          'limit walks M down to 1/(1+&lambda;) and no further, which is the '
-          'floor that Section&nbsp;%s is about. Under load the Q term grows '
-          'with f<sub>n</sub> and the gain keeps falling towards zero '
-          'instead.'
+          'under the root disappears and the first becomes 1, so '
+          '<b>M&nbsp;=&nbsp;1 at any Q</b>. That is the series resonance, and '
+          'it is why every gain curve passes through the same point. <b>At '
+          'no load</b> (Q&nbsp;=&nbsp;0, so the second term is gone) raising '
+          'f<sub>n</sub> without limit only brings M down to 1/(1+&lambda;) '
+          'and no further; that floor is the subject of Section&nbsp;%s. '
+          'Under load the Q term grows with f<sub>n</sub> and the gain keeps '
+          'falling towards zero.'
           % SR('The other bound on &lambda;, and where it has no solution')))
-    add(p('The curve has three regions. Below the gain peak the tank is '
-          'capacitive and the bridge hard switches, which must never be '
-          'allowed; between the peak and f<sub>r</sub> it is inductive and '
-          'boosts; above f<sub>r</sub> it is inductive and bucks. The two '
-          'boundaries are drawn here at f<sub>o</sub> and f<sub>r</sub>, '
-          'which is exact only at no load &mdash; the capacitive edge moves '
-          'up with load, and the next section is about that.'))
+    add(p('The curve has three regions. Below the capacitive/inductive '
+          'boundary the tank is capacitive and the bridge hard-switches, '
+          'which must never be allowed. Between that boundary and '
+          'f<sub>r</sub> the tank is inductive and boosts; above '
+          'f<sub>r</sub> it is inductive and bucks. In the figure the lower '
+          'boundary is drawn for the full-load curve. At no load it would '
+          'sit at f<sub>o</sub>; it moves up as load is added, and the next '
+          'sections are about that.'))
     add(fig('f04_three_regions',
             'The three operating regions, shaded for the full-load curve '
             'drawn. Only the inductive ones are usable, and the boundary '
@@ -428,44 +421,43 @@ def build(A):
     add(h2('Capacitive and inductive, and why those words'))
     add(p('The names have nothing to do with which component dominates. They '
           'describe <b>what the bridge sees</b>: the phase of the tank input '
-          'current relative to the square wave driving it. The tank is a '
-          'series network, so at low frequency C<sub>r</sub> dominates and '
-          'the current <i>leads</i> &mdash; the bridge is driving something '
-          'that behaves like a capacitor. At high frequency the inductances '
-          'dominate and the current <i>lags</i> &mdash; the bridge is driving '
+          'current relative to the square wave that drives it. The tank is a '
+          'series network. At low frequency C<sub>r</sub> dominates and the '
+          'current <i>leads</i>: the bridge is driving something that '
+          'behaves like a capacitor. At high frequency the inductances '
+          'dominate and the current <i>lags</i>: the bridge is driving '
           'something that behaves like an inductor. The word describes the '
           'load the bridge works into, not a part.'))
     add(p('That phase is the whole of soft switching, which is why the '
           'distinction matters more than it sounds:'))
     add(fig('an_cap_ind',
-            'The same converter either side of the boundary. Above, where the '
-            'boundary sits on the gain curve &mdash; note that it is not at '
-            'the peak, but a little above it. Below, the bridge voltage '
-            'v<sub>d</sub> and the tank current, drawn at the phase the '
-            'tank actually presents at each frequency. On the left the '
-            'current leads and is positive when the switch closes; on the '
-            'right it lags and is still negative, which is ZVS.', width=CW * 0.58))
+            'The same converter on either side of the boundary. Above: where '
+            'the boundary sits on the gain curve. Note that it is not at the '
+            'peak, but a little above it. Below: the bridge voltage '
+            'v<sub>d</sub> and the tank current, drawn at the phase the tank '
+            'actually presents at each frequency. On the left the current '
+            'leads and is positive when the switch closes; on the right it '
+            'lags and is still negative, which is ZVS.', width=CW * 0.58))
     ext(bullets([
-        '<b>Inductive: current lags.</b> When a switch turns off, the '
+        '<b>Inductive: the current lags.</b> When a switch turns off, the '
         'current is still flowing in the direction that pushes the bridge '
         'node towards the other rail. The dead time lets it do exactly that, '
         'and the next device turns on at zero volts. <b>ZVS.</b>',
-        '<b>Capacitive: current leads.</b> By the time the switch turns off '
-        'the current has already reversed, so it pushes the node <i>back</i> '
-        'where it came from. The next device then turns on into the full '
-        'rail, and worse, the body diode of the device that was conducting '
-        'is forced out with reverse recovery through a low impedance. '
-        '<b>Hard switching, and the failure mode that destroys parts.</b>']))
+        '<b>Capacitive: the current leads.</b> By the time the switch turns '
+        'off, the current has already reversed, so it pushes the node '
+        '<i>back</i> where it came from. The next device then turns on into '
+        'the full rail voltage. Worse, the body diode of the device that was '
+        'conducting is forced off with reverse recovery through a low '
+        'impedance. <b>Hard switching, and the failure mode that destroys '
+        'parts.</b>']))
     add(note('This is why the capacitive region is not a performance '
              'trade-off to be balanced against something else. It is a '
              'boundary the design stays on one side of, and the controller '
-             'carries a dedicated protection for the case where it does '
-             'not.'))
-
+             'has a dedicated protection for the case where it does not.'))
     add(h2('The two boundaries are not the same boundary'))
-    add(p('This is the point most easily confused, because both pairs of '
-          'words describe positions on the same axis. They are different '
-          'lines on it.'))
+    add(p('This is the point that is most easily confused, because both '
+          'pairs of words describe positions on the same frequency axis. '
+          'They are different lines on it.'))
     add(tbl('Two classifications, two boundaries, two consequences.',
             [['', 'capacitive / inductive', 'below / above resonance'],
              ['the boundary', 'where <b>arg Z<sub>in</sub> = 0</b>',
@@ -482,23 +474,23 @@ def build(A):
           'f<sub>r</sub>, and it <b>rises as the converter is loaded</b>. At '
           'no load it coincides with f<sub>o</sub>; at full load it has moved '
           'some way up towards f<sub>r</sub>. So the capacitive region is not '
-          'a fixed band below f<sub>o</sub> &mdash; it grows as load is '
-          'added, and a frequency that is safely inductive at light load can '
-          'be capacitive at overload.'))
+          'a fixed band below f<sub>o</sub>. It grows as load is added, and a '
+          'frequency that is safely inductive at light load can be '
+          'capacitive at overload.'))
     add(note('<b>The edge is not quite the gain peak.</b> The tank is '
              'capacitive while the phase of its input impedance is negative, '
              'so the edge is where <b>arg Z<sub>in</sub> = 0</b>, and that '
              'sits a little <i>above</i> the peak of the gain curve. At full '
-             'load in this design the peak is at %(fnPk).1f&nbsp;kHz while '
-             'the phase does not reach zero until %(fnEdge).1f&nbsp;kHz, and '
-             'at the peak itself the bridge still sees %(phPk).1f&deg; of '
+             'load in this design the peak is at %(fnPk).1f&nbsp;kHz, but the '
+             'phase does not reach zero until %(fnEdge).1f&nbsp;kHz, and at '
+             'the peak itself the bridge still sees %(phPk).1f&deg; of '
              'capacitive phase. The peak is the usual stand-in because it '
              'needs only the gain curve, but it is optimistic in the '
              'dangerous direction: it calls a band inductive while the '
-             'bridge is still hard switching. Both are approximations of one '
+             'bridge is still hard-switching. Both are approximations of one '
              'real condition, and Section&nbsp;%(zvsref)s measures that '
-             'condition directly instead &mdash; the time the tank current '
-             'takes to reach zero after the bridge changes.'
+             'condition directly instead: the time the tank current takes to '
+             'reach zero after the bridge changes state.'
              % dict(V, zvsref=SR('ZVS verification'), **_edge_numbers(A))))
     add(fig('an_loadshift',
             'The boundary is not fixed. Loading the converter pushes it to a '
@@ -506,151 +498,148 @@ def build(A):
             'load can be capacitive at overload. The dashed curve is the '
             'boundary itself, traced out as Q varies.', width=CW * 0.62))
     ext(bullets([
-        'A converter can be <b>below f<sub>r</sub> and still inductive</b> '
-        '&mdash; that is the ordinary boosting region, and it is where an '
-        'LLC normally runs.',
+        'A converter can be <b>below f<sub>r</sub> and still inductive</b>. '
+        'That is the ordinary boosting region, and it is where an LLC '
+        'normally runs.',
         'It can be <b>below f<sub>r</sub> and capacitive</b>, which is the '
         'fault. Going below f<sub>r</sub> is not the danger; going below the '
-        'peak is.',
+        'boundary is.',
         'It cannot be <b>above f<sub>r</sub> and capacitive</b>, because the '
-        'peak is always below f<sub>r</sub>. Everything above f<sub>r</sub> '
-        'is inductive at every load.']))
+        'boundary is always below f<sub>r</sub>. Everything above '
+        'f<sub>r</sub> is inductive at every load.']))
     add(note('<b>What this means for the design rule.</b> Keep the '
              'oscillator floor f<sub>Min</sub> above f<sub>o</sub>. That is '
              'the <i>no-load</i> position of the boundary, so it is the '
              'weakest form of the requirement: necessary, but not enough on '
              'its own. The real check is the ZVS sweep in '
              'Section&nbsp;' + SR('ZVS verification')
-             + ', which is run at load and at every phase of the line cycle, '
-               'and the controller carries an anti-capacitive protection '
-               'behind that.'))
-
+             + ', which is run under load and at every phase of the line '
+               'cycle. Behind that, the controller has an anti-capacitive '
+               'protection.'))
     add(h2('ZVS and ZCS are not the same thing'))
     add(p('Both are ways of switching a device while one of its two '
-          'quantities is zero, so that their product &mdash; the loss '
-          '&mdash; is zero. They apply to different devices here, for '
+          'quantities, voltage or current, is zero, so that their product, '
+          'the loss, is zero. Here they apply to different devices, for '
           'different reasons, and only one of them is guaranteed.'))
     add(fig('an_zvs_zcs',
             'Zero-voltage switching on the primary and zero-current '
             'switching on the secondary. Different devices, different '
             'mechanisms, different conditions.', width=CW))
     ext(bullets([
-        '<b>ZVS &mdash; zero-voltage switching, on the primary switches.</b> '
-        'The device turns on with no voltage across it. It works because the '
+        '<b>ZVS, zero-voltage switching, on the primary switches.</b> The '
+        'device turns on with no voltage across it. It works because the '
         'tank current is still flowing when the previous device turns off, '
         'and that current discharges the bridge node during the dead time. '
-        'It needs <b>inductive operation</b>, which is to say anywhere above '
-        'the gain peak &mdash; so it is available on both sides of '
+        'It needs <b>inductive operation</b>, that is, anywhere above the '
+        'capacitive/inductive boundary. So it is available on both sides of '
         'f<sub>r</sub>, and f<sub>o</sub> is that limit only at no load. It '
         'is required everywhere, and Section&nbsp;' + SR('ZVS verification')
         + ' says how much margin this design has.',
-        '<b>ZCS &mdash; zero-current switching, on the secondary '
-        'rectifiers.</b> The device turns off with no current through it, so '
-        'a diode is not forced out of conduction and a synchronous rectifier '
-        'has no reverse recovery. It happens because the resonant current '
-        'reaches zero on its own &mdash; which only occurs <b>below '
-        'f<sub>r</sub></b>. Above f<sub>r</sub> the rectifier is cut off '
-        'while still conducting and reverse recovery comes back.']))
+        '<b>ZCS, zero-current switching, on the secondary rectifiers.</b> '
+        'The device turns off with no current through it, so a diode is not '
+        'forced out of conduction and a synchronous rectifier has no reverse '
+        'recovery. It happens because the resonant current reaches zero by '
+        'itself, which only occurs <b>below f<sub>r</sub></b>. Above '
+        'f<sub>r</sub> the rectifier is cut off while it is still '
+        'conducting, and reverse recovery returns.']))
     add(note('<b>So ZCS is not a property of the circuit but of the '
              'operating point.</b> Below f<sub>r</sub> the secondary '
              'rectifiers turn off at zero current and reverse recovery never '
-             'appears; above f<sub>r</sub> they do not and it does. A '
-             'converter that stays on one side settles the question once. '
-             'One whose input moves far enough to cross f<sub>r</sub> has to '
-             'be checked on both sides: its secondary body diode and '
-             'synchronous-rectifier dead time matter whenever it is running '
-             'above f<sub>r</sub>.'))
-
+             'appears; above f<sub>r</sub> they do not, and it does. A '
+             'converter that stays on one side settles the question once. A '
+             'converter whose input moves far enough to cross f<sub>r</sub> '
+             'has to be checked on both sides: its secondary body diode and '
+             'synchronous-rectifier dead time matter whenever it runs above '
+             'f<sub>r</sub>.'))
     add(h2('Sizing the dead time so that ZVS actually happens'))
     add(p('ZVS is what makes an LLC efficient, and it is a charge problem '
           'rather than a voltage problem. During the dead time the '
           'magnetising current must move enough charge to swing the bridge '
           'node across the rail before the opposite device turns on. The '
-          'design quantity is the time the tank current takes to reach zero '
-          'after the bridge transition, T<sub>ZC</sub>, and the requirement '
-          'is simply that it outlast the dead time:'))
+          'design quantity is T<sub>ZC</sub>, the time the tank current '
+          'takes to reach zero after the bridge transition, and the '
+          'requirement is simply that it must be longer than the dead '
+          'time:'))
     add(eq(r'T_{ZC}\;>\;t_D', key='zvs'))
     add(fig('f05_zvs_mechanism',
             'How ZVS happens: the magnetising current, not the load current, '
             'discharges the bridge node during the dead time.',
             width=CW * 0.80))
-    add(note('<b>Use the output charge, not the flat-band capacitance.</b> A '
-             'MOSFET datasheet quotes C<sub>oss</sub>, C<sub>o(er)</sub> and '
-             'C<sub>o(tr)</sub>, and they differ by three to five times. ZVS '
-             'is a charge question, so <b>C<sub>o(tr)</sub></b> (equivalently '
-             'Q<sub>oss</sub>) is the one to use. Sizing the dead time from '
-             'the headline C<sub>oss</sub> is optimistic by a large factor.'))
-
+    add(note('<b>Use the output charge, not the small-signal '
+             'capacitance.</b> A MOSFET datasheet quotes C<sub>oss</sub>, '
+             'C<sub>o(er)</sub> and C<sub>o(tr)</sub>, and they differ by '
+             'three to five times. ZVS is a charge question, so '
+             '<b>C<sub>o(tr)</sub></b> (equivalently Q<sub>oss</sub>) is the '
+             'one to use. Sizing the dead time from the headline '
+             'C<sub>oss</sub> is optimistic by a large factor.'))
     add(h2('How an LLC is normally designed'))
     add(p('The sequence below is the standard one, and every step exists '
-          'because of something already established. It is worth having in '
-          'mind before Section&nbsp;' + SR('Design procedure')
-          + ', which follows the same order and diverges from it in exactly '
+          'because of something already established above. It is worth '
+          'having in mind before Section&nbsp;' + SR('Design procedure')
+          + ', which follows the same order and departs from it in exactly '
             'two places.'))
     ext(bullets([
         '<b>1  Turns ratio from the nominal point.</b> Choose n so that the '
         'converter runs at or near M&nbsp;=&nbsp;1 at nominal input, that '
-        'is at f<sub>r</sub>. That is where the circulating current is '
+        'is, at f<sub>r</sub>. That is where the circulating current is '
         'lowest and where the converter should normally run.',
         '<b>2  The gain range the tank must cover.</b> From the input range '
-        'and the output tolerance, M<sub>min</sub> and M<sub>max</sub>. '
-        'M<sub>max</sub> is asked at minimum input and full load, '
+        'and the output tolerance, find M<sub>min</sub> and M<sub>max</sub>. '
+        'M<sub>max</sub> is needed at minimum input and full load, '
         'M<sub>min</sub> at maximum input and minimum load.',
         '<b>3  Load resistance referred to the primary</b>, R<sub>ac</sub>, '
-        'and with it the meaning of Q at full load.',
+        'which gives Q its meaning at full load.',
         '<b>4  m (equivalently &lambda;) and Q, together, from the peak-gain '
-        'chart.</b> These are not independent: for each m there is a curve '
+        'chart.</b> They are not independent: for each m there is a curve '
         'of attainable peak gain against Q, and the design has to sit under '
-        'the curve with margin. A larger m gives less circulating current '
-        'and less peak gain; a smaller m the reverse.',
+        'that curve with margin. A larger m gives less circulating current '
+        'and less peak gain; a smaller m gives the opposite.',
         '<b>5  The component values.</b> Q and R<sub>ac</sub> give '
-        'Z<sub>0</sub>, and Z<sub>0</sub> with the chosen f<sub>r</sub> '
-        'gives C<sub>r</sub> and L<sub>r</sub>; m then gives L<sub>m</sub>.',
-        '<b>6  Verify.</b> That the gain at the worst corner is still under '
-        'the peak with margin, that ZVS holds at the worst point rather than '
-        'the nominal one, and that the currents and the flux are ones real '
-        'parts can carry.']))
+        'Z<sub>0</sub>; Z<sub>0</sub> with the chosen f<sub>r</sub> gives '
+        'C<sub>r</sub> and L<sub>r</sub>; m then gives L<sub>m</sub>.',
+        '<b>6  Verify.</b> Check that the gain at the worst corner is still '
+        'under the peak with margin, that ZVS holds at the worst point '
+        'rather than at the nominal one, and that the currents and the flux '
+        'are ones real parts can carry.']))
     add(fig('an_peakgain',
             'Step 4, and the reason m and Q cannot be chosen separately: the '
-            'peak gain a tank can reach depends on both. Picking a required '
+            'peak gain a tank can reach depends on both. Choosing a required '
             'gain and a Q leaves only a band of usable m.', width=CW * 0.52))
     add(note('<b>That is the first half.</b> Everything above is the LLC on '
              'its own: a tank, a gain curve, and a frequency that moves the '
-             'operating point along it. Nothing in it has anything to do '
-             'with the mains. The rest of this section is the other half '
-             '&mdash; what a power factor corrector is for and how the '
-             'ordinary one works &mdash; and it can be read without '
-             'reference to any of the above. Section&nbsp;'
+             'operating point along it. None of it involves the mains. The '
+             'rest of this section is the other half: what a power factor '
+             'corrector is for, and how the ordinary one works. It can be '
+             'read without reference to any of the above. Section&nbsp;'
              + SR('Why single stage, and what it costs')
-             + ' is where the two are put together.'))
-
+             + ' is where the two halves are put together.'))
     add(h2('What power factor correction is'))
     add(p('Start with what happens if nothing is done. A bridge rectifier '
           'feeding a capacitor holds the bus near the peak of the mains, so '
           'the diodes can only conduct during the short window in which the '
-          'mains is above that. All of the charge the load will use over the '
-          'whole cycle has to arrive inside that window.'))
+          'mains voltage is above the capacitor voltage. All the charge the '
+          'load will use over the whole cycle has to arrive inside that '
+          'window.'))
     add(fig('an_pfc_cap',
             'A capacitor-input rectifier and what it draws. v<sub>C</sub> '
             'stays near the crest, so the diodes conduct only in the narrow '
             'windows where the mains is above it, and the current inside '
             'them is correspondingly tall.', width=CW * 0.66))
-    add(p('The consequences are all consequences of that one fact. The peak '
-          'current is several times what a resistor of the same average power '
-          'would draw, so the wiring, the fuse, the bridge and the source all '
-          'have to be sized for it. And a pulse train that narrow is mostly '
+    add(p('All the consequences follow from that one fact. The peak current '
+          'is several times what a resistor of the same average power would '
+          'draw, so the wiring, the fuse, the bridge and the source all have '
+          'to be sized for it. And a pulse train that narrow is mostly '
           'harmonics.'))
-
     add(h2('Power factor, and why it is not the same as distortion'))
     add(p('<b>Power factor</b> is the ratio of real power to apparent power:'))
     add(eq(r'PF=\frac{P}{V_{rms}I_{rms}}\;=\;\cos\varphi_{1}\;\times\;\frac{I_{1,rms}}{I_{rms}}'))
-    add(p('It has two independent factors and they fail for different '
+    add(p('It has two independent factors, and they fail for different '
           'reasons. <b>Displacement</b> is the phase between the voltage and '
-          'the fundamental of the current, and it is what a motor gets wrong. '
+          'the fundamental of the current; it is what a motor gets wrong. '
           '<b>Distortion</b> is how much of the rms current is at the '
-          'fundamental at all, and it is what a rectifier gets wrong. The '
+          'fundamental at all; it is what a rectifier gets wrong. The '
           'current in the figure above is roughly in phase, so its '
-          'displacement factor is near 1 &mdash; and it still scores about '
+          'displacement factor is near 1, and it still scores only about '
           '0.6, because the rest of the rms is harmonics.'))
     add(p('The related figure of merit is <b>total harmonic distortion</b>, '
           'the harmonic content as a fraction of the fundamental:'))
@@ -659,24 +648,23 @@ def build(A):
     add(note('<b>The two are not interchangeable.</b> A converter can hold '
              'PF above 0.99 and still fail a harmonic limit, because the '
              'standard limits <i>individual</i> harmonics in amperes rather '
-             'than a single ratio. Harmonics do not deliver power; they heat '
-             'the neutral, saturate distribution transformers and disturb '
-             'other equipment on the same supply, which is why they are '
-             'regulated. IEC&nbsp;61000-3-2 sets the limits, and which '
-             'limit applies depends on the class: a mains rectifier of '
-             'this shape is Class&nbsp;D, exempt below 75&nbsp;W and '
-             'held to a milliamp-per-watt line above it. <b>But Class&nbsp;D '
-             'only reaches 600&nbsp;W</b> &mdash; this design draws '
-             '%(Pin).0f&nbsp;W at the input, above that, so the absolute '
-             'Class&nbsp;A limits apply instead. Settle the class first.'
+             'than one ratio. Harmonics do not deliver power; they heat the '
+             'neutral, saturate distribution transformers and disturb other '
+             'equipment on the same supply, which is why they are regulated. '
+             'IEC&nbsp;61000-3-2 sets the limits, and the limit depends on '
+             'the class. A mains rectifier of this kind is Class&nbsp;D: '
+             'exempt below 75&nbsp;W, and held to a milliamp-per-watt line '
+             'above it. <b>But Class&nbsp;D only reaches 600&nbsp;W.</b> '
+             'This design draws %(Pin).0f&nbsp;W at the input, which is '
+             'above that, so the absolute Class&nbsp;A limits apply instead. '
+             'Settle the class first.'
              % V))
-
     add(h2('How a corrector fixes it'))
-    add(p('Force the input current to follow the input voltage and the '
+    add(p('Force the input current to follow the input voltage, and the '
           'converter looks like a resistor to the mains: both factors go to '
           'one at once. The standard implementation is a <b>boost converter '
-          'placed straight after the bridge</b>, switching fast enough that '
-          'the mains looks frozen within one switching cycle.'))
+          'placed directly after the bridge</b>, switching fast enough that '
+          'the mains looks constant within one switching cycle.'))
     add(fig('an_pfc_boost',
             'A boost corrector, with the current path traced for each half of '
             'the switching period: the reactor charges from the line while '
@@ -684,19 +672,20 @@ def build(A):
             'line while it is off.',
             width=CW * 0.62))
     ext(bullets([
-        '<b>Why boost.</b> The input is a rectified sine that passes through '
-        'zero, so the stage has to be able to step up by an unlimited ratio '
-        'near the crossing &mdash; only boost can. Its input current is also '
-        'continuous, which is what makes shaping it possible at all.',
-        '<b>The inner loop</b> regulates inductor current to a reference. It '
-        'has to be fast compared with the switching frequency.',
-        '<b>The outer loop</b> regulates the bus voltage, and is deliberately '
-        'made <b>slower than 2f<sub>l</sub></b>. If it were fast it would '
-        'fight the ripple on the bus, modulate the level within the line '
-        'cycle and flatten the very shape the corrector exists to make. A '
-        'slow voltage loop is not a compromise here; it is a requirement.',
-        '<b>The multiplier</b> joins them: shape from the mains, level from '
-        'the output. That is the whole of the control law.']))
+        '<b>Why a boost.</b> The input is a rectified sine that passes '
+        'through zero, so the stage must be able to step up by an unlimited '
+        'ratio near the zero crossing; only a boost can. Its input current is '
+        'also continuous, which is what makes shaping it possible at all.',
+        '<b>The inner loop</b> regulates the inductor current to a '
+        'reference. It has to be fast compared with the switching frequency.',
+        '<b>The outer loop</b> regulates the bus voltage, and it is '
+        'deliberately made <b>slower than 2f<sub>l</sub></b>. If it were '
+        'fast, it would fight the ripple on the bus, modulate the current '
+        'level within the line cycle, and flatten the very shape the '
+        'corrector exists to make. A slow voltage loop is not a compromise '
+        'here; it is a requirement.',
+        '<b>The multiplier</b> joins them: the shape comes from the mains, '
+        'the level from the output. That is the whole control law.']))
     add(fig('an_pfc_ccm',
             'The result, in continuous conduction mode. Switching ripple '
             'rides on the reactor current and never brings it to zero; its '
@@ -705,16 +694,15 @@ def build(A):
     add(note('<b>This comes back later.</b> Take the boost stage away and '
              'the same conflict returns in a sharper form: the outer loop is '
              'then the <i>only</i> loop, its output is a power command, and '
-             'any 2f<sub>l</sub> ripple that survives it becomes input '
+             'any 2f<sub>l</sub> ripple that gets through it becomes input '
              'current distortion directly. That is '
              'Section&nbsp;' + SR('Voltage loop and compensation') + '.'))
-    add(p('The corrector delivers what was asked for, and hands over a new '
+    add(p('The corrector delivers what was asked for, and creates a new '
           'problem in doing so. A current that follows the voltage means an '
           'input power that follows sin&sup2;&thinsp;&theta;: zero twice per '
           'cycle, twice the average at the crests. The load still wants '
           'constant power. <b>Something has to store the difference</b>, and '
-          'where that something sits is the whole of the next section.'))
-
+          'where that something sits is the subject of the next section.'))
     add(h2('Why they are normally two stages'))
     add(fig('an_two_stage',
             'The usual two-stage arrangement, with the waveform at every '
@@ -723,7 +711,7 @@ def build(A):
             'absorbs the twice-line-frequency pulsation sits between them, '
             'at 400&nbsp;V.', width=CW))
     add(p('The bus capacitor between a boost PFC and an LLC does two jobs at '
-          'once, and they are usually confused with each other:'))
+          'once, and they are often confused with each other:'))
     ext(bullets([
         'it <b>buffers</b> the difference between the pulsating input power '
         'and the constant output power;',
@@ -733,8 +721,7 @@ def build(A):
           'buffering has to be done somewhere else, and the tank now has to '
           'work directly from a rectified sine that goes to zero a hundred '
           'times a second. What that costs, and why it works anyway, is the '
-          'rest of the story.'))
-
+          'rest of this note.'))
     add(h1('Why single stage, and what it costs'))
     add(note('<b>Two steps of that recipe are the ones this converter '
              'breaks.</b> Step&nbsp;1 has no nominal point to settle at, '
@@ -821,8 +808,8 @@ def build(A):
           'instantaneous gain is therefore forced:'))
     add(eq(r'M(\theta)=\frac{n\,V_{o,eff}}{V_{drive}(\theta)}'
            r'=\frac{n\,V_{o,eff}}{\sqrt{2}\,V_{ac,eq}\,\sin\theta}', key='Mreq'))
-    add(p('with &theta; the line phase angle. The reasoning is worth '
-          'spelling out, because it is the hinge of the whole topology. A '
+    add(p('with &theta; the line phase angle. This reasoning deserves a closer '
+          'look, because the whole topology depends on it. A '
           'gain is a ratio of two voltages. In a two-stage converter the '
           'output voltage is free to move &mdash; the loop moves it &mdash; '
           'so commanding a gain is the same as commanding an output. Here '
@@ -830,23 +817,24 @@ def build(A):
           'the converter</b>: the input by the mains, the output by a bank '
           'so large that it cannot change within a switching cycle. Their '
           'ratio is therefore fixed too, moment by moment, and the '
-          'controller has no say in it.'))
+          'controller cannot change it.'))
     add(p('So what does moving the switching frequency do? It moves <b>Q</b> '
-          '&mdash; the loading &mdash; and Q is power. The tank is told what '
-          'gain to produce and is left to choose how much current it draws '
-          'to produce it. <b>In this converter frequency is a power command, '
+          '&mdash; the loading &mdash; and Q is power. The tank is given the '
+          'gain it must produce, and the frequency decides how much current '
+          'it draws while doing so. <b>In this converter frequency is a power command, '
           'not a voltage command.</b>'))
 
     add(h2('Two divergences that cancel'))
-    add(p('Read that equation near the mains zero crossing and it looks '
-          'impossible: as &theta;&nbsp;&rarr;&nbsp;0 the required gain rises '
+    add(p('Near the mains zero crossing that equation looks impossible to '
+          'satisfy: as &theta;&nbsp;&rarr;&nbsp;0 the required gain rises '
           'as 1/sin&thinsp;&theta; without limit. The converter survives '
-          'because the load vanishes at the same time. A unity-power-factor '
+          'because the load disappears at the same time. A unity-power-factor '
           'input draws power proportional to sin&sup2;&thinsp;&theta;, so'))
     add(eq(r'Q(\theta)=Q_{pk}\,\sin^{2}\theta', key='Qtheta'))
-    add(p('and an unloaded LLC has without limit gain at its lower resonance '
-          'f<sub>o</sub>. Two divergences meet, and the operating point walks '
-          'down towards f<sub>o</sub> as the mains approaches zero '
+    add(p('and an unloaded (lossless) LLC has unlimited gain at its lower '
+          'resonance f<sub>o</sub>. The two infinities cancel, and the '
+          'operating point moves down towards f<sub>o</sub> as the mains '
+          'voltage approaches zero '
           '(Figure&nbsp;' + FR('f12_two_divergences')
           + '). <b>f<sub>o</sub> is therefore the frequency floor of the '
             'entire design</b>, and putting the oscillator clamp below it is '
@@ -857,7 +845,7 @@ def build(A):
             'f<sub>o</sub>.', width=CW * 0.88))
 
     add(h2('Frequency modulation is the power factor correction'))
-    add(p('Put those together and the control law falls out. Over a line half '
+    add(p('Putting these together gives the control law. Over a line half '
           'cycle the controller sweeps the switching frequency so the power '
           'drawn follows sin&sup2;&thinsp;&theta;. There is no current loop, '
           'no multiplier and no separate PFC stage: <b>the frequency profile '
@@ -868,8 +856,8 @@ def build(A):
             'f<sub>sw</sub>(&theta;) over a line half cycle. The excursion is '
             'the power factor correction; the floor is f<sub>o</sub>.',
             width=CW * 0.84))
-    add(p('Working that profile out looks like it needs a numerical root '
-          'search. At each &theta; the gain equation has to be solved for '
+    add(p('Computing that profile seems to need a numerical root '
+          'search: at each &theta; the gain equation has to be solved for '
           'f<sub>n</sub>, and it has two roots: a capacitive one and an '
           'inductive one. <b>It does not.</b> Substituting '
           'M<sub>req</sub> = M<sub>pk</sub>/sin&thinsp;&theta; and '
@@ -879,15 +867,17 @@ def build(A):
     add(eq(r'\lambda^{2}x^{3}+(q-2\lambda(1+\lambda))x^{2}'
            r'+((1+\lambda)^{2}-2q-\frac{u}{M_{pk}^{2}})x+q=0,'
            r'\qquad u=\sin^{2}\theta,\;\; q=Q_{pk}^{2}u^{2}', key='cubic'))
-    add(p('One root is always negative: the cubic is +q at x&nbsp;= 0 and '
-          'runs to &minus;&infin; as x grows. The other two are the two '
-          'crossings of one curve. On x&nbsp;&gt; 0 the right-hand side of '
-          'the gain equation starts at infinity, falls to a single minimum '
-          'and rises again. So a required gain the tank can actually produce '
+    add(p('One root is always negative: the cubic equals +q&nbsp;&gt;&nbsp;0 '
+          'at x&nbsp;= 0 and goes to &minus;&infin; as x goes to '
+          '&minus;&infin;, so it crosses zero somewhere below x&nbsp;= 0. '
+          'The other two roots are where one curve is crossed twice. For '
+          'x&nbsp;&gt; 0 the inverse gain 1/M&sup2; of the tank, as a '
+          'function of x, starts at infinity, falls to a single minimum '
+          'and rises again. So a required gain that the tank can produce '
           'is met at <b>exactly two</b> positive values of x: the capacitive '
           'crossing and the inductive one. All three roots are then real. '
           'The physical, inductive root is the <b>middle</b> one, because '
-          'x&nbsp;= 1/f<sub>n</sub>&sup2; runs backwards against frequency. '
+          'x&nbsp;= 1/f<sub>n</sub>&sup2; decreases as frequency increases. '
           'There is no branch to choose: in the trigonometric form of '
           'Cardano it is always the k&nbsp;= 1 branch. If the required gain '
           'is below that minimum there is no positive root at all, which is '
@@ -895,13 +885,13 @@ def build(A):
           + SR('The other bound on &lambda;, and where it has no solution')
           + ' rather than a numerical failure.'))
     add(note('<b>Why this matters beyond elegance.</b> A grid search needs an '
-             'upper bound on f<sub>n</sub>, and a bound chosen from the ac '
-             'maximum rather than the morphing corner with no warning cannot '
-             'represent the real operating point. The closed form has no '
-             'grid, no bracket and no starting guess, so that failure mode '
-             'does not exist. The inverse problem &mdash; the '
+             'upper bound on f<sub>n</sub>, and a bound taken from the ac '
+             'maximum instead of the morphing corner quietly leaves out '
+             'the real operating point. The closed form has no '
+             'grid, no bracket and no starting guess, so that failure '
+             'cannot happen. The inverse problem &mdash; finding the '
              'sin&sup2;&thinsp;&theta; that gives a required f<sub>n</sub> '
-             '&mdash; is a quadratic and is likewise exact.'))
+             '&mdash; is a quadratic and is also exact.'))
 
     add(note('<b>The zero-crossing dead zone.</b> Very near &theta;&nbsp;= 0 '
              'the required gain exceeds anything the tank can produce and the '
@@ -932,12 +922,12 @@ def build(A):
              'both.'))
 
     add(h2('Which side of resonance this converter runs on'))
-    add(p('Section&nbsp;%s left the question open. Now it can be answered, '
-          'and the answer is that a single-stage converter does not pick a '
-          'side. The equivalent input sweeps a half sine every 10&nbsp;ms, '
-          'the required gain sweeps with it, and the operating point walks '
-          'across f<sub>r</sub> and back within one line cycle. How much of '
-          'the cycle it spends on each side depends on the mains voltage.'
+    add(p('Section&nbsp;%s left this question open. Now it can be answered: '
+          'a single-stage converter does not pick one side. The equivalent '
+          'input follows a half sine every 10&nbsp;ms, the required gain '
+          'follows it, and the operating point crosses f<sub>r</sub> and '
+          'comes back within one line cycle. How much of the cycle it spends '
+          'on each side depends on the mains voltage.'
           % SR('The two resonances')))
     add(fig('an_above_below',
             'Which side of f<sub>r</sub> the converter is on, over a line '
@@ -950,7 +940,7 @@ def build(A):
              'out of zero-current switching &mdash; so the rectifier body '
              'diode and the SR dead time matter here in a way they do not in '
              'a conventional LLC. A design checked only at the line peak, or '
-             'only at low line, has looked at one of the two converters.'))
+             'only at low line, has checked only one of the two.'))
 
     add(h2('Why &lambda; must be about 0.5'))
     add(p('A classic LLC uses m&nbsp;=&nbsp;L<sub>p</sub>/L<sub>r</sub> '
@@ -959,9 +949,9 @@ def build(A):
           'near the zero crossing, and peak gain falls as &lambda; falls. '
           'This design runs <b>&lambda;&nbsp;=&nbsp;%(lam).2f</b>, that is '
           'm&nbsp;=&nbsp;%(m).2f. The evaluation board ST publishes for this '
-          'part runs &lambda;&nbsp;=&nbsp;0.500, which is the strongest '
-          'available confirmation that the value is structural and not a '
-          'quirk of one design.' % V))
+          'part runs &lambda;&nbsp;=&nbsp;0.500, which confirms that this '
+          'value comes from the topology and not from one particular '
+          'design.' % V))
     add(p('The price is circulating current. A small L<sub>m</sub> means a '
           'large magnetising current that carries no power but does carry '
           'conduction loss, at every load. <b>A single-stage PFC LLC is less '
@@ -985,15 +975,16 @@ def build(A):
           'requirement rises from &lambda;<sub>1</sub>&nbsp;=&nbsp;'
           '%(lam1).3f to %(lam2).3f and %(lamTD).3f. <b>The number typed as '
           'f<sub>sw,max</sub> roughly doubles the &lambda; the tank is asked '
-          'for</b>, and as it approaches f<sub>r</sub> the denominators go to '
-          'zero and the requirement diverges.' % V))
+          'for</b>, and if it were set close to f<sub>r</sub> the '
+          'denominators would go to zero and the required &lambda; to '
+          'infinity.' % V))
     add(note('<b>So where does f<sub>sw,max</sub> come from?</b> The common '
              'rule is 1.5&nbsp;&times;&nbsp;f<sub>r</sub>, which is what the '
              '%(fswspec).0f&nbsp;kHz here is. It is a <b>choice</b>, not a '
              'limit &mdash; and it sits upstream of the tank, so changing it '
-             'changes L<sub>m</sub>. That is the opposite of how a maximum '
-             'usually behaves in a design sheet, and a round number can be '
-             'typed into it without noticing what moves.' % V))
+             'changes L<sub>m</sub>. A maximum in a design sheet usually only '
+             'checks a result; this one is an input, so a round number typed '
+             'into it changes the tank without anyone noticing.' % V))
     add(p('It should not be confused with f<sub>Max</sub>, the oscillator '
           'ceiling. That one <i>is</i> a limit: R<sub>T</sub>, C<sub>T</sub> '
           'and the idle time fix it in silicon, the control loop cannot push '
@@ -1009,9 +1000,9 @@ def build(A):
           'from the opposite end: the tank must also be able to reach the '
           '<i>lowest</i> required gain, which happens at the highest '
           'equivalent input and no load. That is where the usual design rule '
-          'without showing it breaks down, because the no-load gain of an LLC does not '
-          'fall indefinitely. Raising the frequency only walks it down to an '
-          'asymptote:'))
+          'quietly breaks down, because the no-load gain of an LLC does not '
+          'fall without limit. Raising the frequency only brings it down '
+          'towards a limit (an asymptote):'))
     add(eq(r'M_{\infty}\;=\;\lim_{f\to\infty}M_{no\;load}'
            r'\;=\;\frac{1}{1+\lambda}', key='Minf'))
     add(p('<b>If the required minimum gain lies below M<sub>&infin;</sub>, no '
@@ -1038,9 +1029,9 @@ def build(A):
              'the region <b>burst mode</b> owns, not frequency control. Under '
              'load the gain curve falls further and the corner arrives '
              'sooner, so every full-load check is unaffected &mdash; which is '
-             'exactly why this can go unnoticed. What is worth knowing is '
-             'which of the candidate ratios still regulates on frequency '
-             'alone, because no full-load number reveals it.'))
+             'exactly why this can go unnoticed. What matters is to know which '
+             'of the candidate turns ratios can still regulate by frequency '
+             'alone at no load, because no full-load number shows it.'))
 
     # =============================================================== 4
     add(h1('Topology morphing'))
@@ -1058,8 +1049,8 @@ def build(A):
             'of the mains range.'))
 
     add(h2('Full bridge'))
-    add(p('Diagonal pairs conduct together. Q1 and Q4 put +V<sub>in</sub> '
-          'across the tank, Q2 and Q3 put &minus;V<sub>in</sub> across it, so '
+    add(p('Diagonal pairs conduct together. S1 and S4 put +V<sub>in</sub> '
+          'across the tank, S2 and S3 put &minus;V<sub>in</sub> across it, so '
           'the drive is a square wave of amplitude V<sub>in</sub> and its '
           'fundamental is (4/&pi;)&thinsp;V<sub>in</sub>. All four devices '
           'switch, and each carries the tank current for half of every '
@@ -1069,7 +1060,7 @@ def build(A):
             'resulting tank drive.'))
 
     add(h2('Half bridge'))
-    add(p('LOUT2 is held statically high. Q3 never turns on and Q4 never '
+    add(p('LOUT2 is held statically high. S3 never turns on and S4 never '
           'turns off, so the leg-2 midpoint becomes ground and the bridge '
           'output swings between 0 and V<sub>in</sub>. C<sub>r</sub> is '
           'already in series with the tank, so it blocks the '
@@ -1080,12 +1071,12 @@ def build(A):
     add(fig('f16_bridge_hb',
             'Half bridge: leg 2 stops switching, and C<sub>r</sub> removes '
             'the dc that the asymmetric drive creates.'))
-    add(note('<b>The standing device is the hottest one.</b> Q4 never '
+    add(note('<b>The standing device is the hottest one.</b> S4 never '
              'switches, but it conducts the full tank current continuously '
              '&mdash; %(Iprilc).1f&nbsp;A rms in this design, '
              '%(Ploss).2f&nbsp;W in one package. It is easy to overlook '
-             'precisely because it is not switching, and it is the device '
-             'that sets the heatsinking requirement.' % V))
+             'exactly because it is not switching, and it is the device '
+             'that sets the heatsink requirement.' % V))
 
     add(h2('How the controller does it'))
     add(p('Only one gate signal changes between the two modes, which is why '
@@ -1100,12 +1091,13 @@ def build(A):
     add(h2('The hysteresis band, and the range it really implies'))
     add(p('The two thresholds are not the same number: the part drops to half '
           'bridge at 245&nbsp;V<sub>pk</sub> going up and returns to full '
-          'bridge at 235&nbsp;V<sub>pk</sub> coming down. Ten volts of '
-          'hysteresis is what stops it chattering at the threshold, but it '
-          'also means that <b>between 235 and 245&nbsp;V<sub>pk</sub> the '
+          'bridge at 235&nbsp;V<sub>pk</sub> coming down. The 10&nbsp;V of '
+          'hysteresis stops the mode from toggling back and forth at the '
+          'threshold, but it also means that <b>between 235 and '
+          '245&nbsp;V<sub>pk</sub> the '
           'mains voltage alone does not determine the mode</b> &mdash; the '
           'direction of travel does.'))
-    add(p('Assigning each threshold to the side on which its mode is '
+    add(p('Taking each threshold on the side where its mode is '
           'guaranteed gives the design range %(Veqlo).1f to '
           '%(Veqhi).1f&nbsp;Vac (1.92:1). Including the band gives '
           '<b>%(Veqlo2).1f to %(Veqhi2).1f&nbsp;Vac (2.08:1)</b>. This design '
@@ -1125,11 +1117,12 @@ def build(A):
              'tank drive 2:1 within one line cycle, and f<sub>sw</sub> must '
              'follow from %(fswA).0f to %(fswB).0f&nbsp;kHz against a voltage '
              'loop that crosses at %(fcross).1f&nbsp;Hz. The output droops '
-             'until the loop recovers. This event is <b>enveloped by the '
-             'hold-up case</b>, which removes power entirely for '
+             'until the loop recovers. This event is <b>less severe than '
+             'the hold-up case</b>, which removes power entirely for '
              '%(Thold).0f&nbsp;ms and is already met, so it is not a reason '
-             'to enlarge C<sub>out</sub> or speed the loop. That containment '
-             'has not yet been confirmed in the time domain.' % V))
+             'to enlarge C<sub>out</sub> or speed up the loop. That '
+             'comparison has not yet been checked in the time domain, by '
+             'simulation or by measurement.' % V))
 
     # =============================================================== 5
     # the sweep populates ZVS_WORST, which the summary tables of the
@@ -1170,7 +1163,7 @@ def build(A):
                            'it is'))))
 
     add(h2('The equivalent input range'))
-    add(p('This is the step most often got wrong. With morphing the tank does '
+    add(p('This is the step that is most often done wrong. With morphing the tank does '
           'not see 90&nbsp;Vac at the bottom and %(Vacmax).0f&nbsp;Vac at the '
           'top. It sees an <b>equivalent</b> input given by the bridge mode:'
           % V))
@@ -1228,9 +1221,9 @@ def build(A):
         'the ZVS margin with it. C<sub>r</sub> above its calculated value and '
         'L<sub>m</sub> below have the opposite effect: Q<sub>pk</sub> falls '
         'and &lambda; is held.',
-        '<b>Sit under the Q<sub>ZVS</sub> cap rather than on it.</b> That gap '
+        '<b>Stay below the Q<sub>ZVS</sub> cap, not on it.</b> That gap '
         'is where most of a design&rsquo;s ZVS margin comes from, and it is a '
-        'choice rather than an accident of rounding. L<sub>m</sub> is chosen '
+        'deliberate choice, not an accident of rounding. L<sub>m</sub> is chosen '
         'together with n so that n<sub>T</sub>&nbsp;=&nbsp;'
         'n&radic;(1+&lambda;<sub>act</sub>) lands on a ratio that can '
         'actually be wound.']))
@@ -1250,8 +1243,8 @@ def build(A):
              'equivalent input voltage, not in the load. Q then means the '
              'quality factor at the line peak, and every other phase scales '
              'from it as Q(&theta;) = Q<sub>pk</sub>sin&sup2;&thinsp;&theta;. '
-             'Taking the two-stage number across instead understates the '
-             'loading by two, and every tank value that follows is wrong.'))
+             'Using the two-stage value instead understates the '
+             'loading by a factor of two, and every tank value that follows is wrong.'))
 
     add(h2('ZVS verification'))
     add(p('The closed-form ZVS estimate found in most design guides is a '
@@ -1278,7 +1271,7 @@ def build(A):
           'a grid, not a formula, and it is the only form of this check that '
           'can be trusted. Section&nbsp;%(ref)s runs it for this design and '
           'says where the worst point turned out to be &mdash; which is not '
-          'where a reader would guess.'
+          'where one would expect.'
           % dict(ref=SR('ZVS over the whole operating space'))))
 
     add(h2('Which side of resonance the converter runs on'))
@@ -1286,8 +1279,8 @@ def build(A):
           'a dead interval and the conduction ratio d = '
           'f<sub>sw</sub>/f<sub>r</sub> is less than one; above f<sub>r</sub> '
           'the current is continuous and d clamps at one. The rms figures '
-          'that ratings and losses are built on carry d, so this is not a '
-          'matter of wording.'))
+          'that ratings and losses are built on contain d, so the difference '
+          'is real, not a matter of words.'))
     add(p('<b>Which side of resonance the converter runs on is not a '
           'separate choice. The turns ratio decides it.</b> The demand is '
           'M<sub>req</sub> = '
@@ -1366,11 +1359,11 @@ def build(A):
           'open, L<sub>short</sub> with the secondary shorted. <b>Specify '
           'those two and the turns, never L<sub>&mu;</sub></b> &mdash; no '
           'terminal pair exposes L<sub>&mu;</sub>, so a supplier cannot test '
-          'it, and a part that meets it can still miss the tank. State the '
-          'turns ratio in words as well: at one or two secondary turns the '
-          'self-inductance of that winding is dominated by the loop of the '
-          'lead-out, so &radic;(L<sub>1</sub>/L<sub>2</sub>) does not recover '
-          'the ratio.'))
+          'it, and a part that meets it can still miss the tank. Also state '
+          'the turns as numbers: with one or two secondary turns, the '
+          'inductance of that winding is dominated by the lead-out loop, '
+          'so &radic;(L<sub>1</sub>/L<sub>2</sub>) does not give the turns '
+          'ratio.'))
 
     add(h2('Peak flux is set by the secondary, not the primary'))
     add(p('Below resonance the secondary conducts for a resonant half period '
@@ -1404,21 +1397,21 @@ def build(A):
           'current makes far more flux than it does in operation. Ask for the '
           'current that reproduces the operating flux in that test:'))
     add(eq(r'I_{eq}=\frac{B_{pk}\,N_{p}\,A_{e}}{L_{open}}', key='Isat'))
-    add(p('Handing the supplier the peak tank current instead asks for a flux '
-          'density no ferrite reaches, and the answer comes back as an '
-          'oversized core or as a query.'))
+    add(p('Giving the supplier the peak tank current instead asks for a flux '
+          'density no ferrite reaches, and the supplier will either '
+          'oversize the core or ask why.'))
 
     add(h2('The specification, and what it is not allowed to leave out'))
-    add(note('<b>The open-circuit tolerance is not a round number, and it '
-             'is not free to be one.</b> f<sub>o</sub> goes as '
+    add(note('<b>The open-circuit inductance tolerance cannot simply be the '
+             'usual round number.</b> f<sub>o</sub> goes as '
              '1/&radic;L<sub>open</sub>, so a low part raises the frequency '
              'floor towards the oscillator clamp. The fall a tank can '
              'tolerate follows from k<sub>floor</sub> and is typically a few '
-             'per cent, so the reflex &plusmn;10&nbsp;%% can let a compliant '
-             'part hard switch. Section&nbsp;' % {}
+             'per cent, so the usual &plusmn;10&nbsp;%% can allow a part that '
+             'meets its specification to hard switch. Section&nbsp;' % {}
              + SR('Controller network') + ' derives the figure and gives the '
-             'two ways out. Ask the supplier for the asymmetric limit, or '
-             'buy the room in the oscillator first and then ask for '
+             'two ways out. Ask the supplier for a tighter low-side limit, '
+             'or first make room in the oscillator setting and then ask for '
              '&plusmn;10&nbsp;%.'))
     add(note('Core, bobbin, wire and winding order are the supplier choice, '
              'and insulation and creepage follow the applicable safety '
@@ -1428,8 +1421,8 @@ def build(A):
 
     add(h2('If one transformer is not practical'))
     add(p('At a low output voltage and high current the secondary is a single '
-          'heavy turn and the core comes out large, which can lose against '
-          'a height or footprint limit. The transformer can then be built as '
+          'heavy turn and the core comes out large, which may not fit a '
+          'height or footprint limit. The transformer can then be built as '
           'N<sub>x</sub> identical units with <b>primaries in series and '
           'secondaries in parallel</b>. Series primaries carry the same '
           'current, so the paralleled secondaries share automatically without '
@@ -1447,8 +1440,8 @@ def build(A):
 
     add(h2('The input capacitor'))
     add(p('With no bulk capacitor, C<sub>in</sub> is a film capacitor that '
-          'absorbs switching ripple and nothing else. Making it large is not '
-          'conservative: it holds charge across the zero crossing and '
+          'absorbs switching ripple and nothing else. A large value is not '
+          'the safe choice: it holds charge across the zero crossing and '
           'distorts the line current, so it is a THD term, not a filter '
           'term.'))
     add(eq(r'C_{in}\;=\;3\,\frac{\mathrm{nF}}{\mathrm{W}}\times P_{in}', key='Cin'))
@@ -1484,7 +1477,7 @@ def build(A):
     add(p('This screening form uses the <i>allowed</i> &Delta;v rather than '
           'the achieved ripple, because it is asked before the bank exists. '
           'On the specification below the two come out close, and loosening '
-          '&Delta;v to 10&nbsp;%% would hand the decision to hold-up '
+          '&Delta;v to 10&nbsp;%% would make hold-up the deciding condition '
           'instead.' % {}))
     add(fig('f19_cout_criterion',
             'Both sizing conditions fall as 1/V<sub>out</sub>&sup2;, so only '
@@ -1493,7 +1486,7 @@ def build(A):
             'is the capacitance that holds it.'))
     ext(bullets([
         'Include the <b>2f<sub>l</sub> component</b> in the ripple current. '
-        'The switching-frequency part alone is well short of the truth: the '
+        'The switching-frequency part alone is far too small: the '
         '2f<sub>l</sub> envelope carries a comparable rms of its own, and '
         'the two are orthogonal so they add in quadrature.',
         'With a centre-tapped secondary, judge the capacitor ripple current '
@@ -1514,8 +1507,8 @@ def build(A):
     ext(bullets([
         'Rate the primary switches on the <b>composite tank peak</b>, not '
         'on the reflected load current. The load component alone under-rates '
-        'the device by roughly a tenth, because the magnetising current is '
-        'missing from it.',
+        'the device by more than a tenth here, because the magnetising '
+        'current is missing from it.',
         'Divide currents by the number of devices actually in parallel before '
         'judging stress. Tabulated currents are <b>per switch position</b> on '
         'the primary and <b>per leg</b> on the secondary; a centre-tapped leg '
@@ -1550,9 +1543,9 @@ def build(A):
           'two jobs &mdash; it senses the zero crossing and it supplies '
           'V<sub>CC</sub> &mdash; and the second job caps its turns ratio, '
           'since the rectified auxiliary voltage at OVP2 must stay under the '
-          'V<sub>CC</sub> rating. That cap is often the binding constraint on '
-          'the winding. Where V<sub>CC</sub> is supplied from elsewhere, as it '
-          'is here, the cap does not exist: the winding senses only, its '
+          'V<sub>CC</sub> rating. That limit is often what decides the '
+          'winding. Where V<sub>CC</sub> is supplied from elsewhere, as it '
+          'is here, the limit does not exist: the winding senses only, its '
           'voltage is set by whatever ratio the ZCD divider is designed '
           'around, and the sole remaining constraint is that the turns come '
           'out whole. A ratio check carried over from the self-supplied case '
@@ -1572,8 +1565,8 @@ def build(A):
              'inconsistently, so whatever it computes to has to be confirmed '
              'by measuring f<sub>sw</sub>(&theta;) on hardware.'))
     add(p('That ratio is also what the transformer tolerance has to fit '
-          'inside, and this is easy to miss because the two live in different '
-          'documents. Since f<sub>o</sub> = 1/(2&pi;&radic;(L<sub>open</sub>'
+          'inside, and this is easy to miss because the two numbers are in '
+          'different documents. Since f<sub>o</sub> = 1/(2&pi;&radic;(L<sub>open</sub>'
           'C<sub>r</sub>)), a <b>low</b> open-circuit inductance raises '
           'f<sub>o</sub>. The fall that can be tolerated is'))
     add(eq(r'\frac{\Delta L}{L}\;=\;1-\frac{1}{k_{floor}^{2}}', key='Ldrop'))
@@ -1597,15 +1590,15 @@ def build(A):
     add(p('The output is a capacitor fed by a constant-power source, so the '
           'control-to-output transfer is a <b>pure integrator</b>: '
           '&minus;90&deg; at every frequency. That makes the loop easy to '
-          'compensate and hard to place, because the crossover is set by a '
-          'constraint that has nothing to do with stability.'))
+          'stabilise but hard to place, because the crossover frequency is '
+          'set by a constraint that has nothing to do with stability.'))
     add(p('Any 2f<sub>l</sub> ripple that survives the loop and reaches the '
           'feedback pin becomes a power command that varies over the line '
           'cycle, and therefore input current distortion &mdash; mostly third '
           'harmonic. Raising the crossover reduces output ripple and '
           '<b>increases</b> distortion. The two constraints pull in opposite '
-          'directions, and the practical answer is in the high teens of '
-          'hertz.'))
+          'directions, and the practical answer is a crossover between 15 and '
+          '20&nbsp;Hz.'))
     add(p('The compensator is a Type&nbsp;II network placed by the Venable '
           'K-factor method. With &alpha;<sub>v</sub> the ratio between the '
           'error-amplifier gain at 2f<sub>l</sub> and the gain the loop needs '
@@ -1613,8 +1606,8 @@ def build(A):
     add(eq(r'K_{v}=\frac{1}{2\alpha_{v}}\left[(1+\alpha_{v}^{2})\tan\Phi_{M}'
            r'+\sqrt{(1+\alpha_{v}^{2}\tan\Phi_{M})^{2}'
            r'+4\alpha_{v}^{2}}\;\right]', key='Kv'))
-    add(p('K<sub>v</sub> puts the zero and the pole the same factor either '
-          'side of the crossover. That is what lands the phase bump where it '
+    add(p('K<sub>v</sub> puts the zero and the pole the same factor below '
+          'and above the crossover. That places the phase boost where it '
           'is needed:'))
     add(eq(r'f_{MB}=\frac{1}{2\pi}\sqrt{\frac{G_{o}K_{v}EA_{o}}{\Gamma_{v}}},'
            r'\qquad f_{p}=K_{v}f_{MB},\qquad f_{z}=\frac{f_{MB}}{K_{v}}', key='fMB'))
@@ -1624,7 +1617,7 @@ def build(A):
           'noise.'))
 
     add(h2('Gain margin, and why it needs checking'))
-    add(p('Phase margin alone does not close the stability argument. Above '
+    add(p('Phase margin alone does not prove stability. Above '
           'f<sub>px</sub> this network has one zero against two poles, so the '
           'phase heads for &minus;270&deg; and <b>&minus;180&deg; is crossed '
           'at a finite frequency</b>. That crossing needs no root search '
@@ -1632,18 +1625,21 @@ def build(A):
           'taking the tangent of both sides leaves one square root,'))
     add(eq(r'f_{180}=\sqrt{\,f_{p}f_{px}-f_{z}(f_{p}+f_{px})\,}'
            r'\,,\qquad GM=-20\log_{10}|T(f_{180})|', key='f180'))
-    add(p('<b>A negative value under the root is the answer, not an '
-          'error.</b> It means the phase never reaches &minus;180&deg;, so '
-          'the gain margin is '
-          'infinite. Judge the result against 6&nbsp;dB as a floor and '
+    add(p('<b>The value under the root is positive whenever the zero sits '
+          'well below both poles</b>, which is what the K-factor placement '
+          'gives. If it ever came out negative the loop would not be extra '
+          'safe: the two poles would pull the phase below &minus;180&deg; '
+          'before the zero could lift it, at every frequency, so the phase '
+          'margin at any crossover would be negative. Judge the gain margin '
+          'against 6&nbsp;dB as a floor and '
           '10&nbsp;dB as a comfortable target. With a crossover in the tens '
           'of hertz the margin is usually large in this topology &mdash; '
           'which is a reason to compute it, not a reason to assume it.'))
 
     add(h2('Feedback ripple against the burst threshold'))
     add(p('A crossover this low leaves 2f<sub>l</sub> ripple on the feedback '
-          'pin. Because that pin is a power command, the ripple walks the '
-          'commanded power up and down every half line cycle; if it straddles '
+          'pin. Because that pin is a power command, the ripple moves the '
+          'commanded power up and down every half line cycle; if it crosses '
           'the burst-entry threshold the converter chatters in and out of '
           'burst. The ripple amplitude at the burst point is'))
     add(eq(r'\Delta V_{FB}\;=\;\frac{P_{in,BM}}{V_{out}}\,'
@@ -1679,7 +1675,7 @@ def build(A):
 
     add(h2('The specification, sorted by what kind of number it is'))
     add(p('A specification sheet usually runs all of its numbers together in '
-          'one table, and that is where a good deal of later trouble starts. '
+          'one table, and that is where much later trouble starts. '
           'Four different kinds of quantity are in there. Some are imposed '
           'from outside and cannot be traded. Some were chosen by the '
           'designer and could have been chosen otherwise. Some are '
@@ -1702,8 +1698,8 @@ def build(A):
               '%(Thold).0f ms down to %(Vomin).0f V, at 100 Vac, worst line '
               'phase' % V]],
             widths=[CW * 0.42, CW * 0.18, CW * 0.40], key='spec-given'))
-    add(p(('Two of these four carry a qualifier that is easy to drop and '
-           'expensive to drop. <b>The worst line frequency is the lowest</b>, '
+    add(p(('Two of these four have a condition attached that is easy to '
+           'forget and costly to forget. <b>The worst line frequency is the lowest</b>, '
            'because the longest line period gives the largest ripple and the '
            'shortest hold-up, so everything that depends on f<sub>l</sub> '
            'uses %(flmin).0f&nbsp;Hz here, not 50 or 60. And '
@@ -1862,7 +1858,7 @@ def build(A):
               '<b>%(kPloss).3f</b>' % V]],
             widths=[CW * 0.34, CW * 0.18, CW * 0.26, CW * 0.10],
             key='margins'))
-    add(note('<b>k below 1 is a result, not a failed build.</b> '
+    add(note('<b>k below 1 is a result, not a failed calculation.</b> '
              'k<sub>Ploss</sub> = %(kPloss).3f says the standing primary '
              'device spends %(a).2f&nbsp;W against a %(b).0f&nbsp;W budget. '
              'The budget is itself a choice, so the ratio could be made to '
@@ -1884,8 +1880,8 @@ def build(A):
 
     # ------------------------------------------------ the chain, step by step
     add(h2('Following the numbers through'))
-    add(p('The table above is the destination. This is the road: every '
-          'quantity in the order it was actually computed, with what it was '
+    add(p('The table above is where the design ends. This is how it got '
+          'there: every quantity in the order it was actually computed, with what it was '
           'computed from. Read down the &ldquo;from&rdquo; column and it is '
           'a chain &mdash; nothing in it appears before the things it needs, '
           'which is the whole reason the design procedure is in that order.'))
@@ -1935,7 +1931,7 @@ def build(A):
              ['12', 'C<sub>r</sub>', '%(Crc).2f &rarr; %(Cr).0f nF' % V,
               ER('fr'),
               '1/(2&pi; f<sub>r</sub> &times; design impedance), then '
-              'rounded up hard to buy Q margin'],
+              'then rounded up on purpose, to gain Q margin'],
              ['13', 'L<sub>r</sub>', '%(Lrc).2f &rarr; %(Lr).0f &micro;H' % V,
               ER('fr'),
               'whatever pairs with the selected C<sub>r</sub> at '
@@ -1967,8 +1963,8 @@ def build(A):
             widths=[CW * 0.055, CW * 0.22, CW * 0.165, CW * 0.06,
                     CW * 0.50],
             key='chain'))
-    add(p('Six of those rows do the real work, and they are worth seeing '
-          'opened out. Each one is the equation named beside it, with this '
+    add(p('Six of those rows carry the real decisions, so they are written '
+          'out in full. Each one is the equation named beside it, with this '
           'design&rsquo;s numbers put in:'))
     ext(bullets([
         '<b>Row 5, the turns ratio.</b> Equation&nbsp;%(e)s is inverted: '
@@ -2015,7 +2011,7 @@ def build(A):
         '&nbsp;=&nbsp; %(Z0s).2f/%(Rac).2f &nbsp;=&nbsp; <b>%(Qpk).3f</b>, '
         'against the %(QZVS).3f cap of row 10.' % dict(V, e=ER('M')),
     ]))
-    add(note('<b>Steps 12, 15 and 18 are where the judgement is.</b> '
+    add(note('<b>Steps 12, 15 and 18 are the judgement calls.</b> '
              'Everything else in that table is arithmetic that any two '
              'engineers would reproduce identically. C<sub>r</sub> was taken '
              'to %(Cr).0f&nbsp;nF against a calculated %(Crc).1f&nbsp;nF and '
@@ -2033,7 +2029,7 @@ def build(A):
             align={1: 'CENTER', 2: 'CENTER', 3: 'CENTER', 4: 'CENTER',
                    5: 'CENTER'}))
     add(h2('ZVS over the whole operating space'))
-    add(p('The closed form of Section&nbsp;' + SR('ZVS verification') + ' reads %(TzcCF).0f&nbsp;ns on this tank against a swept %(Tzc).0f&nbsp;ns, so it understates the margin by %(mag).0f&nbsp;%%; on another tank in the same family it overstates by about 23&nbsp;%%. Read with &lambda;<sub>act</sub>&nbsp;=&nbsp;%(lam).3f instead of the design &lambda;&nbsp;=&nbsp;%(lamreq).3f it returns %(TzcCFact).0f&nbsp;ns &mdash; capacitive, for a tank that is well inside the inductive region. So the sweep is what this design is held to.'
+    add(p('The closed form of Section&nbsp;' + SR('ZVS verification') + ' reads %(TzcCF).0f&nbsp;ns on this tank against a swept %(Tzc).0f&nbsp;ns, so it understates the margin by %(mag).0f&nbsp;%%; on another tank in the same family it overstates by about 23&nbsp;%%. Read with &lambda;<sub>act</sub>&nbsp;=&nbsp;%(lam).3f instead of the design &lambda;&nbsp;=&nbsp;%(lamreq).3f it returns %(TzcCFact).0f&nbsp;ns &mdash; capacitive, for a tank that is well inside the inductive region. So this design is judged by the sweep, not by the closed form.'
           % dict(V, mag=abs(V['TzcCFpc']), lamreq=A.SH['λ'])))
     _z = dict(V, **ZVS_WORST)
     if ZVS_WORST['same']:
@@ -2069,7 +2065,7 @@ def build(A):
 
     add(h2('Which side of resonance this design runs on'))
     add(p('Section&nbsp;' + SR('Which side of resonance the converter runs on') + ' says the turns ratio decides this. With '
-          'n<sub>T</sub>&nbsp;=&nbsp;%(nT).2f the answer is below. At all '
+          'n<sub>T</sub>&nbsp;=&nbsp;%(nT).2f the answer is in the table below. At all '
           'but the lowest line conditions the tank spends part of every line '
           'cycle above f<sub>r</sub>. There the secondary loses zero-current '
           'turn-off, so the rectifier body diode and the SR dead time both '
@@ -2199,8 +2195,8 @@ def build(A):
              'being chosen.' % dict(V, nTx=V['nT'] + 0.4)))
 
     # ------------------------------------------------ output bank as sized
-    add(p('Reduced to what a supplier can measure at the terminals, that '
-          'becomes the sheet below. Nothing on it is a construction '
+    add(p('Reduced to what a supplier can measure at the terminals, this '
+          'gives the specification sheet below. Nothing on it is a construction '
           'instruction, and L<sub>&mu;</sub> is deliberately absent &mdash; '
           'Section&nbsp;' + SR('What the transformer specification must say')
           + ' says why.'))
@@ -2268,7 +2264,7 @@ def build(A):
           'screening inequality is worth carrying. At k = '
           'V<sub>o,min</sub>/V<sub>out</sub> = %(k).3f it reads %(lhs).3f '
           'against %(rhs).3f: the left side is larger, so ripple wins. '
-          'Loosen &Delta;v to 10&nbsp;%% and the sides swap.'
+          'Relax &Delta;v to 10&nbsp;%% and the two sides swap.'
           % dict(V, k=V['Vomin'] / V['Vout'], lhs=V['ripLHS'],
                  rhs=V['ripRHS'])))
     add(tbl('What the selected bank then delivers, and what it has to '
@@ -2332,13 +2328,13 @@ def build(A):
                      + A.SH['P.RCS'] + A.SH['P.Cout']),
               'and the magnetics are not in it']],
             widths=[CW * 0.34, CW * 0.14, CW * 0.52], key='loss'))
-    add(note('<b>That disagreement is the efficiency assumption being '
-             'caught.</b> The itemised device losses already come to '
+    add(note('<b>That disagreement shows that the efficiency assumption is '
+             'optimistic.</b> The itemised device losses already come to '
              '%(t).1f&nbsp;W against the %(b).1f&nbsp;W that '
              '&eta;<sub>HB</sub> = %(etaHB).0f&nbsp;%% allows the LLC stage, '
              'and the transformer is not even in the list. So the assumption '
              'is optimistic, which is why it is filed as an assumption rather '
-             'than as a figure. It is not load-bearing: taking 95&nbsp;%% '
+             'than as a figure. Nothing important depends on it: taking 95&nbsp;%% '
              'instead moves R<sub>ac</sub> and R<sub>CS</sub> by about '
              '3&nbsp;%% and nothing downstream is sensitive to that. What it '
              'does change is the thermal design, and that is settled by '
@@ -2411,7 +2407,7 @@ def build(A):
     add(tbl('And what that loop then measures as.',
             [['Quantity', 'Value', 'Against'],
              ['Crossover f<sub>cross</sub>', '%(fcross).2f Hz' % V,
-              'the high teens of hertz this topology lands in'],
+              'the 15 to 20 Hz this topology lands in'],
              ['Phase margin', '%(PM).2f&deg;' % V, '45&deg; as a floor'],
              ['Gain margin', '%(GM).2f dB at %(f180).0f Hz' % V,
               '6 dB floor, 10 dB comfortable'],
@@ -2459,7 +2455,7 @@ def build(A):
           'adds a fixed idle time:'))
     add(eq(r'\frac{T_{sw}}{2}=\frac{C_{T}V_{ref}}'
            r'{\frac{V_{ref}}{R_{T}}+I_{EA}}+T_{idle}', key='Tsw'))
-    add(p('<b>I<sub>EA</sub> is the only actuator in the converter.</b> More '
+    add(p('<b>I<sub>EA</sub> is the only control input in the converter.</b> More '
           'current means a higher frequency, which means less power. '
           'Everything the control loop does, it does through this one term.'))
     add(p('C<sub>T</sub> is chosen first because it sets the <i>span</i>, and '
@@ -2546,7 +2542,7 @@ def build(A):
           + '; the second is the OCP1 trip point. Opened out, equation&nbsp;'
           + ER('RCS') + ' is two divisions &mdash; 16.8/P<sub>in</sub> and '
             '0.55/I<sub>Lr,pk</sub> &mdash; and they give '
-            '%(a).2f and %(b).2f&nbsp;m&Omega;, so the power law binds. '
+            '%(a).2f and %(b).2f&nbsp;m&Omega;, so the power law is the limiting one. '
             'Dissipation then fixes how many resistors that has to be split '
             'over. At the worst switching cycle that is %(P).2f&nbsp;W, so '
             '<b>%(N).0f in parallel</b>; %(R1).0f&nbsp;m&Omega; each gives '
@@ -2654,8 +2650,8 @@ def build(A):
                  t=A.SH['V.OVP1_out'], naux=A.SH['n.aux'],
                  rl=A.SH['R.ZCD_L'], rh=A.SH['R.ZCD_H'],
                  su=A.SH['V.out_SUend'])))
-    add(note('<b>Two ways to get this wrong, both of which stop the converter '
-             'dead.</b> Swapping the two resistors inverts the ratio and OVP1 '
+    add(note('<b>Two ways to get this wrong, and both stop the converter '
+             'completely.</b> Swapping the two resistors inverts the ratio and OVP1 '
              'trips at well under a volt of output, so the converter never '
              'starts. And the winding polarity must make ZCD <i>positive</i> '
              'when the low side of leg&nbsp;1 is on; reversed, the bridge hard '
@@ -2682,7 +2678,7 @@ def build(A):
         'V<sub>CCon</sub> = 17&nbsp;V down to V<sub>CCoff</sub> = '
         '8&nbsp;V for as long as it takes the supply to take over. The '
         'start-up unit stops %s&nbsp;ms after V<sub>CCon</sub> is reached, '
-        'whether or not anything has.' % '120',
+        'whether or not the supply has taken over by then.' % '120',
         'Where a linear regulator feeds V<sub>CC</sub>, put a diode between '
         'its output and the pin so the start-up charging current cannot be '
         'pushed back into it.',
@@ -2767,12 +2763,12 @@ def build(A):
         'Putting the oscillator floor below f<sub>o</sub> and relying on the '
         'anti-capacitive protection to catch it.',
         'Checking the turns ratio instead of the reflected voltage, so that '
-        'n and n<sub>T</sub> are with no warning interchanged.',
+        'n and n<sub>T</sub> are quietly interchanged.',
         'Rating the primary switch on the reflected load current rather than '
         'the composite tank peak.',
         'Omitting the 2f<sub>l</sub> component from the output capacitor '
         'ripple current, or judging it per winding on a centre tap.',
-        'Rounding L<sub>m</sub> up, which without showing it removes the ZVS margin.',
+        'Rounding L<sub>m</sub> up, which quietly removes the ZVS margin.',
         'Trusting the closed-form ZVS estimate instead of sweeping the '
         'selected tank &mdash; or sweeping only the design corner, which is '
         'where the <i>gain</i> is worst and not always where ZVS is.',
@@ -2828,7 +2824,7 @@ def build(A):
         '&lambda;<sub>act</sub> and the Q of the moment, and know that its '
         'error has no fixed sign.',
         '<b>Record calculated and selected values separately</b>, and make '
-        'every downstream check read the selected one. A sheet that with no warning '
+        'every downstream check read the selected one. A sheet that quietly '
         'reads the calculated value reports margins the hardware does not '
         'have.']))
 
@@ -2843,8 +2839,8 @@ def build(A):
         'network hangs off it.',
         '<b>Cold start into the full output bank.</b> A %(Cout).1f&nbsp;mF '
         'bank is a far heavier start-up load than a conventional design '
-        'presents, and the start-up window is finite. This risk is created by '
-        'the architecture, so it has no precedent to borrow from.' % V,
+        'presents, and the start-up window is finite. This risk is new to '
+        'this architecture, so there is no earlier design to compare with.' % V,
         '<b>ZVS at the half-bridge morphing edge</b> (245&nbsp;'
         'V<sub>pk</sub>, full load), on the gate and mid-point waveforms. '
         'The calculation says %(cTzc).0f&nbsp;ns against %(tD).0f&nbsp;ns; '
@@ -2867,7 +2863,7 @@ def build(A):
         '&mdash; %(ICout).2f&nbsp;A rms calculated, %(Icout1).2f&nbsp;A per '
         'capacitor.' % V,
         '<b>Device temperatures, primary and secondary.</b> This is where the '
-        'accepted loss-budget miss is settled: measure it in <b>half-bridge '
+        'accepted loss-budget shortfall is decided: measure it in <b>half-bridge '
         'morphing</b>, above 245&nbsp;V<sub>pk</sub>, because in full bridge '
         'the standing device is switching and dissipates far less.',
         '<b>Feedback ripple against the burst threshold</b> at light load.',
@@ -2977,8 +2973,8 @@ def build(A):
              ['Loss and thermal resistance',
               'computing loss from the 25 &deg;C R<sub>DS(on)</sub> and then '
               'asking for a heatsink that holds 125 &deg;C',
-              'The required thermal resistance comes out roughly twice as '
-              'easy as it is'],
+              'The required thermal resistance comes out only about half as '
+              'demanding as it really is'],
              ['ZVS check',
               'the closed-form shortcut, at the design Q and with the design '
               '&lambda;',

@@ -39,7 +39,7 @@ def an_above_below(save, foot, R, sweep, FR):
             va='bottom')
     ax.axhspan(1.0, 2.6, color=CYA, alpha=0.10)
     ax.axhspan(0.0, 1.0, color=YEL, alpha=0.13)
-    ax.text(176, 1.9, 'ABOVE resonance\ntank BUCKS  ·  M < 1\n'
+    ax.text(176, 1.72, 'ABOVE resonance\ntank BUCKS  ·  M < 1\n'
                       'secondary conducts the whole half period',
             color=NAVY, fontsize=10, ha='right', va='center',
             bbox=dict(boxstyle='round,pad=0.4', fc='white', ec=CYA, lw=1.2))
