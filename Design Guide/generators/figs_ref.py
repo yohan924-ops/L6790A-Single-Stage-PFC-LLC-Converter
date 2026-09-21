@@ -1648,13 +1648,17 @@ def an_flyback_llc(save, foot):
 
     # ========================================================= the flyback
     ax = _ax(fig, [0.030, 0.655, 0.462, 0.280], *LIM)
-    XT_F, XP_F, XS_F = 4.30, 3.78, 4.82
+    XT_F = 4.30
     #  The secondary polarity dot is at the BOTTOM here and at the top in
     #  the LLC panel.  That one dot is the whole difference: inverted, the
     #  rectifier can only conduct while the switch is OFF, which is what
     #  makes the two winding currents exclusive and the rest of this
     #  figure follow from it.
     t1 = X.xfmr(ax, XT_F, 2.1, hp=3.2, hs=3.2, gap=0.52, s_dot='bot')
+    #  Read the lead lines back rather than assuming x +- gap: xfmr widens
+    #  the gap when the turns would otherwise lie on the core bars, and
+    #  everything hung off the primary lead has to move with it.
+    XP_F, XS_F = t1['p_top'][0], t1['s_top'][0]
     S.wire(ax, [t1['p_top'], (XP_F, YT), (0.80, YT)])
     _batt(ax, 0.80, YT, YB, 'V$_{in}$')
     S.wire(ax, [(0.80, YB), (XP_F, YB)])
@@ -1670,7 +1674,7 @@ def an_flyback_llc(save, foot):
 
     # ============================================================= the LLC
     ax2 = _ax(fig, [0.508, 0.655, 0.462, 0.280], *LIM)
-    XT_L, XP_L, XS_L = 7.30, 6.78, 7.82
+    XT_L = 7.30
     #  A half-bridge LEG, drawn out, because the gate row below has to refer
     #  to something.  With a bare square-wave source on the page the reader
     #  was being shown two gate waveforms and no gates.  The supply is a
@@ -1678,6 +1682,8 @@ def an_flyback_llc(save, foot):
     #  is normally drawn, and the two units it saves on the left are what
     #  the tank needs on the right.
     XLEG, YM, XRAIL = -0.60, 1.65, -1.80
+    t2 = X.xfmr(ax2, XT_L, 2.1, hp=3.2, hs=3.2, gap=0.52)
+    XP_L, XS_L = t2['p_top'][0], t2['s_top'][0]
     S.wire(ax2, [(XRAIL, YT), (XLEG, YT)])
     S.dot(ax2, XRAIL, YT)
     S.label(ax2, XRAIL + 0.45, YT + 0.52, 'V$_{in}$', size=11, ha='left')
@@ -1701,7 +1707,6 @@ def an_flyback_llc(save, foot):
     S.wire(ax2, [d, a])
     S.wire(ax2, [b, (4.00, YM), (4.00, 3.7), (XP_L, 3.7)])
 
-    t2 = X.xfmr(ax2, XT_L, 2.1, hp=3.2, hs=3.2, gap=0.52)
     S.wire(ax2, [t2['p_bot'], (XP_L, YB)])
     #  L_m is drawn as its own shunt because its current is one of the four
     #  rows below; without it on the page i_mu has no branch to be the

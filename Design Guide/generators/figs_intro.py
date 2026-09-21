@@ -109,7 +109,12 @@ def an_fha_steps(save, foot):
         S.wire(ax, [b, c])
         S.wire(ax, [d, (x_n, YS_)])
         S.dot(ax, x_n, YS_)
-        S.shunt(ax, x_n, YS_, YR, 'ind', 'L$_m$', frac=0.4)
+        #  L_m's name goes to the LEFT of its coil.  On the right it is in
+        #  the channel between this coil and the transformer's primary
+        #  lead, which is the narrowest part of the panel.
+        S.shunt(ax, x_n, YS_, YR, 'ind', None, frac=0.4)
+        S.label(ax, x_n - 0.30, (YS_ + YR) / 2.0, 'L$_m$', size=10,
+                ha='right')
         S.dot(ax, x_n, YR)                       # L_m's foot is a T on the rail
 
     # ---- (a) as built
@@ -117,14 +122,20 @@ def an_fha_steps(save, foot):
     S.frame(ax, -0.3, 7.6, -1.3, 3.5, '1   as built')
     right, bottom = drive(ax, 'sq', None)
     series(ax, right, 1.95, 2.9, 3.7)
-    t = S.xfmr(ax, 4.95, YS_, hp=1.6, hs=1.6, gap=0.30)
+    #  The transformer sits a little left of where it used to, and the
+    #  load block is placed from the secondary's own lead line rather than
+    #  at a fixed x: xfmr widens its gap when the turns would otherwise lie
+    #  on the core bars, and the first thing that move ran into was this
+    #  block - the secondary's polarity dot ended up inside it.
+    t = S.xfmr(ax, 4.60, YS_, hp=1.6, hs=1.6, gap=0.30)
     #  up from the node and across: orthogonal, not the slanted lead the
     #  first version drew from the node straight to the winding's top
     S.wire(ax, [(3.7, YS_), (3.7, t['p_top'][1]), t['p_top']])
     #  the primary's return: down to the rail, and the rail back to the
     #  source - the rail used to stop at L_m and leave this lead in the air
     S.wire(ax, [t['p_bot'], (t['p_bot'][0], YR), (XS_, YR), bottom])
-    bl, _ = S.box(ax, 6.55, YS_, 1.9, 1.9, 'rectifier\n+ load', size=9.5)
+    bl, _ = S.box(ax, t['s_top'][0] + 0.52 + 0.90, YS_, 1.8, 1.9,
+                  'rectifier\n+ load', size=9.5)
     S.wire(ax, [t['s_top'], (bl[0], t['s_top'][1])])
     S.wire(ax, [t['s_bot'], (bl[0], t['s_bot'][1])])
 

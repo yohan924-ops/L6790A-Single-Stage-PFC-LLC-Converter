@@ -331,6 +331,14 @@ def xfmr(ax, x, y, hp=1.80, hs=None, np_t=None, ns_t=None, ct=False,
     own turns they read as two unrelated inductors with a pair of bars
     between them, which is what the first version did.
 
+    But not touching it.  `gap` is a REQUEST, not the answer: the turn
+    radius comes from this axes' scale, so the same gap that clears the
+    bars in one drawing has the turns lying on them in another, and the
+    caller cannot know which.  The gap that gets used is therefore the
+    larger of what was asked for and what the turns need, and the caller
+    reads the lead lines back out of the returned terminals rather than
+    assuming x +- gap.
+
     Every winding that is drawn as its own symbol gets its own polarity
     dot.  On a centre tap that means two dots, not one: the halves are
     continuous and wound the same way, so the lower half's dot is the tap
@@ -363,7 +371,6 @@ def xfmr(ax, x, y, hp=1.80, hs=None, np_t=None, ns_t=None, ct=False,
         hh = (hs / 2.0 if ct else hs) - 2 * lead
         ns_t = min(4, max(2, int(round(hh / (2.0 * r)))))
     mark = len(getattr(ax, '_syms', []))
-    xp, xs = x - gap, x + gap
     #  The dot offsets are a FRACTION of the turn radius, not a constant.
     #  Fixed at 0.17 they were fine on the mode panels, whose turns are
     #  small, and on a transformer drawn three times that size the tap's
@@ -371,6 +378,19 @@ def xfmr(ax, x, y, hp=1.80, hs=None, np_t=None, ns_t=None, ct=False,
     rp = min(r, abs(hp - 2 * lead) / (2.0 * max(np_t, 1)))
     rs = min(r, abs((hs / (2.0 if ct else 1.0)) - 2 * lead)
              / (2.0 * max(ns_t, 1)))
+    #  The turns bulge TOWARDS the core, so the lead line has to stand off
+    #  by the core half-width, the turn radius, and a margin that still
+    #  reads as a gap once the page has shrunk the figure.  CLEAR is that
+    #  margin in turn radii; at 1.5 every transformer in this document
+    #  clears its bars by about two points on A4, where before this the
+    #  closest was a quarter of a point and one was a point and a half
+    #  INSIDE them.
+    CLEAR = 1.5
+    gap = max(gap, core + (1.0 + CLEAR) * max(rp, rs))
+    xp, xs = x - gap, x + gap
+    #  what the page actually gets, for figcheck to convert into points
+    ax._xfmr_clear = getattr(ax, '_xfmr_clear', []) + [
+        gap - core - rp, gap - core - rs]
     op, os_ = max(0.17, 0.55 * rp), max(0.17, 0.55 * rs)
     ytp, ybp = y + hp / 2.0, y - hp / 2.0
     yts, ybs = y + hs / 2.0, y - hs / 2.0

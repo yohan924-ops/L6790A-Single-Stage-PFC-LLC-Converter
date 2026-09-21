@@ -240,6 +240,7 @@ def check(fig, name, margin=3.0):
     bad.extend(topology(fig))
     bad.extend(clipped(fig))
     bad.extend(tiny(fig, name))
+    bad.extend(windings(fig, name))
     return bad
 
 
@@ -276,6 +277,49 @@ def _placement(name):
             out[m.group(1)] = _CW_PT * float(w.group(1)) if w else _CW_PT
         _PLACE = out
     return _PLACE.get(name, _CW_PT)
+
+
+def _page_pt(fig, name, ax):
+    """page points per data unit on this axes, once A4 has shrunk the figure"""
+    fw, fh = fig.get_size_inches()
+    w = _placement(name)
+    h = w * fh / fw
+    if h > _HCAP_PT:
+        w *= _HCAP_PT / h
+    sc = w / (fw * 72.0)
+    x0, x1 = ax.get_xlim()
+    y0, y1 = ax.get_ylim()
+    p = ax.get_position()
+    inch = min(p.width * fw / max(abs(x1 - x0), 1e-9),
+               p.height * fh / max(abs(y1 - y0), 1e-9))
+    return inch * 72.0 * sc
+
+
+def windings(fig, name, floor=1.5):
+    """Transformer turns resting on their own core bars.
+
+    schemx.xfmr records what standoff it actually used; this converts it
+    to page points and subtracts the two stroke half-widths, because what
+    a reader sees is ink against ink, not centre line against centre line.
+
+    Nothing here shows up in the PNG at screen size, which is how it hid:
+    the worst case in this document was a turn a point and a half INSIDE
+    the bars, and the eye only caught it at four times magnification on a
+    figure that had already been checked and shipped.
+    """
+    bad = []
+    for ax in fig.axes:
+        cl = getattr(ax, '_xfmr_clear', None)
+        if not cl:
+            continue
+        upt = _page_pt(fig, name, ax)
+        for c in cl:
+            edge = c * upt - 1.2 - 1.0      # core lw 2.4, coil lw 2.0
+            if edge < floor:
+                bad.append(('winding', 'turns clear the core bars by only '
+                            '%.2f pt on the page (floor %.1f)'
+                            % (edge, floor)))
+    return bad
 
 
 def tiny(fig, name, floor=6.5):
