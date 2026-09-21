@@ -32,7 +32,7 @@ def an_llc_stage(save, foot):
     at rest and the group names written above it.
     """
     import figs_modes8 as F
-    fig, ax = plt.subplots(figsize=(13.0, 6.4))
+    fig, ax = plt.subplots(figsize=(9.35, 4.60))
     fig.subplots_adjust(left=0.01, right=0.99, top=0.99, bottom=0.10)
     rest = dict(S1='plain', S2='plain', S3='plain', S4='plain',
                 D1=True, D2=True)
@@ -68,9 +68,9 @@ def an_llc_stage(save, foot):
     #  Measured, not guessed: the pocket between the legs is 3.85 units and
     #  'the tank is driven with' sets 3.62 wide, so its halo ate into the
     #  right leg.  'that drives the tank' is 3.19 and clears both.
-    ax.annotate('the square wave\nthat drives the tank',
+    ax.annotate('the square wave\ndriving the tank',
                 xy=(F.XL + 1.15, F.YT), xytext=((F.XL + F.XR) / 2.0 + 0.05,
-                                                F.YMID - 0.75),
+                                                F.YMID - 1.35),
                 fontsize=10.5, color=MAG, ha='center', linespacing=1.4,
                 arrowprops=dict(arrowstyle='-|>', color=MAG, lw=1.6,
                                 connectionstyle='arc3,rad=0.20'))
@@ -89,7 +89,7 @@ def an_fha_steps(save, foot):
     the axes' position on the figure, and a tight_layout afterwards moved
     the panels under symbols sized for where they used to be.
     """
-    fig, axs = plt.subplots(1, 3, figsize=(14.4, 4.0))
+    fig, axs = plt.subplots(1, 3, figsize=(9.35, 2.60))
     fig.subplots_adjust(left=0.01, right=0.99, top=0.88, bottom=0.04,
                         wspace=0.06)
     XS_, YS_, YR = 0.55, 1.1, -0.9              # source; the return rail
@@ -115,7 +115,7 @@ def an_fha_steps(save, foot):
     # ---- (a) as built
     ax = axs[0]
     S.frame(ax, -0.3, 7.6, -1.3, 3.5, '1   as built')
-    right, bottom = drive(ax, 'sq', 'square\nwave')
+    right, bottom = drive(ax, 'sq', None)
     series(ax, right, 1.95, 2.9, 3.7)
     t = S.xfmr(ax, 4.95, YS_, hp=1.6, hs=1.6, gap=0.30)
     #  up from the node and across: orthogonal, not the slanted lead the
@@ -124,14 +124,14 @@ def an_fha_steps(save, foot):
     #  the primary's return: down to the rail, and the rail back to the
     #  source - the rail used to stop at L_m and leave this lead in the air
     S.wire(ax, [t['p_bot'], (t['p_bot'][0], YR), (XS_, YR), bottom])
-    bl, _ = S.box(ax, 6.55, YS_, 1.3, 1.9, 'rectifier\n+ load', size=9.5)
+    bl, _ = S.box(ax, 6.55, YS_, 1.9, 1.9, 'rectifier\n+ load', size=9.5)
     S.wire(ax, [t['s_top'], (bl[0], t['s_top'][1])])
     S.wire(ax, [t['s_bot'], (bl[0], t['s_bot'][1])])
 
     # ---- (b) referred
     ax = axs[1]
     S.frame(ax, -0.3, 7.6, -1.3, 3.5, '2   secondary referred to the primary')
-    right, bottom = drive(ax, 'sq', 'square\nwave')
+    right, bottom = drive(ax, 'sq', None)
     series(ax, right, 1.95, 3.1, 4.2)
     XR_ = 5.9
     S.wire(ax, [(4.2, YS_), (XR_, YS_)])
@@ -146,7 +146,7 @@ def an_fha_steps(save, foot):
     # ---- (c) FHA
     ax = axs[2]
     S.frame(ax, -0.3, 7.6, -1.3, 3.5, '3   first harmonic only')
-    right, bottom = drive(ax, 'ac', 'fundamental\nof the drive')
+    right, bottom = drive(ax, 'ac', None)
     series(ax, right, 1.95, 3.1, 4.2)
     S.wire(ax, [(4.2, YS_), (XR_, YS_)])
     S.shunt(ax, XR_, YS_, YR, 'res', 'R$_{ac}$')

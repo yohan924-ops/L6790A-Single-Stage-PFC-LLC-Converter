@@ -14,7 +14,7 @@ from schem import NAVY, MAG, CYA, GRN, PUR, GREY, LT, YEL
 
 def an_above_below(save, foot, R, sweep, FR):
     """f_sw(theta)/f_r for each equivalent input, with f_r marked"""
-    fig, ax = plt.subplots(figsize=(11.0, 5.0))
+    fig, ax = plt.subplots(figsize=(9.35, 4.25))
     CASES = [(R['Vin_min'], '173.2 Vac eq.  (HB morphing edge)', MAG),
              (225.0, '225 Vac eq.', CYA),
              (264.0, '264 Vac eq.  (mains maximum)', NAVY),
@@ -70,76 +70,149 @@ def an_above_below(save, foot, R, sweep, FR):
 
 
 def an_zvs_zcs(save, foot):
-    """which switch gets which soft-switching, and why"""
-    fig, axs = plt.subplots(1, 2, figsize=(12.6, 4.3))
-    t = np.linspace(0, 1, 600)
+    """which switch gets which soft-switching, and why
 
-    # ---------------- primary: ZVS
-    ax = axs[0]
-    ax.set_title('PRIMARY  —  zero VOLTAGE switching',
-                 fontsize=11.5, color=NAVY, pad=8)
-    v = np.where(t < 0.46, 1.0, np.where(t < 0.54, 1 - (t - 0.46) / 0.08, 0.0))
-    ax.plot(t, v, color=NAVY, lw=2.3, label='bridge midpoint')
-    i = 0.75 * np.sin(2 * np.pi * (t - 0.06))
-    ax.plot(t, i, color=MAG, lw=2.2, label='tank current')
-    ax.axvspan(0.46, 0.54, color=YEL, alpha=0.55)
-    ax.text(0.50, 1.32, 'dead time', ha='center', fontsize=10,
-            color='#8a6d00', fontweight='bold')
-    ax.annotate('current is still flowing when the gate turns off,\n'
-                'so it pulls the node down for free',
-                xy=(0.50, 0.5), xytext=(0.03, -1.05), fontsize=9.6,
+    Rebuilt after the question "is the tank current really that perfect a
+    sine, and has the dead time been taken into account?"  It was a sine,
+    and it had not.  Both panels now read the eight-interval model that the
+    mode sheets use, so the three figures cannot disagree.  The gate
+    waveforms are drawn as well: without them there is nothing in the
+    picture that says WHEN the next device turns on, and "the node reaches
+    zero before the next turn-on" is a claim about exactly that instant.
+    """
+    import figs as _F
+    import figs_modes8 as _M
+    from l6790 import sweep
+    R = _F.R
+    _, agg = sweep(R, R['Vin_min'], N=721)
+    FSW_FR = 0.70                       # the ratio the mode sheets are drawn at
+    T, e, ILR, ILM, IO, VA = _M.series(R['lam_a'], FSW_FR,
+                                       agg['comp_pk'], agg['ILm_pk'])
+
+    fig = plt.figure(figsize=(9.2, 6.0))
+    gs = fig.add_gridspec(3, 2, width_ratios=[1.15, 1.0],
+                          height_ratios=[0.78, 0.80, 1.22],
+                          hspace=0.20, wspace=0.22,
+                          left=0.085, right=0.985, top=0.895, bottom=0.175)
+    ag = fig.add_subplot(gs[0, 0])
+    av = fig.add_subplot(gs[1, 0], sharex=ag)
+    ai = fig.add_subplot(gs[2, 0], sharex=ag)
+    ar = fig.add_subplot(gs[:, 1])
+
+    # ================================================ primary: ZVS
+    ag.set_title('PRIMARY  —  zero VOLTAGE switching',
+                 fontsize=11.5, color=NAVY, pad=7)
+    #  the two dead times, on all three rows, so the sync is not a matter
+    #  of trusting the eye across panels
+    for a in (ag, av, ai):
+        for k in (2, 6):
+            a.axvspan(e[k], e[k + 2], color=YEL, alpha=0.55, lw=0)
+        a.set_xlim(0, 1)
+        a.set_xticks([])
+        for sp in ('top', 'right'):
+            a.spines[sp].set_visible(False)
+
+    def sq(a, b):
+        return np.where((T >= a) & (T < b), 1.0, 0.0)
+    ag.plot(T, 0.46 * sq(e[0], e[2]) + 0.54, color=NAVY, lw=2.2)
+    ag.plot(T, 0.46 * sq(e[4], e[6]), color=PUR, lw=2.2)
+    ag.text(-0.012, 0.77, 'S1, S4', ha='right', va='center', fontsize=10,
+            color=NAVY, fontweight='bold')
+    ag.text(-0.012, 0.23, 'S2, S3', ha='right', va='center', fontsize=10,
+            color=PUR, fontweight='bold')
+    ag.set_ylim(-0.22, 1.72)
+    ag.set_yticks([])
+    #  the band is 0.045 wide, so the two labels have to be stacked in y
+    #  rather than placed side by side - they collided at the same height
+    ag.text((e[2] + e[4]) / 2, 1.50, 'dead time', ha='center', va='bottom',
+            fontsize=10, color='#8a6d00', fontweight='bold')
+    ag.annotate('next turn-on', xy=(e[4], 0.46), xytext=(e[4] + 0.05, 0.98),
+                fontsize=10, color=PUR, ha='left',
+                arrowprops=dict(arrowstyle='-|>', color=PUR, lw=1.4))
+
+    av.plot(T, VA, color=NAVY, lw=2.3)
+    av.set_ylim(-0.28, 1.62)
+    av.set_yticks([0, 1])
+    av.set_yticklabels(['0', 'V$_{in}$'])
+    av.set_ylabel('node A', fontsize=10, color=NAVY)
+    #  to the RIGHT of the transition: to its left is the V_in level line
+    #  and the annotation sat straight on it
+    #  Short lines on purpose: one long line ran out of this panel and into
+    #  the one beside it, which is what the checker calls wrong-panel.
+    av.annotate('v$_A$ is already 0 when\nS2, S3 turn on —\nthat is ZVS',
+                xy=(e[4], 0.05), xytext=(e[4] + 0.055, 0.30), fontsize=10,
+                color=GRN, ha='left', linespacing=1.35,
+                arrowprops=dict(arrowstyle='-|>', color=GRN, lw=1.4))
+
+    ai.plot(T, ILR, color=MAG, lw=2.4, label='i$_{Lr}$  tank')
+    ai.plot(T, ILM, color=CYA, lw=2.2, ls='--', label='i$_{Lm}$  magnetising')
+    ai.axhline(0, color=GREY, lw=0.9)
+    ai.set_ylim(-1.62 * agg['comp_pk'], 1.72 * agg['comp_pk'])
+    ai.set_yticks([0])
+    ai.set_yticklabels(['0'])
+    ai.set_xlabel('one switching period', fontsize=10, color=NAVY)
+    ai.legend(loc='lower left', fontsize=10, ncol=2, framealpha=0.92)
+    ai.annotate('the load component is already gone:\nwhat is left to swing the node is i$_{Lm}$',
+                xy=(e[2], float(ILM[np.searchsorted(T, e[2])])),
+                xytext=(0.035, 1.12 * agg['comp_pk']), fontsize=10,
                 color=MAG, ha='left',
                 arrowprops=dict(arrowstyle='-|>', color=MAG, lw=1.4))
-    ax.text(0.62, 0.16, 'voltage reaches zero\nBEFORE the next turn-on',
-            fontsize=9.6, color=NAVY,
-            bbox=dict(boxstyle='round,pad=0.3', fc='white', ec=NAVY, lw=1.0))
-    ax.set_ylim(-1.5, 1.6)
-    ax.set_xticks([])
-    ax.set_yticks([])
-    ax.legend(loc='upper left', fontsize=9)
 
-    # ---------------- secondary: ZCS
-    ax = axs[1]
-    ax.set_title('SECONDARY  —  zero CURRENT switching (below f$_r$ only)',
-                 fontsize=11.5, color=NAVY, pad=8)
-    d = 0.72
-    s = np.where(t < d, np.sin(np.pi * t / d), 0.0)
-    ax.plot(t, s, color=GRN, lw=2.4, label='rectifier current')
-    ax.fill_between(t, 0, s, color=GRN, alpha=0.15)
-    ax.axvspan(d, 1.0, color=LT, alpha=0.9)
-    #  the interval after the current has reached zero is the secondary-off
-    #  part of the same half cycle (step 2 in the mode figures), not the
-    #  dead time - the note is careful about that word elsewhere
-    ax.text((d + 1) / 2, 0.5, 'secondary\noff (step 2)', ha='center',
-            fontsize=9.6, color=GREY)
-    ax.annotate('current reaches zero on its own,\n'
-                'so the rectifier turns off with no reverse recovery',
-                xy=(d, 0.02), xytext=(0.04, 0.78), fontsize=9.6, color=GRN,
+    # ================================================ secondary: ZCS
+    ar.set_title('SECONDARY  —  zero CURRENT switching (below f$_r$ only)',
+                 fontsize=11.5, color=NAVY, pad=7)
+    #  the same half period the left-hand panel shows, at the same f_sw/f_r
+    h = T <= 0.5
+    th, io = T[h] * 2.0, IO[h]                   # one half period, 0 to 1
+    ar.plot(th, io, color=GRN, lw=2.4, label='rectifier current')
+    ar.fill_between(th, 0, io, color=GRN, alpha=0.15)
+    d = 2.0 * e[1]                               # = f_sw / f_r
+    ar.axvspan(d, 1.0, color=LT, alpha=0.9, lw=0)
+    ar.text((d + 1) / 2, 0.45 * io.max(), 'secondary\noff (step 2)',
+            ha='center', fontsize=10, color=GREY)
+    #  Labelled AT the zero crossing, not from across the panel: the long
+    #  straight leader drawn before ran down the falling flank and read as
+    #  part of the waveform.
+    ar.plot([d], [0.0], 'o', color=GRN, ms=7, zorder=5)
+    #  under the rising flank, where the panel is empty: written against the
+    #  falling flank the middle line ran along the waveform itself
+    ar.annotate('reaches zero on its own —\nno reverse recovery',
+                xy=(d, 0.0), xytext=(0.045, 0.07 * io.max()),
+                ha='left', va='bottom', fontsize=10, color=GRN,
+                linespacing=1.35,
                 arrowprops=dict(arrowstyle='-|>', color=GRN, lw=1.4))
     #  Above f_r the resonant half sine is LONGER than the half period, so
     #  the half period ends with the current still flowing and the switches
-    #  cut it.  The first version drew a sine that reached zero exactly at
-    #  the end - the opposite of its own label.
+    #  cut it.  Drawn to the same peak, stretched by 1/d.
     t2 = np.linspace(0, 1.06, 640)
-    hi = np.sin(np.pi / 1.25)
-    above = np.where(t2 < 1.0, np.sin(np.pi * t2 / 1.25),
+    st = 1.25
+    hi = io.max() * np.sin(np.pi / st)
+    above = np.where(t2 < 1.0, io.max() * np.sin(np.pi * t2 / st),
                      hi * np.clip(1.0 - (t2 - 1.0) / 0.03, 0.0, 1.0))
-    ax.plot(t2, above, color=GREY, lw=1.4, ls=':',
+    ar.plot(t2, above, color=GREY, lw=1.4, ls=':',
             label='above f$_r$ : cut off while still flowing')
-    ax.axvline(1.0, color=GREY, lw=0.9, ls='--')
-    ax.text(1.0, -0.085, 'half period ends', ha='center', va='center',
-            fontsize=8.8, color=GREY)
-    ax.set_xlim(0, 1.06)
-    ax.set_ylim(-0.15, 1.35)
-    ax.set_xlabel('one switching half period')
-    ax.set_xticks([])
-    ax.set_yticks([])
-    ax.legend(loc='upper right', fontsize=9)
+    ar.axvline(1.0, color=GREY, lw=0.9, ls='--')
+    #  along the line, inside the axes: written under it the label fell off
+    #  the bottom of the figure
+    #  low and right, against the dashed line: at the top it disappeared
+    #  behind the legend box, which is not a Text and so is invisible to
+    #  the overlap check
+    ar.text(0.995, 0.07 * io.max(), 'half period ends', ha='right',
+            va='bottom', fontsize=10, color=GREY)
+    ar.set_xlim(0, 1.06)
+    ar.set_ylim(-0.14 * io.max(), 1.34 * io.max())
+    ar.set_xlabel('one switching half period', fontsize=10, color=NAVY)
+    ar.set_xticks([])
+    ar.set_yticks([])
+    for sp in ('top', 'right'):
+        ar.spines[sp].set_visible(False)
+    ar.legend(loc='upper left', fontsize=10, framealpha=0.94)
 
-    foot(fig, 'The two are different mechanisms on different devices. ZVS on '
-              'the primary needs inductive operation and is required '
+    foot(fig, 'Two different mechanisms on two different devices, drawn from '
+              'the same eight-interval model as the mode figures, at '
+              'f$_{sw}$/f$_r$ = %.2f and with the dead time wider than scale. '
+              'ZVS on the primary needs inductive operation and is required '
               'everywhere. ZCS on the secondary happens only below '
               'resonance, and is lost the moment the converter crosses above '
-              'it.')
-    fig.tight_layout()
+              'it.' % FSW_FR)
     save(fig, 'an_zvs_zcs')

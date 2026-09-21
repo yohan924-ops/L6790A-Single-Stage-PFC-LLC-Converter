@@ -345,29 +345,39 @@ def xfmr(ax, x, y, hp=1.80, hs=None, np_t=None, ns_t=None, ct=False,
     #  every winding in the document is drawn with the same size turn.
     #  Fixing the count instead makes a tall winding's turns bigger.
     r = WIND_R * scale(ax)
+    #  A schematic winding is a few bumps, not a spring.  Filling the whole
+    #  core height at a fixed turn radius put ten and more turns on a
+    #  transformer drawn as tall as its circuit, and the symbol then
+    #  dominated every drawing it appeared in.  Cap the count, keep the
+    #  radius, and let straight lead wire take up the rest of the height.
     if np_t is None:
-        np_t = max(3, int(round((hp - 2 * lead) / (2.0 * r))))
+        np_t = min(5, max(3, int(round((hp - 2 * lead) / (2.0 * r)))))
     if ns_t is None:
         hh = (hs / 2.0 if ct else hs) - 2 * lead
-        ns_t = max(2, int(round(hh / (2.0 * r))))
+        ns_t = min(4, max(2, int(round(hh / (2.0 * r)))))
     mark = len(getattr(ax, '_syms', []))
     xp, xs = x - gap, x + gap
     #  The dot offsets are a FRACTION of the turn radius, not a constant.
     #  Fixed at 0.17 they were fine on the mode panels, whose turns are
     #  small, and on a transformer drawn three times that size the tap's
     #  junction dot and the lower half's polarity dot merged into one blob.
-    rp = abs(hp - 2 * lead) / (2.0 * max(np_t, 1))
-    rs = abs((hs / (2.0 if ct else 1.0)) - 2 * lead) / (2.0 * max(ns_t, 1))
+    rp = min(r, abs(hp - 2 * lead) / (2.0 * max(np_t, 1)))
+    rs = min(r, abs((hs / (2.0 if ct else 1.0)) - 2 * lead)
+             / (2.0 * max(ns_t, 1)))
     op, os_ = max(0.17, 0.55 * rp), max(0.17, 0.55 * rs)
     ytp, ybp = y + hp / 2.0, y - hp / 2.0
     yts, ybs = y + hs / 2.0, y - hs / 2.0
-    for xx in (x - core, x + core):
-        ax.plot([xx, xx], [min(ybp, ybs) - 0.38, max(ytp, yts) + 0.38],
-                color=GREY, lw=2.4, zorder=3)
+    def _wind(xx, y0, y1, n, rr, side):
+        """n turns of radius rr, centred in the span, leads for the rest."""
+        c = (y0 + y1) / 2.0
+        h = min(abs(y1 - y0) - 2 * lead, 2.0 * rr * n)
+        a, b = c - h / 2.0, c + h / 2.0
+        coil(ax, xx, a, b, n=n, side=side)
+        wire(ax, [(xx, y0), (xx, a)])
+        wire(ax, [(xx, b), (xx, y1)])
+        return a, b
 
-    coil(ax, xp, ybp + lead, ytp - lead, n=np_t, side=+1)
-    wire(ax, [(xp, ybp), (xp, ybp + lead)])
-    wire(ax, [(xp, ytp - lead), (xp, ytp)])
+    ext = list(_wind(xp, ybp, ytp, np_t, rp, +1))
     #  Beside the coil there is no spot that clears the widest loop and
     #  still sits nearer its own winding than the next one.  Above the
     #  terminal there is, and it is unambiguous.
@@ -379,11 +389,8 @@ def xfmr(ax, x, y, hp=1.80, hs=None, np_t=None, ns_t=None, ct=False,
     out = dict(p_top=(xp, ytp), p_bot=(xp, ybp),
                s_top=(xs, yts), s_bot=(xs, ybs))
     if ct:
-        coil(ax, xs, y + lead, yts - lead, n=ns_t, side=-1)
-        coil(ax, xs, ybs + lead, y - lead, n=ns_t, side=-1)
-        wire(ax, [(xs, ybs), (xs, ybs + lead)])
-        wire(ax, [(xs, y - lead), (xs, y + lead)])
-        wire(ax, [(xs, yts - lead), (xs, yts)])
+        ext += list(_wind(xs, y, yts, ns_t, rs, -1))
+        ext += list(_wind(xs, ybs, y, ns_t, rs, -1))
         if dots:
             dot(ax, xs + os_, yts - os_, NAVY, 4.8)
             dot(ax, xs + os_, y - os_ * 1.25, NAVY, 4.8)
@@ -393,13 +400,18 @@ def xfmr(ax, x, y, hp=1.80, hs=None, np_t=None, ns_t=None, ct=False,
             txt(ax, xs + 0.42, (y + yts) / 2.0, ls[0], size=size, ha='left')
             txt(ax, xs + 0.42, (y + ybs) / 2.0, ls[1], size=size, ha='left')
     else:
-        coil(ax, xs, ybs + lead, yts - lead, n=ns_t, side=-1)
-        wire(ax, [(xs, ybs), (xs, ybs + lead)])
-        wire(ax, [(xs, yts - lead), (xs, yts)])
+        ext += list(_wind(xs, ybs, yts, ns_t, rs, -1))
         if dots:
             dot(ax, xs + os_, yts - os_, NAVY, 4.8)
         if ls:
             txt(ax, xs + 0.42, y, ls, size=size, ha='left')
+    #  The core spans the WINDINGS, not the terminals.  Drawn to the full
+    #  terminal height it stood a long way past the coils once those were
+    #  capped, and the symbol read as two bars with a small coil beside it.
+    for xx in (x - core, x + core):
+        ax.plot([xx, xx], [min(ext) - 0.30, max(ext) + 0.30],
+                color=GREY, lw=2.4, zorder=3)
+
     #  a transformer's turns are their own class, and are checked as one
     syms = getattr(ax, '_syms', [])
     for i in range(mark, len(syms)):
@@ -469,7 +481,7 @@ def _with_hops(pts, r=0.20):
     return out
 
 
-def path(ax, pts, load=True, heads=(), lw=3.8, head=18):
+def path(ax, pts, load=True, heads=(), lw=3.8, head=18, color=None):
     """The conducting path, laid over the drawing.
 
     load=True  -> solid magenta, power is being delivered
@@ -480,7 +492,10 @@ def path(ax, pts, load=True, heads=(), lw=3.8, head=18):
     the left leg's inside the MOSFET symbol, because those are where 62 %
     of those particular runs falls.
     """
-    col = MAG if load else CYA
+    #  `color` is for the one case the two-colour convention does not
+    #  cover: a fault current, which is neither the load nor the
+    #  magnetising current and must not be mistaken for either.
+    col = color or (MAG if load else CYA)
     xs, ys = zip(*_with_hops(pts))
     # UNDER the schematic, not over it.  Laid on top, a 3.8-wide highlight
     # swallowed the chord of every coil it ran through and struck out the

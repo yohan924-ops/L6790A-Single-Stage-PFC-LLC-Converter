@@ -91,16 +91,26 @@ def ind(ax, x, y, t=None, horiz=True, s=0.66, n=None, color=NAVY, tdy=None):
     short one's in the same document.
     """
     r = X.TURN_R * X.scale(ax)
-    n = max(2, int(round(s / (2.0 * r)))) if n is None else n
+    #  Capped at four bumps.  Uncapped, a long inductor came out as a
+    #  spring of ten turns and the symbol swamped the wire it was in; the
+    #  extra length is drawn as lead, which is what it is.
+    n = min(4, max(2, int(round(s / (2.0 * r))))) if n is None else n
+    w = min(s, 2.0 * r * n)
     if horiz:
-        X.hcoil(ax, x, y, s=s, n=n, color=color)
+        X.hcoil(ax, x, y, s=w, n=n, color=color)
+        if w < s - 1e-9:
+            wire(ax, [(x - s / 2, y), (x - w / 2, y)], color=color)
+            wire(ax, [(x + w / 2, y), (x + s / 2, y)], color=color)
         if t:
-            label(ax, x, y + (tdy if tdy is not None else s / (2.0 * n)
+            label(ax, x, y + (tdy if tdy is not None else w / (2.0 * n)
                               + 0.20), t)
         return (x - s / 2, y), (x + s / 2, y)
-    X.coil(ax, x, y - s / 2, y + s / 2, n=n, side=+1, color=color)
+    X.coil(ax, x, y - w / 2, y + w / 2, n=n, side=+1, color=color)
+    if w < s - 1e-9:
+        wire(ax, [(x, y - s / 2), (x, y - w / 2)], color=color)
+        wire(ax, [(x, y + w / 2), (x, y + s / 2)], color=color)
     if t:
-        label(ax, x + s / (2.0 * n) + 0.16, y, t, ha='left')
+        label(ax, x + w / (2.0 * n) + 0.16, y, t, ha='left')
     return (x, y - s / 2), (x, y + s / 2)
 
 

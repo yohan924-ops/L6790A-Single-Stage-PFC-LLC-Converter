@@ -20,11 +20,17 @@ What it reports, per figure:
             the wiring itself, read back off the axes - see topology().
   clipped   a patch drawn past its own axes, so the reader sees its label
             and not the box.
+  tiny      text that lands under 6.5 pt once the page scales the figure
+            down to the column width it is actually printed at.  The floor
+            is there to catch the 3 and 4 pt disasters, not to police the
+            last half point: a 9.5 pt label on a full-column figure prints
+            at 6.65 and reads perfectly well.
 
 It is a reporter, not a judge: a figure can legitimately put a caption
 over a shaded band.  It exists so that a person looking at a list of
 twelve figures knows which three to open.
 """
+import re
 import numpy as np
 import matplotlib
 matplotlib.use('Agg')
@@ -212,7 +218,11 @@ def check(fig, name, margin=3.0):
                 break
 
     for t, ax, n in ink(fig):
-        if _shielded(t):            # it brings its own background with it
+        #  White glyphs are drawn on a dark fill on purpose, and the second
+        #  render blanks that fill - so what is measured under them is the
+        #  fill's own outline and the gridlines behind it, not something a
+        #  reader can see.  shield() skips them for the same reason.
+        if _shielded(t) or _white(t):
             continue
         bad.append(('on-ink', '%-28s %4d px of it are on drawn line work'
                     % (_short(t), n)))
@@ -229,7 +239,75 @@ def check(fig, name, margin=3.0):
                                    _short(boxes[j][0]))))
     bad.extend(topology(fig))
     bad.extend(clipped(fig))
+    bad.extend(tiny(fig, name))
     return bad
+
+
+#  ------------------------------------------------------------------ size
+#  A4 text column, the same arithmetic an_pdf.py does.
+_CW_PT = 595.276 - 62 - 62
+_HCAP_PT = 560.0                 # an_pdf keeps one figure to a page
+_PLACE = None
+
+
+def _placement(name):
+    """How wide the application note actually prints this figure, in points.
+
+    Read out of an_body.py rather than assumed, because half the figures
+    ask for a fraction of the column and that fraction is the whole
+    reason their text lands at 3 pt on paper.
+    """
+    global _PLACE
+    if _PLACE is None:
+        import os
+        out = {}
+        f = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                         'an_body.py')
+        try:
+            s = open(f, encoding='utf-8').read()
+        except OSError:
+            return _CW_PT
+        for m in re.finditer(r"fig\('([a-z0-9_]+)'", s):
+            i, d = m.end(), 1          # balance the call's own brackets
+            while i < len(s) and d:
+                d += (s[i] == '(') - (s[i] == ')')
+                i += 1
+            w = re.search(r"width=CW \* ([0-9.]+)", s[m.end():i])
+            out[m.group(1)] = _CW_PT * float(w.group(1)) if w else _CW_PT
+        _PLACE = out
+    return _PLACE.get(name, _CW_PT)
+
+
+def tiny(fig, name, floor=6.5):
+    """Text that will be unreadable once the page shrinks the figure.
+
+    Nothing here is wrong in the PNG - it is wrong at A4.  A figure 14 in
+    wide printed 6.5 in wide divides every point size by 2.2, so a 10 pt
+    annotation arrives at 4.5 pt and the reader gives up.  Ten figures
+    went out like that before anyone put a number on it.
+
+    What matters is fontsize / figure-width-in-inches: the dpi cancels.
+    """
+    fw, fh = fig.get_size_inches()
+    w = _placement(name)
+    h = w * fh / fw
+    if h > _HCAP_PT:                 # an_pdf shrinks it again to fit a page
+        w *= _HCAP_PT / h
+    sc = w / (fw * 72.0)
+    small = []
+    for t, ax, b in _boxes(fig):
+        try:
+            s = float(t.get_fontsize()) * sc
+        except Exception:                                # noqa: BLE001
+            continue
+        if s < floor:
+            small.append((s, _short(t)))
+    if not small:
+        return []
+    small.sort()
+    return [('tiny', 'page scale %.2f - %d text(s) under %.1f pt, '
+             'smallest %.1f pt  %s'
+             % (sc, len(small), floor, small[0][0], small[0][1]))]
 
 
 def _white(t):
@@ -597,8 +675,8 @@ def run(names=None, cropdir=None):
         #  them itself - and they are the drawings every other schematic
         #  was matched to, so they are read here by the same rules.
         import figs_modes8
-        for k, nums in (('an_modes_1234', (1, 2, 3, 4)),
-                        ('an_modes_5678', (5, 6, 7, 8))):
+        for k, nums in (('an_modes_12', (1, 2)), ('an_modes_34', (3, 4)),
+                        ('an_modes_56', (5, 6)), ('an_modes_78', (7, 8))):
             if names and k not in names:
                 continue
             spy(figs_modes8.sheet_fig(nums), k)

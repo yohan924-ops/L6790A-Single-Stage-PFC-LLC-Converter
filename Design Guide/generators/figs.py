@@ -212,7 +212,7 @@ def f03_gain_walk():
 
 
 def f04_three_regions():
-    fig = plt.figure(figsize=(10.6, 7.0))
+    fig = plt.figure(figsize=(9.35, 6.17))
     gs = fig.add_gridspec(2, 3, height_ratios=[2.0, 1.35], hspace=0.34,
                           wspace=0.16)
     ask(fig, 'Three operating regions - only the middle one is where you want to be')
@@ -295,57 +295,102 @@ def f04_three_regions():
     save(fig, 'f04_three_regions')
 
 def f05_zvs_mechanism():
-    fig, (a1, a2) = plt.subplots(2, 1, figsize=(9.8, 5.6), sharex=True,
-                                 gridspec_kw=dict(height_ratios=[1.0, 1.0],
-                                                  hspace=0.18))
+    """The transition itself, zoomed - and read off the same model.
+
+    Drawn free-hand before: a full sine for i_Lr and a triangle for i_Lm,
+    which put the switching instant at a current the tank never has there.
+    Below resonance the load component is already zero by then and what is
+    left is the magnetising current at its PEAK - that is the whole reason
+    ZVS is free in an LLC, and a sketched sine hides it.
+    """
+    import figs_modes8 as _M
+    from l6790 import sweep
+    _, agg = sweep(R, R['Vin_min'], N=721)
+    FSW_FR, TD = 0.70, 0.045
+    T, e, ILR, ILM, IO, VA = _M.series(R['lam_a'], FSW_FR,
+                                       agg['comp_pk'], agg['ILm_pk'], TD)
+    #  T_ZC, measured on the model rather than asserted: how long after the
+    #  gates drop the tank current would take to reach zero.  ZVS needs the
+    #  current still flowing for the whole dead time, so T_ZC > t_D.
+    k = np.searchsorted(T, 0.5)
+    z = k + int(np.argmax(ILR[k:] <= 0.0))
+    tzc = T[z] - 0.5
+
+    fig, (a1, a2) = plt.subplots(2, 1, figsize=(9.2, 5.4), sharex=True,
+                                 gridspec_kw=dict(height_ratios=[1.0, 1.15],
+                                                  hspace=0.16))
     ask(fig, 'How ZVS actually happens — the magnetising current does the work')
-    t = np.linspace(0, 1, 1200)
-    dead = 0.055
-    vsw = np.where(t < 0.5 - dead / 2, 1.0,
-                   np.where(t < 0.5 + dead / 2,
-                            1 - (t - (0.5 - dead / 2)) / dead, 0.0))
-    a1.plot(t, vsw, color=NAVY, lw=2.6)
-    a1.set_ylim(-0.30, 1.80)
+    x0, x1 = e[2] - 0.055, 0.5 + 1.25 * tzc
+    for a in (a1, a2):
+        a.axvspan(e[2], e[3], color=YEL, alpha=0.40, lw=0)
+        a.axvspan(e[3], e[4], color=GRN, alpha=0.16, lw=0)
+        a.set_xlim(x0, x1)
+        a.set_xticks([])
+        for sp in ('top', 'right'):
+            a.spines[sp].set_visible(False)
+
+    a1.plot(T, VA, color=NAVY, lw=2.6)
+    a1.set_ylim(-0.22, 1.78)
     a1.set_yticks([0, 1])
     a1.set_yticklabels(['0', 'V$_{in}$'])
-    a1.set_ylabel('bridge midpoint')
-    a1.axvspan(0.5 - dead / 2, 0.5 + dead / 2, color=YEL, alpha=0.45)
-    note(a1, 0.5, 1.50, 'DEAD TIME  t$_D$\nboth MOSFETs off', color='#8a6d00',
-         ha='center', size=10)
-    a1.annotate('', xy=(0.5 + dead / 2, 0.16), xytext=(0.5 - dead / 2, 0.94),
-                arrowprops=dict(arrowstyle='-|>', color=MAG, lw=2.2))
-    note(a1, 0.60, 0.52, 'C$_{oss}$ is discharged HERE,\n'
-                         'before the next MOSFET turns on', color=MAG, size=10)
+    a1.set_ylabel('bridge midpoint', fontsize=10, color=NAVY)
+    a1.text((e[2] + e[3]) / 2, 1.60, '3', ha='center', va='center',
+            fontsize=11, fontweight='bold', color='white',
+            bbox=dict(boxstyle='circle,pad=0.24', fc='#B08900', ec='none'))
+    a1.text((e[3] + e[4]) / 2, 1.60, '4', ha='center', va='center',
+            fontsize=11, fontweight='bold', color='white',
+            bbox=dict(boxstyle='circle,pad=0.24', fc=GRN, ec='none'))
+    a1.annotate('', xy=(e[2], 1.22), xytext=(e[3], 1.22),
+                arrowprops=dict(arrowstyle='<->', color='#8a6d00', lw=1.6))
+    a1.text((e[2] + e[3]) / 2, 1.30, 'T$_T$  the swing', ha='center',
+            va='bottom', fontsize=10, color='#8a6d00', fontweight='bold')
+    a1.annotate('body diode holds it at 0 —\nturn on anywhere in here',
+                xy=((e[3] + e[4]) / 2, 0.02),
+                xytext=(e[4] + 0.004, 0.42), fontsize=10, color=GRN,
+                ha='left', linespacing=1.35,
+                arrowprops=dict(arrowstyle='-|>', color=GRN, lw=1.4))
 
-    ilm = 0.42 * (2 * np.where(t < 0.5, t / 0.5, (1 - t) / 0.5) - 1)
-    ires = 0.95 * np.sin(2 * pi * t)
-    a2.plot(t, ires, color=MAG, lw=2.6, label='resonant current  i$_{Lr}$')
-    a2.plot(t, ilm, color=CYA, lw=2.4, ls='--',
-            label='magnetising current  i$_{Lm}$')
+    a2.plot(T, ILR, color=MAG, lw=2.6, label='i$_{Lr}$  tank')
+    a2.plot(T, ILM, color=CYA, lw=2.3, ls='--',
+            label='i$_{Lm}$  magnetising')
     a2.axhline(0, color=GREY, lw=1.0)
-    a2.axvspan(0.5 - dead / 2, 0.5 + dead / 2, color=YEL, alpha=0.45)
-    a2.set_ylim(-2.05, 1.45)
-    a2.set_xlim(0, 1)
-    a2.set_xticks([])
-    a2.set_ylabel('current')
-    a2.set_xlabel('one switching period')
-    a2.legend(loc='upper right', fontsize=9.5)
-    a2.plot(0.5, float(np.interp(0.5, t, ilm)), 'o', color=CYA, ms=9, zorder=5)
-    note(a2, 0.30, -1.50,
-         'At the switching instant the resonant current has NOT\n'
-         'reached zero — what is left is the magnetising current.\n'
-         'That leftover current is what charges C$_{oss}$.', color=NAVY,
-         size=10)
-    foot(fig, 'Two conditions, both needed: current must still be flowing at '
-              'turn-off (T$_{ZC}$ > t$_D$), AND the transition must finish '
-              'inside the dead time (t$_D$ > T$_T$).')
+    a2.plot([0.5], [float(ILR[k])], 'o', color=MAG, ms=8, zorder=5)
+    a2.set_ylim(-0.78 * agg['comp_pk'], 1.42 * agg['comp_pk'])
+    a2.set_yticks([0])
+    a2.set_yticklabels(['0'])
+    a2.set_ylabel('current', fontsize=10, color=NAVY)
+    a2.set_xlabel('the transition, magnified — the dead time is %.0f %% of '
+                  'the period here' % (100 * TD), fontsize=10, color=NAVY)
+    a2.legend(loc='lower left', fontsize=10, ncol=2, framealpha=0.94)
+    a2.annotate('the two currents are EQUAL from the end of interval 1:\n'
+                'the load component is gone and only i$_{Lm}$ is left',
+                xy=(e[2], float(ILM[np.searchsorted(T, e[2])])),
+                xytext=(x0 + 0.004, 1.06 * agg['comp_pk']), fontsize=10,
+                color=MAG, ha='left', linespacing=1.35,
+                arrowprops=dict(arrowstyle='-|>', color=MAG, lw=1.4))
+    #  T_ZC runs from the TURN-OFF, which is where the dead time starts -
+    #  not from the end of it.  Measured from the wrong end it would be
+    #  short by exactly t_D, and t_D is the thing it is compared against.
+    y = -0.30 * agg['comp_pk']
+    a2.annotate('', xy=(e[2], y), xytext=(T[z], y),
+                arrowprops=dict(arrowstyle='<->', color=MAG, lw=1.6))
+    a2.text((e[2] + T[z]) / 2, y - 0.055 * agg['comp_pk'],
+            'T$_{ZC}$ — turn-off to the current zero crossing.\n'
+            'It has to outlast the whole dead time.', ha='center', va='top',
+            fontsize=10, color=MAG, linespacing=1.35)
+
+    foot(fig, 'Two conditions, both needed. The current must still be '
+              'flowing when the gates drop (T$_{ZC}$ > t$_D$), and the swing '
+              'must finish inside the dead time (t$_D$ > T$_T$). Interval 4 '
+              'is the margin between them: the body diode holds the node at '
+              'zero and the incoming device can be gated on anywhere in it.')
     fig.tight_layout(rect=[0, 0.055, 1, 0.955])
     save(fig, 'f05_zvs_mechanism')
 
 
 # =============================================================== single stage
 def f11_power_balance():
-    fig, ax = plt.subplots(figsize=(9.6, 4.9))
+    fig, ax = plt.subplots(figsize=(9.35, 4.77))
     ask(fig, 'The mains delivers a pulsating power, the load wants a constant one')
     th = np.linspace(0, pi, 900)
     p_in = 2 * POUT * np.sin(th) ** 2
@@ -382,7 +427,7 @@ def f11_power_balance():
 
 
 def f12_two_divergences():
-    fig, (a1, a2) = plt.subplots(1, 2, figsize=(13.0, 5.0))
+    fig, (a1, a2) = plt.subplots(1, 2, figsize=(9.35, 3.60))
     ask(fig, 'Near the mains zero crossing the required gain goes to infinity - '
              'so how does it work?')
     deg = np.linspace(1.2, 90, 700)
@@ -438,7 +483,7 @@ def f12_two_divergences():
     save(fig, 'f12_two_divergences')
 
 def f13_morphing():
-    fig, (aW, aE) = plt.subplots(1, 2, figsize=(13.2, 5.2),
+    fig, (aW, aE) = plt.subplots(1, 2, figsize=(9.35, 3.68),
                                  gridspec_kw=dict(width_ratios=[1.0, 1.06],
                                                   wspace=0.20))
     ask(fig, 'Topology morphing - change the BRIDGE, and a 2.93:1 mains becomes 1.92:1')
@@ -459,7 +504,7 @@ def f13_morphing():
                  color=NAVY)
     aW.text(0, 2.72, 'HALF bridge - only leg 1 switches', color=NAVY,
             fontsize=10.5, fontweight='bold', va='bottom')
-    aW.text(0, -2.72, 'FULL bridge - leg 2 switches 180 deg out of phase',
+    aW.text(0, -2.72, 'FULL bridge - leg 2 switches too',
             color=MAG, fontsize=10.5, fontweight='bold', va='top')
     for y0, y1, c, lab in ((1.4, 2.4, NAVY, 'V$_{in}$'),
                            (-2.4, -0.4, MAG, '2 x V$_{in}$')):
@@ -467,8 +512,8 @@ def f13_morphing():
                     arrowprops=dict(arrowstyle='<|-|>', color=c, lw=2.0))
         aW.text(2.36, (y0 + y1) / 2, lab, color=c, fontsize=12,
                 fontweight='bold', va='center')
-    aW.text(1.0, 0.02, 'same vertical scale - the full bridge really is twice '
-            'as tall', color=GREY, fontsize=9.5, ha='center', va='center')
+    aW.text(1.0, 0.02, 'same vertical scale',
+            color=GREY, fontsize=9.5, ha='center', va='center')
 
     vac = np.linspace(85, 270, 900)
     eq = np.where(vac * sqrt(2) <= 235, 2 * vac, vac)
@@ -498,7 +543,7 @@ def f13_morphing():
     save(fig, 'f13_morphing')
 
 def f14_fsw_theta():
-    fig, ax = plt.subplots(figsize=(9.8, 5.1))
+    fig, ax = plt.subplots(figsize=(9.35, 4.87))
     ask(fig, 'Where does the switching frequency actually peak?')
     fam = [(R['Vin_min'], MAG, '173.2 Vac eq.  (HB morphing edge)'),
            (180.0, CYA, '180 Vac eq.  (90 Vac mains, FB)'),
@@ -953,7 +998,7 @@ def _bridge(ax, states, path, title, vlabel):
 
 def f15_bridge_fb():
     """FULL bridge - both legs switch, 180 deg apart"""
-    fig = plt.figure(figsize=(13.2, 5.4))
+    fig = plt.figure(figsize=(9.35, 3.83))
     gs = fig.add_gridspec(1, 3, width_ratios=[1, 1, 1.02], wspace=0.13)
     ask(fig, 'FULL bridge - both legs switch, and the tank sees the WHOLE input')
 
@@ -992,7 +1037,7 @@ def f15_bridge_fb():
 
 def f16_bridge_hb():
     """HALF bridge - leg 2 stops, S4 stands on, Cr blocks the DC"""
-    fig = plt.figure(figsize=(13.2, 5.4))
+    fig = plt.figure(figsize=(9.35, 3.83))
     gs = fig.add_gridspec(1, 3, width_ratios=[1, 1, 1.02], wspace=0.13)
     ask(fig, 'HALF bridge - leg 2 STOPS, and the tank sees half as much')
 
@@ -1037,7 +1082,7 @@ def f16_bridge_hb():
 
 def f17_morph_gates():
     """the four gate signals, both modes, on one time base"""
-    fig, (aF, aH) = plt.subplots(1, 2, figsize=(13.2, 4.9), sharey=True,
+    fig, (aF, aH) = plt.subplots(1, 2, figsize=(9.35, 3.47), sharey=True,
                                  gridspec_kw=dict(wspace=0.10))
     ask(fig, 'One pin decides it: LOUT2 switches, or LOUT2 just stays high')
 
@@ -1078,7 +1123,7 @@ def f17_morph_gates():
     save(fig, 'f17_morph_gates')
 def f19_cout_criterion():
     """why 75 mF, and why it is the ripple condition that asks for it"""
-    fig, (aL, aR) = plt.subplots(1, 2, figsize=(12.6, 5.2),
+    fig, (aL, aR) = plt.subplots(1, 2, figsize=(9.35, 3.86),
                                  gridspec_kw=dict(width_ratios=[1.25, 1.0],
                                                   wspace=0.28))
     ask(fig, 'Sizing the output bank - and what the architecture really trades')
@@ -1139,8 +1184,11 @@ def f19_cout_criterion():
     for x, (e, b) in enumerate(zip(en, bars)):
         aR.text(x, e + 0.35, '%.1f J' % e, ha='center', va='bottom',
                 fontsize=12.5, fontweight='bold', color=NAVY)
-        aR.text(x, e / 2, b[4] + '\n\n' + b[5], ha='center', va='center',
-                fontsize=9.0, color='white', fontweight='bold')
+        #  8 pt and one blank line: at the narrower figure the two
+        #  in-bar lines of neighbouring bars ran into each other
+        aR.text(x, e / 2, b[4] + '\n' + b[5], ha='center', va='center',
+                fontsize=8.0, color='white', fontweight='bold',
+                linespacing=1.9)
     aR.set_xticks(range(3))
     aR.set_xticklabels([b[3] for b in bars], fontsize=9.4)
     aR.set_ylim(0, 13)

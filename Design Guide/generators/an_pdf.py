@@ -184,6 +184,12 @@ V = dict(
     Lmu=SH['L.mu'], LL1=SH['L.L1'], LL2=SH['L.L2'] / 1e3,
     Lopen=SH['L.open'], Lshort=SH['L.short'],
     Lopenx=SH['L.open'] / SH['N.x'], Lshortx=SH['L.r'] / SH['N.x'],
+    #  Skin depth in copper at the series resonance and 100 C, in mm.
+    #  rho_Cu(100 C) = rho_20 (1 + 0.00393 x 80).  Computed, not typed, so
+    #  that a change of f_r carries into the wire the text asks for.
+    #  f.r is carried in kHz in the sheet, hence the 1e3.
+    delta=1e3 * sqrt(1.72e-8 * (1 + 0.00393 * 80.0)
+                     / (pi * SH['f.r'] * 1e3 * 4e-7 * pi)),
     Aereq=SH['A.e_req_mm'], kAe=SH['k.Ae'],
     Aemm=SH['k.Ae'] * SH['A.e_req_mm'],
     Isateq=SH['I.sat_eq'], Isatspec=SH['I.sat_spec'],
@@ -639,9 +645,12 @@ def fig(name, caption, width=None, sec=None):
     w = (width or CW) * FIGSCALE
     w = min(w, CW)
     h = w * ih / iw
-    if h > 430:                            # keep one figure to a page at most
-        w *= 430.0 / h
-        h = 430
+    #  A4 leaves 672 pt of text height, so a figure of 560 plus its caption
+    #  still fits on a page of its own.  At 430 a full-width schematic was
+    #  being shrunk to three quarters for no reason but the number.
+    if h > 560:                            # keep one figure to a page at most
+        w *= 560.0 / h
+        h = 560
     n = _FIG.setdefault(name, len(_FIG) + 1)
     REFS['fig'][name] = n
     return FigBlock(p, w, h,

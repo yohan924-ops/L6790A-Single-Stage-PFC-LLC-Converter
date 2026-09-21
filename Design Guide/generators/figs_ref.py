@@ -24,7 +24,7 @@ Everything numeric comes from l6790.py.  Nothing in this file is a number
 typed in from a picture.
 """
 import numpy as np
-from matplotlib.patches import FancyArrowPatch
+from matplotlib.patches import Circle, FancyArrowPatch, Rectangle
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as pe
 
@@ -119,10 +119,16 @@ def _bridge(ax, xm, ym, w=1.50, h=1.50, names=('D$_1$', 'D$_3$',
     were 4 degrees off, which figcheck's grid test reported.
     """
     L, Rt, P, Mn = (xm - w, ym), (xm + w, ym), (xm, ym + h), (xm, ym - h)
-    for a, b, nm, dx, dy in ((L, P, names[0], -0.48, 0.34),
-                             (Rt, P, names[1], 0.48, 0.34),
-                             (Mn, L, names[2], -0.48, -0.34),
-                             (Mn, Rt, names[3], 0.48, -0.34)):
+    #  Offsets grew with the figures: once a drawing is narrower the same
+    #  point size covers more data units, and 0.48/0.34 put each name back
+    #  on its own arm.
+    for a, b, nm, dx, dy in ((L, P, names[0], -0.62, 0.44),
+                             (Rt, P, names[1], 0.62, 0.44),
+                             (Mn, L, names[2], -0.62, -0.44),
+                             #  the bottom-right arm has the far ac corner's
+                             #  riser just outside it, so this one name goes
+                             #  BELOW its arm instead of outboard of it
+                             (Mn, Rt, names[3], 0.22, -0.80)):
         S.wire(ax, [a, b])
         _diode_along(ax, a, b)
         mx, my = (a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0
@@ -135,7 +141,7 @@ def _bridge(ax, xm, ym, w=1.50, h=1.50, names=('D$_1$', 'D$_3$',
 # ------------------------------------------------------------------ 1  R_ac
 def an_rac(save, foot):
     """Why the rectifier and the load collapse into one resistor."""
-    fig = plt.figure(figsize=(11.8, 5.6))
+    fig = plt.figure(figsize=(9.35, 4.44))
 
     ax = _ax(fig, [0.02, 0.30, 0.62, 0.66], -1.2, 14.6, -2.3, 4.6)
     # the tank, standing in as a current source
@@ -240,7 +246,7 @@ def an_integrated(save, foot):
     and tied the secondary's bottom to it, which is a transformer with its
     isolation shorted out - the kind of thing a reader spots at once.
     """
-    fig = plt.figure(figsize=(11.6, 7.2))
+    fig = plt.figure(figsize=(9.35, 5.80))
     XSRC, YT_, YB_ = 0.9, 3.4, 0.1
 
     def source(ax, f, name):
@@ -265,11 +271,16 @@ def an_integrated(save, foot):
         S.dot(ax, 5.1, YB_)
 
     # ---- as wound: leakage on both sides of an ideal n_T : 1
-    ax = _ax(fig, [0.04, 0.545, 0.92, 0.40], -0.6, 15.0, -0.7, 4.3)
-    S.label(ax, 7.2, 4.05, 'as wound:  leakage on both sides', size=11,
+    ax = _ax(fig, [0.04, 0.545, 0.92, 0.40], -0.6, 15.0, -0.7, 4.9)
+    S.label(ax, 7.2, 4.55, 'as wound:  leakage on both sides', size=11,
             color=GREY)
     source(ax, S.sqsrc, 'v$_{in}$')
-    tank(ax, 3.7, 'L$_{lkp}$', 0.95, 'L$_m$')
+    #  The shunt of the T model is L_mu, NOT the tank model's L_m.  They
+    #  differ by the coupling - L_mu = sqrt(L_m (L_m + L_r)), which on this
+    #  design is 24.9 uH against L_m = 20 uH - and the figure said L_m on
+    #  both panels, which is the very confusion the caption warns about.
+    #  The series elements carry the same names as equation Lmu, too.
+    tank(ax, 3.7, 'L$_{L1}$', 0.95, 'L$_\\mu$')
     t = X.xfmr(ax, 7.5, 1.75, hp=3.3, hs=3.3, gap=0.52, lp=None, ls=None)
     S.wire(ax, [(5.1, YT_), t['p_top']])
     #  the primary's return rail ends at the primary
@@ -278,7 +289,7 @@ def an_integrated(save, foot):
     #  L_lks starts clear of the secondary's polarity dot.  At 8.6 its
     #  first turn sat on top of the dot, and a dot under a coil is the one
     #  thing a transformer symbol cannot afford to be unclear about.
-    e, f = S.ind(ax, 9.3, YT_, 'L$_{lks}$', s=0.95)
+    e, f = S.ind(ax, 9.3, YT_, 'L$_{L2}$', s=0.95)
     S.wire(ax, [t['s_top'], e])
     #  What the secondary drives is the rectifier and the load - one block
     #  here, since this figure is about the magnetics.  v_RI is what it
@@ -298,9 +309,9 @@ def an_integrated(save, foot):
                                    color=MAG, lw=2.0, shrinkA=0, shrinkB=0))
 
     # ---- referred: all of it on the primary
-    ax2 = _ax(fig, [0.04, 0.085, 0.92, 0.40], -0.6, 15.0, -0.7, 4.3)
-    S.label(ax2, 7.2, 4.05, 'referred to the primary:  one L$_r$, one L$_m$, '
-            'one ideal 1 : M$_v$', size=11, color=GREY)
+    ax2 = _ax(fig, [0.04, 0.085, 0.92, 0.40], -0.6, 15.0, -0.7, 4.9)
+    S.label(ax2, 7.2, 4.55, 'referred to the primary:  one L$_r$, one L$_m$, '
+            'one ideal n : 1', size=11, color=GREY)
     #  a sine, because this is the first-harmonic circuit: the square-wave
     #  symbol the first version used here belongs to the drawing above
     source(ax2, S.acsrc, 'v$_{in}^F$')
@@ -308,7 +319,11 @@ def an_integrated(save, foot):
     t2 = X.xfmr(ax2, 7.5, 1.75, hp=3.3, hs=3.3, gap=0.52)
     S.wire(ax2, [(5.1, YT_), t2['p_top']])
     S.wire(ax2, [t2['p_bot'], (XSRC, YB_)])
-    S.label(ax2, 7.5, -0.48, '1 : M$_v$   ideal', size=10.5, color=GREY)
+    #  The one ideal transformer left after the referral has ratio n : 1,
+    #  with n = n_T / M_v.  Written '1 : M_v' it read as a step-up of M_v,
+    #  which is neither the wound ratio nor the model one.
+    S.label(ax2, 7.5, -0.48, 'n : 1   ideal,   n = n$_T$ / M$_v$',
+            size=10.5, color=GREY)
     S.wire(ax2, [t2['s_top'], (9.9, YT_)])
     S.wire(ax2, [t2['s_bot'], (9.9, YB_)])
     S.shunt(ax2, 9.9, YT_, YB_, 'res', 'R$_{ac}$')
@@ -320,12 +335,13 @@ def an_integrated(save, foot):
     S.label(ax2, xv, YB_ - 0.36, '$-$', size=12, color=GREY)
     S.label(ax2, xv + 0.25, 1.75, 'V$_{RO}^F$', size=11, ha='left')
 
-    foot(fig, 'L_r is the whole leakage seen from the primary and L_p the '
-              'whole open-circuit inductance, so lambda = L_r / (L_p - L_r). '
-              'The turns ratio that survives the referral is M_v = '
-              'sqrt(L_p / (L_p - L_r)), which is n, not n_T - the difference '
-              'between them is the coupling, and confusing the two moves the '
-              'whole gain curve.')
+    foot(fig, 'Only the lower drawing has the tank model in it. Above, the '
+              'shunt is the PHYSICAL magnetising inductance L_mu = '
+              'sqrt(L_m (L_m + L_r)) and the ideal ratio is the wound one; '
+              'below, the shunt is L_m = L_p - L_r and the ratio is n = n_T '
+              '/ M_v with M_v = sqrt(L_p / (L_p - L_r)) = sqrt(1 + lambda). '
+              'The difference between the two ratios is the coupling, and '
+              'confusing them moves the whole gain curve.')
     save(fig, 'an_integrated')
 
 
@@ -358,7 +374,7 @@ def _mains_bridge(ax, xs=0.4, xm=4.1, ym=1.6, ytop=4.0, ybot=-0.6):
 # ------------------------------------------------------- 3  the PFC problem
 def an_pfc_cap(save, foot):
     """A capacitor-input rectifier, and the current it draws."""
-    fig = plt.figure(figsize=(11.4, 6.6))
+    fig = plt.figure(figsize=(9.35, 5.41))
 
     ax = _ax(fig, [0.05, 0.50, 0.90, 0.46], -1.4, 13.6, -2.4, 5.0)
     xe = _mains_bridge(ax, 0.4, 4.1, 1.6, 4.0, -0.6)
@@ -425,7 +441,7 @@ def an_pfc_cap(save, foot):
 # -------------------------------------------------------- 4  boost corrector
 def an_pfc_boost(save, foot):
     """A boost corrector, with the path traced for each half of its period."""
-    fig = plt.figure(figsize=(12.0, 6.4))
+    fig = plt.figure(figsize=(9.35, 4.99))
 
     for k, (rect, on, ttl) in enumerate((
             ([0.03, 0.10, 0.455, 0.80], True,
@@ -488,7 +504,7 @@ def an_pfc_boost(save, foot):
 # ------------------------------------------------------------ 5  CCM current
 def an_pfc_ccm(save, foot):
     """What that modulation looks like over a line half cycle."""
-    fig = plt.figure(figsize=(11.2, 4.6))
+    fig = plt.figure(figsize=(9.35, 3.84))
     ax = fig.add_axes([0.06, 0.20, 0.90, 0.72])
     t = np.linspace(0, 1, 24000)
     vin = np.sin(np.pi * t)
@@ -537,7 +553,7 @@ def an_two_stage(save, foot):
     reader could not tell which belonged to which - nor read either.
     """
     from matplotlib.patches import ConnectionPatch
-    fig = plt.figure(figsize=(11.6, 6.8))
+    fig = plt.figure(figsize=(9.35, 5.48))
     ax = _ax(fig, [0.03, 0.04, 0.94, 0.50], -0.6, 30.4, -1.7, 2.9)
 
     YW = 1.0                                        # the chain's wire
@@ -545,10 +561,12 @@ def an_two_stage(save, foot):
               (8.2, 1.9, 'boost PFC', LT, GREY),
               (13.2, 1.5, '400 V\nbulk C', YEL, MAG),
               (18.0, 1.7, 'LLC', LT, GREY),
-              (22.4, 1.7, 'transformer', LT, GREY),
+              (22.4, 2.1, 'transformer', LT, GREY),
               (26.8, 1.7, 'rectifier', LT, GREY)]
     for x, hw, t, fc, ec in blocks:
-        S.box(ax, x, YW, 2 * hw, 2.2, t, fc=fc, ec=ec, size=12)
+        #  11, not 12: at the narrower figure the longest name no
+        #  longer fitted inside its own box
+        S.box(ax, x, YW, 2 * hw, 2.2, t, fc=fc, ec=ec, size=11)
     S.shade(ax, 16.0, -0.35, 28.8, 2.35, None, color=CYA, alpha=0.07)
     S.label(ax, 22.4, -0.78, 'dc / dc converter', size=10.5, color=GREY)
     S.label(ax, 13.2, -0.78, 'the buffer sits here', size=10.5, color=MAG)
@@ -572,19 +590,38 @@ def an_two_stage(save, foot):
     #  reads as one-sided and a mains or square-wave node as two-sided.
     #  Drawn centred, as the first version drew it, the rectified wave
     #  swung below zero.
+    #  The bus ripple is a 2f_l SINE, and its sign is not free.  With
+    #  v = V sin(theta) the mains delivers P(1 - cos 2theta) while the load
+    #  takes P, so the capacitor's stored energy goes as -sin(2theta): the
+    #  bus is at its LOWEST at theta = 45 deg, which is the same trough the
+    #  power-balance figure marks.  Drawn as +sin it peaked there instead.
+    #  Size, from the 274 uF the output-bank figure uses for the two-stage
+    #  case: dV_pp = P / (w_l C V) - about a twentieth of the bus, not the
+    #  third of it that was drawn.
+    import figs as _F
+    _FL, _CB, _VB = 47.0, 274e-6, 400.0
+    _rip = _F.POUT / (2 * np.pi * _FL * _CB * _VB) / _VB
+    DC, _A = 0.62, 0.16            # drawn far larger than life, and said so
+    bus = DC - _A * np.sin(12 * np.pi * t)
+    out = DC - 0.30 * _A * np.sin(12 * np.pi * t)
     nodes = [(0.85, 'mains\nvoltage  ·  current', [(v, NAVY), (0.72 * v, GRN)]),
              (5.5, 'rectified', [(np.abs(v) * 0.95, NAVY)]),
-             (15.5, '400 V dc\n(2f$_l$ ripple)',
-              [(0.62 + 0.20 * np.sin(12 * np.pi * t), MAG)]),
+             (15.5, '400 V dc\n2f$_l$ ripple, %.0f %% pk-pk' % (100 * _rip),
+              [(bus, MAG)]),
              (20.2, 'hf square', [(0.82 * np.sign(np.sin(34 * np.pi * t)),
                                    CYA)]),
-             (29.05, 'dc out', [(0.62 + 0.05 * np.sin(12 * np.pi * t), MAG)])]
+             (29.05, 'dc out\nregulated, 2f$_l$ residue', [(out, MAG)])]
     x0, x1 = ax.get_xlim()
     for x, nm, traces in nodes:
         fx = 0.03 + (x - x0) / (x1 - x0) * 0.94
         a = fig.add_axes([fx - 0.056, 0.60, 0.112, 0.25])
         a.axhline(0, color=GREY, lw=0.7, zorder=1)
         for y, c in traces:
+            #  a dc node gets its mean drawn too: without it the ripple has
+            #  nothing to be read against and looks like the whole signal
+            if y.min() > 0.05:
+                a.axhline(float(np.mean(y)), color=GREY, lw=0.7, ls=(0, (3, 3)),
+                          zorder=1)
             a.plot(t, y, color=c, lw=1.7)
         a.set_xlim(0, 1)
         a.set_ylim(-1.15, 1.15)
@@ -602,7 +639,11 @@ def an_two_stage(save, foot):
 
     foot(fig, 'Correction happens in the first block, and the LLC works from '
               'a dc bus that is already regulated. Two controllers, two sets '
-              'of switches, and a 400 V electrolytic between them.')
+              'of switches, and a 400 V electrolytic between them. The ripple '
+              'on the two dc nodes is drawn several times larger than life, '
+              'against the dashed mean; its trough sits at \u03b8 = 45\u00b0, '
+              'where the mains has delivered one quarter cycle less energy '
+              'than the load has taken.')
     save(fig, 'an_two_stage')
 
 
@@ -664,7 +705,7 @@ def _cycle(ratio, lam, ilr_pk, ilm_pk, td=0.05, n=2400):
 def an_llc_waves(save, foot):
     """The waveforms of one switching period, named."""
     import figs_modes8 as F
-    fig = plt.figure(figsize=(10.6, 7.4))
+    fig = plt.figure(figsize=(9.35, 6.53))
     lam, fr = 0.55, 1.0
     t, e, ilm, ilr, io, _ = _cycle(0.70, lam, 18.32, 12.41)
 
@@ -736,7 +777,7 @@ def an_llc_waves(save, foot):
 def an_three_cases(save, foot):
     """The three cases side by side."""
     import figs_modes8 as F
-    fig = plt.figure(figsize=(12.4, 7.0))
+    fig = plt.figure(figsize=(9.35, 5.28))
     lam = 0.55
     #  The middle column is the boundary case the model itself defines:
     #  the resonant half sine exactly fills the half period less the dead
@@ -818,12 +859,19 @@ def _edge_curves(lam, qs):
 
 
 def an_cap_ind(save, foot):
-    """The same converter either side of the boundary, and how it shows."""
-    import figs_modes8 as F
-    fig = plt.figure(figsize=(12.0, 8.0))
+    """The same converter either side of the boundary, and how it shows.
+
+    The third row is the one that matters to a device: the drain current of
+    the switch that is closing.  The gain curve and the tank current say
+    WHICH side the converter is on; only the switch current says what that
+    costs, and on the capacitive side it is a reverse-recovery spike many
+    times the tank current, drawn into a device that is still standing at
+    the full rail.  The shape follows ON Semiconductor AN-4151 figure 12.
+    """
+    fig = plt.figure(figsize=(9.2, 8.4))
     lam, q = 0.55, 0.766
 
-    ax = fig.add_axes([0.085, 0.620, 0.855, 0.350])
+    ax = fig.add_axes([0.095, 0.712, 0.845, 0.252])
     fn = np.linspace(0.34, 2.4, 1200)
     g = np.array([M(f, q, lam) for f in fn])
     edge = zvs_edge(q, lam)
@@ -833,19 +881,19 @@ def an_cap_ind(save, foot):
     ax.axvspan(edge, fn[-1], color=GRN, alpha=0.11, lw=0)
     ax.axvline(edge, color=GREY, lw=1.6, ls=(0, (5, 3)))
     ax.plot([pk], [g.max()], marker='*', ms=15, color=NAVY, zorder=5)
-    _call(ax, (pk, g.max()), (pk + 0.40, g.max() - 0.04),
-          'gain peak - NOT the boundary', color=NAVY, size=10)
-    ax.text(edge + 0.02, ax.get_ylim()[0] + 0.06,
-            '  boundary: arg Z$_{in}$ = 0', fontsize=10, color=GREY,
+    _call(ax, (pk, g.max()), (pk + 0.34, g.max() - 0.06),
+          'gain peak - NOT the boundary', color=NAVY, size=10.5)
+    ax.text(edge + 0.03, ax.get_ylim()[0] + 0.07,
+            'boundary: arg Z$_{in}$ = 0', fontsize=10.5, color=GREY,
             ha='left')
-    ax.text((fn[0] + edge) / 2.0, g.max() * 0.30, 'capacitive\nhard '
-            'switching', ha='center', fontsize=11.5, color=MAG,
+    ax.text((fn[0] + edge) / 2.0, g.max() * 0.32, 'capacitive\nhard '
+            'switching', ha='center', fontsize=12, color=MAG,
             path_effects=HALO, zorder=9)
-    ax.text(edge + 0.62, g.max() * 0.30, 'inductive\nZVS', ha='center',
-            fontsize=11.5, color=GRN, path_effects=HALO, zorder=9)
+    ax.text(edge + 0.62, g.max() * 0.32, 'inductive\nZVS', ha='center',
+            fontsize=12, color=GRN, path_effects=HALO, zorder=9)
     ax.set_xlabel('f$_{sw}$ / f$_r$', fontsize=11, color=NAVY)
     ax.set_ylabel('M', fontsize=11, color=NAVY)
-    ax.tick_params(labelsize=9.5, colors=GREY)
+    ax.tick_params(labelsize=10, colors=GREY)
     for sp in ('top', 'right'):
         ax.spines[sp].set_visible(False)
 
@@ -859,54 +907,195 @@ def an_cap_ind(save, foot):
     #  actually separates the two cases is the SIGN of arg Z_in, and that is
     #  a number l6790.phase() gives for any f_n, so the traces are drawn
     #  from it and nothing here is invented.
+    IHI, ILOW = 2.75, -1.55            # one scale for BOTH drain currents:
     for c, (fnx, nm, col) in enumerate(((edge * 0.80, 'capacitive', MAG),
                                         (edge * 1.45, 'inductive', GRN))):
         phi = phase(fnx, q, lam)               # arg Z_in, radians
-        fig.text(0.085 + c * 0.470 + 0.192, 0.505, nm, ha='center',
-                 fontsize=12.5, color=col, fontweight='bold')
-        fig.text(0.085 + c * 0.470 + 0.192, 0.482,
-                 'f$_{sw}$/f$_r$ = %.2f,   arg Z$_{in}$ = %+.0f$\\degree$'
-                 % (fnx, np.degrees(phi)), ha='center', fontsize=10,
+        xc = 0.095 + c * 0.462 + 0.188
+        fig.text(xc, 0.648, nm, ha='center',
+                 fontsize=13, color=col, fontweight='bold')
+        fig.text(xc, 0.626,
+                 'f$_{sw}$/f$_r$ = %.2f,   arg Z$_{in}$ = %+.0f$\degree$'
+                 % (fnx, np.degrees(phi)), ha='center', fontsize=10.5,
                  color=GREY)
-        tt = np.linspace(0, 2, 2000)
+        tt = np.linspace(0, 2, 4000)
         vd = np.where((tt % 1.0) < 0.5, 1.0, -1.0)
         cur = np.sin(2 * np.pi * tt - phi)
-        y = 0.452
-        for nmx, h in (('v$_d$', 0.108), ('i$_{Lr}$', 0.140)):
-            y -= h + 0.036
-            a = _wave_ax(fig, [0.085 + c * 0.470, y, 0.385, h], 0, 2,
-                         -1.35, 1.35, nmx if c == 0 else None)
-            if nmx == 'v$_d$':
+        on = (tt % 1.0) < 0.5                  # S1 conducting
+        ids = np.where(on, cur, 0.0)
+        hard = np.sin(-phi) > 0
+        if hard:
+            #  Reverse recovery of the OPPOSITE body diode, swept out
+            #  through the device that is closing. Height and width are
+            #  indicative - what is not indicative is that it exists here
+            #  and does not exist in the other column.
+            for k in (0.0, 1.0):
+                ids = ids + np.where(on & (tt >= k),
+                                     2.35 * np.exp(-(tt - k) / 0.009), 0.0)
+            ids = np.clip(ids, ILOW, IHI)
+        y = 0.600
+        rows = (('v$_d$', 0.092, -1.45, 1.45),
+                ('i$_{Lr}$', 0.092, -1.45, 1.45),
+                ('i$_{DS}$', 0.118, ILOW, IHI))
+        for nmx, h, lo, hi in rows:
+            y -= h + 0.034
+            a = _wave_ax(fig, [0.095 + c * 0.462, y, 0.376, h], 0, 2,
+                         lo, hi, nmx if c == 0 else None)
+            if nmx.startswith('v$_d$'):
                 a.plot(tt, vd, color=NAVY, lw=1.9)
-            else:
+            elif nmx.startswith('i$_{Lr}$'):
                 a.plot(tt, cur, color=col, lw=2.1)
                 for k in (0.0, 1.0):
                     a.plot([k], [np.sin(-phi)], 'o', color=col, ms=8,
                            zorder=6)
-                a.axvline(0.0, color=GREY, lw=0.8, ls=(0, (2, 3)))
-                a.axvline(1.0, color=GREY, lw=0.8, ls=(0, (2, 3)))
-        tail = ('POSITIVE at turn-on - the current was already\nflowing '
-                'the other way, so the body diode of the\nswitch about to '
-                'close has to recover.'
-                if np.sin(-phi) > 0 else
-                'NEGATIVE at turn-on - the current had already\nswung the '
-                'node over, so the switch closes\non zero volts.  ZVS.')
-        fig.text(0.085 + c * 0.470 + 0.192, 0.112, tail, ha='center',
-                 va='top', fontsize=9.6, color=col, linespacing=1.5)
+            else:
+                a.fill_between(tt, 0, ids, where=(ids < 0), color=GRN,
+                               alpha=0.30, lw=0)
+                a.plot(tt, ids, color=NAVY, lw=2.0)
+                if hard:
+                    _call(a, (0.012, 2.30), (0.16, 2.05),
+                          'reverse recovery of the other\nbody diode',
+                          color=MAG, size=10, ha='left')
+                else:
+                    _call(a, (0.10, float(np.interp(0.10, tt, ids))),
+                          (0.30, 1.45),
+                          'negative first: the body diode\nof this very switch',
+                          color=GRN, size=10, ha='left')
+            for k in (0.0, 1.0):
+                a.axvline(k, color=GREY, lw=0.8, ls=(0, (2, 3)))
+        tail = ('The current was ALREADY flowing the other way, so the\n'
+                'diode of the switch about to close is conducting and\n'
+                'has to be recovered. Hard switching, and the spike is\n'
+                'dissipated in the closing device.'
+                if hard else
+                'The current had already swung the node over, so this\n'
+                'switch closes across its own conducting body diode.\n'
+                'Zero volts, no recovery, no spike.')
+        fig.text(xc, y - 0.026, tail, ha='center',
+                 va='top', fontsize=10.5, color=col, linespacing=1.5)
 
     foot(fig, 'The boundary is where the tank input impedance phase crosses '
               'zero, and that is a little above the peak of the gain curve - '
               'so quoting the peak reports a band of hard switching as '
-              'inductive. Both shaded regions here come from '
-              'l6790.zvs_edge, which solves the phase for zero in closed '
-              'form.')
+              'inductive. The shaded regions come from l6790.zvs_edge, which '
+              'solves the phase for zero in closed form; the two drain '
+              'currents are drawn to one scale. i$_{DS}$ is the drain '
+              'current of the device that is closing.')
     save(fig, 'an_cap_ind')
+
+
+# ------------------------------------------- 11b  why the diode recovers
+def _bd(x, y, h, dx=0.80):
+    """The body-diode detour round one device, source node to drain node."""
+    return [(x, y - h / 2), (x + dx, y - h / 2), (x + dx, y + h / 2),
+            (x, y + h / 2)]
+
+
+def an_recovery(save, foot):
+    """The two commutations, drawn - why one recovers a diode and one does not.
+
+    The gain curve says which side of the boundary the converter is on and
+    the waveforms say what the switch current looks like, but neither says
+    WHY the capacitive side destroys devices.  It is one sentence and it
+    needs a circuit: on the capacitive side the incoming switch closes onto
+    a body diode that is still conducting, and a diode does not block until
+    its stored charge has been swept out.  For that moment the rail is
+    short-circuited through both devices.
+    """
+    RED = '#C21807'
+    HI, LO, XL = 6.0, 0.0, 3.0
+    YM, HS = 3.0, 1.8
+    YS1, YS2 = 4.5, 1.5
+    XB0, XB1, XR = 5.3, 7.5, 8.6
+    fig = plt.figure(figsize=(9.2, 5.3))
+
+    for k, cap in enumerate((True, False)):
+        ax = _ax(fig, [0.030 + k * 0.492, 0.300, 0.450, 0.610],
+                 -0.6, 9.4, -0.9, 7.0)
+        #  rails.  The top one stops at the leg, so it has no loose end;
+        #  the bottom one carries the tank return home.
+        S.wire(ax, [(0.25, HI), (XL, HI)])
+        S.wire(ax, [(0.25, LO), (XR, LO)])
+        S.dot(ax, 0.25, HI)
+        S.dot(ax, 0.25, LO)
+        S.label(ax, 0.25, HI + 0.52, 'V$_{in}$', size=11)
+        S.label(ax, 0.25, LO - 0.52, '0', size=11)
+        #  the leg
+        S.wire(ax, [(XL, HI), (XL, YS1 + HS / 2)])
+        S.wire(ax, [(XL, YS1 - HS / 2), (XL, YS2 + HS / 2)])
+        S.wire(ax, [(XL, YS2 - HS / 2), (XL, LO)])
+        S.dot(ax, XL, LO)
+        X.mosfet(ax, XL, YS1, 'S1', 'on' if cap else 'diode', h=HS,
+                 gate=0.95, coss=False, size=11)
+        X.mosfet(ax, XL, YS2, 'S2', 'diode' if cap else 'off', h=HS,
+                 gate=0.95, coss=False, size=11)
+        #  the tank, as a block: this figure is about the leg
+        S.wire(ax, [(XL, YM), (XB0, YM)])
+        S.wire(ax, [(XB1, YM), (XR, YM), (XR, LO)])
+        S.dot(ax, XL, YM)
+        ax.add_patch(Rectangle((XB0, YM - 0.70), XB1 - XB0, 1.40, fc=LT,
+                               ec=GREY, lw=1.3, zorder=4))
+        X.txt(ax, (XB0 + XB1) / 2, YM, 'resonant\ntank', size=10.5, z=5)
+
+        if cap:
+            ax.set_title('CAPACITIVE — S1 closes onto a conducting diode',
+                         fontsize=11.5, color=MAG, pad=6)
+            #  vertices at the device edges, so a head can be put on a
+            #  clear stretch of leg instead of inside a symbol
+            X.path(ax, [(0.25, HI), (XL, HI), (XL, YS1 + HS / 2),
+                        (XL, YS1 - HS / 2), (XL, YS2 + HS / 2)]
+                   + _bd(XL, YS2, HS)[::-1] + [(XL, LO), (0.25, LO)],
+                   heads=((2, 0.50), (4, 0.78), (7, 0.50), (9, 0.50)),
+                   color=RED)
+            #  the tank current is what put that diode into conduction, so
+            #  it is named - but not highlighted, or it would run along the
+            #  same leg as the fault current and neither would be readable
+            ax.annotate('', xy=(XB0 - 0.25, YM), xytext=(XL + 0.55, YM),
+                        arrowprops=dict(arrowstyle='-|>', color=MAG, lw=2.0))
+            X.txt(ax, (XL + XB0) / 2 + 0.45, YM + 0.60,
+                  'i$_{Lr}$ > 0', size=10.5, color=MAG, halo=True, z=9)
+            _call(ax, (XL + 0.80, YS2), (XL + 1.35, YS2 - 1.25),
+                  'still carrying,\nstill charged', color=GRN, size=10.5)
+        else:
+            ax.set_title('INDUCTIVE — the node is already over',
+                         fontsize=11.5, color=GRN, pad=6)
+            X.path(ax, [(0.25, LO), (XR, LO), (XR, YM), (XB1, YM),
+                        (XB0, YM), (XL, YM)]
+                   + _bd(XL, YS1, HS) + [(XL, HI), (0.25, HI)],
+                   heads=((1, 0.55), (5, 0.55), (8, 0.50), (10, 0.45)))
+            X.txt(ax, (XL + XB0) / 2 + 0.45, YM + 0.60,
+                  'i$_{Lr}$ < 0', size=10.5, color=MAG, halo=True, z=9)
+            _call(ax, (XL + 0.80, YS1), (XL + 1.35, YS1 + 1.15),
+                  'the body diode of S1 itself —\nV$_{ds}$ = 0 before the gate rises', color=GRN,
+                  size=10.5)
+
+    fig.text(0.255, 0.225,
+             'S2 was carrying the tank current in its body diode. A diode\n'
+             'cannot block until its stored charge has been swept out, so\n'
+             'the moment S1 closes the rail is short-circuited through both\n'
+             'devices. Only stray inductance limits the spike, and S1\n'
+             'dissipates it at full V$_{ds}$.',
+             ha='center', va='top', fontsize=10.5, color=MAG,
+             linespacing=1.5)
+    fig.text(0.748, 0.225,
+             'The tank current ran the other way. Through the dead time it\n'
+             'charged the node to V$_{in}$, and it now flows in the body diode\n'
+             'of S1 itself. S1 closes across zero volts: nothing to\n'
+             'recover, no spike, no turn-on loss. That is the only\n'
+             'difference between the two sides of the boundary.',
+             ha='center', va='top', fontsize=10.5, color=GRN,
+             linespacing=1.5)
+    foot(fig, 'The same leg, one switching instant, either side of the '
+              'boundary. The mechanism is the reason the capacitive region '
+              'is not merely inefficient but destructive, and it is why the '
+              'oscillator floor exists (after ON Semiconductor AN-4151).')
+    save(fig, 'an_recovery')
 
 
 # ------------------------------------------------------- 10  load shifts it
 def an_loadshift(save, foot):
     """The boundary is not fixed: loading the converter moves it."""
-    fig = plt.figure(figsize=(10.6, 5.8))
+    fig = plt.figure(figsize=(9.35, 5.12))
     ax = fig.add_axes([0.085, 0.145, 0.885, 0.79])
     lam = 0.55
     fn = np.linspace(0.34, 2.4, 1400)
@@ -955,7 +1144,7 @@ def an_loadshift(save, foot):
 # --------------------------------------------------------- 11  peak gain
 def an_peakgain(save, foot):
     """Why m and Q cannot be chosen separately."""
-    fig = plt.figure(figsize=(10.4, 6.0))
+    fig = plt.figure(figsize=(9.35, 5.39))
     ax = fig.add_axes([0.095, 0.135, 0.875, 0.82])
     fn = np.linspace(0.16, 3.0, 2400)
     qs = np.linspace(0.20, 1.40, 90)
@@ -997,9 +1186,141 @@ def an_peakgain(save, foot):
     save(fig, 'an_peakgain')
 
 
+# --------------------------------------------- the core, in cross-section
+def an_core_section(save, foot):
+    """The chosen core in section, and the winding that has to fit in it.
+
+    Proportions are schematic - the datasheet gives A_e, A_min, A_N and
+    l_N but not the window's width and height separately, so nothing here
+    is drawn to a dimension that was not published.  Every number written
+    on the drawing is either from the datasheet or computed from the
+    design by cores.py.
+
+    Stacked, not side by side: five zone names do not fit inside a window
+    drawn a third of a panel wide, and putting them there is what made the
+    first version unreadable.  Here they sit clear of the core with
+    leaders into it.
+    """
+    import cores as _C
+    import an_pdf as _A
+    V = _A.V
+    NAME = 'PQ 40/40'
+    R = _C.CORES[NAME]
+    bpk = _C.flux(V, R['Ae'])
+    g = _C.gap(V, R['Ae'])
+    bare = _C.window(V)
+    rows = _C.copper(V)
+
+    CORE, GOLD = '#9aa3ad', '#8a6d00'
+    fig = plt.figure(figsize=(9.2, 6.6))
+
+    # ---------------------------------------------------- section
+    ax = _ax(fig, [0.035, 0.475, 0.930, 0.455], -8.2, 16.8, -0.9, 9.9)
+    ax.set_title('%s in section  —  where each winding goes' % NAME,
+                 fontsize=11.5, color=NAVY, pad=6)
+    #  Each outer leg carries half the centre leg's flux, so it is half its
+    #  width.  Drawn the same width they read as three equal legs, which is
+    #  not what the flux does.
+    YB, YT, HW = 1.6, 7.4, 1.0          # window floor, ceiling, OUTER leg
+    XL, XR, XC0, XC1 = 0.0, 12.0, 5.0, 7.0
+    YG0, YG1 = 4.25, 4.75               # the centre-leg gap
+    for rc in ((XL, YT, XR - XL, 1.6), (XL, 0.0, XR - XL, YB),
+               (XL, YB, HW, YT - YB), (XR - HW, YB, HW, YT - YB),
+               (XC0, YG1, XC1 - XC0, YT - YG1),
+               (XC0, YB, XC1 - XC0, YG0 - YB)):
+        ax.add_patch(Rectangle(rc[:2], rc[2], rc[3], fc=CORE, ec=GREY,
+                               lw=1.2, zorder=3))
+    ZONES = ((6.85, YT, LT, 'margin tape', GREY),
+             (5.25, 6.85, NAVY, 'PRIMARY  %d turns' % V['Np'], NAVY),
+             (4.45, 5.25, None, 'separation — sets L$_{short}$',
+              GOLD),
+             (2.10, 4.45, MAG, 'SECONDARY  %d + %d turns'
+              % (V['Ns'], V['Ns']), MAG),
+             (YB, 2.10, LT, 'margin tape', GREY))
+    for x0, x1 in ((HW, XC0), (XC1, XR - HW)):
+        for y0, y1, col, _t, _c in ZONES:
+            if col is None:
+                continue
+            hatch = '///' if col is LT else None
+            ax.add_patch(Rectangle((x0 + 0.10, y0), x1 - x0 - 0.20, y1 - y0,
+                                   fc=col, ec=GREY, lw=0.9, zorder=4,
+                                   alpha=0.9 if hatch else 0.25, hatch=hatch))
+    #  names clear of the core, leaders into the left window
+    for y0, y1, _col, t, c in ZONES:
+        ax.annotate(t, xy=(HW + 0.55, (y0 + y1) / 2),
+                    xytext=(-8.0, (y0 + y1) / 2), fontsize=10, color=c,
+                    ha='left', va='center', zorder=9,
+                    arrowprops=dict(arrowstyle='-', color=c, lw=1.0,
+                                    shrinkA=3, shrinkB=2))
+    #  clear of the core on the right, like the zone names on the left:
+    #  placed inside it they landed on the far window's own windings
+    _call(ax, (XC1 - 0.25, 6.6), (12.5, 8.6), 'A$_e$ = %.0f mm$^2$' % R['Ae'],
+          color=NAVY, size=10, ha='left')
+    _call(ax, (XR - HW - 0.35, 5.95), (12.5, 6.4),
+          'window A$_N$ = %.0f mm$^2$' % R['AN'], color=GREY, size=10,
+          ha='left')
+    _call(ax, (XC1 - 0.25, (YG0 + YG1) / 2), (12.5, 3.3),
+          'centre-leg gap:\nground to A$_L$,\nnot to a dimension',
+          color=GOLD, size=10, ha='left')
+
+    # ---------------------------------------------- the winding, unrolled
+    ax2 = fig.add_axes([0.075, 0.165, 0.855, 0.250])
+    ax2.set_title('the same winding, unrolled along the bobbin',
+                  fontsize=11.5, color=NAVY, pad=6)
+    ax2.set_xlim(-0.3, 10.3)
+    ax2.set_ylim(-2.05, 3.60)
+    ax2.set_xticks([])
+    ax2.set_yticks([])
+    for sp in ax2.spines.values():
+        sp.set_visible(False)
+    #  deep enough that the name clears its own outline: at 0.45 the text
+    #  sat on the top and bottom edges of the bar
+    ax2.add_patch(Rectangle((0, -0.72), 10, 0.72, fc=CORE, ec=GREY, lw=1.1))
+    X.txt(ax2, 5.0, -0.36, 'bobbin', size=10, color='white', z=5)
+    for x0, x1 in ((0.0, 1.00), (9.00, 10.0)):
+        ax2.add_patch(Rectangle((x0, 0), x1 - x0, 2.4, fc=LT, ec=GREY,
+                                lw=0.9, hatch='///'))
+    np_, ns_ = V['Np'], V['Ns']
+    for k in range(np_):
+        cx = 1.32 + 0.60 * (k % 3) + (0.30 if k >= 3 else 0)
+        cy = 0.40 + 0.70 * (k // 3)
+        ax2.add_patch(Circle((cx, cy), 0.28, fc=NAVY, ec=NAVY, lw=1.0,
+                             alpha=0.30))
+    #  one text, two lines - two texts one line apart are reported as
+    #  overlapping each other, and they are
+    X.txt(ax2, 1.92, 1.92, 'primary  %d turns\nLitz, %.2f mm$^2$'
+          % (np_, rows[0][3]), size=10, color=NAVY)
+    ax2.add_patch(Rectangle((3.55, 0), 1.45, 2.4, fc='none', ec=GOLD,
+                            lw=1.6, ls=(0, (4, 3))))
+    X.txt(ax2, 4.28, 2.92, 'separation\nsets L$_{short}$', size=10,
+          color=GOLD, z=5)
+    for k in range(2):
+        for j in range(ns_):
+            ax2.add_patch(Rectangle((5.35, 0.16 + 0.29 * (j + ns_ * k)), 3.40,
+                                    0.19, fc=MAG, ec=MAG, lw=0.8, alpha=0.35))
+    X.txt(ax2, 7.05, 1.92, 'secondary  %d + %d turns\nfoil, %.2f mm$^2$ each'
+          % (ns_, ns_, rows[1][3]), size=10, color=MAG)
+    ax2.annotate('', xy=(0, -1.28), xytext=(10, -1.28),
+                 arrowprops=dict(arrowstyle='<->', color=GREY, lw=1.3))
+    X.txt(ax2, 5.0, -1.70, 'winding width  —  a margin at each end for '
+          'reinforced isolation', size=10, color=GREY)
+
+    foot(fig, 'Schematic section: the datasheet gives A_e, A_min, A_N and '
+              'l_N but not the window width and height separately, so no '
+              'proportion here is drawn to a published dimension. What is '
+              'from the datasheet or computed: A_e %.0f mm2, A_min %.0f '
+              'mm2, A_N %.0f mm2, l_N %.0f mm, B_pk %.0f mT (%.0f mT at '
+              'A_min), first-estimate gap %.2f mm, bare copper %.1f mm2 per '
+              'unit.'
+              % (R['Ae'], R['Amin'], R['AN'], R['lN'], bpk,
+                 bpk * R['Ae'] / R['Amin'], g, bare))
+    save(fig, 'an_core_section')
+
+
 FIGS = {'an_rac': an_rac, 'an_integrated': an_integrated,
         'an_pfc_cap': an_pfc_cap, 'an_pfc_boost': an_pfc_boost,
         'an_pfc_ccm': an_pfc_ccm, 'an_two_stage': an_two_stage,
         'an_llc_waves': an_llc_waves, 'an_three_cases': an_three_cases,
         'an_cap_ind': an_cap_ind, 'an_loadshift': an_loadshift,
-        'an_peakgain': an_peakgain}
+        'an_peakgain': an_peakgain, 'an_recovery': an_recovery,
+        'an_core_section': an_core_section}

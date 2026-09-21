@@ -27,6 +27,7 @@ def _edge_numbers(A):
 def build(A):
     """A is the an_pdf module, handed in - importing it here would load a
     second copy whenever an_pdf is run as __main__."""
+    import cores as _CORE          # the datasheet figures, in one place
     h1, h2, p, eq, fig, tbl, note = A.h1, A.h2, A.p, A.eq, A.fig, A.tbl, A.note
     bullets, V, CW = A.bullets, A.V, A.CW
     FR, TR, SR = A.figref, A.tblref, A.secref
@@ -80,8 +81,7 @@ def build(A):
             'An LLC stage: a square-wave generator, the resonant network, a '
             'transformer and a rectifier. The switches only set the '
             'frequency &mdash; the tank decides how much power flows and '
-            'the transformer sets the voltage.',
-            width=CW * 0.82))
+            'the transformer sets the voltage.'))
     add(p('The three tank elements are named in the order they appear in '
           '&ldquo;LLC&rdquo;: the series inductance L<sub>r</sub>, the '
           'magnetising inductance L<sub>m</sub> of the transformer, and the '
@@ -157,8 +157,7 @@ def build(A):
             'difference between them is what crosses to the secondary, and '
             'it is gone once the two meet. The switch turns on while its own '
             'current is still negative, and that is what discharges the '
-            'mid-point.',
-            width=CW * 0.62))
+            'mid-point.'))
     add(p('The two frequencies that bound this are the subject of '
           'Section&nbsp;' + SR('The two resonances')
           + ', and the operating regions they divide are in Section&nbsp;'
@@ -184,7 +183,7 @@ def build(A):
             'a square wave; the tank filters everything except the '
             'fundamental, so the current is a sine wave. A sine of current in '
             'phase with a square of voltage delivers the same fundamental '
-            'power as a resistor would take.', width=CW * 0.66))
+            'power as a resistor would take.'))
     add(fig('an_fha_steps',
             'The reduction, in three steps: as built; then the secondary '
             'referred to the primary; then the fundamental only. What is '
@@ -194,7 +193,7 @@ def build(A):
             'has. Put the line-peak power into the same expression instead '
             'and the result halves; Section&nbsp;'
             + SR('The resonant tank')
-            + ' says why.', width=CW * 0.60))
+            + ' says why.'))
     ext(bullets([
         '<b>Refer the secondary to the primary.</b> The ideal transformer '
         'disappears and the load resistance is multiplied by n&sup2;.',
@@ -243,7 +242,7 @@ def build(A):
           'when the bus sags.'))
     add(fig('f02_two_resonances',
             'The two resonances, and the band between them in which the tank '
-            'can boost.', width=CW * 0.84))
+            'can boost.'))
 
     add(p('The two expressions are not much use without knowing what each '
           'one does to the current, because the current is where the '
@@ -253,8 +252,8 @@ def build(A):
           'then freewheeling, <b>with the same pair of switches on '
           'throughout</b>. At resonance the half cycle is power delivery '
           'only; above resonance the power delivery is cut short.'))
-    add(fig('an_modes_1234',
-            '<b>One switching period, first half: steps 1 to 4.</b> '
+    add(fig('an_modes_12',
+            '<b>One switching period, first half, steps 1 and 2.</b> '
             '<b>1</b>&nbsp;Power delivery &mdash; S<sub>1</sub>,S<sub>4</sub> '
             'are on, the resonant current exceeds the magnetising current '
             'and the difference passes through the transformer to '
@@ -265,25 +264,31 @@ def build(A):
             'current has fallen to the magnetising current, nothing is left '
             'for the secondary, the rectifiers are off and L<sub>m</sub> '
             'joins the resonance: this interval rings at f<sub>o</sub>. The '
-            'same pair of switches is still on. <b>3</b>&nbsp;Dead time (a) '
-            '&mdash; all four switches are off and the tank current, now the '
-            'magnetising current alone, charges two C<sub>oss</sub> and '
-            'discharges the other two, carrying both mid-points across. '
-            '<b>4</b>&nbsp;Dead time (b) &mdash; the swing is complete and '
-            'the body diodes of S<sub>2</sub>,S<sub>3</sub> clamp their '
-            'V<sub>ds</sub> at zero. This is the ZVS window: the gate that '
-            'follows has to arrive inside it. Each switch is drawn with its '
-            'body diode and its C<sub>oss</sub> beside it, greyed while '
-            'they do nothing.', width=CW))
-    add(fig('an_modes_5678',
-            '<b>Second half: steps 5 to 8</b>, the mirror image. '
-            'S<sub>2</sub>,S<sub>3</sub> carry the power delivery '
-            '(<b>5</b>, through D<sub>2</sub>) and the freewheeling '
-            '(<b>6</b>); the dead time swings the mid-points back '
-            '(<b>7</b>) and the body diodes of S<sub>1</sub>,S<sub>4</sub> '
-            'clamp (<b>8</b>), which is where S<sub>1</sub>,S<sub>4</sub> '
-            'then close on zero volts and step 1 begins again.',
-            width=CW))
+            'same pair of switches is still on. Each switch is drawn with '
+            'its body diode and its C<sub>oss</sub> beside it, greyed while '
+            'they do nothing.'))
+    add(fig('an_modes_34',
+            '<b>Steps 3 and 4: the dead time.</b> <b>3</b>&nbsp;All four '
+            'switches are off, so the tank current &mdash; now the '
+            'magnetising current alone &mdash; can only reach the rails '
+            'through the four C<sub>oss</sub>. It arrives at A from both, '
+            'so A is pulled down, and leaves B into both, so B is pushed '
+            'up: that swap is the transition. <b>4</b>&nbsp;The swing is '
+            'complete and the body diodes of S<sub>2</sub>,S<sub>3</sub> '
+            'clamp their V<sub>ds</sub> at zero. This is the ZVS window: '
+            'the gate that follows has to arrive inside it.'))
+    add(fig('an_modes_56',
+            '<b>Second half, steps 5 and 6</b>, the mirror image of 1 and '
+            '2. S<sub>2</sub>,S<sub>3</sub> carry the power delivery '
+            '(<b>5</b>, through D<sub>2</sub>) and then the freewheeling '
+            '(<b>6</b>), again with the same pair on throughout.'))
+    add(fig('an_modes_78',
+            '<b>Steps 7 and 8</b>, the second dead time. The mid-points '
+            'swing back (<b>7</b>) and the body diodes of '
+            'S<sub>1</sub>,S<sub>4</sub> clamp (<b>8</b>), which is where '
+            'S<sub>1</sub>,S<sub>4</sub> then close on zero volts and step '
+            '1 begins again. ZVS happens in steps 4 and 8, and in none of '
+            'the other six.'))
     add(fig('an_modes_wave',
             '<b>Where each step sits on the waveforms.</b> The numbered '
             'bands are the eight panels above, in time order across one '
@@ -415,8 +420,7 @@ def build(A):
     add(fig('f04_three_regions',
             'The three operating regions, shaded for the full-load curve '
             'drawn. Only the inductive ones are usable, and the boundary '
-            'between them moves up as the converter is loaded.',
-            width=CW * 0.84))
+            'between them moves up as the converter is loaded.'))
 
     add(h2('Capacitive and inductive, and why those words'))
     add(p('The names have nothing to do with which component dominates. They '
@@ -433,11 +437,14 @@ def build(A):
     add(fig('an_cap_ind',
             'The same converter on either side of the boundary. Above: where '
             'the boundary sits on the gain curve. Note that it is not at the '
-            'peak, but a little above it. Below: the bridge voltage '
-            'v<sub>d</sub> and the tank current, drawn at the phase the tank '
-            'actually presents at each frequency. On the left the current '
-            'leads and is positive when the switch closes; on the right it '
-            'lags and is still negative, which is ZVS.', width=CW * 0.58))
+            'peak, but a little above it. Below, for each case: the bridge '
+            'voltage v<sub>d</sub>, the tank current at the phase the tank '
+            'actually presents there, and <b>the drain current of the switch '
+            'that is closing</b>. On the left the current leads and is '
+            'positive at turn-on, and the drain current carries the recovery '
+            'spike of the opposite body diode. On the right it lags and is '
+            'still negative, so the switch closes on its own conducting body '
+            'diode. The two drain currents are drawn to one scale.'))
     ext(bullets([
         '<b>Inductive: the current lags.</b> When a switch turns off, the '
         'current is still flowing in the direction that pushes the bridge '
@@ -454,6 +461,65 @@ def build(A):
              'trade-off to be balanced against something else. It is a '
              'boundary the design stays on one side of, and the controller '
              'has a dedicated protection for the case where it does not.'))
+
+    add(h2('Why a diode has to recover on one side and not on the other'))
+    add(p('The drain-current row above is the difference that reaches the '
+          'hardware, so it is worth following one switching instant through '
+          'in both cases. Take the leg alone: a high-side switch, a low-side '
+          'switch, and the tank hanging off the mid-point. Whichever device '
+          'has just been turned off, <b>the tank current does not stop</b> '
+          '&mdash; it is the current in an inductor. The only question is '
+          'what carries it during the dead time, and the answer decides '
+          'everything.'))
+    add(fig('an_recovery',
+            'One switching instant in the same leg, either side of the '
+            'boundary. Left: the tank current is already positive, so it is '
+            'flowing in the body diode of the low-side device; when the '
+            'high-side device is gated on, the rail is short-circuited '
+            'through both until that diode recovers. Right: the tank current '
+            'is negative, it has carried the mid-point up to the rail during '
+            'the dead time, and the closing device finds its own body diode '
+            'already conducting at zero volts.'))
+    ext(bullets([
+        '<b>Inductive.</b> At turn-off the current is flowing in the '
+        'direction that carries the mid-point towards the <i>other</i> rail. '
+        'It charges one C<sub>oss</sub> and discharges the other, the node '
+        'arrives, and the body diode of the incoming device picks the '
+        'current up and holds the node there. That device is then gated on '
+        'with V<sub>ds</sub> already at zero. When its channel takes over, '
+        'the current in its own body diode falls away with no reverse '
+        'voltage applied to it, so <b>there is nothing to recover</b>.',
+        '<b>Capacitive.</b> At turn-off the current has already reversed. It '
+        'pushes the mid-point back onto the rail it came from, so the body '
+        'diode of the device that just turned off picks it up and clamps the '
+        'node there. <b>The node never moves.</b> The incoming device is '
+        'then gated on across the full rail, straight onto a conducting '
+        'diode.']))
+    add(p('A diode carrying forward current holds stored charge in its '
+          'junction, and it cannot block reverse voltage until that charge '
+          'has been swept out. For as long as that takes, both devices in '
+          'the leg are conducting and the input rail is short-circuited '
+          'through them. Three things follow, and all three are bad:'))
+    ext(bullets([
+        'The current is limited only by the stray inductance of the loop, so '
+        'it is a <b>spike, not a current</b> &mdash; many times the tank '
+        'current, as the drain-current row shows.',
+        'It flows in the incoming device while that device still stands at '
+        'the full rail voltage, so it is dissipated there, in a few tens of '
+        'nanoseconds, every cycle.',
+        'When the diode finally does snap off, the di/dt in the loop '
+        'inductance appears across it as overshoot, which is what actually '
+        'breaks the part.']))
+    add(note('<b>This is the reason the AN asks for a fast-recovery body '
+             'diode on the primary</b> (Section&nbsp;%(ref)s). A '
+             'superjunction device stores a great deal of charge in a body '
+             'diode that was never designed to be commutated, and in a full '
+             'bridge that diode conducts before every turn-on even when the '
+             'converter is behaving. It is also the reason the oscillator '
+             'floor exists: f<sub>Min</sub> above f<sub>o</sub> is what '
+             'keeps the converter out of the left-hand picture, and the '
+             'anti-capacitive protection is what catches it if that fails.'
+             % dict(ref=SR('Semiconductor requirements'))))
     add(h2('The two boundaries are not the same boundary'))
     add(p('This is the point that is most easily confused, because both '
           'pairs of words describe positions on the same frequency axis. '
@@ -496,7 +562,7 @@ def build(A):
             'The boundary is not fixed. Loading the converter pushes it to a '
             'higher frequency, so a frequency that is inductive at light '
             'load can be capacitive at overload. The dashed curve is the '
-            'boundary itself, traced out as Q varies.', width=CW * 0.62))
+            'boundary itself, traced out as Q varies.'))
     ext(bullets([
         'A converter can be <b>below f<sub>r</sub> and still inductive</b>. '
         'That is the ordinary boosting region, and it is where an LLC '
@@ -563,8 +629,7 @@ def build(A):
     add(eq(r'T_{ZC}\;>\;t_D', key='zvs'))
     add(fig('f05_zvs_mechanism',
             'How ZVS happens: the magnetising current, not the load current, '
-            'discharges the bridge node during the dead time.',
-            width=CW * 0.80))
+            'discharges the bridge node during the dead time.'))
     add(note('<b>Use the output charge, not the small-signal '
              'capacitance.</b> A MOSFET datasheet quotes C<sub>oss</sub>, '
              'C<sub>o(er)</sub> and C<sub>o(tr)</sub>, and they differ by '
@@ -604,7 +669,7 @@ def build(A):
     add(fig('an_peakgain',
             'Step 4, and the reason m and Q cannot be chosen separately: the '
             'peak gain a tank can reach depends on both. Choosing a required '
-            'gain and a Q leaves only a band of usable m.', width=CW * 0.52))
+            'gain and a Q leaves only a band of usable m.'))
     add(note('<b>That is the first half.</b> Everything above is the LLC on '
              'its own: a tank, a gain curve, and a frequency that moves the '
              'operating point along it. None of it involves the mains. The '
@@ -624,7 +689,7 @@ def build(A):
             'A capacitor-input rectifier and what it draws. v<sub>C</sub> '
             'stays near the crest, so the diodes conduct only in the narrow '
             'windows where the mains is above it, and the current inside '
-            'them is correspondingly tall.', width=CW * 0.66))
+            'them is correspondingly tall.'))
     add(p('All the consequences follow from that one fact. The peak current '
           'is several times what a resistor of the same average power would '
           'draw, so the wiring, the fuse, the bridge and the source all have '
@@ -669,8 +734,7 @@ def build(A):
             'A boost corrector, with the current path traced for each half of '
             'the switching period: the reactor charges from the line while '
             'the switch is on, and delivers to the bus in series with the '
-            'line while it is off.',
-            width=CW * 0.62))
+            'line while it is off.'))
     ext(bullets([
         '<b>Why a boost.</b> The input is a rectified sine that passes '
         'through zero, so the stage must be able to step up by an unlimited '
@@ -690,7 +754,7 @@ def build(A):
             'The result, in continuous conduction mode. Switching ripple '
             'rides on the reactor current and never brings it to zero; its '
             'average follows the input voltage, which is what the two loops '
-            'were arranged to produce.', width=CW * 0.66))
+            'were arranged to produce.'))
     add(note('<b>This comes back later.</b> Take the boost stage away and '
              'the same conflict returns in a sharper form: the outer loop is '
              'then the <i>only</i> loop, its output is a power command, and '
@@ -746,7 +810,7 @@ def build(A):
     add(fig('f11_power_balance',
             'Unity power factor forces a 2f<sub>l</sub> energy imbalance. The '
             'shaded areas are what a capacitor somewhere must absorb and give '
-            'back.', width=CW * 0.84))
+            'back.'))
 
     add(h2('Moving the buffer from 400 V to the output'))
     add(p('In the two-stage converter that buffer is the bus capacitor, at '
@@ -842,7 +906,7 @@ def build(A):
     add(fig('f12_two_divergences',
             'Near the zero crossing the required gain diverges and the load '
             'vanishes together, so the operating point converges on '
-            'f<sub>o</sub>.', width=CW * 0.88))
+            'f<sub>o</sub>.'))
 
     add(h2('Frequency modulation is the power factor correction'))
     add(p('Putting these together gives the control law. Over a line half '
@@ -854,8 +918,7 @@ def build(A):
           'equivalent input range.' % FR('f14_fsw_theta')))
     add(fig('f14_fsw_theta',
             'f<sub>sw</sub>(&theta;) over a line half cycle. The excursion is '
-            'the power factor correction; the floor is f<sub>o</sub>.',
-            width=CW * 0.84))
+            'the power factor correction; the floor is f<sub>o</sub>.'))
     add(p('Computing that profile seems to need a numerical root '
           'search: at each &theta; the gain equation has to be solved for '
           'f<sub>n</sub>, and it has two roots: a capacitive one and an '
@@ -1106,7 +1169,7 @@ def build(A):
           'when tightening a specification.' % V))
     add(fig('f18_morph_levels',
             'Where each mode applies. Inside the band the mode depends on '
-            'which direction the mains arrived from.', width=CW * 0.78))
+            'which direction the mains arrived from.'))
     add(note('<b>Where you will actually meet the band.</b> Real mains never '
              'sits at 166 to 173&nbsp;Vrms, so in service the mode is settled '
              'at start-up and stays. The band is met on a programmable ac '
@@ -1310,7 +1373,7 @@ def build(A):
         'loss by the square of that.']))
     add(fig('an_tank_current',
             'The composite tank current, and why its peak is not the sum of '
-            'the two component peaks.', width=CW * 0.74))
+            'the two component peaks.'))
     add(h2('The transformer'))
     add(p('The tank has fixed L<sub>r</sub>, L<sub>m</sub> and a ratio; the '
           'transformer has turns, an open-circuit inductance and a leakage. '
@@ -1336,14 +1399,15 @@ def build(A):
            r'L_{L1}=L_{m}+L_{r}-L_{\mu}\,,\qquad '
            r'L_{L2}=\frac{L_{L1}}{n_{T}^{2}}', key='Lmu'))
     add(fig('an_integrated',
-            'The same transformer drawn both ways. Above, the leakage split '
-            'between the two sides; below, all of it referred to the '
-            'primary so that the tank sees L<sub>r</sub>, a shunt '
-            'inductance and an ideal transformer whose ratio is no longer '
-            'the wound one. L<sub>p</sub> is the total primary inductance, '
-            'L<sub>open</sub> elsewhere in this note, and M<sub>V</sub> is '
-            '&radic;(1+&lambda;) &mdash; so n<sub>T</sub>/M<sub>V</sub> is '
-            'n.', width=CW * 0.62))
+            'The same transformer drawn both ways. Above, as wound: the '
+            'leakage split between the two sides, the <b>physical</b> '
+            'magnetising inductance L<sub>&mu;</sub> in shunt, and the '
+            'wound ratio n<sub>T</sub>&nbsp;:&nbsp;1. Below, referred to '
+            'the primary: one L<sub>r</sub>, one L<sub>m</sub>, and an '
+            'ideal ratio n&nbsp;:&nbsp;1 that is no longer the wound one. '
+            'The two shunt elements are not the same number &mdash; '
+            'L<sub>&mu;</sub> = &radic;(L<sub>m</sub>(L<sub>m</sub>+'
+            'L<sub>r</sub>)) &mdash; and neither are the two ratios.'))
     add(note('That three-element form assumes the leakage splits evenly '
              'between the two sides. The real split is set by the winding '
              'arrangement rather than by the design, and it does not matter: '
@@ -1390,6 +1454,167 @@ def build(A):
              'quarter at &lambda;&nbsp;&asymp;&nbsp;0.5 &mdash; because the '
              'L<sub>m</sub> branch carries n V<sub>out</sub> while the '
              'winding reflects n<sub>T</sub> V<sub>out</sub>.'))
+
+    add(h2('Choosing the core: two areas, and the one that usually decides'))
+    add(p('A core has to satisfy two independent conditions, and they have '
+          'nothing to do with each other. The magnetic one is the equation '
+          'above: enough cross-section A<sub>e</sub> to carry the flux at '
+          'the turns chosen. The electrical one is the winding window '
+          'A<sub>N</sub>: enough room for the copper the currents need. '
+          'Catalogues quote both, and their product is what handbooks call '
+          'the <b>area product</b>. Either can be the binding one.'))
+    add(note('<b>Read the flux check against A<sub>min</sub>, not '
+             'A<sub>e</sub>.</b> A<sub>e</sub> is the effective area for '
+             'inductance; A<sub>min</sub> is the narrowest section the flux '
+             'actually has to pass. On a PQ core the two differ by ten to '
+             'twenty per cent, and it is A<sub>min</sub> that saturates '
+             'first: the real peak is B<sub>pk</sub>&thinsp;A<sub>e</sub>/'
+             'A<sub>min</sub>. Both numbers are in the datasheet, and only '
+             'one of them is usually used.'))
+    add(p('In a <b>single-stage PF LLC there is a third condition, and it is '
+          'normally the one that decides</b>: the leakage inductance has to '
+          'come out at L<sub>r</sub>. Written as a fraction of what a meter '
+          'reads at the primary,'))
+    add(eq(r'\frac{L_{short}}{L_{open}}=\frac{L_{r}}{L_{m}+L_{r}}'
+           r'=\frac{\lambda}{1+\lambda}', key='lkfrac'))
+    add(p('At &lambda;&nbsp;=&nbsp;%(lam).2f that is '
+          '<b>%(lkpc).0f&nbsp;%%</b>. A conventional transformer, wound to '
+          'couple as well as it can, leaks a few per cent; this one has to '
+          'leak an order of magnitude more, <i>on purpose</i>. Leakage that '
+          'large is not a winding tolerance, it is a winding <b>geometry</b> '
+          '&mdash; and geometry costs window area. A core that passes on '
+          'A<sub>e</sub> and on copper can still fail here.'
+          % dict(V, lkpc=100 * V['lam'] / (1 + V['lam']))))
+
+    add(h2('The winding arrangement is the leakage'))
+    add(p('Leakage is the flux that links one winding and not the other, so '
+          'it is set by how far apart the two windings are and by how much '
+          'of the window separates them. That gives the designer one knob '
+          'and a well-known ordering:'))
+    ext(bullets([
+        '<b>Interleaved</b> &mdash; primary, secondary, primary, all '
+        'concentric. Lowest leakage, typically one or two per cent. This is '
+        'what a conventional forward or flyback transformer wants, and it is '
+        'the opposite of what is needed here.',
+        '<b>Concentric, not interleaved</b> &mdash; the whole primary, then '
+        'the whole secondary, over it. A few per cent. Still far short.',
+        '<b>Side by side</b> &mdash; the primary on one half of the winding '
+        'width, the secondary on the other. Tens of per cent, and adjustable '
+        'by the gap left between them. <b>This is the arrangement a '
+        'single-stage tank asks for</b>, and it is why the window has to be '
+        'generous: half of it goes to each winding, and part of what is left '
+        'is deliberately empty.',
+        '<b>A magnetic shunt</b> &mdash; a ferrite bar in the window between '
+        'the two windings, which carries leakage flux on purpose. It buys '
+        'leakage without spending winding width, at the cost of a part and '
+        'of a tolerance that is harder to hold.']))
+    add(note('<b>This inverts the usual advice.</b> Every transformer text '
+             'says to interleave, because in every other topology leakage is '
+             'loss and overshoot. Here L<sub>r</sub> is a design value that '
+             'the tank needs, and a supplier who "improves" the coupling has '
+             'broken the converter &mdash; f<sub>r</sub> moves, &lambda; '
+             'collapses and the gain curve goes with it. Say so on the '
+             'drawing, in words, next to L<sub>short</sub>.'))
+
+    add(h2('The gap, and why the drawing must not name it'))
+    add(p('L<sub>m</sub> is two orders below what an ungapped core of this '
+          'size gives, so the core is gapped. The inductance factor that '
+          'follows from the turns is'))
+    add(eq(r'A_{L}=\frac{L_{open}/N_{x}}{N_{p}^{2}}'
+           r'\qquad\qquad '
+           r'g\;\approx\;\frac{\mu_{0}\,A_{e}}{A_{L}}', key='ALgap'))
+    add(p('with N<sub>x</sub> the number of units the assembly is built '
+          'from. The second expression is only an estimate: it assumes the '
+          'gap carries the whole reluctance and it ignores fringing, which '
+          'always makes the real gap larger than it predicts. <b>Specify '
+          'A<sub>L</sub>, or better L<sub>open</sub> itself, and leave the '
+          'gap to the supplier</b> &mdash; that is the number they grind to, '
+          'and it is the number a meter can check.'))
+
+    add(h2('The window: wire, current density and what actually fits'))
+    add(p('Each winding needs a conductor cross-section set by its own rms '
+          'current and the current density the design can cool:'))
+    add(eq(r'A_{cu}=\frac{I_{rms}}{J}\qquad\qquad '
+           r'\sum_{w} N_{w}A_{cu,w}\;\leq\;k_{u}A_{N}', key='window'))
+    add(p('J is an assumption, not a constant: 4 to 5&nbsp;A/mm&sup2; is '
+          'usual for a transformer of this size in free air, less if it is '
+          'enclosed. k<sub>u</sub> is the window utilisation, and it is '
+          'brutal &mdash; round wire in a round bundle, insulation, the '
+          'bobbin wall, the margins and the layer-to-layer tape leave '
+          '<b>0.3 or less</b> of the window as copper when the wire is '
+          'Litz. Sizing on bare copper alone overstates what fits by three '
+          'times.'))
+    add(note('<b>The primary current does not divide between units.</b> With '
+             'the primaries in series every unit carries the whole primary '
+             'current, and only the secondaries share. So the primary '
+             'copper is the same in each unit as it would be in one big '
+             'transformer, while the secondary copper is divided &mdash; '
+             'which is exactly why splitting helps a low-voltage, '
+             'high-current output.'))
+
+    add(h2('Skin depth, and why the wire is not a wire'))
+    add(p('At the switching frequency current does not fill a conductor. It '
+          'crowds into a surface layer of depth'))
+    add(eq(r'\delta=\sqrt{\frac{\rho}{\pi f\mu_{0}}}', key='skin'))
+    add(p('which at f<sub>r</sub> = %(fr).0f&nbsp;kHz and 100&nbsp;&deg;C '
+          'is <b>%(delta).2f&nbsp;mm</b> in copper. A conductor thicker '
+          'than about 2&delta; carries no more current than one of 2&delta; '
+          '&mdash; it only adds weight. Worse, the field from the '
+          '<i>other</i> turns drives circulating current in each conductor '
+          '(the proximity effect), and in a side-by-side winding, where the '
+          'two windings sit in each other’s leakage field, that term '
+          'can dominate the skin term.'
+          % dict(V, delta=V['delta'])))
+    ext(bullets([
+        'Use <b>Litz</b> on the primary: many strands, each well under '
+        '2&delta;, individually insulated and transposed. Strand diameter '
+        'around %(ds).1f&nbsp;mm is a usual choice at this frequency.'
+        % dict(ds=0.2),
+        'On a two-turn, high-current secondary, <b>copper foil</b> is '
+        'usually better than wire: the thickness can be held near &delta; '
+        'while the width fills the window, and it terminates well into a '
+        'centre tap.',
+        'Whatever is chosen, the ac resistance is what heats the winding. '
+        'The dc resistance &rho;&thinsp;l<sub>N</sub>N/A<sub>cu</sub> is a '
+        'floor, not an answer.']))
+
+    add(h2('Isolation, margins and what they cost in window'))
+    add(p('The transformer is the isolation barrier of the whole supply, so '
+          'the winding that looks like a copper problem is also a safety '
+          'one. Two arrangements are common, and they spend the window '
+          'differently. <b>Margin tape</b> leaves a creepage margin at each '
+          'end of the bobbin &mdash; typically 3&nbsp;mm each side for '
+          'reinforced isolation from a universal mains &mdash; so it takes '
+          '6&nbsp;mm off the usable winding width and costs nothing in '
+          'material. <b>Triple-insulated wire</b> needs no margin, so the '
+          'winding uses the full width, but the wire is thicker for the same '
+          'copper and it costs more.'))
+    add(note('On a side-by-side winding the margin is taken twice over: once '
+             'for the isolation, and once again for the gap that sets the '
+             'leakage. Work the window budget with both in it, or the part '
+             'that is ordered will not be the part that was calculated.'))
+
+    add(h2('Loss, and the temperature the drawing has to survive'))
+    ext(bullets([
+        '<b>Core loss</b> comes off the material curve at the operating '
+        'flux and frequency, not off the headline figure. A datasheet '
+        'quotes P<sub>V</sub> at one point &mdash; 100 or 200&nbsp;mT at '
+        '100&nbsp;kHz &mdash; and a design at a different flux and a '
+        'different frequency has to be read from the curve.',
+        '<b>Copper loss</b> is I&sup2;R<sub>ac</sub>, and R<sub>ac</sub> is '
+        'the number the previous section is about. Both windings count, and '
+        'in a side-by-side arrangement the proximity term is not small.',
+        '<b>The temperature rise</b> is what actually limits the design, '
+        'and it depends on the surface area and the airflow, neither of '
+        'which is in any of the equations above. Treat the computed loss as '
+        'an input to a thermal measurement, not as an answer.']))
+    add(note('<b>Flux and loss do not move together here.</b> B<sub>pk</sub> '
+             'is set at f<sub>r</sub> by the secondary volt-seconds, so it '
+             'does not change when the converter runs faster &mdash; but '
+             'core loss does, and in a single-stage converter the frequency '
+             'sweeps over the line cycle. The core sees its worst flux at '
+             'the bottom of the sweep and its worst loss per cycle count at '
+             'the top.'))
 
     add(h2('The saturation test is not the peak winding current'))
     add(p('A DC-overlap test leaves every other winding open, so none of the '
@@ -1585,8 +1810,7 @@ def build(A):
             'R<sub>I</sub> and R<sub>O</sub> set the regulated output, '
             'R<sub>f</sub>C<sub>f</sub> and C<sub>fo</sub> shape the '
             'compensator, and R<sub>P</sub> and R<sub>B</sub> bias the shunt '
-            'regulator and the optocoupler diode.',
-            width=CW * 0.68))
+            'regulator and the optocoupler diode.'))
     add(p('The output is a capacitor fed by a constant-power source, so the '
           'control-to-output transfer is a <b>pure integrator</b>: '
           '&minus;90&deg; at every frequency. That makes the loop easy to '
@@ -1653,7 +1877,7 @@ def build(A):
 
     add(fig('an_loop_bode',
             'Open-loop gain and phase margin of the selected compensation '
-            'network.', width=CW * 0.72))
+            'network.'))
     add(note('<b>A loop this slow cannot recover from a large load step.</b> '
              'The controller&rsquo;s anti-saturation circuit does that '
              'instead, which is why the optocoupler bias resistor must sit '
@@ -2011,6 +2235,71 @@ def build(A):
         '&nbsp;=&nbsp; %(Z0s).2f/%(Rac).2f &nbsp;=&nbsp; <b>%(Qpk).3f</b>, '
         'against the %(QZVS).3f cap of row 10.' % dict(V, e=ER('M')),
     ]))
+    add(p('And the rest of the chain, in the same form, so that nothing in '
+          'the table is a number that appeared without being worked:'))
+    ext(bullets([
+        '<b>Rows 1 and 2, the power the tank has to pass.</b> The output is '
+        '%(Pout).1f&nbsp;W. The input bridge is allowed %(a).2f&nbsp;W and '
+        'the EMI filter %(b).2f&nbsp;W, and the LLC stage itself '
+        '%(c).2f&nbsp;W at &eta;<sub>HB</sub>&nbsp;=&nbsp;%(etaHB).0f&nbsp;%%. '
+        'So P<sub>in</sub>&nbsp;=&nbsp;%(Pout).1f + %(c).2f + %(b).2f + '
+        '%(a).2f &nbsp;=&nbsp; <b>%(Pin).1f&nbsp;W</b>, and what reaches the '
+        'tank is P<sub>in</sub> less the first two: '
+        '%(Pin).1f &minus; %(a).2f &minus; %(b).2f &nbsp;=&nbsp; '
+        '<b>%(d).1f&nbsp;W</b>.'
+        % dict(V, a=A.SH['P.d_BR'], b=A.SH['P.d_EMI'], c=A.SH['P.d_LLC'],
+               d=A.SH['P.in_LLC']),
+        '<b>Rows 3 and 4, the corners.</b> Equation&nbsp;%(e)s, at the two '
+        'morphing thresholds and not at the mains limits: in half bridge '
+        '245&nbsp;V<sub>pk</sub>/&radic;2 &nbsp;=&nbsp; '
+        '<b>%(Veqlo).1f&nbsp;Vac</b>, and in full bridge '
+        '2&times;235&nbsp;V<sub>pk</sub>/&radic;2 &nbsp;=&nbsp; '
+        '<b>%(Veqhi).1f&nbsp;Vac</b>. Everything downstream is designed '
+        'between those two numbers.' % dict(V, e=ER('Veq')),
+        '<b>Row 10, the cap on the quality factor.</b> Two limits are '
+        'evaluated at the low corner and the smaller is kept: the Q at '
+        'which the tank can still reach the gain of row 7, and the Q at '
+        'which ZVS still completes inside t<sub>D</sub>. Here that is '
+        '<b>Q<sub>ZVS</sub> = %(QZVS).4f</b>, and multiplying it by '
+        'R<sub>ac</sub> gives the design impedance of row 11: '
+        '%(Rac).2f&nbsp;&times;&nbsp;%(QZVS).4f &nbsp;=&nbsp; '
+        '<b>%(Z0).2f&nbsp;&Omega;</b>.' % V,
+        '<b>Row 14, the &lambda; the tank is asked for.</b> Four candidates '
+        'are computed and the largest is binding. The plain minimum-gain '
+        'condition gives &lambda;<sub>1</sub>&nbsp;=&nbsp;%(l1).3f; folding '
+        'in the frequency ceiling through equation&nbsp;%(e)s raises it to '
+        '%(l2).3f, and the dead-time form to <b>%(lTD).3f</b>. That last '
+        'one is the requirement.'
+        % dict(V, e=ER('lam'), l1=A.SH['λ.1'], l2=A.SH['λ.2'],
+               lTD=A.SH['λ.TD']),
+        '<b>Rows 15 and 16, where the design departs from the arithmetic.</b> '
+        'L<sub>r</sub>/&lambda;<sub>req</sub> would be '
+        '%(Lr).0f/%(lTD).3f&nbsp;=&nbsp;%(Lmc).2f&nbsp;&micro;H. That '
+        'number is the <i>no-load</i> condition at the high corner, which '
+        'this design knowingly does not meet, so it is not rounded to. '
+        'L<sub>m</sub> is chosen at <b>%(Lm).0f&nbsp;&micro;H</b> together '
+        'with n so that n<sub>T</sub> lands on a windable ratio, and the '
+        '&lambda; that results is '
+        '&lambda;<sub>act</sub>&nbsp;=&nbsp;L<sub>r</sub>/L<sub>m</sub> '
+        '&nbsp;=&nbsp; %(Lr).0f/%(Lm).0f &nbsp;=&nbsp; <b>%(lam).3f</b>.'
+        % dict(V, lTD=A.SH['λ.TD']),
+        '<b>Row 17, the two resonances the selected parts actually make.</b> '
+        'f<sub>r</sub>&nbsp;=&nbsp;1/(2&pi;&radic;(L<sub>r</sub>'
+        'C<sub>r</sub>)) &nbsp;=&nbsp; 1/(2&pi;&radic;(%(Lr).0f&nbsp;&micro;H '
+        '&times; %(Cr).0f&nbsp;nF)) &nbsp;=&nbsp; <b>%(fr).1f&nbsp;kHz</b>, '
+        'and the same expression with L<sub>r</sub>+L<sub>m</sub> = '
+        '%(Lsum).0f&nbsp;&micro;H gives <b>f<sub>o</sub> = '
+        '%(fo).1f&nbsp;kHz</b>. Those two, not the targets, are what every '
+        'later check is measured against.'
+        % dict(V, Lsum=V['Lr'] + V['Lm']),
+        '<b>Row 19, the ratio that is actually wound.</b> '
+        'n<sub>T</sub>&nbsp;=&nbsp;n&thinsp;&radic;(1+&lambda;<sub>act</sub>) '
+        '&nbsp;=&nbsp; %(n).3f&times;&radic;(1+%(lam).3f) &nbsp;=&nbsp; '
+        '%(n).3f&times;%(rt).4f &nbsp;=&nbsp; <b>%(nT).3f</b>, which is '
+        '%(NpSet)d&nbsp;:&nbsp;%(Ns)d across the assembly and '
+        '%(Np)d&nbsp;:&nbsp;%(Ns)d in each of the %(nser)d units.'
+        % dict(V, rt=(1 + V['lam']) ** 0.5),
+    ]))
     add(note('<b>Steps 12, 15 and 18 are the judgement calls.</b> '
              'Everything else in that table is arithmetic that any two '
              'engineers would reproduce identically. C<sub>r</sub> was taken '
@@ -2195,6 +2484,112 @@ def build(A):
              'being chosen.' % dict(V, nTx=V['nT'] + 0.4)))
 
     # ------------------------------------------------ output bank as sized
+    # ------------------------------------------------ the core, chosen
+    add(h2('Choosing the core, and building the winding on it'))
+    add(p('The tank has fixed what the transformer must be: '
+          'L<sub>open</sub>&nbsp;=&nbsp;%(Lopenx).1f&nbsp;&micro;H and '
+          'L<sub>short</sub>&nbsp;=&nbsp;%(Lshortx).2f&nbsp;&micro;H per '
+          'unit, %(Np)d&nbsp;:&nbsp;%(Ns)d turns, and a leakage that is '
+          '%(lkpc).0f&nbsp;%% of the open-circuit inductance. Now a core '
+          'has to be picked that can do all three. Two standard PQ sets '
+          'are worked through below; both are TDK catalogue parts and '
+          'every figure in the left-hand columns is from their '
+          'datasheets.' % dict(V, lkpc=100 * V['lam'] / (1 + V['lam']))))
+    _cw = _CORE.window(V) / _CORE.K_U
+    add(tbl('Two candidate cores against the three conditions. Datasheet '
+            'figures on the left, this design on the right.',
+            [['', 'PQ 32/30', 'PQ 40/40', 'what it has to beat']]
+            + [[n] + [f % _CORE.CORES[k][kk] if kk else f % g(k)
+                      for k in ('PQ 32/30', 'PQ 40/40')] + [w]
+               for n, kk, f, g, w in (
+                   ('A<sub>e</sub>', 'Ae', '%.1f mm&sup2;', None,
+                    '&ge; %.0f mm&sup2; at 0.20 T' % V['Aereq']),
+                   ('A<sub>min</sub>', 'Amin', '%.1f mm&sup2;', None,
+                    'the section that really saturates'),
+                   ('B<sub>pk</sub>', None, '%.0f mT',
+                    lambda k: _CORE.flux(V, _CORE.CORES[k]['Ae']),
+                    'at A<sub>min</sub>: %.0f and %.0f mT'
+                    % tuple(_CORE.flux(V, _CORE.CORES[k]['Ae'])
+                            * _CORE.CORES[k]['Ae'] / _CORE.CORES[k]['Amin']
+                            for k in ('PQ 32/30', 'PQ 40/40'))),
+                   ('N<sub>s</sub> needed', None, '%.2f &rarr; 2',
+                    lambda k: _CORE.turns_needed(V, _CORE.CORES[k]['Ae']),
+                    'a whole number, so 2 on either'),
+                   ('window A<sub>N</sub>', 'AN', '%.0f mm&sup2;', None,
+                    '&ge; %.0f mm&sup2; for the copper alone' % _cw),
+                   ('window used', None, '%.0f %%',
+                    lambda k: 100 * _cw / _CORE.CORES[k]['AN'],
+                    'before margins and the separation'),
+                   ('mean turn l<sub>N</sub>', 'lN', '%.0f mm', None,
+                    'copper length, so copper loss'),
+                   ('gap for A<sub>L</sub> = %.0f nH' % V['AL'], None,
+                    '%.2f mm', lambda k: _CORE.gap(V, _CORE.CORES[k]['Ae']),
+                    'first estimate, before fringing'))],
+            widths=[CW * 0.24, CW * 0.16, CW * 0.16, CW * 0.44],
+            key='cores'))
+    add(p('<b>Both cores pass the flux condition, so the flux does not '
+          'decide.</b> A<sub>e</sub> clears the requirement by %(k1).2f on '
+          'the smaller core and %(k2).2f on the larger, and either takes '
+          'the same two secondary turns. What separates them is the '
+          'window. The copper alone asks for %(cw).0f&nbsp;mm&sup2; at '
+          '%(J).1f&nbsp;A/mm&sup2; and k<sub>u</sub>&nbsp;=&nbsp;'
+          '%(ku).2f, which is %(u1).0f&nbsp;%% of the smaller former and '
+          '%(u2).0f&nbsp;%% of the larger &mdash; <i>and that is before any '
+          'of the window has been given to the margins and to the '
+          'separation that the %(lkpc).0f&nbsp;%% leakage needs</i>. On the '
+          'smaller core there is nothing left to give.'
+          % dict(V, cw=_cw, J=_CORE.J_CU, ku=_CORE.K_U,
+                 lkpc=100 * V['lam'] / (1 + V['lam']),
+                 k1=_CORE.CORES['PQ 32/30']['Ae'] / V['Aereq'],
+                 k2=_CORE.CORES['PQ 40/40']['Ae'] / V['Aereq'],
+                 u1=100 * _cw / _CORE.CORES['PQ 32/30']['AN'],
+                 u2=100 * _cw / _CORE.CORES['PQ 40/40']['AN'])))
+    add(note('<b>So the core is chosen by the leakage, not by the flux.</b> '
+             'That is the single-stage result in one line, and it is worth '
+             'stating because it is the opposite of the usual order: in a '
+             'conventional converter the core comes from A<sub>e</sub> and '
+             'the window follows, and here the window decides. '
+             '<b>PQ 40/40 is taken</b> &mdash; N95 or an equivalent low-loss '
+             'grade, gapped to A<sub>L</sub>. The price is a mean turn '
+             '%(dl).0f&nbsp;%% longer than the smaller core and a set that '
+             'weighs %(dm).0f&nbsp;%% more.'
+             % dict(dl=100 * (_CORE.CORES['PQ 40/40']['lN']
+                              / _CORE.CORES['PQ 32/30']['lN'] - 1),
+                    dm=100 * (_CORE.CORES['PQ 40/40']['mass']
+                              / _CORE.CORES['PQ 32/30']['mass'] - 1))))
+    add(fig('an_core_section',
+            'The chosen core in section, and the same winding unrolled '
+            'along the bobbin. The primary and the secondary sit side by '
+            'side with a deliberate gap between them: that gap is what '
+            'makes L<sub>short</sub> come out at %(Ls).2f&nbsp;&micro;H per '
+            'unit instead of the one or two per cent an interleaved '
+            'winding would leak. Proportions are schematic; the areas '
+            'named are the datasheet\u2019s.' % dict(Ls=V['Lshortx'])))
+    _rows = _CORE.copper(V)
+    add(tbl('The winding, and what it asks of the window. One unit.',
+            [['Winding', 'Turns', 'I<sub>rms</sub> per unit',
+              'Copper at %.1f A/mm&sup2;' % _CORE.J_CU, 'Wire'],
+             ['Primary', '%d' % V['Np'], '%.2f A' % _rows[0][2],
+              '%.2f mm&sup2;' % _rows[0][3],
+              'Litz, strands well under 2&delta; = %.2f mm' % (2 * V['delta'])],
+             ['Secondary, each half', '%d' % V['Ns'],
+              '%.2f A' % _rows[1][2], '%.2f mm&sup2;' % _rows[1][3],
+              'foil: thickness near &delta;, width fills the window'],
+             ['<b>Bare copper, both halves counted</b>', '&mdash;', '&mdash;',
+              '<b>%.1f mm&sup2;</b>' % _CORE.window(V),
+              'at k<sub>u</sub> = %.2f that is %.0f mm&sup2; of window, '
+              '%.0f %% of A<sub>N</sub>'
+              % (_CORE.K_U, _cw, 100 * _cw / _CORE.CORES['PQ 40/40']['AN'])]],
+            widths=[CW * 0.24, CW * 0.08, CW * 0.14, CW * 0.16, CW * 0.38],
+            key='winding'))
+    add(note('<b>Only the secondary current divides.</b> The primaries are '
+             'in series, so each of the %(nser)d units carries the whole '
+             '%(Iprilc).2f&nbsp;A of primary current; the secondaries are in '
+             'parallel, so each unit sees a third of the '
+             '%(Idio).2f&nbsp;A that a rectifier leg carries. That is the '
+             'whole reason the split helps here, and it is also why the '
+             'primary copper cannot be reduced by adding units.' % V))
+
     add(p('Reduced to what a supplier can measure at the terminals, this '
           'gives the specification sheet below. Nothing on it is a construction '
           'instruction, and L<sub>&mu;</sub> is deliberately absent &mdash; '

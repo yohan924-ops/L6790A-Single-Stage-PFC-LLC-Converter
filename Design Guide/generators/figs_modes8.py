@@ -279,21 +279,46 @@ PRI_FWD_DIODE = ([P_LO, (XL, LO)] + bd(XL, SH[1]) + [A, LM_T, LM_B, B]
 #  Both halves are drawn, because leaving one out would say the midpoint is
 #  carried by one capacitor when it is carried by four.  Each capacitor's
 #  own colour still says which way its V_ds is going.
-COSS_FWD_HI = ([P_HI, (XL, HI)] + cs(XL, SH[0])[::-1] + [A, LM_T, LM_B, B]
-               + cs(XR, SH[0]) + [(XR, HI), P_HI])
-COSS_FWD_LO = ([P_LO, (XL, LO)] + cs(XL, SH[1]) + [A, LM_T, LM_B, B]
-               + cs(XR, SH[1])[::-1] + [(XR, LO), P_LO])
-COSS_HEADS = ((4, 0.50), (7, 0.34), (12, 0.50))
+#  Drawn as two whole loops, both of them ran down the same tank wire and
+#  the reader saw one thick line where there are two currents - which was
+#  the first thing asked about the panel.  There are not two currents in
+#  the tank: there is ONE, and it splits at the legs.  So the tank carries
+#  a single line and each leg carries its own pair of short branches:
+#
+#     leg 1   V_in -> C_oss(S1) -> A        both ARRIVE at A, so A falls
+#             0    -> C_oss(S2) -> A
+#     leg 2   B -> C_oss(S3) -> V_in        both LEAVE B, so B rises
+#             B -> C_oss(S4) -> 0
+#
+#  That asymmetry is not a drawing choice - it is the transition.  KCL at
+#  a midpoint gives dv/dt = -/+ i/(2 C_oss): the node the current leaves
+#  is pulled down and the node it enters is pushed up, and the two swap
+#  ends.  Each capacitor keeps its own colour for the V_ds it is going to.
+COSS_TANK_F = [A, LM_T, LM_B, B]
+COSS_F_A_HI = [P_HI, (XL, HI)] + cs(XL, SH[0])[::-1] + [A]
+COSS_F_A_LO = [P_LO, (XL, LO)] + cs(XL, SH[1]) + [A]
+COSS_F_B_HI = [B] + cs(XR, SH[0]) + [(XR, HI), P_HI]
+COSS_F_B_LO = [B] + cs(XR, SH[1])[::-1] + [(XR, LO), P_LO]
+#  head on the segment that crosses the plates, and one on the run to the
+#  junction, so the direction is readable without tracing the whole branch
+H_IN = ((4, 0.50), (6, 0.55))
+H_OUT = ((1, 0.55), (3, 0.50))
+COSS_HEADS = ((1, 0.30), (3, 0.55))
+COSS_FWD = [(COSS_F_A_HI, H_IN), (COSS_F_A_LO, H_IN),
+            (COSS_F_B_HI, H_OUT), (COSS_F_B_LO, H_OUT)]
 
 # primary, second half: the mirror image
 PRI_REV_XFMR = [P_HI, (XR, HI), B, NP_B, NP_T, A, (XL, LO), P_LO]
 PRI_REV_LM = [P_HI, (XR, HI), B, LM_B, LM_T, A, (XL, LO), P_LO]
 PRI_REV_DIODE = ([P_LO, (XR, LO)] + bd(XR, SH[1]) + [B, LM_B, LM_T, A]
                  + bd(XL, SH[0]) + [(XL, HI), P_HI])
-COSS_REV_HI = ([P_HI, (XR, HI)] + cs(XR, SH[0])[::-1] + [B, LM_B, LM_T, A]
-               + cs(XL, SH[0]) + [(XL, HI), P_HI])
-COSS_REV_LO = ([P_LO, (XR, LO)] + cs(XR, SH[1]) + [B, LM_B, LM_T, A]
-               + cs(XL, SH[1])[::-1] + [(XL, LO), P_LO])
+COSS_TANK_R = [B, LM_B, LM_T, A]
+COSS_R_B_HI = [P_HI, (XR, HI)] + cs(XR, SH[0])[::-1] + [B]
+COSS_R_B_LO = [P_LO, (XR, LO)] + cs(XR, SH[1]) + [B]
+COSS_R_A_HI = [A] + cs(XL, SH[0]) + [(XL, HI), P_HI]
+COSS_R_A_LO = [A] + cs(XL, SH[1])[::-1] + [(XL, LO), P_LO]
+COSS_REV = [(COSS_R_B_HI, H_IN), (COSS_R_B_LO, H_IN),
+            (COSS_R_A_HI, H_OUT), (COSS_R_A_LO, H_OUT)]
 
 #  Secondary, centre tapped.  Current always LEAVES the tap into the load
 #  and comes back through one rectifier into one winding end; which end is
@@ -325,10 +350,10 @@ MODES = [
     dict(n=3, t='DEAD TIME (a)', sub='all four off  ·  C$_{oss}$ swaps '
                                      'the midpoints over',
          sw=dict(S1='charge', S4='charge', S2='discharge', S3='discharge'),
-         d=(0, 0), pri=COSS_FWD_HI, pri_b=COSS_FWD_LO, heads=COSS_HEADS,
+         d=(0, 0), pri=COSS_TANK_F, pri_n=COSS_FWD, heads=COSS_HEADS,
          load=False, lm=False, sec=None, coss=True,
          swing=(':  V$_{in}$ $\\rightarrow$ 0', ':  0 $\\rightarrow$ V$_{in}$'),
-         note=('All four channels off: the current goes THROUGH the four C$_{oss}$, in two loops, one round each rail.\nThat is what carries the midpoints across.  Magenta: C$_{oss}$ charging, V$_{ds}$ rising;  cyan: discharging.'),
+         note=('All four channels are off, so the ONE tank current can reach the rails only THROUGH the four C$_{oss}$.\nIt arrives at A from both, so A is pulled down; it leaves B into both, so B is pushed up. That swap IS the transition.'),
          say='The same magnetising current keeps flowing and has nowhere to '
              'go but the device capacitances. Node A falls from V$_{in}$ to '
              '0 and node B rises from 0 to V$_{in}$.'),
@@ -360,10 +385,10 @@ MODES = [
     dict(n=7, t='DEAD TIME (a)', sub='all four off  ·  C$_{oss}$ swaps '
                                      'the midpoints back',
          sw=dict(S2='charge', S3='charge', S1='discharge', S4='discharge'),
-         d=(0, 0), pri=COSS_REV_HI, pri_b=COSS_REV_LO, heads=COSS_HEADS,
+         d=(0, 0), pri=COSS_TANK_R, pri_n=COSS_REV, heads=COSS_HEADS,
          load=False, lm=False, sec=None, coss=True,
          swing=(':  0 $\\rightarrow$ V$_{in}$', ':  V$_{in}$ $\\rightarrow$ 0'),
-         note=('The mirror of 3. Node B falls, node A rises, and the same magnetising current moves the charge -\nthrough the capacitances again, never a channel.  Same colours:  magenta charging, cyan discharging.'),
+         note=('The mirror of 3: the current now arrives at B and leaves A, so B falls and A rises.\nThrough the capacitances again, never a channel.  Magenta: C$_{oss}$ charging, V$_{ds}$ rising;  cyan: discharging.'),
          say='The mirror image of interval 3. Node B falls and node A rises, '
              'and the charge is moved by the magnetising current again.'),
     dict(n=8, t='DEAD TIME (b)  —  ZVS', sub='body diodes of S1 and S4 '
@@ -394,9 +419,9 @@ def panel(ax, m):
 
     hd = m.get('heads', ((2, 0.90), (3, 0.45), (6, 0.90)))
     path(ax, m['pri'], load=m['load'], heads=hd)
-    if m.get('pri_b'):
-        #  the dead time has two loops, one round each rail
-        path(ax, m['pri_b'], load=m['load'], heads=hd)
+    for p, h in m.get('pri_n', ()):
+        #  the dead time splits at both legs: four branches off one tank
+        path(ax, p, load=m['load'], heads=h)
     if m['sec']:
         #  The last head sits early on the run back to the winding: at
         #  0.45 it landed on the 'centre tap' label in the second half.
@@ -493,6 +518,28 @@ def _step(T, e, lo, hi):
     v[m] = (T[m] - e[6]) / (e[7] - e[6])
     v[T > e[7]] = 1.0
     return lo + (hi - lo) * v
+
+
+def series(lam, fsw_over_fr, ilr_pk, ilm_pk, td_draw=0.045, n=4000):
+    """The same eight-interval model, handed to the other figures as arrays.
+
+    The ZVS figures used to sketch the tank current as a perfect sine.
+    Below resonance it is not one: it is a half sine of length T_r/2 riding
+    on a magnetising ramp, and once the rectifiers stop conducting the load
+    component is GONE - what is left at the switching instant, and what
+    swings the bridge node, is the magnetising current alone, at its peak.
+    A figure whose subject is the current at that instant cannot draw a
+    sine crossing zero somewhere else, so it reads the model instead.
+
+    -> T, edges, i_Lr, i_Lm, i_o(rectified), v_A   over one whole period
+    """
+    e = _timeline(fsw_over_fr, td_draw)
+    io_pk = _solve_io(lam, fsw_over_fr, e, ilm_pk, ilr_pk)
+    t = np.linspace(0.0, 0.5, n)
+    ilm, ilr, io = _halfwave(t, lam, fsw_over_fr, e, ilm_pk, io_pk)
+    T = np.concatenate([t, t + 0.5])
+    return (T, e, np.concatenate([ilr, -ilr]), np.concatenate([ilm, -ilm]),
+            np.concatenate([io, io]), _step(T, e, 0.0, 1.0))
 
 
 def waveforms(axes, lam, fsw_over_fr, ilr_pk, ilm_pk, td_draw=0.045):
@@ -597,10 +644,18 @@ LEGEND = [('load current', MAG, 'solid'),
           ('C$_{oss}$ charging, V$_{ds}$ rising', MAG, 'cap'),
           ('C$_{oss}$ discharging', CYA, 'cap')]
 LEG_X = (0.030, 0.144, 0.310, 0.397, 0.608, 0.726)
+#  Half the width means twice the figure-fraction per character, so the one
+#  row the wide sheet used runs the last three items into each other.  Three
+#  per row, two rows, for the narrow one.
+LEG_X_N = ((0.030, 0), (0.200, 0), (0.470, 0),
+           (0.030, 1), (0.400, 1), (0.690, 1))
 
 
-def _legend(fig, y=0.010):
-    for x, (what, col, kind) in zip(LEG_X, LEGEND):
+def _legend(fig, y=0.010, narrow=False):
+    place = ([(x, r) for x, r in LEG_X_N] if narrow
+             else [(x, 0) for x in LEG_X])
+    for (x, row), (what, col, kind) in zip(place, LEGEND):
+        y = (0.030 if row == 0 else 0.008) if narrow else y
         if kind in ('solid', 'dash'):
             fig.add_artist(plt.Line2D(
                 [x, x + 0.026], [y + 0.010] * 2, transform=fig.transFigure,
@@ -624,17 +679,23 @@ def _legend(fig, y=0.010):
 
 
 def sheet_fig(nums):
-    """Four panels, two by two, with the colour key underneath - the figure
-    itself, so figcheck can read it the way it reads every other drawing."""
-    fig, axs = plt.subplots(2, 2, figsize=(17.6, 10.4))
+    """Two panels, one above the other, with the colour key underneath.
+
+    Two by two before, which put four schematics across one A4 column and
+    left every panel 3.3 in wide on paper - each device a few millimetres
+    and its note at 4 pt.  One column doubles the panel width at the same
+    size in inches: the figure gets half as wide, so the page scales it
+    down half as much.  The panels themselves are untouched.
+    """
+    fig, axs = plt.subplots(len(nums), 1, figsize=(8.9, 5.2 * len(nums)))
     #  Laid out first: symbol scale reads the axes' position, and adjusted
     #  afterwards the panels recorded a scale for a layout they never had.
     #  (The panels themselves draw at explicit sizes, so nothing moves.)
-    fig.subplots_adjust(left=0.004, right=0.996, top=0.995, bottom=0.042,
-                        wspace=0.02, hspace=0.02)
-    for ax, n in zip(axs.ravel(), nums):
+    fig.subplots_adjust(left=0.004, right=0.996, top=0.995,
+                        bottom=0.062, hspace=0.02)
+    for ax, n in zip(np.atleast_1d(axs).ravel(), nums):
         panel(ax, MODES[n - 1])
-    _legend(fig)
+    _legend(fig, narrow=True)
     return fig
 
 
@@ -658,7 +719,7 @@ def build(out_dir, dpi=150):
     R = figs.R
     _, agg = sweep(R, R['Vin_min'], N=721)
 
-    fig, axes = plt.subplots(4, 1, figsize=(13.2, 8.8), sharex=True,
+    fig, axes = plt.subplots(4, 1, figsize=(9.3, 6.2), sharex=True,
                              gridspec_kw=dict(height_ratios=[1.25, 1.0,
                                                              1.4, 0.9]))
     fig.subplots_adjust(left=0.085, right=0.985, top=0.985, bottom=0.075,
@@ -668,11 +729,10 @@ def build(out_dir, dpi=150):
     fig.savefig(w, dpi=dpi, bbox_inches='tight', facecolor='white')
     plt.close(fig)
 
-    return [w,
-            sheet([1, 2, 3, 4], os.path.join(out_dir, 'an_modes_1234.png'),
-                  dpi),
-            sheet([5, 6, 7, 8], os.path.join(out_dir, 'an_modes_5678.png'),
-                  dpi)]
+    return [w] + [sheet(list(pair),
+                        os.path.join(out_dir, 'an_modes_%d%d.png' % pair),
+                        dpi)
+                  for pair in ((1, 2), (3, 4), (5, 6), (7, 8))]
 
 
 if __name__ == '__main__':
