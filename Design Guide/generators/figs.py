@@ -158,13 +158,17 @@ def f02_two_resonances():
     ax.set_xlabel('normalised frequency   f / f$_r$')
     ax.set_ylabel('gain   M = n·V$_o$ / V$_{in}$')
     ax.legend(loc='upper right', fontsize=9.5)
+    #  The axis is f / f_r, so the two lines are named where they sit on
+    #  THAT axis.  Written as absolute kilohertz they were two numbers from
+    #  a design the reader has not met yet, on an axis that does not carry
+    #  them - which is exactly what a reader asked about.
     note(ax, FN0 + 0.03, 3.55,
-         'f$_o$ = %.1f kHz\nno-load gain goes to infinity here\n'
-         '→ nothing can push the converter below it' % (FO / 1e3), color=PUR,
+         'f$_o$ = %.2f f$_r$\nno-load gain goes to infinity here\n'
+         '→ nothing can push the converter below it' % FN0, color=PUR,
          size=10)
     note(ax, 1.04, 1.45,
-         'f$_r$ = %.1f kHz\ngain = 1 at ANY load\n'
-         '(L$_m$ is clamped by the output and drops out)' % (FR / 1e3),
+         'f$_r$\ngain = 1 at ANY load\n'
+         '(L$_m$ is clamped by the output and drops out)',
          color=GREY, size=10)
     ax.axvspan(0.45, FN0, color=MAG, alpha=0.10)
     note(ax, 0.475, 0.42, 'capacitive AT NO LOAD\nhard switching — stay out',

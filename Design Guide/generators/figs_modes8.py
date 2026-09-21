@@ -180,9 +180,11 @@ def _skeleton(ax, states, parts=True):
     hop(ax, XCT, YT)
     wire(ax, [(XCT + 0.20, YT), (XQ2, YT)])
     wire(ax, [(XS, YMID), (XCT, YMID), (XCT, VP)])        # the tap itself
-    dot(ax, XQ1, YB)
-    dot(ax, XQ2, YT)
-    dot(ax, XCT, VP)
+    #  A dot means three or more wires meet.  There were three here that
+    #  marked plain CORNERS - the tap riser turning onto the + rail, and
+    #  each rectifier's top where one wire ends and the next begins - and
+    #  a dot on a corner tells the reader nothing while looking exactly
+    #  like the ones that do.  Only the true tee is marked.
     dot(ax, XQ2, VN)          # D2's return joins the - rail mid-run: a T
     # Set on one line it is wider than any gap left on this side, and
     # it landed on N_s2 twice and on the riser once. Two lines fit the
@@ -248,16 +250,50 @@ def bd(x, y, h=DEVH):
             (x, y + h / 2)]
 
 
+def cs(x, y, h=DEVH):
+    """The C_oss detour round one device, source node to drain node.
+
+    The dead time is the one interval in which NO channel conducts, so the
+    current cannot be drawn down the leg the way intervals 1, 2, 5 and 6
+    draw it.  It goes through the device capacitance - that is the whole
+    mechanism, and a displacement current is a current: it passes between
+    the plates.  Drawn down the leg instead, as it was, the picture shows
+    current in a channel that the panel's own caption says is off.
+
+    Same shape as bd(), one column further out.
+    """
+    return [(x, y - h / 2), (x + DX_C, y - h / 2), (x + DX_C, y + h / 2),
+            (x, y + h / 2)]
+
+
 # primary, first half: out of the left junction, back into the right one
 PRI_FWD_XFMR = [P_HI, (XL, HI), A, NP_T, NP_B, B, (XR, LO), P_LO]
 PRI_FWD_LM = [P_HI, (XL, HI), A, LM_T, LM_B, B, (XR, LO), P_LO]
 PRI_FWD_DIODE = ([P_LO, (XL, LO)] + bd(XL, SH[1]) + [A, LM_T, LM_B, B]
                  + bd(XR, SH[0]) + [(XR, HI), P_HI])
+#  Dead time, first half.  The tank current does not change direction when
+#  the gates drop, so it still leaves node A and returns to node B - but it
+#  now has to reach the rails through the capacitances, and it SPLITS:
+#    upper   V_in rail -> C_oss(S1) -> A -> tank -> B -> C_oss(S3) -> V_in
+#    lower   0 rail    -> C_oss(S2) -> A -> tank -> B -> C_oss(S4) -> 0
+#  Both halves are drawn, because leaving one out would say the midpoint is
+#  carried by one capacitor when it is carried by four.  Each capacitor's
+#  own colour still says which way its V_ds is going.
+COSS_FWD_HI = ([P_HI, (XL, HI)] + cs(XL, SH[0])[::-1] + [A, LM_T, LM_B, B]
+               + cs(XR, SH[0]) + [(XR, HI), P_HI])
+COSS_FWD_LO = ([P_LO, (XL, LO)] + cs(XL, SH[1]) + [A, LM_T, LM_B, B]
+               + cs(XR, SH[1])[::-1] + [(XR, LO), P_LO])
+COSS_HEADS = ((4, 0.50), (7, 0.34), (12, 0.50))
+
 # primary, second half: the mirror image
 PRI_REV_XFMR = [P_HI, (XR, HI), B, NP_B, NP_T, A, (XL, LO), P_LO]
 PRI_REV_LM = [P_HI, (XR, HI), B, LM_B, LM_T, A, (XL, LO), P_LO]
 PRI_REV_DIODE = ([P_LO, (XR, LO)] + bd(XR, SH[1]) + [B, LM_B, LM_T, A]
                  + bd(XL, SH[0]) + [(XL, HI), P_HI])
+COSS_REV_HI = ([P_HI, (XR, HI)] + cs(XR, SH[0])[::-1] + [B, LM_B, LM_T, A]
+               + cs(XL, SH[0]) + [(XL, HI), P_HI])
+COSS_REV_LO = ([P_LO, (XR, LO)] + cs(XR, SH[1]) + [B, LM_B, LM_T, A]
+               + cs(XL, SH[1])[::-1] + [(XL, LO), P_LO])
 
 #  Secondary, centre tapped.  Current always LEAVES the tap into the load
 #  and comes back through one rectifier into one winding end; which end is
@@ -289,10 +325,10 @@ MODES = [
     dict(n=3, t='DEAD TIME (a)', sub='all four off  ·  C$_{oss}$ swaps '
                                      'the midpoints over',
          sw=dict(S1='charge', S4='charge', S2='discharge', S3='discharge'),
-         d=(0, 0), pri=PRI_FWD_LM, load=False, lm=False, sec=None,
-         coss=True,
+         d=(0, 0), pri=COSS_FWD_HI, pri_b=COSS_FWD_LO, heads=COSS_HEADS,
+         load=False, lm=False, sec=None, coss=True,
          swing=(':  V$_{in}$ $\\rightarrow$ 0', ':  0 $\\rightarrow$ V$_{in}$'),
-         note=('All four channels off, so the current is in the four C$_{oss}$ and what it does is carry the midpoints across.\nMagenta means that C$_{oss}$ is charging and its V$_{ds}$ rising;  cyan means discharging.'),
+         note=('All four channels off: the current goes THROUGH the four C$_{oss}$, in two loops, one round each rail.\nThat is what carries the midpoints across.  Magenta: C$_{oss}$ charging, V$_{ds}$ rising;  cyan: discharging.'),
          say='The same magnetising current keeps flowing and has nowhere to '
              'go but the device capacitances. Node A falls from V$_{in}$ to '
              '0 and node B rises from 0 to V$_{in}$.'),
@@ -324,10 +360,10 @@ MODES = [
     dict(n=7, t='DEAD TIME (a)', sub='all four off  ·  C$_{oss}$ swaps '
                                      'the midpoints back',
          sw=dict(S2='charge', S3='charge', S1='discharge', S4='discharge'),
-         d=(0, 0), pri=PRI_REV_LM, load=False, lm=False, sec=None,
-         coss=True,
+         d=(0, 0), pri=COSS_REV_HI, pri_b=COSS_REV_LO, heads=COSS_HEADS,
+         load=False, lm=False, sec=None, coss=True,
          swing=(':  0 $\\rightarrow$ V$_{in}$', ':  V$_{in}$ $\\rightarrow$ 0'),
-         note=('The mirror of 3. Node B falls, node A rises, and the same magnetising current moves the charge.\nSame colours:  magenta charging, cyan discharging.'),
+         note=('The mirror of 3. Node B falls, node A rises, and the same magnetising current moves the charge -\nthrough the capacitances again, never a channel.  Same colours:  magenta charging, cyan discharging.'),
          say='The mirror image of interval 3. Node B falls and node A rises, '
              'and the charge is moved by the magnetising current again.'),
     dict(n=8, t='DEAD TIME (b)  —  ZVS', sub='body diodes of S1 and S4 '
@@ -356,11 +392,16 @@ def panel(ax, m):
         st[k] = bool(v)
     _skeleton(ax, st)
 
-    path(ax, m['pri'], load=m['load'],
-         heads=m.get('heads', ((2, 0.90), (3, 0.45), (6, 0.90))))
+    hd = m.get('heads', ((2, 0.90), (3, 0.45), (6, 0.90)))
+    path(ax, m['pri'], load=m['load'], heads=hd)
+    if m.get('pri_b'):
+        #  the dead time has two loops, one round each rail
+        path(ax, m['pri_b'], load=m['load'], heads=hd)
     if m['sec']:
+        #  The last head sits early on the run back to the winding: at
+        #  0.45 it landed on the 'centre tap' label in the second half.
         path(ax, m['sec'], load=True,
-             heads=((2, 0.62), (4, 0.75), (7, 0.45)))
+             heads=((2, 0.62), (4, 0.75), (7, 0.15)))
 
     sa, sb = m.get('swing', ('', ''))
     txt(ax, NODE_A[0], NODE_A[1], 'A' + sa, size=11, weight='bold', color=PUR,

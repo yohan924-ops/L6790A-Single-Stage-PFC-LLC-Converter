@@ -140,7 +140,7 @@ def an_rac(save, foot):
     ax = _ax(fig, [0.02, 0.30, 0.62, 0.66], -1.2, 14.6, -2.3, 4.6)
     # the tank, standing in as a current source
     S.acsrc(ax, 0.3, 1.5, None)
-    S.label(ax, 0.3, 0.76, 'i$_{ac}$', size=11, color=MAG)
+    S.label(ax, 0.06, 0.76, 'i$_{ac}$', size=11, color=MAG, ha='right')
     S.wire(ax, [(0.3, 1.86), (0.3, 3.3), (2.5, 3.3)])
     S.wire(ax, [(0.3, 1.14), (0.3, -0.3), (2.5, -0.3)])
     S.label(ax, 1.45, 1.80, 'v$_{RI}$', size=11.5)
@@ -194,12 +194,11 @@ def an_rac(save, foot):
 
 
     ax2 = _ax(fig, [0.655, 0.34, 0.335, 0.56], -6.6, 3.6, -0.6, 4.6)
-    #  One resistor between two terminals.  The rails the first version
-    #  ran either side of it led nowhere, and read as a bus with a part
-    #  hung on it.
-    S.shunt(ax2, 1.5, 3.6, 0.4, 'res', None)
-    S.dot(ax2, 1.5, 3.6)
-    S.dot(ax2, 1.5, 0.4)
+    #  One resistor, by itself.  The rails the first version ran either
+    #  side of it led nowhere and read as a bus with a part hung on it;
+    #  the terminal dots that replaced them marked nothing three wires
+    #  meet at, which is what a dot is for.
+    S.res(ax2, 1.5, 2.0, None, horiz=False)
     S.label(ax2, 2.0, 2.0, 'R$_{ac}$', size=12, ha='left')
     S.label(ax2, 1.5, 4.15, 'one resistor', size=10.5, color=MAG)
     S.arrow(ax2, (-5.4, 2.0), (-2.6, 2.0), None, color=MAG)
@@ -530,54 +529,76 @@ def an_pfc_ccm(save, foot):
 
 # -------------------------------------------------------- 6  the two stages
 def an_two_stage(save, foot):
-    """The usual two-stage arrangement, with the waveform at every node."""
-    fig = plt.figure(figsize=(12.2, 5.2))
-    ax = _ax(fig, [0.03, 0.06, 0.94, 0.62], -0.4, 24.6, -1.4, 3.2)
+    """The usual two-stage arrangement, with the waveform at every node.
 
-    blocks = [(2.6, 'bridge'), (6.2, 'boost PFC'), (13.4, 'LLC'),
-              (17.4, 'transformer'), (20.8, 'rectifier')]
-    for x, t in blocks:
-        S.box(ax, x, 1.0, 2.9, 1.5, t, fc=LT, ec=GREY, size=10.5)
-    S.box(ax, 9.8, 1.0, 2.6, 1.5, '400 V\nbulk C', fc=YEL, ec=MAG, size=10.5)
-    S.label(ax, 15.6, 2.35, 'dc / dc converter', size=10, color=GREY)
-    S.shade(ax, 11.9, 0.05, 22.4, 1.95, None, color=CYA, alpha=0.07)
-    S.label(ax, -0.08, 1.0, 'V$_{in}$', size=11.5, ha='right', weight='bold')
-    S.label(ax, 23.18, 1.0, 'V$_{out}$', size=11.5, ha='left', weight='bold')
-    #  Gap by gap.  The first version ran the boost-to-LLC wire straight
-    #  on under the capacitor's box and laid two short wires over it, which
-    #  figcheck read as a T at each edge of the box.
-    for x0, x1 in ((0.1, 1.15), (4.05, 4.75), (7.65, 8.5), (11.1, 11.95),
-                   (14.85, 15.95), (18.85, 19.35), (22.25, 23.0)):
-        S.wire(ax, [(x0, 1.0), (x1, 1.0)])
-    S.dot(ax, 0.1, 1.0)
-    S.dot(ax, 23.0, 1.0)
-    S.label(ax, 9.8, -0.42, 'the buffer sits here', size=10, color=MAG)
+    Each waveform stands directly above the node it is measured at and a
+    dotted leader runs down to that node.  The first version floated a
+    row of small thumbnails a long way above a row of small blocks, and a
+    reader could not tell which belonged to which - nor read either.
+    """
+    from matplotlib.patches import ConnectionPatch
+    fig = plt.figure(figsize=(11.6, 6.8))
+    ax = _ax(fig, [0.03, 0.04, 0.94, 0.50], -0.6, 30.4, -1.7, 2.9)
 
-    # a strip of node waveforms, each above the wire it belongs to
+    YW = 1.0                                        # the chain's wire
+    blocks = [(3.0, 1.7, 'bridge', LT, GREY),
+              (8.2, 1.9, 'boost PFC', LT, GREY),
+              (13.2, 1.5, '400 V\nbulk C', YEL, MAG),
+              (18.0, 1.7, 'LLC', LT, GREY),
+              (22.4, 1.7, 'transformer', LT, GREY),
+              (26.8, 1.7, 'rectifier', LT, GREY)]
+    for x, hw, t, fc, ec in blocks:
+        S.box(ax, x, YW, 2 * hw, 2.2, t, fc=fc, ec=ec, size=12)
+    S.shade(ax, 16.0, -0.35, 28.8, 2.35, None, color=CYA, alpha=0.07)
+    S.label(ax, 22.4, -0.78, 'dc / dc converter', size=10.5, color=GREY)
+    S.label(ax, 13.2, -0.78, 'the buffer sits here', size=10.5, color=MAG)
+    S.label(ax, -0.1, YW, 'V$_{in}$', size=12, ha='right', weight='bold')
+    S.label(ax, 29.85, YW, 'V$_{out}$', size=12, ha='left', weight='bold')
+    edges = [0.4]
+    for x, hw, *_ in blocks:
+        edges += [x - hw, x + hw]
+    edges.append(29.6)
+    for x0, x1 in zip(edges[0::2], edges[1::2]):
+        S.wire(ax, [(x0, YW), (x1, YW)])
+    S.dot(ax, 0.4, YW)
+    S.dot(ax, 29.6, YW)
+
+    #  One waveform per node, above it.  The mains node carries voltage
+    #  AND current: the current drawn from the mains is what the first
+    #  stage shapes, and that is the whole reason the stage is there.
     t = np.linspace(0, 1, 900)
-    nodes = [(0.1, 'mains', np.sin(6 * np.pi * t), NAVY),
-             (4.4, 'rectified', np.abs(np.sin(6 * np.pi * t)) * 1.6 - 0.8,
-              NAVY),
-             (8.0, 'shaped\ncurrent', np.abs(np.sin(6 * np.pi * t)) * 1.6
-              - 0.8, GRN),
-             (11.5, '400 V dc', 0.20 * np.sin(12 * np.pi * t) + 0.45, MAG),
-             (15.6, 'hf square',
-              0.80 * np.sign(np.sin(34 * np.pi * t)), CYA),
-             (22.4, 'dc out', 0.45 + 0.05 * np.sin(12 * np.pi * t), MAG)]
-    for x, nm, y, c in nodes:
-        #  Axes fraction from the SAME mapping the schematic uses, or the
-        #  thumbnail floats above the wrong block - which it did.
-        fx = 0.03 + (x - (-0.4)) / 25.0 * 0.94
-        a = fig.add_axes([fx - 0.038, 0.735, 0.076, 0.135])
-        a.plot(t, y, color=c, lw=1.5)
+    v = np.sin(6 * np.pi * t)
+    #  Every thumbnail carries its zero line, so a rectified or a dc node
+    #  reads as one-sided and a mains or square-wave node as two-sided.
+    #  Drawn centred, as the first version drew it, the rectified wave
+    #  swung below zero.
+    nodes = [(0.85, 'mains\nvoltage  ·  current', [(v, NAVY), (0.72 * v, GRN)]),
+             (5.5, 'rectified', [(np.abs(v) * 0.95, NAVY)]),
+             (15.5, '400 V dc\n(2f$_l$ ripple)',
+              [(0.62 + 0.20 * np.sin(12 * np.pi * t), MAG)]),
+             (20.2, 'hf square', [(0.82 * np.sign(np.sin(34 * np.pi * t)),
+                                   CYA)]),
+             (29.05, 'dc out', [(0.62 + 0.05 * np.sin(12 * np.pi * t), MAG)])]
+    x0, x1 = ax.get_xlim()
+    for x, nm, traces in nodes:
+        fx = 0.03 + (x - x0) / (x1 - x0) * 0.94
+        a = fig.add_axes([fx - 0.056, 0.60, 0.112, 0.25])
+        a.axhline(0, color=GREY, lw=0.7, zorder=1)
+        for y, c in traces:
+            a.plot(t, y, color=c, lw=1.7)
         a.set_xlim(0, 1)
         a.set_ylim(-1.15, 1.15)
         a.set_xticks([])
         a.set_yticks([])
         for sp in a.spines.values():
             sp.set_color(GREY)
-            sp.set_linewidth(0.7)
-        a.set_title(nm, fontsize=9.2, color=GREY, pad=3)
+            sp.set_linewidth(0.8)
+        a.set_title(nm, fontsize=10.5, color=GREY, pad=4)
+        S.dot(ax, x, YW)
+        fig.add_artist(ConnectionPatch(
+            xyA=(0.5, 0.0), coordsA='axes fraction', axesA=a,
+            xyB=(x, YW), coordsB='data', axesB=ax,
+            color=GREY, lw=1.0, ls=(0, (2, 3)), zorder=1))
 
     foot(fig, 'Correction happens in the first block, and the LLC works from '
               'a dc bus that is already regulated. Two controllers, two sets '

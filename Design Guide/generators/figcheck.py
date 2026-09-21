@@ -94,15 +94,92 @@ def _segments(ax, r):
     return segs
 
 
-def _hits(box, pts, pad=1.0):
-    """Does a polyline pass THROUGH the box rather than end in it?"""
-    inside = ((pts[:, 0] > box.x0 - pad) & (pts[:, 0] < box.x1 + pad) &
-              (pts[:, 1] > box.y0 - pad) & (pts[:, 1] < box.y1 + pad))
-    if not inside.any():
-        return False
-    # a leader line that ends in the label is fine; a wire crossing is not
-    return bool(inside.any() and not inside.all() and inside.sum() > 2
-                and inside[0] == inside[-1])
+def ink(fig, floor=10):
+    """Where a text's GLYPHS actually land on drawn ink, in pixels.
+
+    The geometric test this replaces asked whether a line passed through
+    the text's bounding BOX.  A box is bigger than the letters in it - it
+    carries the font's ascent, descent and side bearings - so a label
+    correctly placed a hair off a wire was reported as lying on it, and
+    tuning the box smaller to silence those would have been fitting the
+    checker to the answer.
+
+    So it is measured instead.  The figure is rendered twice: once as it
+    is, and once with every text string emptied.  The pixels that differ
+    ARE the glyphs; anything non-white in the second render is the drawing.
+    Where those two masks meet, a letter is sitting on ink, and the count
+    of such pixels says how badly.
+
+    Emptying the string rather than hiding the artist matters: a note box
+    and an annotation's arrow are drawn in both passes, so neither is
+    mistaken for a letter.
+
+    -> [(text, axes, overlapping pixel count), ...], worst first
+    """
+    fig.canvas.draw()
+    A = np.asarray(fig.canvas.buffer_rgba()).astype(np.int16)
+    boxes = _boxes(fig)
+    #  Hidden by alpha, not by emptying the string.  An annotation's arrow
+    #  is clipped at its own text box, so an emptied text let the arrow
+    #  grow into the space the letters had been, and that extra piece of
+    #  arrow was then read as letters lying on ink - a phantom overlap on
+    #  every callout in the document.
+    saved = [(t, t.get_alpha()) for t, _, _ in boxes]
+    for t, _ in saved:
+        t.set_alpha(0.0)
+    #  A label INSIDE a filled box is not lying on anything - the fill is
+    #  its background.  So the second pass also blanks the face of every
+    #  large patch (a block, a shaded band, a switch's halo) and keeps its
+    #  edge, which IS line work.  Small filled shapes - a diode's triangle,
+    #  an arrowhead - stay, because a label on one of those is a fault.
+    r = fig.canvas.get_renderer()
+    faces = []
+    for ax in fig.axes:
+        for pa in ax.patches:
+            try:
+                bb = pa.get_window_extent(r)
+            except Exception:                            # noqa: BLE001
+                continue
+            if bb.width * bb.height > 1500 and pa.get_visible():
+                faces.append((pa, pa.get_facecolor()))
+                pa.set_facecolor('none')
+    #  The current highlight (zorder 1.5, under the drawing) is a
+    #  background band too: a label brushing its glow is not lying on a
+    #  wire.  Anything drawn below the wiring is hidden in this pass.
+    glows = []
+    for ax in fig.axes:
+        if ax.get_aspect() not in ('equal', 1, 1.0):
+            continue
+        for ln in ax.lines:
+            if ln.get_zorder() < 2 and ln.get_visible():
+                glows.append((ln, ln.get_alpha()))
+                ln.set_alpha(0.0)
+    try:
+        fig.canvas.draw()
+        B = np.asarray(fig.canvas.buffer_rgba()).astype(np.int16)
+    finally:
+        for t, al in saved:
+            t.set_alpha(al)
+        for pa, fc in faces:
+            pa.set_facecolor(fc)
+        for ln, al in glows:
+            ln.set_alpha(al)
+        fig.canvas.draw()
+
+    H = A.shape[0]
+    glyph = (np.abs(A[:, :, :3] - B[:, :, :3]).max(axis=2) > 12)
+    drawn = (B[:, :, :3].min(axis=2) < 235)
+    both = glyph & drawn
+    out = []
+    for t, ax, b in boxes:
+        c0, c1 = int(np.floor(b.x0)), int(np.ceil(b.x1))
+        r0, r1 = int(np.floor(H - b.y1)), int(np.ceil(H - b.y0))
+        c0, r0 = max(c0, 0), max(r0, 0)
+        n = int(both[r0:r1, c0:c1].sum())
+        if n >= floor:
+            out.append((t, ax, n))
+    out.sort(key=lambda r: -r[2])
+    return out
 
 
 def check(fig, name, margin=3.0):
@@ -134,19 +211,11 @@ def check(fig, name, margin=3.0):
                             '%-28s lands in another panel' % _short(t)))
                 break
 
-    for ax in fig.axes:
-        segs = _segments(ax, r)
-        for t, tax, b in boxes:
-            if tax is not ax:
-                continue
-            if _shielded(t):        # it brings its own background with it
-                continue
-            bb = Bbox.from_extents(b.x0 + 1, b.y0 + 1, b.x1 - 1, b.y1 - 1)
-            for ln, pts in segs:
-                if _hits(bb, pts):
-                    bad.append(('on-ink', '%-28s sits on drawn line work'
-                                % _short(t)))
-                    break
+    for t, ax, n in ink(fig):
+        if _shielded(t):            # it brings its own background with it
+            continue
+        bad.append(('on-ink', '%-28s %4d px of it are on drawn line work'
+                    % (_short(t), n)))
 
     for i in range(len(boxes)):
         for j in range(i + 1, len(boxes)):
@@ -206,37 +275,63 @@ def symbols(fig):
 
 
 def shield(fig):
-    """Give a white halo to any text this figure draws over its own ink.
+    """Give a white halo to any PLOT text that sits on drawn ink.
 
     Applied at save time rather than at each call site.  The alternative
     was to remember a halo in sixty places, and the twenty texts sitting on
     curves in the older figures are what remembering looks like in
-    practice.  Only text that is ALREADY on line work is touched, so
+    practice.  Only text that is measured to be on ink is touched, so
     nothing that reads cleanly gets a stroke it does not need.
 
-    It returns what it had to rescue, and `run` prints that list.  On a
-    plot a caption over a curve is fine; on a SCHEMATIC the halo keeps the
-    text readable by cutting a white gap in a wire, which is worse than
-    the overlap it fixed.  Silently rescuing both hid exactly that - a
-    callout eating through a bridge leg - so the rescues are now reported
-    even though they are not failures.
+    Schematic axes (aspect equal) are left alone: there a halo cuts a
+    white gap in the wire the label is lying on, which is worse than the
+    overlap.  check() reports those and they get moved.
+
+    It returns what it had to rescue, and `run` prints that list.
     """
-    fig.canvas.draw()
-    r = fig.canvas.get_renderer()
+    sch = {ax for ax in fig.axes if ax.get_aspect() in ('equal', 1, 1.0)}
     out = []
-    for ax in fig.axes:
-        segs = _segments(ax, r)
-        if not segs:
+    for t, ax, n in ink(fig):
+        if ax in sch or _shielded(t):
             continue
-        for t, tax, b in _boxes(fig):
-            if tax is not ax or _shielded(t):
-                continue
-            bb = Bbox.from_extents(b.x0 + 1, b.y0 + 1, b.x1 - 1, b.y1 - 1)
-            if any(_hits(bb, pts) for _, pts in segs):
-                t.set_path_effects([_pe.withStroke(linewidth=3.4,
-                                                   foreground='white')])
-                t.set_zorder(max(t.get_zorder(), 9))
-                out.append(_short(t))
+        t.set_path_effects([_pe.withStroke(linewidth=3.4,
+                                           foreground='white')])
+        t.set_zorder(max(t.get_zorder(), 9))
+        out.append(_short(t))
+    return out
+
+
+def crops(fig, name, outdir, zoom=3, pad=60):
+    """A magnified crop round every text that is on ink, its box in red.
+
+    So that a finding is judged by looking, not by arguing about it: the
+    first pass of the on-ink test flagged twenty labels that turned out to
+    be a hair off their wires, and the only way to know was to see them.
+    """
+    import os
+    from PIL import Image, ImageDraw
+    hits = ink(fig)
+    if not hits:
+        return []
+    fig.canvas.draw()
+    A = np.asarray(fig.canvas.buffer_rgba())
+    im = Image.fromarray(A[:, :, :3].copy())
+    H = im.height
+    out = []
+    for k, (t, ax, n) in enumerate(hits):
+        b = Text.get_window_extent(t, fig.canvas.get_renderer())
+        x0, x1 = int(b.x0), int(b.x1)
+        y0, y1 = int(H - b.y1), int(H - b.y0)
+        box = (max(0, x0 - pad), max(0, y0 - pad),
+               min(im.width, x1 + pad), min(im.height, y1 + pad))
+        c = im.crop(box)
+        d = ImageDraw.Draw(c)
+        d.rectangle((x0 - box[0], y0 - box[1], x1 - box[0], y1 - box[1]),
+                    outline=(255, 0, 0), width=1)
+        c = c.resize((c.width * zoom, c.height * zoom), Image.LANCZOS)
+        f = os.path.join(outdir, '%s_%02d.png' % (name, k))
+        c.save(f)
+        out.append((f, _short(t), n))
     return out
 
 
@@ -295,6 +390,12 @@ def topology(fig, tol=2.0):
                  counted: a bus is allowed to run on a little)
       crossing   two wires cross with neither a hop nor a dot
       off-grid   a wire segment more than a degree off the 45-degree grid
+      stray-dot  a junction dot where exactly two wire arms meet - a plain
+                 corner.  A dot means "these wires are connected, they do
+                 not merely cross"; on a corner there is nothing to say,
+                 and it looks exactly like the dots that do say something.
+                 A dot on ONE arm is a port marker and is left alone, as
+                 is a dot on no wire at all (a transformer's polarity dot).
     """
     fig.canvas.draw()
     bad = []
@@ -383,6 +484,11 @@ def topology(fig, tol=2.0):
             kind = 'stub' if i in junction_pieces else 'open-end'
             bad.append((kind, 'wire ends at %s touching nothing' % where(p)))
 
+        for d in dots:
+            if arms(d) == 2 and not through(d):
+                bad.append(('stray-dot', 'dot at %s marks a corner, not a '
+                            'junction' % where(d)))
+
         for x in range(len(segs)):
             i, a, b = segs[x]
             r = b - a
@@ -398,15 +504,15 @@ def topology(fig, tol=2.0):
                 j, c, d = segs[y]
                 if i == j:
                     continue
-                s = d - c
-                den = r[0] * s[1] - r[1] * s[0]
+                sv = d - c
+                den = r[0] * sv[1] - r[1] * sv[0]
                 if abs(den) < 1e-9:
                     continue
                 q = c - a
-                t = (q[0] * s[1] - q[1] * s[0]) / den
+                t = (q[0] * sv[1] - q[1] * sv[0]) / den
                 u = (q[0] * r[1] - q[1] * r[0]) / den
                 et = tol / max(L, 1e-9)
-                eu = tol / max(float(np.hypot(*s)), 1e-9)
+                eu = tol / max(float(np.hypot(*sv)), 1e-9)
                 if et < t < 1 - et and eu < u < 1 - eu:
                     p = a + t * r
                     if not near_dot(p):
@@ -441,8 +547,12 @@ def clipped(fig, margin=2.0):
 
 
 
-def run(names=None):
-    """Draw every figure through figs.py and report, saving nothing."""
+def run(names=None, cropdir=None):
+    """Draw every figure through figs.py and report, saving nothing.
+
+    With `cropdir`, every on-ink finding is also saved there as a
+    magnified crop with the text's box drawn in red.
+    """
     import figs
     keep = figs.save
     found = {}
@@ -452,6 +562,9 @@ def run(names=None):
 
     def spy(fig, nm):
         sizes[nm] = symbols(fig)
+        if cropdir:
+            for f, lbl, n in crops(fig, nm, cropdir):
+                print('  crop %-40s %-28s %4d px' % (f.split('/')[-1], lbl, n))
         #  save() shields on-ink text before writing the file, so the check
         #  has to run on the same thing the reader gets.  Checking before
         #  the shield reports twenty faults that the saved figure does not
@@ -532,4 +645,10 @@ def run(names=None):
 
 if __name__ == '__main__':
     import sys
-    run(sys.argv[1:] or None)
+    argv = sys.argv[1:]
+    cd = None
+    if '--crops' in argv:
+        k = argv.index('--crops')
+        cd = argv[k + 1]
+        del argv[k:k + 2]
+    run(argv or None, cropdir=cd)
