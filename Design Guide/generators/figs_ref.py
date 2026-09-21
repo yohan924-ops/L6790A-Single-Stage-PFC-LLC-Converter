@@ -1126,7 +1126,7 @@ def an_loadshift(save, foot):
     edges = []
     for q, nm, col in qs:
         g = np.array([M(f, q, lam) for f in fn])
-        ax.plot(fn, g, color=col, lw=2.2, label='%s   Q = %.2f' % (nm, q))
+        ax.plot(fn, g, color=col, lw=2.2, label=nm)
         e = zvs_edge(q, lam)
         edges.append((e, M(e, q, lam), col))
     for e, me, col in edges:

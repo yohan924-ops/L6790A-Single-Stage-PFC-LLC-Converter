@@ -238,7 +238,7 @@ def f02_two_resonances():
     for q, c, w, lab in ((0.0001, PUR, 2.4, 'no load   Q → 0'),
                          (0.20, MAG, 1.7, 'Q = 0.2'),
                          (0.40, CYA, 1.7, 'Q = 0.4'),
-                         (QPK, NAVY, 2.6, 'full load  Q = %.2f' % QPK),
+                         (QPK, NAVY, 2.6, 'full load'),
                          (1.50, GRN, 1.7, 'Q = 1.5')):
         ax.plot(fn, [gain_fn(x, q, LAM) for x in fn], color=c, lw=w, label=lab)
     ax.axvline(FN0, color=PUR, ls='--', lw=1.7)
@@ -311,7 +311,7 @@ def f04_three_regions():
     for q in (0.20, 0.45, 1.50):
         ax.plot(fn, [gain_fn(x, q, LAM) for x in fn], color=LT, lw=1.3)
     ax.plot(fn, [gain_fn(x, QPK, LAM) for x in fn], color=NAVY, lw=2.8,
-            zorder=4, label='full load  Q = %.2f' % QPK)
+            zorder=4, label='full load')
     _edge = zvs_edge(QPK, LAM)          # arg Z_in = 0 on the curve drawn
     ax.axvspan(0.45, _edge, color=MAG, alpha=0.16)
     ax.axvspan(_edge, 1.0, color=GRN, alpha=0.16)
@@ -334,11 +334,10 @@ def f04_three_regions():
     _pk = max(np.linspace(FN0, 1.0, 900), key=lambda x: gain_fn(x, QPK, LAM))
     ax.plot([_pk], [gain_fn(_pk, QPK, LAM)], marker='*', ms=15, color=NAVY,
             mec='white', mew=1.2, zorder=6)
-    ax.annotate('capacitive edge AT THIS LOAD, %.2f f$_r$\n'
-                'arg Z$_{in}$ = 0 here - it moves right as load rises\n'
-                'the gain peak (star, %.2f f$_r$) is the usual\n'
-                'stand-in and sits low, so it flatters the margin'
-                % (_edge, _pk),
+    ax.annotate('capacitive edge at this load: arg Z$_{in}$ = 0\n'
+                'it moves right as load rises\n'
+                'the gain peak (star) is the usual stand-in;\n'
+                'it sits lower, so it flatters the margin',
                 (_edge, 1.35), xytext=(1.13, 1.70), va='top',
                 color=MAG, fontsize=9.0,
                 bbox=dict(boxstyle='round,pad=0.25', fc='white', ec=MAG,
@@ -483,11 +482,12 @@ def f11_power_balance():
     fig, ax = plt.subplots(figsize=(9.35, 4.77))
     ask(fig, 'The mains delivers a pulsating power, the load wants a constant one')
     th = np.linspace(0, pi, 900)
+    POUT = 1.0                           # drawn as p / P: no design in it
     p_in = 2 * POUT * np.sin(th) ** 2
     ax.plot(np.degrees(th), p_in, color=MAG, lw=2.7,
-            label='instantaneous input   2P·sin²θ')
+            label='instantaneous input   p/P = 2 sin²θ')
     ax.axhline(POUT, color=NAVY, lw=2.4,
-               label='what the load takes   P = %.0f W' % POUT)
+               label='what the load takes   p/P = 1')
     ax.fill_between(np.degrees(th), POUT, p_in, where=(p_in >= POUT),
                     color=GRN, alpha=0.30)
     ax.fill_between(np.degrees(th), POUT, p_in, where=(p_in < POUT),
@@ -495,9 +495,8 @@ def f11_power_balance():
     ax.set_xlim(0, 180)
     ax.set_ylim(0, 2 * POUT * 1.20)
     ax.set_xticks([0, 45, 90, 135, 180])
-    ax.set_xlabel('line phase  θ  [deg]      (half cycle = %.1f ms at 47 Hz)'
-                  % (1000 / (2 * 47)))
-    ax.set_ylabel('power  [W]')
+    ax.set_xlabel('line phase  θ  [deg]')
+    ax.set_ylabel('power / average power')
     ax.legend(loc='upper right', fontsize=9.5)
     for x in (45, 135):
         ax.axvline(x, color=GREY, ls=':', lw=1.3)
@@ -508,10 +507,8 @@ def f11_power_balance():
     note(ax, 163, POUT * 0.40, 'deficit', color=MAG, ha='center', size=10)
     note(ax, 45, 2 * POUT * 1.10, 'θ = 45°: balance point\n= the ripple trough',
          color=NAVY, ha='center', size=9.8)
-    foot(fig, 'The two shaded areas are equal — %.2f J. In a two-stage supply '
-              'the 400 V bulk capacitor does this; here the OUTPUT bank does, '
-              'and that is why the ripple condition alone asks for %d mF.'
-              % (POUT / (2 * pi * 47), round(R['Cout_req'] * 1e3)))
+    foot(fig, 'The two shaded areas are equal. In a two-stage supply the '
+              '400 V bulk capacitor absorbs them; here the OUTPUT bank does.')
     fig.tight_layout(rect=[0, 0.055, 1, 0.945])
     save(fig, 'f11_power_balance')
 
@@ -990,7 +987,7 @@ _MORPH_EN = {
     'ylab':  'what the TANK sees  [Vac equivalent]',
     'xlab':  'mains  [Vrms]',
     'step':  'the drive jumps 2:1 at the transition \u2014\n'
-         '$f_{sw}$ must follow it from 123 to 250 kHz',
+         '$f_{sw}$ must follow it within one line cycle',
     'range': 'the range the design must cover\n166.2 to 346.5 Vac  (2.08 : 1)',
     'vbo':   '$V_{BO}$\n(set by $R_{CFG}$)',
     'ask':   'Morphing \u2014 where it is a full bridge, and where it is a half bridge',
@@ -1207,12 +1204,13 @@ def f17_morph_gates():
             ax.text(-0.06, y + 0.31, nm, ha='right', va='center', fontsize=10.5,
                     fontweight='bold', color=c)
             if static:
-                ax.text(1.0, y + 0.62 * s.max() + 0.24,
+                #  Beside the line, not on it: a boxed label centred on the
+                #  held level hid the very trace it named (user, 2026-09-21).
+                hi = s.max() > 0.5
+                ax.text(1.0, y + 0.62 * s.max() + (-0.22 if hi else 0.24),
                         'held HIGH  \u2014  S4 conducts all the time'
-                        if s.max() > 0.5 else 'held LOW  \u2014  S3 never turns on',
-                        ha='center', va='center', fontsize=10, color=c,
-                        bbox=dict(boxstyle='round,pad=0.3', fc='white', ec=c,
-                                  lw=1.1, alpha=0.95))
+                        if hi else 'held LOW  \u2014  S3 never turns on',
+                        ha='center', va='center', fontsize=10, color=c)
         ax.set_xlim(-0.55, 2.05)
         ax.set_ylim(-0.35, 4.0)
         ax.set_xticks([])
