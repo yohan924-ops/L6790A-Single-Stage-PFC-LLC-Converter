@@ -67,7 +67,10 @@ def derive(s):
     Bpk = g('B.pk') / 1000.0                        # T, A.e_mm 기준
     Ae_now = g('A.e_mm')
     return dict(
-        Np=int(round(Np)), Ns=int(round(Ns)),
+        Np=int(round(Np)), Ns=int(round(Ns)), Nx=int(round(Nx)),
+        # 보조 권선은 코어당 정수 턴이어야 한다.  시트가 n.aux 를 세트 기준으로
+        # 들고 있으므로 여기서 유닛 턴수로 되돌린다 - 사양서에 나가는 것은 이쪽이다.
+        Naux=int(round(g('n.aux') * Ns / Nx)),
         Lopen=Lopen / Nx,                           # uH/개
         Lshort=g('L.r') / Nx,                       # uH/개
         Ipri_rms=g('I.pri_lc'), Ipri_pk=g('I.Lr_pk'),      # 1차 직렬 -> 나누지 않는다
@@ -126,15 +129,18 @@ def spec_from_xlsx(path):
 def main():
     import re as _re
     bad = 0
-    for var in ('9to1', '7p5to1', '6to1'):
+    for var in ('9to1', '7p5to1', '8to1', '6to1'):
         smp = os.path.join(SMDIR, 'L6790A_%s.sm' % var)
         xlp = os.path.join(HERE, '..', '..', 'Calculation Excel Sheet',
                            'variants', 'Transformer_Spec_%s.xlsx' % var)
-        for q in (smp, xlp):
-            if not os.path.exists(q):
-                print('%-8s  없음: %s' % (var, os.path.normpath(q)))
-                bad += 1
-        if bad:
+        # 없는 파일 판정은 이 변형에만 걸어야 한다.  누적 bad 를 보고 continue
+        # 하면 앞 변형이 하나라도 어긋난 순간 뒤 변형을 통째로 건너뛴다 -
+        # 실제로 9to1 하나 때문에 나머지 셋이 검사되지 않고 있었다.
+        missing = [q for q in (smp, xlp) if not os.path.exists(q)]
+        for q in missing:
+            print('%-8s  없음: %s' % (var, os.path.normpath(q)))
+        bad += len(missing)
+        if missing:
             continue
         d, spec = derive(sheet(smp)), spec_from_xlsx(xlp)
         print('=' * 78)

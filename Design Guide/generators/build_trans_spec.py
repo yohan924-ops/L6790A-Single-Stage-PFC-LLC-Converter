@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
-"""벤더에 보낼 트랜스포머 요구사양서를 만든다.  9:1 설계점(2차 1턴) 기준.
+"""벤더에 보낼 트랜스포머 요구사양서를 만든다.  변형을 인자로 받는다.
 
 이것은 우리가 보내는 '사양서' 이지 벤더가 채워 오는 '검사성적서' 가 아니다.
 그래서 빈 칸을 하나도 두지 않는다 - 벤더는 자기 양식으로 승인원을 낸다.
 
-값은 워크북 Final Design Check 의 세트 값을 유닛으로 환산한 것이다:
-1차가 직렬이라 인덕턴스는 /3, 2차가 병렬이라 전류는 /3, 권선비는 /3.
+값은 변형 시트의 세트 값을 유닛으로 환산한 것이다: 1차가 직렬이라
+인덕턴스는 /N.x, 2차가 병렬이라 전류는 /N.x, 권선비는 /N.x.  N.x 는
+시트에서 읽는다 - 세 설계점은 3 이고 8to1 은 2 다.
 L.L2(2차 누설)는 지그 부유 인덕턴스 수준이라 주지 않는다 - 개방·단락 두
 인덕턴스와 권선비가 있으면 T-모델이 완전히 결정된다.
 
@@ -27,7 +28,7 @@ import math
 import os
 import sys
 from openpyxl import Workbook
-from openpxxl.styles import Font, PatternFill, Alignment, Border, Side
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 
 # 시트에서 읽는 값(인덕턴스·전류·A.e·주파수)은 여기 적지 않는다.  손으로 적으면
 # 시트를 고칠 때마다 조용히 낡는다 - 6:1 사양서가 실제로 그렇게 f.Min 을 90 kHz
@@ -35,6 +36,7 @@ from openpxxl.styles import Font, PatternFill, Alignment, Border, Side
 VARIANTS = {
     '9to1':   dict(label='9 : 1'),
     '7p5to1': dict(label='7.5 : 1'),
+    '8to1':   dict(label='8 : 1'),
     '6to1':   dict(label='6 : 1'),
 }
 if len(sys.argv) < 2 or sys.argv[1] not in VARIANTS:
@@ -55,7 +57,8 @@ if not os.path.exists(_sm):
 _d = CTS.derive(CTS.sheet(_sm))
 
 V.update(
-    Np=_d['Np'], Ns=_d['Ns'], Lopen=_d['Lopen'], Lshort=_d['Lshort'],
+    Np=_d['Np'], Ns=_d['Ns'], Nx=_d['Nx'], Naux=_d['Naux'],
+    Lopen=_d['Lopen'], Lshort=_d['Lshort'],
     Ae=int(round(_d['Ae'])),
     Ipri='%.1f A   /   %.1f A' % (_d['Ipri_rms'], _d['Ipri_pk']),
     Isec='%.1f A   /   %.1f A' % (_d['Isec_rms'], _d['Isec_pk']),
@@ -151,9 +154,10 @@ ws.row_dimensions[4].height = 4
 
 # ------------------------------------------------------------- 1. 구성
 section(6, '1.    CONFIGURATION')
+COUNT = {2: 'Two', 3: 'Three', 4: 'Four'}.get(V['Nx'], str(V['Nx']))
 for i, (t, red) in enumerate([
-        ('Three identical transformers per set — primaries in series, '
-         'secondaries in parallel.', False),
+        ('%s identical transformers per set — primaries in series, '
+         'secondaries in parallel.' % COUNT, False),
         ('EVERY VALUE BELOW IS PER TRANSFORMER.', True)]):
     row = 7 + i
     span(row)
@@ -169,7 +173,7 @@ WIND = [
     ('1', 'NP1     Primary', '1 – 2', '%d Ts' % V['Np'], V['Ipri']),
     ('2', 'NS2     Secondary A', '3 – 5', '%d T' % V['Ns'], V['Isec']),
     ('3', 'NS3     Secondary B', '4 – 6', '%d T' % V['Ns'], V['Isec']),
-    ('4', 'NAUX   Auxiliary (ZCD)', 'a – b', '1 T', 'sense only'),
+    ('4', 'NAUX   Auxiliary (ZCD)', 'a – b', '%d T' % V['Naux'], 'sense only'),
 ]
 for i, (n, des, term, turns, cur) in enumerate(WIND):
     line(12 + i, [('B', n, 'center'), ('C', des, 'left'), ('D', term, 'center'),
@@ -202,7 +206,7 @@ for i, (n, item, term, req, cond, h) in enumerate(REQ):
                                           wrap_text=True)
 
 note(25, 'Both measured at 1 – 2 of ONE transformer.   '
-         'Three in series give a total ratio of %s.' % V['label'])
+         '%s in series give a total ratio of %s.' % (COUNT, V['label']))
 note(26, 'Item 2 follows the existing production part 26OP-LM83W clause 4-2, '
          '"SECONDARY ALL SHORT" — same vendor, same centre-tapped construction.   '
          'The auxiliary is NOT shorted.')

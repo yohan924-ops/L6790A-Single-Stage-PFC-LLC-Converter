@@ -27,12 +27,18 @@ import zedsheet as ZS                                              # noqa: E402
 #   I.Lm,pk = 39.27 * n.T * lambda / (Z.0 * sqrt(1+lambda))   [V.out = 25 V]
 # 로 Z.0 에 반비례하기 때문이다.  n.T 가 작아 불리한 만큼 Z.0 = sqrt(L.r/C.r) 을
 # 10.49 -> 6 ohm 으로 내려 덮는다.  대가는 C.r 이 커지는 것과 순환 전류다.
+#   N.x 는 세트 안의 트랜스포머 개수다.  세 설계점은 LGE 기존 보드의 3직렬을
+#   그대로 쓰므로 3 이고, 8to1 만 2 다 - 코어 하나를 줄이는 대신 유닛당 1차가
+#   8턴이 된다.  N.x 가 2 면 N.s=2 에서 감을 수 있는 세트비가 1.0 단위가 된다
+#   (N.x=3 · N.s=2 는 1.5 단위라 8 을 못 잡는다).
 VARIANTS = {
-    '9to1':   dict(nT=9.0, Cr=100, Lr=11.0, Lm=24.0, Np=3, Ns=1,
+    '9to1':   dict(nT=9.0, Cr=100, Lr=11.0, Lm=24.0, Nx=3, Np=3, Ns=1,
                   kaux=3, RzH=680, CT=470, label='9 : 1'),
-    '7p5to1': dict(nT=7.5, Cr=100, Lr=11.0, Lm=20.0, Np=5, Ns=2,
+    '7p5to1': dict(nT=7.5, Cr=100, Lr=11.0, Lm=20.0, Nx=3, Np=5, Ns=2,
                   kaux=1.5, RzH=330, CT=470, label='7.5 : 1'),
-    '6to1':   dict(nT=6.0, Cr=180, Lr=6.4, Lm=14.2, Np=2, Ns=1,
+    '8to1':   dict(nT=8.0, Cr=100, Lr=11.0, Lm=20.0, Nx=2, Np=8, Ns=2,
+                  kaux=1, RzH=220, CT=470, label='8 : 1'),
+    '6to1':   dict(nT=6.0, Cr=180, Lr=6.4, Lm=14.2, Nx=3, Np=2, Ns=1,
                   kaux=3, RzH=680, CT=330, label='6 : 1'),
 }
 VAR = os.environ.get('L6790_VARIANT', '9to1')
@@ -682,7 +688,8 @@ S.row('- Dissipation in the output bank:', 'P.Cout',
 
 # ===================================================================== 12
 S.h2('12. Transformer Construction')
-S.const('- Number of transformers in the series string:', 'N.x', '3', None, 0)
+S.const('- Number of transformers in the series string:', 'N.x',
+        '%d' % V['Nx'], None, 0)
 S.const('- Primary turns per transformer:', 'N.p', '%d' % V['Np'], None, 0)
 S.const('- Secondary half-winding turns:', 'N.s', '%d' % V['Ns'], None, 0)
 S.row('- Wound turns ratio:', 'n.T_act', 'N.x*N.p/N.s', None, 4)
