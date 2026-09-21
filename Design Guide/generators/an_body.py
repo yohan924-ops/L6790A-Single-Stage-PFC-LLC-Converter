@@ -2335,7 +2335,7 @@ def build(A):
              ['12', 'C<sub>r</sub>', '%(Crc).2f &rarr; %(Cr).0f nF' % V,
               ER('fr'),
               '1/(2&pi; f<sub>r</sub> &times; design impedance), then '
-              'then rounded up on purpose, to gain Q margin'],
+              'rounded up on purpose, to gain Q margin'],
              ['13', 'L<sub>r</sub>', '%(Lrc).2f &rarr; %(Lr).0f &micro;H' % V,
               ER('fr'),
               'whatever pairs with the selected C<sub>r</sub> at '
