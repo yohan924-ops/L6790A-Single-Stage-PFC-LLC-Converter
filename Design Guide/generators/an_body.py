@@ -637,6 +637,112 @@ def build(A):
              '<b>C<sub>o(tr)</sub></b> (equivalently Q<sub>oss</sub>) is the '
              'one to use. Sizing the dead time from the headline '
              'C<sub>oss</sub> is optimistic by a large factor.'))
+    add(h2('Not a flyback, and why that changes the core'))
+    add(p('Almost everybody meets a transformer first in a flyback, and '
+          'almost every habit formed there is wrong here. Two of them cost '
+          'money: <b>why a core area matters at all in a converter that '
+          'stores none of the energy it delivers</b>, and <b>why the '
+          'saturation test current is nothing like the peak winding '
+          'current</b>. Both come from one difference, which is when the '
+          'two windings conduct.'))
+    add(p('<b>In a flyback they never conduct together.</b> The secondary '
+          'polarity dot is inverted, so the rectifier can only conduct while '
+          'the switch is off. At every instant exactly one winding is '
+          'carrying current, and therefore at every instant the whole '
+          'winding current is magnetising current. Energy goes into the core '
+          'during the on-time and comes out of it during the off-time, and '
+          'every joule that reaches the output was first stored in the core. '
+          'The flux follows the <i>current</i>, the core is gapped so that '
+          'it can hold that energy without saturating, and A<sub>e</sub> is '
+          'sized from the peak current.'))
+    add(p('<b>In an LLC they conduct together.</b> While the secondary is '
+          'rectifying, both windings are carrying current and their '
+          'ampere-turns oppose. Only what is left after the subtraction '
+          'magnetises the core:'))
+    add(eq(r'N_{p}\,i_{p}\;-\;N_{s}\,i_{s}\;=\;N_{p}\,i_{\mu}', key='mmf'))
+    add(p('The load current passes <i>through</i>, by transformer action; it '
+          'never enters the core as stored energy. What the core does hold '
+          'is the magnetising energy &frac12;L<sub>m</sub>'
+          'i<sub>&mu;</sub>&sup2;, and in this converter that is not a '
+          'by-product but the mechanism: i<sub>&mu;</sub> is the current '
+          'that charges and discharges the bridge node during the dead '
+          'time, which is to say it is what makes ZVS possible '
+          '(Section&nbsp;' + SR('Sizing the dead time so that ZVS actually happens') + '). An LLC transformer is gapped too, but the gap is '
+          'there to hold L<sub>m</sub> at the value the tank asked for, '
+          'not to store what goes to the load.'))
+    add(fig('an_flyback_llc',
+            'The two transformers, drawn from the same four rows. On the '
+            'left the switch and the rectifier are never on together, so '
+            'whichever winding is conducting carries all of the magnetising '
+            'current and the flux is a one-sided ramp that follows it. On '
+            'the right both windings conduct at once, their ampere-turns '
+            'oppose, and what magnetises the core is the difference '
+            'i<sub>&mu;</sub> = i<sub>p</sub> &minus; i<sub>s</sub>, which '
+            'is bipolar. The two i<sub>s</sub> traces are drawn referred to '
+            'the primary so that they can be compared with '
+            'i<sub>p</sub> directly, and the sign of each is set by that '
+            'converter\'s polarity dot: added in the flyback, subtracted '
+            'here. <b>The bottom row is not the net flux alone.</b> The '
+            'dashed curves are what each winding\'s ampere-turns would '
+            'drive on their own, the solid one is their sum, and the '
+            'shaded band between the primary\'s curve and the sum is '
+            'exactly what the secondary did to the core &mdash; taken away '
+            'at the same instant on the right, handed over afterwards on '
+            'the left. The flyback rectifier is drawn as a diode because '
+            'its orientation is the mechanism; the LLC rectifier is a '
+            'block because this design uses a centre tap, whose halves '
+            'conduct on alternate half periods, and the drive is drawn as '
+            'a half bridge because a full bridge changes only the '
+            'amplitude.'))
+    add(note('<b>&ldquo;An LLC transformer stores no energy&rdquo; is a '
+             'slogan, not a statement.</b> It stores the magnetising energy, '
+             'twice every switching period, and the design leans on it. What '
+             'it does not store is the energy delivered to the load.'))
+    add(p('So why does A<sub>e</sub> come into it at all? Because Faraday\'s '
+          'law does not ask whether anything is being stored:'))
+    add(eq(r'B(t)\;=\;\frac{1}{N\,A_{e}}\int v\,dt', key='faraday'))
+    add(p('A winding with a voltage across it makes flux; flux in a finite '
+          'area is a flux density; and ferrite saturates at a flux density. '
+          'That is equally true of a flyback, an LLC, a mains transformer '
+          'and a plain choke. <b>What differs is only the input to the '
+          'calculation.</b> In a flyback the volt-seconds are the input '
+          'voltage times the on-time, which is another way of writing the '
+          'peak current. In an LLC the conducting secondary clamps the '
+          'winding to the output for a resonant half period, so the '
+          'volt-seconds &mdash; and with them the flux &mdash; are set by '
+          'the <b>output voltage alone</b>. Section&nbsp;'
+          + SR('Peak flux is set by the secondary, not the primary')
+          + ' turns that into an equation with neither the input voltage '
+            'nor the load in it.'))
+    add(p('Three consequences follow, and they are worth having in mind '
+          'long before a core is chosen:'))
+    ext(bullets([
+        '<b>The flux does not rise with load.</b> Twice the output current '
+        'is twice i<sub>s</sub>, and the primary has to carry that extra '
+        'current as well &mdash; so both grow together and their '
+        'difference, i<sub>&mu;</sub>, does not move at all. (i<sub>p</sub> '
+        'itself does not simply double: it is i<sub>&mu;</sub> plus the '
+        'reflected load current, and only the second term grows.) A core '
+        'that is adequate at full load is adequate in overload; what '
+        'overload threatens is the copper and the semiconductors, not the '
+        'core.',
+        '<b>The flux does rise with output voltage.</b> Anything that lets '
+        'V<sub>out</sub> climb raises the flux in proportion, so the ceiling '
+        'to design against is the over-voltage threshold and not the nominal '
+        'output.',
+        '<b>The flux does not fall with switching frequency</b>, below '
+        'resonance. The rectifier clamps the winding for a resonant half '
+        'period T<sub>r</sub>/2 whatever f<sub>sw</sub> is doing, which is '
+        'why f<sub>r</sub> and not f<sub>sw</sub> appears in the flux '
+        'equation.']))
+    add(p('The same difference decides what the vendor is asked to test. A '
+          'DC-overlap measurement is made with the secondary open, which '
+          'removes the cancellation and puts the transformer back into the '
+          'flyback condition &mdash; all of the test current is magnetising '
+          'current. Section&nbsp;'
+          + SR('The saturation test is not the peak winding current')
+          + ' takes that to a number.'))
+
     add(h2('How an LLC is normally designed'))
     add(p('The sequence below is the standard one, and every step exists '
           'because of something already established above. It is worth '
@@ -1379,102 +1485,12 @@ def build(A):
           'transformer has turns, an open-circuit inductance and a leakage. '
           'Getting from one to the other is where most of the errors in a '
           'resonant design are made, because <b>two different turns ratios '
-          'and two different inductances carry almost the same names</b>.'))
-
-    add(h2('Not a flyback, and why that changes the core'))
-    add(p('Almost everybody meets a transformer first in a flyback, and '
-          'almost every habit formed there is wrong here. Two of them cost '
-          'money: <b>why a core area matters at all in a converter that '
-          'stores none of the energy it delivers</b>, and <b>why the '
-          'saturation test current is nothing like the peak winding '
-          'current</b>. Both come from one difference, which is when the '
-          'two windings conduct.'))
-    add(p('<b>In a flyback they never conduct together.</b> The secondary '
-          'polarity dot is inverted, so the rectifier can only conduct while '
-          'the switch is off. At every instant exactly one winding is '
-          'carrying current, and therefore at every instant the whole '
-          'winding current is magnetising current. Energy goes into the core '
-          'during the on-time and comes out of it during the off-time, and '
-          'every joule that reaches the output was first stored in the core. '
-          'The flux follows the <i>current</i>, the core is gapped so that '
-          'it can hold that energy without saturating, and A<sub>e</sub> is '
-          'sized from the peak current.'))
-    add(p('<b>In an LLC they conduct together.</b> While the secondary is '
-          'rectifying, both windings are carrying current and their '
-          'ampere-turns oppose. Only what is left after the subtraction '
-          'magnetises the core:'))
-    add(eq(r'N_{p}\,i_{p}\;-\;N_{s}\,i_{s}\;=\;N_{p}\,i_{\mu}', key='mmf'))
-    add(p('The load current passes <i>through</i>, by transformer action; it '
-          'never enters the core as stored energy. What the core does hold '
-          'is the magnetising energy &frac12;L<sub>&mu;</sub>'
-          'i<sub>&mu;</sub>&sup2;, and in this converter that is not a '
-          'by-product but the mechanism: i<sub>&mu;</sub> is the current '
-          'that charges and discharges the bridge node during the dead time '
-          'and so makes ZVS possible. An LLC transformer is gapped too, but '
-          'the gap is there to set A<sub>L</sub> &mdash; to hold '
-          'L<sub>&mu;</sub> at the value the tank asked for &mdash; and not '
-          'to store what goes to the load.'))
-    add(fig('an_flyback_llc',
-            'The two transformers, drawn from the same four rows. On the '
-            'left the switch and the rectifier are never on together, so '
-            'whichever winding is conducting carries all of the magnetising '
-            'current and the flux is a one-sided ramp that follows it. On '
-            'the right both windings conduct at once, their ampere-turns '
-            'oppose, and what magnetises the core is the difference '
-            'i<sub>&mu;</sub> = i<sub>p</sub> &minus; i<sub>s</sub>, which '
-            'is bipolar. The two i<sub>s</sub> traces are drawn referred to '
-            'the primary so that they can be compared with '
-            'i<sub>p</sub> directly, and the sign of each is set by that '
-            'converter\'s polarity dot: added in the flyback, subtracted '
-            'here. The flyback rectifier is drawn as a diode because its '
-            'orientation is the mechanism; the LLC rectifier is a block '
-            'because this design uses a centre tap, whose halves conduct '
-            'on alternate half periods, and nothing in the argument turns '
-            'on which full-wave arrangement is used.'))
-    add(note('<b>&ldquo;An LLC transformer stores no energy&rdquo; is a '
-             'slogan, not a statement.</b> It stores the magnetising energy, '
-             'twice every switching period, and the design leans on it. What '
-             'it does not store is the energy delivered to the load.'))
-    add(p('So why does A<sub>e</sub> come into it at all? Because Faraday\'s '
-          'law does not ask whether anything is being stored:'))
-    add(eq(r'B(t)\;=\;\frac{1}{N\,A_{e}}\int v\,dt', key='faraday'))
-    add(p('A winding with a voltage across it makes flux; flux in a finite '
-          'area is a flux density; and ferrite saturates at a flux density. '
-          'That is equally true of a flyback, an LLC, a mains transformer '
-          'and a plain choke. <b>What differs is only the input to the '
-          'calculation.</b> In a flyback the volt-seconds are the input '
-          'voltage times the on-time, which is another way of writing the '
-          'peak current. In an LLC the conducting secondary clamps the '
-          'winding to the output for a resonant half period, so the '
-          'volt-seconds &mdash; and with them the flux &mdash; are set by '
-          'the <b>output voltage alone</b>. Section&nbsp;'
-          + SR('Peak flux is set by the secondary, not the primary')
-          + ' turns that into an equation with neither the input voltage '
-            'nor the load in it.'))
-    add(p('Three consequences are worth having in front of you before the '
-          'core is chosen:'))
-    ext(bullets([
-        '<b>The flux does not rise with load.</b> Twice the output current '
-        'is twice i<sub>p</sub> and twice i<sub>s</sub>, and their '
-        'difference does not move. A core that is adequate at full load is '
-        'adequate in overload; what overload threatens is the copper and '
-        'the semiconductors, not the core.',
-        '<b>The flux does rise with output voltage.</b> Anything that lets '
-        'V<sub>out</sub> climb raises the flux in proportion, so the ceiling '
-        'to design against is the over-voltage threshold and not the nominal '
-        'output.',
-        '<b>The flux does not fall with switching frequency</b>, below '
-        'resonance. The rectifier clamps the winding for a resonant half '
-        'period T<sub>r</sub>/2 whatever f<sub>sw</sub> is doing, which is '
-        'why f<sub>r</sub> and not f<sub>sw</sub> appears in the flux '
-        'equation.']))
-    add(p('The same difference decides what the vendor is asked to test. A '
-          'DC-overlap measurement is made with the secondary open, which '
-          'removes the cancellation and puts the transformer back into the '
-          'flyback condition &mdash; all of the test current is magnetising '
-          'current. Section&nbsp;'
-          + SR('The saturation test is not the peak winding current')
-          + ' takes that to a number.'))
+          'and two different inductances carry almost the same names</b>. '
+          'Section&nbsp;'
+          + SR('Not a flyback, and why that changes the core')
+          + ' has already set out why this transformer is sized the way it '
+            'is; this section turns that into the numbers a supplier can '
+            'measure.'))
 
     add(h2('Two ratios, two inductances'))
     add(p('When all of the leakage is referred to the primary, the tank sees '
