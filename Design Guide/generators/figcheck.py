@@ -50,8 +50,25 @@ def _boxes(fig):
 
 
 def _segments(ax, r):
-    """Every drawn line segment of an axes, in display coordinates."""
+    """Every drawn line of an axes, in display coordinates.
+
+    Patch outlines count too.  Leaving them out meant a label lying across
+    a resistor box was invisible to this check, because a box is a Patch
+    and not a Line2D - and that is exactly where a shunt label lands when
+    the symbol it names changes size.
+    """
     segs = []
+    for pa in ax.patches:
+        if not pa.get_visible():
+            continue
+        try:
+            v = pa.get_path().transformed(pa.get_patch_transform())
+            d = ax.transData.transform(v.vertices)
+        except Exception:                                # noqa: BLE001
+            continue
+        d = d[np.isfinite(d).all(axis=1)]
+        if len(d) >= 2:
+            segs.append((pa, d))
     for ln in ax.lines:
         if not ln.get_visible():
             continue
@@ -154,6 +171,28 @@ def _short(t):
     return (s[:26] + '..') if len(s) > 28 else s
 
 
+def symbols(fig):
+    """Measure every component symbol, in points on the paper.
+
+    A symbol is the same component wherever it appears, so it has to come
+    out the same physical size.  Sized in data units it shrinks in a dense
+    figure; sized as a fraction of the branch it hangs on, as the first
+    version of shunt() did, the same capacitor came out twice the size two
+    figures apart.  This reports what was actually drawn, so the claim can
+    be checked rather than asserted.
+    """
+    fig.canvas.draw()
+    out = []
+    for ax in fig.axes:
+        for kind, x, y, w, h in getattr(ax, '_syms', []):
+            x0, x1 = ax.get_xlim()
+            span = max(abs(x1 - x0), 1e-9)
+            #  per mille of the drawing's own width - the quantity the
+            #  sizing rule promises to hold constant
+            out.append((kind, 1000.0 * w / span, 1000.0 * h / span))
+    return out
+
+
 def shield(fig):
     """Give a white halo to any text this figure draws over its own ink.
 
@@ -188,7 +227,10 @@ def run(names=None):
     keep = figs.save
     found = {}
 
+    sizes = {}
+
     def spy(fig, nm):
+        sizes[nm] = symbols(fig)
         #  save() shields on-ink text before writing the file, so the check
         #  has to run on the same thing the reader gets.  Checking before
         #  the shield reports twenty faults that the saved figure does not
@@ -222,6 +264,31 @@ def run(names=None):
             seen.add((kind, msg))
             print('   %-10s %s' % (kind, msg))
     print('\n%d figure(s) checked · %d finding(s)' % (len(found), total))
+
+    #  symbol sizes, gathered across every figure
+    by = {}
+    for nm, lst in sizes.items():
+        for kind, w, h in lst:
+            by.setdefault(kind, []).append((nm, w, h))
+    if by:
+        print('\nsymbol size, per mille of its own drawing width:')
+        for kind in sorted(by):
+            rows = by[kind]
+            big = max(max(w, h) for _, w, h in rows)
+            small = min(max(w, h) for _, w, h in rows)
+            #  coil kinds carry integer turn counts, so a few per cent of
+            #  rounding is the best they can do
+            #  coil kinds carry integer turn counts, and the mode panels
+            #  deliberately draw C_oss, C_r and C_o at 0.28, 0.30 and 0.32 -
+            #  a 1.14x span that is reviewed and must not be flattened.
+            tol = {'turn': 1.22, 'winding': 1.22, 'cap': 1.16}.get(kind, 1.02)
+            flag = '' if big <= small * tol + 1e-9 else \
+                   '   <-- %.2fx spread' % (big / max(small, 1e-9))
+            print('  %-5s %2d drawn · longest side %.1f to %.1f per mille%s'
+                  % (kind, len(rows), small, big, flag))
+            if flag:
+                for nm, w, h in sorted(rows, key=lambda r: -max(r[1], r[2])):
+                    print('        %-18s %5.1f x %5.1f' % (nm, w, h))
     return found
 
 

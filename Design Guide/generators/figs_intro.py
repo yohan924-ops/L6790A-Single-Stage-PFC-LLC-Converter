@@ -39,7 +39,7 @@ def an_llc_stage(save, foot):
 
     # the tank
     S.shade(ax, 2.85, 0.55, 7.35, 2.65, 'resonant tank', color=CYA)
-    a, b = S.cap(ax, 3.55, 1.45, 'C$_r$', s=0.34, tdy=0.55)
+    a, b = S.cap(ax, 3.55, 1.45, 'C$_r$', tdy=0.55)
     S.wire(ax, [(2.2, 1.45), a])
     c, d = S.ind(ax, 5.05, 1.45, 'L$_r$', s=0.95)
     S.wire(ax, [b, c])
@@ -49,8 +49,7 @@ def an_llc_stage(save, foot):
     S.wire(ax, [(2.2, -0.9), (9.0, -0.9)])
 
     # transformer
-    t = S.xfmr(ax, 8.05, 1.45, hp=1.9, hs=1.9, gap=0.34, ct=True,
-               np_t=5, ns_t=2)
+    t = S.xfmr(ax, 8.05, 1.45, hp=1.9, hs=1.9, gap=0.34, ct=True)
     S.wire(ax, [(6.55, 1.45), (6.55, 2.40), (t['p_top'][0], 2.40),
                 t['p_top']])
     S.wire(ax, [t['p_bot'], (t['p_bot'][0], -0.9)])
@@ -79,7 +78,7 @@ def an_llc_stage(save, foot):
     # centre tap return
     S.wire(ax, [t['s_tap'], (XTAP, 1.45), (XTAP, -0.9), (14.3, -0.9)])
 
-    ca, cb = S.cap(ax, 12.8, 0.28, None, horiz=False, s=0.34)
+    ca, cb = S.cap(ax, 12.8, 0.28, None, horiz=False)
     S.wire(ax, [(12.8, 1.45), (12.8, 0.62)])
     S.wire(ax, [(12.8, -0.06), (12.8, -0.9)])
     S.dot(ax, 12.8, 1.45)
@@ -117,7 +116,7 @@ def an_fha_steps(save, foot):
             '1   as built')
     S.sqsrc(ax, 0.55, 1.1, 'square\nwave')
     S.wire(ax, [(0.91, 1.1), (1.3, 1.1)])
-    a, b = S.cap(ax, 1.6, 1.1, 'C$_r$', s=0.28, tdy=0.48)
+    a, b = S.cap(ax, 1.6, 1.1, 'C$_r$', tdy=0.48)
     c, d = S.ind(ax, 2.6, 1.1, 'L$_r$', s=0.8)
     S.wire(ax, [b, c])
     S.wire(ax, [d, (3.5, 1.1)])
@@ -139,7 +138,7 @@ def an_fha_steps(save, foot):
             '2   secondary referred to the primary')
     S.sqsrc(ax, 0.55, 1.1, 'square\nwave')
     S.wire(ax, [(0.91, 1.1), (1.3, 1.1)])
-    a, b = S.cap(ax, 1.6, 1.1, 'C$_r$', s=0.28, tdy=0.48)
+    a, b = S.cap(ax, 1.6, 1.1, 'C$_r$', tdy=0.48)
     c, d = S.ind(ax, 2.8, 1.1, 'L$_r$', s=0.8)
     S.wire(ax, [b, c])
     S.wire(ax, [d, (4.0, 1.1)])
@@ -163,7 +162,7 @@ def an_fha_steps(save, foot):
             '3   first harmonic only')
     S.acsrc(ax, 0.55, 1.1, 'fundamental\nof the drive')
     S.wire(ax, [(0.91, 1.1), (1.3, 1.1)])
-    a, b = S.cap(ax, 1.6, 1.1, 'C$_r$', s=0.28, tdy=0.48)
+    a, b = S.cap(ax, 1.6, 1.1, 'C$_r$', tdy=0.48)
     c, d = S.ind(ax, 2.8, 1.1, 'L$_r$', s=0.8)
     S.wire(ax, [b, c])
     S.wire(ax, [d, (4.0, 1.1)])

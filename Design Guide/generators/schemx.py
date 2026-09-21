@@ -56,16 +56,85 @@ def txt(ax, x, y, t, size=10.5, color=NAVY, ha='center', va='center',
             if halo else None)
 
 
-def vcap(ax, x, y, s=0.30, gap=0.11, color=NAVY, lw=2.2, z=4):
-    """A capacitor across a vertical branch: two horizontal plates."""
+#  ---------------------------------------------------------- symbol sizing
+#  A component symbol has to come out the SAME PHYSICAL SIZE in every
+#  figure.  Sized in data units it shrinks in a dense drawing and grows in
+#  a sparse one; sized as a fraction of the branch it hangs on - which is
+#  what the old shunt() did - the same capacitor came out 0.73 units long
+#  in one figure and 1.38 in another, and that is what "the output cap
+#  symbol is far too big" meant the first time it was said.
+#
+#  REF_UPI is the data-units-per-inch of the eight-mode panels, the scale
+#  the symbols below were reviewed at.  `scale(ax)` returns the factor that
+#  reproduces that physical size in any other axes, and `_ax()` in the
+#  figure modules records each axes' own units-per-inch for it to read.
+#  The mode panels' x span - the drawing the symbols were reviewed on.
+REF_SPAN = 22.45
+#  Turn radii, at the mode panels' scale.  A transformer winding is drawn
+#  with bigger turns than a filter inductor - that is ordinary practice -
+#  but the ratio between them is fixed here instead of falling out of
+#  whatever height and turn count each drawing happened to pass, which is
+#  how one figure ended up with windings five times another's.
+TURN_R, WIND_R = 0.14, 0.28
+
+
+def scale(ax):
+    """How big a data unit is here, against the mode panels.
+
+    Taken from the axes' own DATA WIDTH, not from its position on the
+    paper.  Position was the first attempt and it is wrong twice over:
+    `tight_layout` moves the axes after the symbols are drawn, and with
+    aspect 'equal' the box matplotlib finally uses is not the one
+    `get_position` reports.  Both showed up as a 1.35x spread in resistor
+    sizes between figures that should have matched.
+
+    Data width has neither problem, and it is what a reader actually
+    judges: a symbol that is the same fraction of its own drawing looks
+    the same whatever size that drawing is printed at.
+    """
+    try:
+        x0, x1 = ax.get_xlim()
+        span = abs(x1 - x0)
+    except Exception:                                   # noqa: BLE001
+        return 1.0
+    return (span / REF_SPAN) if span > 1e-9 else 1.0
+
+
+def note_symbol(ax, kind, x, y, w, h):
+    """Remember a symbol's drawn extent so figcheck can measure it."""
+    if not hasattr(ax, '_syms'):
+        ax._syms = []
+    ax._syms.append((kind, x, y, w, h))
+
+
+def _cap_size(ax, s, gap):
+    if s is None:
+        s = 0.30 * scale(ax)
+        return s, (s * (0.11 / 0.30) if gap is None else gap)
+    return s, (0.11 if gap is None else gap)
+
+
+def vcap(ax, x, y, s=None, gap=None, color=NAVY, lw=2.2, z=4):
+    """A capacitor across a vertical branch: two horizontal plates.
+
+    s is the plate half-length and gap the half-separation.  Left out, both
+    come from the axes' own scale so the symbol is the same size on paper
+    as it is on the mode panels.
+    """
+    #  An explicit s keeps the historical gap: the mode panels pass their
+    #  own sizes and must not move.
+    s, gap = _cap_size(ax, s, gap)
     for dy in (gap, -gap):
         ax.plot([x - s, x + s], [y + dy] * 2, color=color, lw=lw, zorder=z)
+    note_symbol(ax, 'cap', x, y, 2 * s, 2 * gap)
 
 
-def hcap(ax, x, y, s=0.30, gap=0.11, color=NAVY, lw=2.2, z=4):
+def hcap(ax, x, y, s=None, gap=None, color=NAVY, lw=2.2, z=4):
     """A capacitor in a horizontal run: two vertical plates."""
+    s, gap = _cap_size(ax, s, gap)
     for dx in (gap, -gap):
         ax.plot([x + dx] * 2, [y - s, y + s], color=color, lw=lw, zorder=z)
+    note_symbol(ax, 'cap', x, y, 2 * gap, 2 * s)
 
 
 #  A winding is a stack of half circles whose diameters lie on the lead
@@ -105,11 +174,15 @@ def hcoil_pts(x, y, s=0.90, n=4, m=26):
 
 
 def coil(ax, x, y0, y1, n=5, side=-1, color=NAVY, lw=2.0, z=4):
+    r = abs(y1 - y0) / (2.0 * max(n, 1))
+    note_symbol(ax, 'turn', x, (y0 + y1) / 2.0, 2 * r, 2 * r)
     xs, ys = zip(*coil_pts(x, y0, y1, n, side))
     ax.plot(xs, ys, color=color, lw=lw, zorder=z, solid_capstyle='round')
 
 
 def hcoil(ax, x, y, s=0.90, n=4, color=NAVY, lw=2.0, z=4):
+    r = s / (2.0 * max(n, 1))
+    note_symbol(ax, 'turn', x, y, 2 * r, 2 * r)
     xs, ys = zip(*hcoil_pts(x, y, s, n))
     ax.plot(xs, ys, color=color, lw=lw, zorder=z, solid_capstyle='round')
 
@@ -125,8 +198,15 @@ def vdiode(ax, x, y, s=0.26, up=True, color=NAVY, lw=2.2, z=4):
 
 
 def resbox(ax, x, y, w=0.46, h=1.15, color=NAVY, z=4):
+    """A resistor as a box.
+
+    The defaults stay literal: the mode panels call this with none, and a
+    size derived from their own scale would come out 1.03x and move them.
+    `schem.res` passes the scaled size for every other figure.
+    """
     ax.add_patch(Rectangle((x - w / 2, y - h / 2), w, h, fc='white', ec=color,
                            lw=1.8, zorder=z))
+    note_symbol(ax, 'res', x, y, w, h)
 
 
 def hop(ax, x, y, r=0.20, color=NAVY, lw=LW, z=5):
@@ -218,7 +298,8 @@ def mosfet(ax, x, y, name, state='on', h=1.80, gate=1.00,
     return (x, yt), (x, yb)
 
 
-def xfmr(ax, x, y, hp=1.80, hs=None, np_t=6, ns_t=3, ct=False, gap=0.34,
+def xfmr(ax, x, y, hp=1.80, hs=None, np_t=None, ns_t=None, ct=False,
+         gap=0.34,
          lp=None, ls=None, dots=True, core=0.13, lead=0.06, size=11):
     """A transformer, optionally with a centre-tapped secondary.
 
@@ -237,6 +318,16 @@ def xfmr(ax, x, y, hp=1.80, hs=None, np_t=6, ns_t=3, ct=False, gap=0.34,
        ct is set.
     """
     hs = hp if hs is None else hs
+    #  Turn COUNT follows from the winding height and one turn radius, so
+    #  every winding in the document is drawn with the same size turn.
+    #  Fixing the count instead makes a tall winding's turns bigger.
+    r = WIND_R * scale(ax)
+    if np_t is None:
+        np_t = max(3, int(round((hp - 2 * lead) / (2.0 * r))))
+    if ns_t is None:
+        hh = (hs / 2.0 if ct else hs) - 2 * lead
+        ns_t = max(2, int(round(hh / (2.0 * r))))
+    mark = len(getattr(ax, '_syms', []))
     xp, xs = x - gap, x + gap
     #  The dot offsets are a FRACTION of the turn radius, not a constant.
     #  Fixed at 0.17 they were fine on the mode panels, whose turns are
@@ -286,6 +377,11 @@ def xfmr(ax, x, y, hp=1.80, hs=None, np_t=6, ns_t=3, ct=False, gap=0.34,
             dot(ax, xs + os_, yts - os_, NAVY, 4.8)
         if ls:
             txt(ax, xs + 0.42, y, ls, size=size, ha='left')
+    #  a transformer's turns are their own class, and are checked as one
+    syms = getattr(ax, '_syms', [])
+    for i in range(mark, len(syms)):
+        if syms[i][0] == 'turn':
+            syms[i] = ('winding',) + syms[i][1:]
     return out
 
 

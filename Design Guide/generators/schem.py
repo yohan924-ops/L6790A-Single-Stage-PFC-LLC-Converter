@@ -56,51 +56,56 @@ def label(ax, x, y, t, size=10, color=NAVY, ha='center', va='center',
 
 
 # --------------------------------------------------------------- components
-def cap(ax, x, y, t=None, horiz=True, s=0.30, color=NAVY, tdy=None):
-    """capacitor: two plates.  -> (left, right) or (bottom, top)"""
-    g, h = s * 0.30, s
+def cap(ax, x, y, t=None, horiz=True, s=None, color=NAVY, tdy=None):
+    """A capacitor, drawn by the kit.  -> (left, right) or (bottom, top)
+
+    `s` is the plate half-length.  Left out it comes from the axes' scale,
+    so the same capacitor is the same size on paper in every figure.  The
+    old version derived the plate from whatever length the caller happened
+    to pass, and shunt() passed a fraction of the branch - so the plates
+    grew with the branch and no two matched.
+    """
+    s = 0.30 * X.scale(ax) if s is None else s
+    g = s * (0.11 / 0.30)
     if horiz:
-        for dx in (-g, g):
-            ax.plot([x + dx, x + dx], [y - h / 2, y + h / 2], color=color,
-                    lw=2.1, zorder=3)
+        X.hcap(ax, x, y, s=s, gap=g, color=color)
         if t:
-            label(ax, x, y + (tdy if tdy is not None else h * 0.85), t)
+            label(ax, x, y + (tdy if tdy is not None else s * 1.35), t)
         return (x - s, y), (x + s, y)
-    for dy in (-g, g):
-        ax.plot([x - h / 2, x + h / 2], [y + dy, y + dy], color=color, lw=2.1,
-                zorder=3)
+    X.vcap(ax, x, y, s=s, gap=g, color=color)
     if t:
-        label(ax, x + h * 0.95, y, t, ha='left')
+        label(ax, x + s * 1.45, y, t, ha='left')
     return (x, y - s), (x, y + s)
 
 
-def ind(ax, x, y, t=None, horiz=True, s=0.66, n=4, color=NAVY, tdy=None):
-    """inductor: n half-loops.  -> (left, right) or (bottom, top)"""
-    r = s / (2.0 * n)
-    a = np.linspace(np.pi, 0, 40)
-    for k in range(n):
-        c = x - s / 2 + r * (2 * k + 1) if horiz else x
-        if horiz:
-            ax.plot(c + r * np.cos(a), y + r * np.sin(a), color=color, lw=2.0,
-                    zorder=3)
-        else:
-            cy = y - s / 2 + r * (2 * k + 1)
-            ax.plot(x + r * np.sin(a), cy + r * np.cos(a), color=color,
-                    lw=2.0, zorder=3)
+def ind(ax, x, y, t=None, horiz=True, s=0.66, n=None, color=NAVY, tdy=None):
+    """An inductor.  -> (left, right) or (bottom, top)
+
+    The TURN SIZE is fixed and the number of turns fills the length, which
+    is the way a real winding works and the way the mode panels draw one.
+    Fixing n instead made a long inductor's turns three times the size of a
+    short one's in the same document.
+    """
+    r = X.TURN_R * X.scale(ax)
+    n = max(2, int(round(s / (2.0 * r)))) if n is None else n
+    if horiz:
+        X.hcoil(ax, x, y, s=s, n=n, color=color)
+        if t:
+            label(ax, x, y + (tdy if tdy is not None else s / (2.0 * n)
+                              + 0.20), t)
+        return (x - s / 2, y), (x + s / 2, y)
+    X.coil(ax, x, y - s / 2, y + s / 2, n=n, side=+1, color=color)
     if t:
-        if horiz:
-            label(ax, x, y + (tdy if tdy is not None else r + 0.20), t)
-        else:
-            label(ax, x + r + 0.16, y, t, ha='left')
-    return ((x - s / 2, y), (x + s / 2, y)) if horiz else \
-           ((x, y - s / 2), (x, y + s / 2))
+        label(ax, x + s / (2.0 * n) + 0.16, y, t, ha='left')
+    return (x, y - s / 2), (x, y + s / 2)
 
 
-def res(ax, x, y, t=None, horiz=True, s=0.70, color=NAVY, tdy=None):
-    """resistor: a box.  -> (left, right) or (bottom, top)"""
-    w, h = (s, s * 0.42) if horiz else (s * 0.42, s)
-    ax.add_patch(Rectangle((x - w / 2, y - h / 2), w, h, fc='white',
-                           ec=color, lw=1.8, zorder=3))
+def res(ax, x, y, t=None, horiz=True, s=None, color=NAVY, tdy=None):
+    """A resistor as a box, at the kit's size.  -> two terminals"""
+    k = X.scale(ax)
+    long_, short = (1.15 * k, 0.46 * k)
+    w, h = (long_, short) if horiz else (short, long_)
+    X.resbox(ax, x, y, w=w, h=h, color=color)
     if t:
         if horiz:
             label(ax, x, y + (tdy if tdy is not None else h * 0.5 + 0.20), t)
@@ -169,7 +174,7 @@ def sqsrc(ax, x, y, t=None, r=0.38, color=NAVY):
 
 
 def xfmr(ax, x, y, hp=1.15, hs=1.15, gap=0.30, lp=None, ls=None, dots=True,
-         ct=False, np_t=4, ns_t=3):
+         ct=False, np_t=None, ns_t=None):
     """Two windings and a core; the kit draws it.  -> dict of terminals."""
     return X.xfmr(ax, x, y, hp=hp, hs=hs, np_t=np_t, ns_t=ns_t, ct=ct,
                   gap=gap, lp=lp, ls=ls, dots=dots, size=10)
@@ -210,21 +215,39 @@ def arrow(ax, p0, p1, t=None, color=MAG, lw=2.0, size=11, dy=0.22):
               color=color, size=size, weight='bold')
 
 
-def shunt(ax, x, ytop, ybot, kind, t=None, frac=0.55, tdx=0.34, **kw):
+def shunt(ax, x, ytop, ybot, kind, t=None, frac=None, tdx=None, **kw):
     """A component hanging between two nodes, wired to both.
 
-    Placing a vertical symbol centred ON the node - which is the obvious
-    thing to write - puts the wire in the middle of the coil and the junction
-    dot inside the resistor box.  This sizes the symbol to a fraction of the
-    span and wires the leftovers.
+    Placing a vertical symbol centred ON the node - the obvious thing to
+    write - puts the wire in the middle of the coil and the junction dot
+    inside the resistor box.  This places the symbol and wires the
+    leftovers.
+
+    It used to size the symbol to `frac` of the span, which is why the same
+    capacitor came out half again as large in a figure whose output rail
+    happened to sit further from its return.  The symbol is now a fixed
+    physical size; `frac` is kept only for the inductor, whose LENGTH is a
+    real choice, and is ignored for the other two.
     """
-    fn = {'ind': ind, 'cap': cap, 'res': res}[kind]
-    span = ytop - ybot
-    s = span * frac
-    yc = ybot + span / 2.0
-    (b, tp) = fn(ax, x, yc, None, horiz=False, s=s, **kw)
-    wire(ax, [(x, ytop), tp])
-    wire(ax, [b, (x, ybot)])
+    span = abs(ytop - ybot)
+    yc = min(ytop, ybot) + span / 2.0
+    if kind == 'ind':
+        out = ind(ax, x, yc, None, horiz=False,
+                  s=span * (0.55 if frac is None else frac), **kw)
+    elif kind == 'cap':
+        out = cap(ax, x, yc, None, horiz=False, **kw)
+    else:
+        out = res(ax, x, yc, None, horiz=False, **kw)
+    b, tp = out
+    wire(ax, [(x, ytop), tp if ytop > ybot else b])
+    wire(ax, [b if ytop > ybot else tp, (x, ybot)])
     if t:
-        label(ax, x + tdx, yc, t, ha='left')
+        #  clear of the symbol that was actually drawn, not a fixed guess:
+        #  the symbols shrank when they became physically sized and the old
+        #  0.34 put every label on top of its own component.
+        half = 0.30 * X.scale(ax)
+        for kind_, _x, _y, w_, h_ in getattr(ax, '_syms', [])[-1:]:
+            half = w_ / 2.0
+        dx = (half + 0.34 * X.scale(ax)) if tdx is None else tdx
+        label(ax, x + dx, yc, t, ha='left')
     return (x, ytop), (x, ybot)

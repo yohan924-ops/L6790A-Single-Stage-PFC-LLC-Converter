@@ -146,7 +146,7 @@ def an_rac(save, foot):
     #  transformer is in the picture and the n^2 in R_ac has somewhere to
     #  come from.  A bridge would need one of its ac leads to cross the
     #  other, which is a crossing this figure does not have to spend.
-    t = X.xfmr(ax, 3.7, 1.5, hp=3.6, hs=3.6, np_t=5, ns_t=2, ct=True,
+    t = X.xfmr(ax, 3.7, 1.5, hp=3.6, hs=3.6, ct=True,
                gap=0.52, ls=('N$_s$', 'N$_s$'))
     S.wire(ax, [(2.5, 3.3), t['p_top']])
     S.wire(ax, [(2.5, -0.3), t['p_bot']])
@@ -228,7 +228,7 @@ def an_integrated(save, foot):
     S.label(ax, 0.5, 1.10, 'v$_{in}$', size=11)
     S.wire(ax, [(0.5, 2.18), (0.5, 3.4), (1.7, 3.4)])
     S.wire(ax, [(0.5, 1.42), (0.5, 0.1), (10.4, 0.1)])
-    p, q = S.cap(ax, 2.2, 3.4, 'C$_r$', s=0.30, tdy=0.46)
+    p, q = S.cap(ax, 2.2, 3.4, 'C$_r$', tdy=0.46)
     S.wire(ax, [(1.7, 3.4), p])
     c, d = S.ind(ax, 3.7, 3.4, 'L$_{lkp}$', s=0.95)
     S.wire(ax, [q, c])
@@ -236,7 +236,7 @@ def an_integrated(save, foot):
     S.shunt(ax, 5.1, 3.4, 0.1, 'ind', None, frac=0.50)
     S.label(ax, 4.62, 1.75, 'L$_m$', size=11, ha='right')
     S.dot(ax, 5.1, 3.4)
-    t = X.xfmr(ax, 7.5, 1.75, hp=3.3, hs=3.3, np_t=5, ns_t=4, gap=0.52,
+    t = X.xfmr(ax, 7.5, 1.75, hp=3.3, hs=3.3, gap=0.52,
                lp=None, ls=None)
     S.wire(ax, [(5.1, 3.4), t['p_top']])
     S.wire(ax, [t['p_bot'], (t['p_bot'][0], 0.1)])
@@ -267,7 +267,7 @@ def an_integrated(save, foot):
     S.label(ax2, 0.5, 1.10, 'v$_{in}^F$', size=11)
     S.wire(ax2, [(0.5, 2.18), (0.5, 3.4), (1.7, 3.4)])
     S.wire(ax2, [(0.5, 1.42), (0.5, 0.1), (9.9, 0.1)])
-    p, q = S.cap(ax2, 2.2, 3.4, 'C$_r$', s=0.30, tdy=0.46)
+    p, q = S.cap(ax2, 2.2, 3.4, 'C$_r$', tdy=0.46)
     S.wire(ax2, [(1.7, 3.4), p])
     c, d = S.ind(ax2, 4.2, 3.4, 'L$_r$', s=1.05)
     S.wire(ax2, [q, c])
@@ -275,7 +275,7 @@ def an_integrated(save, foot):
     S.shunt(ax2, 5.1, 3.4, 0.1, 'ind', None, frac=0.50)
     S.label(ax2, 4.62, 1.75, 'L$_p$ $-$ L$_r$', size=11, ha='right')
     S.dot(ax2, 5.1, 3.4)
-    t2 = X.xfmr(ax2, 7.5, 1.75, hp=3.3, hs=3.3, np_t=5, ns_t=5, gap=0.52)
+    t2 = X.xfmr(ax2, 7.5, 1.75, hp=3.3, hs=3.3, gap=0.52)
     S.wire(ax2, [(5.1, 3.4), t2['p_top']])
     S.wire(ax2, [t2['p_bot'], (t2['p_bot'][0], 0.1)])
     S.label(ax2, 7.5, -0.48, '1 : M$_v$   ideal', size=10.5, color=GREY)
