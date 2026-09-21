@@ -1187,133 +1187,371 @@ def an_peakgain(save, foot):
 
 
 # --------------------------------------------- the core, in cross-section
+FERR, FERRE, GOLD, TAPE, PLAS = '#dfe4e9', '#6f7883', '#8a6d00', '#f5e6b4', '#eef1f4'
+
+
+def _mm_ax(fig, rect, cx, cy, mm_per_in):
+    """An axes whose data units ARE millimetres, at a stated scale.
+
+    The scale is set from the axes' own size on the page, so the drawing
+    cannot be out of scale: there is one number, mm_per_in, and both axes
+    of the plot get it.  Panels that quote different scales are detail
+    views, exactly as on a real drawing, and each says so.
+    """
+    ax = fig.add_axes(rect)
+    fw, fh = fig.get_size_inches()
+    hw = rect[2] * fw * mm_per_in / 2.0
+    hh = rect[3] * fh * mm_per_in / 2.0
+    ax.set_xlim(cx - hw, cx + hw)
+    ax.set_ylim(cy - hh, cy + hh)
+    ax.set_aspect('equal')
+    ax.axis('off')
+    return ax
+
+
+def _dimh(ax, x0, x1, y, t, ext=None, color=GREY, size=8.0, side=1):
+    if ext is not None:
+        for x in (x0, x1):
+            ax.plot([x, x], [ext, y + 0.35 * (1 if y > ext else -1)],
+                    color=color, lw=0.5, zorder=1)
+    ax.annotate('', xy=(x0, y), xytext=(x1, y),
+                arrowprops=dict(arrowstyle='<|-|>', color=color, lw=0.8,
+                                mutation_scale=8), zorder=6)
+    ax.text((x0 + x1) / 2, y + side * 0.45, t, ha='center',
+            va='bottom' if side > 0 else 'top', fontsize=size, color=color,
+            zorder=7, path_effects=HALO)
+
+
+def _dimv(ax, y0, y1, x, t, ext=None, color=GREY, size=8.0):
+    if ext is not None:
+        for y in (y0, y1):
+            ax.plot([ext, x + 0.35 * (1 if x > ext else -1)], [y, y],
+                    color=color, lw=0.5, zorder=1)
+    ax.annotate('', xy=(x, y0), xytext=(x, y1),
+                arrowprops=dict(arrowstyle='<|-|>', color=color, lw=0.8,
+                                mutation_scale=8), zorder=6)
+    ax.text(x + 0.45, (y0 + y1) / 2, t, ha='left', va='center',
+            fontsize=size, color=color, rotation=90, zorder=7,
+            path_effects=HALO)
+
+
+def _balloon(ax, n, x, y, xt, yt, color=GREY, r=1.35, lead=True):
+    """A numbered balloon with a short leader - the drawing convention.
+
+    Long prose with a leader across the part is what made the first
+    version unreadable: five sentences crossing a core 40 mm wide.  The
+    numbers go on the part and the words go in the key beside it.
+    """
+    if lead:
+        ax.annotate('', xy=(x, y), xytext=(xt, yt),
+                    arrowprops=dict(arrowstyle='-', color=color, lw=0.8,
+                                    shrinkA=r * 2.6, shrinkB=1), zorder=8)
+    ax.add_patch(Circle((xt, yt), r, fc='white', ec=color, lw=1.0, zorder=9))
+    ax.text(xt, yt - 0.04, '%d' % n, ha='center', va='center', fontsize=8.0,
+            color=color, zorder=10)
+
+
 def an_core_section(save, foot):
-    """The chosen core in section, and the winding that has to fit in it.
+    """The chosen core in section, drawn to scale, and the winding in it.
 
-    Proportions are schematic - the datasheet gives A_e, A_min, A_N and
-    l_N but not the window's width and height separately, so nothing here
-    is drawn to a dimension that was not published.  Every number written
-    on the drawing is either from the datasheet or computed from the
-    design by cores.py.
+    THE AXES ARE IN MILLIMETRES with equal aspect, and the scale comes
+    from each panel's own size on the page (_mm_ax), so nothing here can
+    be out of proportion without the core itself coming out the wrong
+    shape.  Two of the three panels are detail views at larger scales and
+    each says by how much, the way a real drawing does: at 1:1 the four
+    foil turns are one millimetre of stack and read as a single bar.
 
-    Stacked, not side by side: five zone names do not fit inside a window
-    drawn a third of a panel wide, and putting them there is what made the
-    first version unreadable.  Here they sit clear of the core with
-    leaders into it.
+    Dimensions are from the TDK dimensional drawings, PQ 40/40 core
+    B65883A page 2 and coil former B65884E page 3, and are listed with
+    their provenance in cores.MECH.
+
+    The winding is not decoration.  cores.winding() lays it out from the
+    design current, the chosen current density and the skin depth, and
+    cores.report() prints the arithmetic; this function draws what comes
+    back.  The Litz bundles are circles of the computed bundle diameter
+    at their real radius, the foil is its computed thickness and width.
+    If the copper did not fit, it would be seen not to fit.
     """
     import cores as _C
     import an_pdf as _A
     V = _A.V
     NAME = 'PQ 40/40'
     R = _C.CORES[NAME]
+    w = _C.winding(V, NAME)
+    M = w['M']
     bpk = _C.flux(V, R['Ae'])
-    g = _C.gap(V, R['Ae'])
-    bare = _C.window(V)
-    rows = _C.copper(V)
+    gp = _C.gap(V, R['Ae'])
+    d, tp = w['d_litz'], w['t_foil'] + _C.T_FOIL_INS
 
-    CORE, GOLD = '#9aa3ad', '#8a6d00'
-    fig = plt.figure(figsize=(9.2, 6.6))
+    fig = plt.figure(figsize=(9.3, 7.95))
+    S1, S2, S3 = 17.2, 6.4, 2.10            # mm per inch on each panel
+    ax = _mm_ax(fig, [0.006, 0.405, 0.395, 0.570], 4.0, -3.0, S1)
+    ax2 = _mm_ax(fig, [0.412, 0.665, 0.578, 0.310], 15.0, 0.7, S2)
+    ax3 = _mm_ax(fig, [0.412, 0.398, 0.578, 0.232], 2.9, 0.20, S3)
 
-    # ---------------------------------------------------- section
-    ax = _ax(fig, [0.035, 0.475, 0.930, 0.455], -8.2, 16.8, -0.9, 9.9)
-    ax.set_title('%s in section  —  where each winding goes' % NAME,
-                 fontsize=11.5, color=NAVY, pad=6)
-    #  Each outer leg carries half the centre leg's flux, so it is half its
-    #  width.  Drawn the same width they read as three equal legs, which is
-    #  not what the flux does.
-    YB, YT, HW = 1.6, 7.4, 1.0          # window floor, ceiling, OUTER leg
-    XL, XR, XC0, XC1 = 0.0, 12.0, 5.0, 7.0
-    YG0, YG1 = 4.25, 4.75               # the centre-leg gap
-    for rc in ((XL, YT, XR - XL, 1.6), (XL, 0.0, XR - XL, YB),
-               (XL, YB, HW, YT - YB), (XR - HW, YB, HW, YT - YB),
-               (XC0, YG1, XC1 - XC0, YT - YG1),
-               (XC0, YB, XC1 - XC0, YG0 - YB)):
-        ax.add_patch(Rectangle(rc[:2], rc[2], rc[3], fc=CORE, ec=GREY,
-                               lw=1.2, zorder=3))
-    ZONES = ((6.85, YT, LT, 'margin tape', GREY),
-             (5.25, 6.85, NAVY, 'PRIMARY  %d turns' % V['Np'], NAVY),
-             (4.45, 5.25, None, 'separation — sets L$_{short}$',
-              GOLD),
-             (2.10, 4.45, MAG, 'SECONDARY  %d + %d turns'
-              % (V['Ns'], V['Ns']), MAG),
-             (YB, 2.10, LT, 'margin tape', GREY))
-    for x0, x1 in ((HW, XC0), (XC1, XR - HW)):
-        for y0, y1, col, _t, _c in ZONES:
-            if col is None:
-                continue
-            hatch = '///' if col is LT else None
-            ax.add_patch(Rectangle((x0 + 0.10, y0), x1 - x0 - 0.20, y1 - y0,
-                                   fc=col, ec=GREY, lw=0.9, zorder=4,
-                                   alpha=0.9 if hatch else 0.25, hatch=hatch))
-    #  names clear of the core, leaders into the left window
-    for y0, y1, _col, t, c in ZONES:
-        ax.annotate(t, xy=(HW + 0.55, (y0 + y1) / 2),
-                    xytext=(-8.0, (y0 + y1) / 2), fontsize=10, color=c,
-                    ha='left', va='center', zorder=9,
-                    arrowprops=dict(arrowstyle='-', color=c, lw=1.0,
-                                    shrinkA=3, shrinkB=2))
-    #  clear of the core on the right, like the zone names on the left:
-    #  placed inside it they landed on the far window's own windings
-    _call(ax, (XC1 - 0.25, 6.6), (12.5, 8.6), 'A$_e$ = %.0f mm$^2$' % R['Ae'],
-          color=NAVY, size=10, ha='left')
-    _call(ax, (XR - HW - 0.35, 5.95), (12.5, 6.4),
-          'window A$_N$ = %.0f mm$^2$' % R['AN'], color=GREY, size=10,
-          ha='left')
-    _call(ax, (XC1 - 0.25, (YG0 + YG1) / 2), (12.5, 3.3),
-          'centre-leg gap:\nground to A$_L$,\nnot to a dimension',
-          color=GOLD, size=10, ha='left')
+    #  =================================================== SECTION, 1:1
+    HW, HH = M['W'] / 2.0, M['H'] / 2.0
+    WH, RC, RW = M['win_h'] / 2.0, M['d_centre'] / 2.0, M['r_win_out']
+    ferr = dict(fc=FERR, ec=FERRE, lw=1.0, hatch='////', zorder=3)
+    #  the centre leg is drawn GAPPED, because it is: the design needs
+    #  a definite A_L and the two halves are ground back to get it.  An
+    #  ungapped drawing with a balloon pointing at solid ferrite says
+    #  nothing.
+    for rc in ((-HW, WH, M['W'], HH - WH), (-HW, -HH, M['W'], HH - WH),
+               (-RC, gp / 2.0, 2 * RC, WH - gp / 2.0),
+               (-RC, -WH, 2 * RC, WH - gp / 2.0),
+               (-HW, -WH, HW - RW, M['win_h']),
+               (RW, -WH, HW - RW, M['win_h'])):
+        ax.add_patch(Rectangle(rc[:2], rc[2], rc[3], **ferr))
 
-    # ---------------------------------------------- the winding, unrolled
-    ax2 = fig.add_axes([0.075, 0.165, 0.855, 0.250])
-    ax2.set_title('the same winding, unrolled along the bobbin',
-                  fontsize=11.5, color=NAVY, pad=6)
-    ax2.set_xlim(-0.3, 10.3)
-    ax2.set_ylim(-2.05, 3.60)
-    ax2.set_xticks([])
-    ax2.set_yticks([])
-    for sp in ax2.spines.values():
-        sp.set_visible(False)
-    #  deep enough that the name clears its own outline: at 0.45 the text
-    #  sat on the top and bottom edges of the bar
-    ax2.add_patch(Rectangle((0, -0.72), 10, 0.72, fc=CORE, ec=GREY, lw=1.1))
-    X.txt(ax2, 5.0, -0.36, 'bobbin', size=10, color='white', z=5)
-    for x0, x1 in ((0.0, 1.00), (9.00, 10.0)):
-        ax2.add_patch(Rectangle((x0, 0), x1 - x0, 2.4, fc=LT, ec=GREY,
-                                lw=0.9, hatch='///'))
-    np_, ns_ = V['Np'], V['Ns']
-    for k in range(np_):
-        cx = 1.32 + 0.60 * (k % 3) + (0.30 if k >= 3 else 0)
-        cy = 0.40 + 0.70 * (k // 3)
-        ax2.add_patch(Circle((cx, cy), 0.28, fc=NAVY, ec=NAVY, lw=1.0,
-                             alpha=0.30))
-    #  one text, two lines - two texts one line apart are reported as
-    #  overlapping each other, and they are
-    X.txt(ax2, 1.92, 1.92, 'primary  %d turns\nLitz, %.2f mm$^2$'
-          % (np_, rows[0][3]), size=10, color=NAVY)
-    ax2.add_patch(Rectangle((3.55, 0), 1.45, 2.4, fc='none', ec=GOLD,
-                            lw=1.6, ls=(0, (4, 3))))
-    X.txt(ax2, 4.28, 2.92, 'separation\nsets L$_{short}$', size=10,
-          color=GOLD, z=5)
-    for k in range(2):
-        for j in range(ns_):
-            ax2.add_patch(Rectangle((5.35, 0.16 + 0.29 * (j + ns_ * k)), 3.40,
-                                    0.19, fc=MAG, ec=MAG, lw=0.8, alpha=0.35))
-    X.txt(ax2, 7.05, 1.92, 'secondary  %d + %d turns\nfoil, %.2f mm$^2$ each'
-          % (ns_, ns_, rows[1][3]), size=10, color=MAG)
-    ax2.annotate('', xy=(0, -1.28), xytext=(10, -1.28),
-                 arrowprops=dict(arrowstyle='<->', color=GREY, lw=1.3))
-    X.txt(ax2, 5.0, -1.70, 'winding width  —  a margin at each end for '
-          'reinforced isolation', size=10, color=GREY)
+    RB, RT = M['bore'] / 2.0, M['tube_od'] / 2.0
+    FH, WW = M['flange_h'] / 2.0, M['wind_w'] / 2.0
+    RF = RW - 0.15
+    bob = dict(fc=PLAS, ec='#55606c', lw=0.9, zorder=4)
+    for sgn in (-1, 1):
+        xt = RB if sgn > 0 else -RT
+        ax.add_patch(Rectangle((xt, -FH), RT - RB, 2 * FH, **bob))
+        for yy in (WW, -FH):
+            xf = RT if sgn > 0 else -RF
+            ax.add_patch(Rectangle((xf, yy), RF - RT, FH - WW, **bob))
 
-    foot(fig, 'Schematic section: the datasheet gives A_e, A_min, A_N and '
-              'l_N but not the window width and height separately, so no '
-              'proportion here is drawn to a published dimension. What is '
-              'from the datasheet or computed: A_e %.0f mm2, A_min %.0f '
-              'mm2, A_N %.0f mm2, l_N %.0f mm, B_pk %.0f mT (%.0f mT at '
-              'A_min), first-estimate gap %.2f mm, bare copper %.1f mm2 per '
-              'unit.'
-              % (R['Ae'], R['Amin'], R['AN'], R['lN'], bpk,
-                 bpk * R['Ae'] / R['Amin'], g, bare))
+    yP1 = WW - w['margin']
+    yP0 = yP1 - w['w_pri']
+    yS1 = yP0 - w['gap']
+    yS0 = yS1 - w['w_foil']
+    for y0, y1 in ((yP1, WW), (-WW, -WW + w['margin'])):
+        for sgn in (-1, 1):
+            x0 = RT if sgn > 0 else -RF
+            ax.add_patch(Rectangle((x0, y0), RF - RT, y1 - y0, fc=TAPE,
+                                   ec='#b9a25e', lw=0.6, zorder=5))
+    for li, n in enumerate(w['rows_p']):
+        r = RT + d * (li + 0.5)
+        y0 = yP1 - d * 0.5 - (w['per_layer'] - n) * d * 0.5
+        for k in range(n):
+            for sgn in (-1, 1):
+                ax.add_patch(Circle((sgn * r, y0 - k * d), d / 2.0, fc=NAVY,
+                                    ec='#12315c', lw=0.7, alpha=0.45,
+                                    zorder=6))
+    for k in range(2 * w['Ns']):
+        for sgn in (-1, 1):
+            x0 = RT + k * tp if sgn > 0 else -(RT + k * tp + w['t_foil'])
+            ax.add_patch(Rectangle((x0, yS0), w['t_foil'], w['w_foil'],
+                                   fc=MAG, ec=MAG, lw=0.4, zorder=6))
+    for sgn in (-1, 1):
+        x0 = RT if sgn > 0 else -RF
+        ax.add_patch(Rectangle((x0, yS1), RF - RT, w['gap'], fc='none',
+                               ec=GOLD, lw=1.1, ls=(0, (3.5, 2.5)), zorder=7))
+
+    _dimh(ax, -HW, HW, -HH - 10.5, '%.1f' % M['W'], ext=-HH)
+    _dimh(ax, -RC, RC, -HH - 3.2, 'ø%.1f' % M['d_centre'], ext=-WH,
+          side=-1)
+    _dimv(ax, -HH, HH, HW + 7.6, '%.1f' % M['H'], ext=HW)
+    _dimv(ax, -WH, WH, HW + 2.4, '%.1f' % M['win_h'], ext=RW)
+    ax.text(0.0, HH + 9.4, 'PQ 40/40 in section', ha='center', va='bottom',
+            fontsize=10.5, color=NAVY, zorder=8)
+    ax.text(0.0, -HH - 14.6, 'all dimensions in mm', ha='center', va='top',
+            fontsize=8.5, color=GREY, zorder=8)
+    #  balloons point into the LEFT window, so no leader crosses the part
+    BX = -HW - 5.2
+    _balloon(ax, 1, -(RT + d * 0.9), yP1 - d * 0.6, BX, yP1 - 0.8, NAVY)
+    _balloon(ax, 3, -(RT + 2.6), yS1 + w['gap'] * 0.5, BX,
+             yS1 + w['gap'] * 0.5, GOLD)
+    _balloon(ax, 2, -(RT + 0.6), yS0 + w['w_foil'] * 0.5, BX,
+             yS0 + w['w_foil'] * 0.5, MAG)
+    _balloon(ax, 4, -(RT + 2.6), -WW + w['margin'] * 0.5, BX,
+             -WW + w['margin'] * 0.5, GREY)
+    _balloon(ax, 6, 10.5, WH - 2.2, 10.5, HH + 4.4, GREY)
+    _balloon(ax, 5, 0.0, gp / 2.0, 0.0, HH + 4.4, GOLD)
+
+    #  ============================== DETAIL, unrolled, enlarged S1/S2
+    OX, OY = 2.0, -3.6
+    L = M['wind_w']
+    fl = (M['flange_h'] - M['wind_w']) / 2.0
+    BH = w['build_p'] + 1.1
+    ax2.add_patch(Rectangle((OX - fl - 1.6, OY - 1.9), L + 2 * fl + 3.2, 1.9,
+                            fc=FERR, ec=FERRE, lw=1.0, hatch='////', zorder=3))
+    for x0 in (OX - fl, OX + L):
+        ax2.add_patch(Rectangle((x0, OY), fl, BH, **bob))
+    for x0 in (OX, OX + L - w['margin']):
+        ax2.add_patch(Rectangle((x0, OY), w['margin'], BH, fc=TAPE,
+                                ec='#b9a25e', lw=0.6, zorder=4))
+    xP = OX + w['margin']
+    for li, n in enumerate(w['rows_p']):
+        y = OY + d * (li + 0.5)
+        x0 = xP + d * 0.5 + (w['per_layer'] - n) * d * 0.5
+        for k in range(n):
+            ax2.add_patch(Circle((x0 + k * d, y), d / 2.0, fc=NAVY,
+                                 ec='#12315c', lw=0.7, alpha=0.45, zorder=6))
+    xG = xP + w['w_pri']
+    ax2.add_patch(Rectangle((xG, OY), w['gap'], BH, fc='none', ec=GOLD,
+                            lw=1.1, ls=(0, (3.5, 2.5)), zorder=7))
+    xS = xG + w['gap']
+    for k in range(2 * w['Ns']):
+        ax2.add_patch(Rectangle((xS, OY + k * tp), w['w_foil'], w['t_foil'],
+                                fc=MAG, ec=MAG, lw=0.4, zorder=6))
+    ax2.text(OX + L / 2.0, OY + BH + 5.4,
+             'the winding unrolled along the bobbin  —  enlarged %.1f×'
+             % (S1 / S2), ha='center', va='bottom', fontsize=10.5,
+             color=NAVY, zorder=8)
+    _dimh(ax2, OX, OX + L, OY - 3.5, 'winding width  %.1f' % L,
+          ext=OY - 1.9, side=-1)
+    for x0, x1, t, c in ((xP, xG, '%.2f' % w['w_pri'], NAVY),
+                         (xG, xS, '%.2f' % w['gap'], GOLD),
+                         (xS, xS + w['w_foil'], '%.2f' % w['w_foil'], MAG)):
+        _dimh(ax2, x0, x1, OY + BH + 1.1, t, color=c)
+    for n, x0, x1, c in ((1, xP, xG, NAVY), (3, xG, xS, GOLD),
+                         (2, xS, xS + w['w_foil'], MAG)):
+        _balloon(ax2, n, 0, 0, (x0 + x1) / 2, OY + BH + 3.1, c, r=0.62,
+                 lead=False)
+    _balloon(ax2, 4, OX + w['margin'] * 0.5, OY + BH * 0.62,
+             OX - 1.5, OY + BH + 3.1, GREY, r=0.62)
+    #  which bit the bottom panel magnifies
+    ax2.add_patch(Rectangle((xS + w['w_foil'] * 0.30, OY - 0.12),
+                            w['w_foil'] * 0.40, 2 * w['Ns'] * tp + 0.24,
+                            fc='none', ec=MAG, lw=0.9, ls=(0, (2.5, 2)),
+                            zorder=8))
+    ax2.annotate('magnified\nbelow', xy=(xS + w['w_foil'] * 0.70,
+                 OY + 2 * w['Ns'] * tp + 0.35),
+                 xytext=(xS + w['w_foil'] + 1.0, OY + 3.2), fontsize=8.0,
+                 color=MAG, ha='left', va='center', zorder=9,
+                 arrowprops=dict(arrowstyle='-|>', color=MAG, lw=0.9))
+
+    #  ========================= FOIL STACK, magnified again S1/S3
+    #  At 1:1 the whole stack is one millimetre and reads as a single bar,
+    #  which is exactly the complaint this panel answers.  Only a few
+    #  millimetres of the foil's WIDTH are shown - the width is not the
+    #  point, the four layers and the skin depth are.
+    FW = 3.6
+    ax3.text(-2.7, 1.62, 'the secondary foil stack  —  enlarged '
+             '%.0f×' % (S1 / S3), ha='left', va='center',
+             fontsize=10.5, color=NAVY, zorder=8)
+    ax3.add_patch(Rectangle((-0.35, -1.28), FW + 0.7, 0.55, fc=PLAS,
+                            ec='#55606c', lw=0.9, zorder=3))
+    ax3.text(FW / 2.0, -1.00, 'bobbin', ha='center', va='center',
+             fontsize=8.0, color='#55606c', zorder=6)
+    LBL = ['NS2  turn 1', 'NS2  turn 2', 'NS3  turn 1', 'NS3  turn 2']
+    for k in range(2 * w['Ns']):
+        y0 = -0.70 + k * tp
+        ax3.add_patch(Rectangle((0, y0), FW, w['t_foil'], fc=MAG, ec=MAG,
+                                lw=0.4, zorder=6))
+        if k < 2 * w['Ns'] - 1:
+            ax3.add_patch(Rectangle((0, y0 + w['t_foil']), FW,
+                                    _C.T_FOIL_INS, fc='#d9dde2',
+                                    ec='#b6bcc4', lw=0.3, zorder=6))
+        ax3.annotate(LBL[k], xy=(FW + 0.05, y0 + w['t_foil'] / 2.0),
+                     xytext=(FW + 2.55, y0 + w['t_foil'] / 2.0),
+                     fontsize=8.0, color=MAG, ha='left', va='center',
+                     zorder=8, arrowprops=dict(arrowstyle='-', color=MAG,
+                                               lw=0.6, shrinkA=2,
+                                               shrinkB=1))
+    #  0.05 mm will not carry a dimension arrow at any magnification that
+    #  still fits on the page, so both thicknesses are leader callouts.
+    ax3.annotate('%.2f mm copper' % w['t_foil'],
+                 xy=(0.35, -0.70 + w['t_foil'] / 2.0), xytext=(-0.55, -1.02),
+                 fontsize=8.0, color=MAG, ha='right', va='center', zorder=9,
+                 arrowprops=dict(arrowstyle='-|>', color=MAG, lw=0.9))
+    ax3.annotate('%.2f mm insulation' % _C.T_FOIL_INS,
+                 xy=(0.35, -0.70 + w['t_foil'] + _C.T_FOIL_INS / 2.0),
+                 xytext=(-0.55, 0.62), fontsize=8.0, color=GREY,
+                 ha='right', va='center', zorder=9,
+                 arrowprops=dict(arrowstyle='-|>', color=GREY, lw=0.9))
+    #  the skin depth drawn beside the copper at the same scale - the whole
+    #  argument for foil is that those two bars are the same height
+    ax3.add_patch(Rectangle((FW + 0.25, -0.70), 0.55, V['delta'], fc=CYA,
+                            ec=CYA, lw=0.4, zorder=6))
+    ax3.annotate('one skin depth\nδ = %.3f mm at f$_r$' % V['delta'],
+                 xy=(FW + 0.52, -0.70 + V['delta']), xytext=(FW + 0.95, 1.05),
+                 fontsize=8.0, color='#0d6b74', ha='left', va='center',
+                 zorder=9,
+                 arrowprops=dict(arrowstyle='-|>', color='#0d6b74', lw=0.9))
+    ax3.text(-2.7, -1.62, 'the copper is one skin depth thick — that is '
+             'why the secondary is foil and not a round wire', ha='left',
+             va='center', fontsize=8.0, color=GREY, zorder=8)
+
+    #  ==================================================== key and tables
+    axk = fig.add_axes([0.020, 0.030, 0.960, 0.330])
+    axk.set_xlim(0, 100)
+    axk.set_ylim(0, 34)
+    axk.axis('off')
+    KEY = [
+        (1, NAVY, 'PRIMARY  N$_p$ = %d turns' % w['Np'],
+         'Litz %d × ø%.2f mm (%.2f mm$^2$ Cu), bundle ø%.2f mm, '
+         '%d layers %s' % (w['n_strand'], _C.D_STRAND, w['ap'], d,
+                           w['layers'],
+                           '+'.join(str(n) for n in w['rows_p']))),
+        (2, MAG, 'SECONDARY  %d + %d turns' % (w['Ns'], w['Ns']),
+         'copper foil %.2f × %.1f mm, %.2f mm$^2$ each, centre-tapped'
+         % (w['t_foil'], w['w_foil'], w['asec'])),
+        (3, GOLD, 'SEPARATION  %.2f mm' % w['gap'],
+         'not slack — this gap IS the resonant inductor. '
+         'L$_{short}$/L$_{open}$ = λ/(1+λ) = %.1f %%'
+         % (100 * V['lam'] / (1 + V['lam']))),
+        (4, GREY, 'MARGIN TAPE  %.1f mm each flange' % _C.MARGIN,
+         'assumed, for reinforced isolation; it comes straight off the '
+         '%.1f mm of winding width' % M['wind_w']),
+        (5, GOLD, 'CENTRE-LEG GAP  ≈ %.2f mm' % gp,
+         'ground to A$_L$ = %.0f nH, never to a dimension; the estimate '
+         'ignores fringing so the real gap is larger' % V['AL']),
+        (6, GREY, 'WINDOW  A$_N$ = %.0f mm$^2$' % R['AN'],
+         'both halves together, against %.1f mm$^2$ of bare copper here; '
+         'A$_e$ = %.0f mm$^2$ gives B$_{pk}$ = %.0f mT'
+         % (_C.window(V), R['Ae'], bpk)),
+    ]
+    y = 32.4
+    for n, c, head, tail in KEY:
+        axk.add_patch(Circle((1.5, y - 0.35), 1.2, fc='white', ec=c, lw=1.0))
+        axk.text(1.5, y - 0.40, '%d' % n, ha='center', va='center',
+                 fontsize=8.0, color=c)
+        axk.text(3.8, y, head, ha='left', va='center', fontsize=9.0, color=c)
+        axk.text(31.0, y, tail, ha='left', va='center', fontsize=9.0,
+                 color='#333a42')
+        y -= 3.25
+
+    TOP, ROW = 11.8, 2.45
+    COL = [(0.0, 'No'), (5.0, 'Winding'), (25.0, 'Terminals'),
+           (38.0, 'Turns'), (47.0, 'Wire'), (78.0, 'Winding method')]
+    TAB = [('1', 'NP1   primary', '1 – 2', '%d Ts' % w['Np'],
+            'Litz %d × ø%.2f' % (w['n_strand'], _C.D_STRAND),
+            '%d layers, %s' % (w['layers'],
+                               '+'.join(str(n) for n in w['rows_p']))),
+           ('2', 'NS2   secondary A', '3 – 5', '%d T' % w['Ns'],
+            'foil %.2f × %.1f' % (w['t_foil'], w['w_foil']),
+            'past the separation'),
+           ('3', 'NS3   secondary B', '4 – 6', '%d T' % w['Ns'],
+            'foil %.2f × %.1f' % (w['t_foil'], w['w_foil']),
+            'past the separation'),
+           ('4', 'NAUX  auxiliary', 'a – b', '1 T',
+            'any sense wire', 'ZCD sense only, no load')]
+    for x, t in COL:
+        axk.text(x, TOP, t, ha='left', va='center', fontsize=8.5, color=NAVY)
+    for k, row in enumerate(TAB):
+        yy = TOP - ROW * (k + 1)
+        for (x, _h), t in zip(COL, row):
+            axk.text(x, yy, t, ha='left', va='center', fontsize=8.5,
+                     color='#333a42')
+    for yy in (TOP + 1.25, TOP - 1.2, TOP - ROW * len(TAB) - 1.2):
+        axk.plot([0, 100], [yy, yy], color=GREY, lw=0.7)
+    axk.text(0.0, TOP - ROW * len(TAB) - 3.2,
+             'Per transformer, %d in the series string. Inductance at '
+             '1–2 with the other windings open: %.2f µH ± 10 %%. '
+             'With NS2 + NS3 shorted: %.2f µH ± 10 %%.'
+             % (V['nser'], (V['Lr'] + V['Lm']) / V['nser'],
+                V['Lr'] / V['nser']),
+             ha='left', va='center', fontsize=8.5, color=GREY)
+
+    foot(fig, 'Drawn to scale: every panel has millimetre axes with equal '
+              'aspect and its scale is taken from the panel size, the two '
+              'details at %.1f and %.0f times the section. Core and coil '
+              'former dimensions from the TDK PQ 40/40 datasheet, core %s '
+              'page 2 and coil former %s page 3; the outer-leg inner face '
+              'at r = %.2f mm carries no dimension label and was measured '
+              'from the drawing vector geometry, a method that returns the '
+              'centre leg as 14.94 mm against its labelled 14.9. The '
+              'winding comes from cores.winding() at J = %.1f A/mm2 with a '
+              'Litz fill of %.2f, %.2f mm foil and %.1f mm of margin tape; '
+              'those four are the assumptions and everything else follows.'
+              % (S1 / S2, S1 / S3, M['core'], M['former'], M['r_win_out'],
+                 _C.J_CU, _C.K_LITZ, _C.T_FOIL, _C.MARGIN))
     save(fig, 'an_core_section')
 
 

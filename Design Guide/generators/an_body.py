@@ -2544,6 +2544,7 @@ def build(A):
                  k2=_CORE.CORES['PQ 40/40']['Ae'] / V['Aereq'],
                  u1=100 * _cw / _CORE.CORES['PQ 32/30']['AN'],
                  u2=100 * _cw / _CORE.CORES['PQ 40/40']['AN'])))
+    _w = _CORE.winding(V)
     add(note('<b>So the core is chosen by the leakage, not by the flux.</b> '
              'That is the single-stage result in one line, and it is worth '
              'stating because it is the opposite of the usual order: in a '
@@ -2558,13 +2559,19 @@ def build(A):
                     dm=100 * (_CORE.CORES['PQ 40/40']['mass']
                               / _CORE.CORES['PQ 32/30']['mass'] - 1))))
     add(fig('an_core_section',
-            'The chosen core in section, and the same winding unrolled '
-            'along the bobbin. The primary and the secondary sit side by '
-            'side with a deliberate gap between them: that gap is what '
-            'makes L<sub>short</sub> come out at %(Ls).2f&nbsp;&micro;H per '
-            'unit instead of the one or two per cent an interleaved '
-            'winding would leak. Proportions are schematic; the areas '
-            'named are the datasheet\u2019s.' % dict(Ls=V['Lshortx'])))
+            'The chosen core in section, the same winding unrolled along '
+            'the bobbin, and the secondary foil stack. <b>All three are '
+            'drawn to scale</b> from the TDK dimensional drawings, so the '
+            'Litz bundles and the foil are their real size against the '
+            'core. The primary and the secondary sit side by side with a '
+            'deliberate gap between them: that gap is what makes '
+            'L<sub>short</sub> come out at %(Ls).2f&nbsp;&micro;H per unit '
+            'instead of the one or two per cent an interleaved winding '
+            'would leak. What is left for it &mdash; '
+            '%(g).2f&nbsp;mm of the %(ww).1f&nbsp;mm winding width, once '
+            'the copper and the margins have been taken out &mdash; is the '
+            'whole of the design margin on this transformer.'
+            % dict(Ls=V['Lshortx'], g=_w['gap'], ww=_w['M']['wind_w'])))
     _rows = _CORE.copper(V)
     add(tbl('The winding, and what it asks of the window. One unit.',
             [['Winding', 'Turns', 'I<sub>rms</sub> per unit',
@@ -2574,7 +2581,8 @@ def build(A):
               'Litz, strands well under 2&delta; = %.2f mm' % (2 * V['delta'])],
              ['Secondary, each half', '%d' % V['Ns'],
               '%.2f A' % _rows[1][2], '%.2f mm&sup2;' % _rows[1][3],
-              'foil: thickness near &delta;, width fills the window'],
+              'copper foil %.2f &times; %.1f mm: one skin depth thick, '
+              'so all of it conducts' % (_w['t_foil'], _w['w_foil'])],
              ['<b>Bare copper, both halves counted</b>', '&mdash;', '&mdash;',
               '<b>%.1f mm&sup2;</b>' % _CORE.window(V),
               'at k<sub>u</sub> = %.2f that is %.0f mm&sup2; of window, '

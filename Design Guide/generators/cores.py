@@ -82,3 +82,126 @@ def window(V):
     a = rows[0][1] * rows[0][3]              # primary
     a += 2 * rows[1][1] * rows[1][3]         # two secondary halves
     return a
+
+
+# ===================================================================
+#  Mechanical dimensions, so the cross-section can be drawn to scale
+# ===================================================================
+#  Everything in MECH is read off the datasheet dimensional drawings:
+#
+#      PQ 40/40 core        B65883A, October 2022, page 2
+#      PQ 40/40 coil former B65884E, October 2022, page 3, section A-A
+#
+#  Values marked "scaled" carry no dimension label on the drawing.  They
+#  were measured from the PDF's own vector geometry, not from a picture:
+#  the drawing's line coordinates were read out, and the two labelled
+#  dimensions on the same view (40.5 wide, 39.8 high) fix the scale to
+#  2.1455 pt/mm with the two independent readings agreeing to 0.03 %.
+#  The same measurement returns the centre leg as 14.94 mm against the
+#  labelled 14.9, which is the check that the method is sound.
+MECH = {
+    'PQ 40/40': dict(
+        core='B65883A', former='B65884E',
+        #  core, section view - labelled
+        W=40.5, H=39.8, d_centre=14.9, win_h=29.5,
+        #  core, section view - scaled: inner face of the outer leg,
+        #  measured from the centre line
+        r_win_out=13.60,
+        #  core, plan view - labelled
+        plan_w=37.0, plan_d=28.0,
+        #  coil former, section A-A - labelled
+        tube_od=17.5, bore=15.5, wind_w=25.4, flange_h=29.0,
+        #  coil former, plan and elevation - labelled
+        former_w=38.1, former_d=40.0, flange_w=29.5, former_h=45.0,
+        pitch_a=5.08, pitch_b=15.24, pins=12),
+}
+
+#  Three more assumptions, kept beside J_CU and K_U for the same reason.
+K_LITZ = 0.55       # copper fill of a served Litz bundle, insulation included
+T_FOIL = 0.20       # mm, copper foil thickness - the nearest standard gauge
+                    # at or under twice the skin depth
+T_FOIL_INS = 0.05   # mm, interlayer insulation on each foil turn
+MARGIN = 2.0        # mm of margin tape at each flange
+D_STRAND = 0.10     # mm, Litz strand diameter
+
+
+def litz(area_mm2):
+    """-> (bundle outer diameter [mm], strand count) for a bare copper area."""
+    a_strand = pi * D_STRAND ** 2 / 4.0
+    n = int(area_mm2 / a_strand + 0.9999)
+    return (4.0 * area_mm2 / (pi * K_LITZ)) ** 0.5, n
+
+
+def winding(V, name='PQ 40/40'):
+    """The winding laid out along the bobbin, in millimetres.
+
+    Side by side, not interleaved: a single-stage tank needs
+    L_short/L_open = lambda/(1+lambda), and only a deliberate gap between
+    primary and secondary gives leakage of that order.  The gap is
+    therefore not slack - it is the resonant inductor, and this function
+    reports what is left for it after the copper and the margins.
+
+    Returns a dict the drawing can render directly.  Nothing is rounded
+    for appearance: if the copper does not fit, 'gap' comes out negative
+    and 'fits' is False.
+    """
+    M = MECH[name]
+    rows = copper(V)
+    ap, asec = rows[0][3], rows[1][3]
+    dp, nstr = litz(ap)
+    wf = asec / T_FOIL                       # foil width for one turn
+    usable = M['wind_w'] - 2 * MARGIN
+    #  fewest primary layers that leave room for the foil and a gap
+    lay = 1
+    while lay <= V['Np']:
+        per = -(-V['Np'] // lay)             # ceil
+        if per * dp + wf < usable:
+            break
+        lay += 1
+    per = -(-V['Np'] // lay)
+    rows_p = [min(per, V['Np'] - i * per) for i in range(lay)]
+    wp = per * dp
+    gap_ax = usable - wp - wf
+    build_p = lay * dp
+    build_s = 2 * V['Ns'] * (T_FOIL + T_FOIL_INS)
+    r_tube = M['tube_od'] / 2.0
+    r_free = M['r_win_out'] - r_tube         # radial room at the narrow section
+    return dict(
+        name=name, M=M, Np=V['Np'], Ns=V['Ns'],
+        ap=ap, asec=asec, d_litz=dp, n_strand=nstr,
+        t_foil=T_FOIL, w_foil=wf, margin=MARGIN, usable=usable,
+        layers=lay, per_layer=per, rows_p=rows_p, w_pri=wp, gap=gap_ax,
+        build_p=build_p, build_s=build_s, r_tube=r_tube, r_free=r_free,
+        fits=(gap_ax > 0 and build_p <= r_free and build_s <= r_free))
+
+
+def report(V, name='PQ 40/40'):
+    """Print the fit arithmetic.  Run this before believing the drawing."""
+    w = winding(V, name)
+    M = w['M']
+    out = [
+        '%s   core %s   coil former %s' % (name, M['core'], M['former']),
+        '  bobbin winding width      %6.2f mm   (datasheet)' % M['wind_w'],
+        '  margin tape, both flanges %6.2f mm   (assumed %.1f each)'
+        % (2 * MARGIN, MARGIN),
+        '  usable axial              %6.2f mm' % w['usable'],
+        '  primary  %d turns of %.2f mm2 -> Litz %d x %.2f mm, bundle '
+        'd = %.2f mm' % (w['Np'], w['ap'], w['n_strand'], D_STRAND,
+                         w['d_litz']),
+        '           %d layer(s) %s -> %6.2f mm axial, %.2f mm build'
+        % (w['layers'], w['rows_p'], w['w_pri'], w['build_p']),
+        '  secondary %d + %d turns of %.2f mm2 -> foil %.2f x %.2f mm'
+        % (w['Ns'], w['Ns'], w['asec'], w['t_foil'], w['w_foil']),
+        '           %d turns -> %6.2f mm axial, %.2f mm build'
+        % (2 * w['Ns'], w['w_foil'], w['build_s']),
+        '  LEFT FOR THE SEPARATION    %5.2f mm   %s'
+        % (w['gap'], 'ok' if w['gap'] > 0 else '** DOES NOT FIT'),
+        '  radial room at the narrow section %.2f mm  '
+        '(window %.2f - bobbin r %.2f)' % (w['r_free'], M['r_win_out'],
+                                           w['r_tube']),
+        '  primary build %.2f mm %s   secondary build %.2f mm %s'
+        % (w['build_p'], 'ok' if w['build_p'] <= w['r_free'] else '** TOO DEEP',
+           w['build_s'], 'ok' if w['build_s'] <= w['r_free'] else '** TOO DEEP'),
+        '  VERDICT %s' % ('fits' if w['fits'] else '** DOES NOT FIT'),
+    ]
+    return '\n'.join(out)
