@@ -177,6 +177,23 @@ def main():
               % ('I.sat  개방시험 A', spec['Isat'], d['Ieq'],
                  'same' if ok else '** 동작보다 헐거움',
                  100 * (spec['Isat'] / d['Ieq'] - 1)))
+        #  개방 시험에서는 2차가 없으므로 1차 전류 전체가 자화 전류다.  따라서
+        #  동작 자속을 재현하는 DC 전류는 자화전류 피크와 같아야 한다 - 그것이
+        #  아니면 분모에 틀린 인덕턴스가 들어간 것이다.  L.open 을 쓰면 정확히
+        #  L.mu/L.open 배만큼 작게 나오고, 2026-09-21 까지 실제로 그랬다.
+        ok = close(d['Ieq'], d['ILm_pk'], 0.002)
+        bad += 0 if ok else 1
+        print('  %-20s %-12.4g 자화피크 %-12.4g %s'
+              % ('I.sat_eq = I.Lm_pk?', d['Ieq'], d['ILm_pk'],
+                 'same' if ok else '** 분모 인덕턴스가 틀렸다'))
+        #  자속 등가와 별개로, 권선은 합성 탱크 피크를 실제로 흘린다.  시험
+        #  전류가 그보다 낮으면 사양서를 받는 쪽에서 반드시 묻는다.
+        ok = spec['Isat'] >= d['Ipri_pk']
+        bad += 0 if ok else 1
+        print('  %-20s 사양서 %-12g 탱크피크 %-12.4g %s  (여유 %.0f %%)'
+              % ('I.sat vs I.Lr_pk', spec['Isat'], d['Ipri_pk'],
+                 'same' if ok else '** 실제 피크보다 낮다',
+                 100 * (spec['Isat'] / d['Ipri_pk'] - 1)))
     print()
     print('불일치 %d 건' % bad)
     return 1 if bad else 0

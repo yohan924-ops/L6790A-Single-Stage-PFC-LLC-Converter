@@ -699,6 +699,10 @@ S.row('- Resulting reflected voltage:', 'V.refl_act', 'n.act*V.o_eff', 'V', 2,
 S.const('- Core effective area [mm^2]:', 'A.e_mm', '113.1', None, 2)
 S.row('- Core effective area:', 'A.e', "A.e_mm*'mm*'mm", None, 8)
 S.row('- Open-circuit inductance per transformer:', 'L.open_x', 'L.open/N.x', 'μH', 3)
+S.row('- Physical magnetizing inductance per transformer:', 'L.mu_x',
+      'L.mu/N.x', 'μH', 3,
+      note='L.mu, not L.open: only this part of the open-circuit flux linkage '
+           'goes round the core. The rest is primary leakage.')
 S.row('- Inductance factor required:', 'A.L', "L.open_x/N.p^2", 'nH', 2)
 S.row('- Peak flux density in each core:', 'B.pk',
       "n.T_act*V.o_eff/N.x/(2*f.r)/(2*N.p*A.e)", 'mT', 1)
@@ -710,10 +714,20 @@ S.row('- Core area required [mm^2]:', 'A.e_req_mm', "A.e_req/('mm*'mm)", None, 1
 S.row('- Core area margin (>1):', 'k.Ae', 'A.e/A.e_req', None, 3,
       note='below 1 means the core is too small for the flux target.')
 S.row('- Flux-equivalent DC test current:', 'I.sat_eq',
-      "B.pk*N.p*A.e/L.open_x", 'A', 2)
+      "B.pk*N.p*A.e/L.mu_x", 'A', 2,
+      note='the DC current that reproduces B.pk in the OPEN-circuit test. '
+           'Divide by L.mu_x, not by L.open_x: the leakage part of the open '
+           'flux linkage does not thread the centre leg, so using L.open '
+           'puts B.pk at a lower current than it really takes and '
+           'UNDER-specifies the test. The answer must come out equal to '
+           'I.Lm_pk, because with the secondary open the whole primary '
+           'current IS magnetizing current - check_trans_spec tests that.')
 S.row('- Test current on the vendor specification:', 'I.sat_spec',
       "1.5*I.sat_eq", 'A', 1,
-      note='margin over I.sat_eq, rounded to a whole ampere on the specification sheet.')
+      note='margin over I.sat_eq, rounded UP to a whole ampere on the '
+           'specification sheet. Compare it with I.Lr_pk as well: the '
+           'winding really carries that peak, and in every variant here '
+           'this test current clears it.')
 S.row('- Secondary rms current per transformer:', 'I.sec_x', 'I.diode_lc/N.x', 'A', 2)
 S.row('- Primary rms current (same in all - series):', 'I.pri_x', 'I.pri_lc', 'A', 3)
 
