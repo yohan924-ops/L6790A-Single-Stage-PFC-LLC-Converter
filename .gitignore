@@ -1,3 +1,8 @@
 __pycache__/
 *.pyc
 .eqcache/
+
+#  an_locate.py --mark writes a ringed copy of the note beside the note
+#  itself.  It is a 7 MB diagnostic that one command regenerates from the
+#  real PDF, and committing it would double the note in every clone.
+*_marked.pdf
