@@ -166,7 +166,8 @@ def diode(ax, x, y, t=None, horiz=True, s=None, flip=False, color=NAVY):
     bar - visible once figcheck read the wires back.  `s` defaults to the
     kit's size at this axes' scale.
     """
-    s = 0.28 * X.scale(ax) if s is None else s
+    #  0.56: doubled 2026-09-21 with the kit's vdiode - see there
+    s = 0.56 * X.scale(ax) if s is None else s
     d = -1 if flip else 1
     a, w = 0.62 * s, 0.72 * s                     # half-length, half-width
     if horiz:

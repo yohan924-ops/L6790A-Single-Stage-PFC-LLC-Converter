@@ -169,10 +169,11 @@ def _skeleton(ax, states, parts=True):
     wire(ax, [(XP, YT - LEAD), (XP, YT)])
     # Against its own coil, on the side the turns bulge towards.  There is
     # room for that now the turns stand a clear radius off the core.
-    #  0.30 out and 0.10 down.  At that height the top loop reaches 0.12
-    #  out and the core bar is 0.49 out, so the dot clears both by about
-    #  its own radius - which is the whole reason the gap is 0.62.
-    dot(ax, XP + 0.30, YT - 0.10, NAVY, 4.8)
+    #  On the OUTER side of the lead line, level with the first turn -
+    #  the reviewer's red dot.  The turns bulge the other way, so that
+    #  spot beside the coil is empty; the gap side was tried and was
+    #  crowded against the core bar.
+    dot(ax, XP - 0.28, YT - LEAD - 0.21, NAVY, 4.8)
     txt(ax, XP, YB - 0.70, 'N$_p$', size=11.5)
 
     coil(ax, XS, YMID + LEAD, YT - LEAD, n=NS_T_N, side=-1)
@@ -194,11 +195,11 @@ def _skeleton(ax, states, parts=True):
     # reader's request: stacked under N_s2's polarity dot the two read as
     # one smeared pair.  The tap is unambiguous without it - the lead
     # leaves a corner where two coils end, and nothing else passes through.
-    dot(ax, XS - 0.30, YT - 0.10, NAVY, 4.8)
-    dot(ax, XS - 0.30, YMID - 0.10, NAVY, 4.8)
+    dot(ax, XS + 0.28, YT - LEAD - 0.195, NAVY, 4.8)
+    dot(ax, XS + 0.28, YMID - LEAD - 0.195, NAVY, 4.8)
     nodot(ax, XS, YMID)
-    txt(ax, XS + 0.42, (YMID + YT) / 2.0, 'N$_{s1}$', size=11, ha='left')
-    txt(ax, XS + 0.42, (YMID + YB) / 2.0, 'N$_{s2}$', size=11, ha='left')
+    txt(ax, XS + 0.52, (YMID + YT) / 2.0, 'N$_{s1}$', size=11, ha='left')
+    txt(ax, XS + 0.52, (YMID + YB) / 2.0, 'N$_{s2}$', size=11, ha='left')
 
     # ---- secondary: centre tap out to V_o+, one rectifier per winding end
     wire(ax, [(XS, YB), (XQ1, YB)])                       # lower end, near leg
@@ -225,8 +226,10 @@ def _skeleton(ax, states, parts=True):
         on = bool(states[nm])
         c = NAVY if on else OFF_C
         wire(ax, [(x, VN), (x, ytop)], c, 2.0 if on else 1.4)
-        vdiode(ax, x, y_d, 0.28, up=True, color=c)
-        txt(ax, x + side * 0.38, y_d, nm, size=11,
+        vdiode(ax, x, y_d, 0.56, up=True, color=c)
+        #  0.60 out: the diode is 0.40 wide each side now, and at 0.38
+        #  the name sat on the triangle
+        txt(ax, x + side * 0.60, y_d, nm, size=11,
             ha='left' if side > 0 else 'right', color=NAVY if on else GREY)
 
     wire(ax, [(XCO, VN), (XCO, YMID - 0.12)])

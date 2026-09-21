@@ -582,7 +582,7 @@ def f13_morphing():
     aW.plot(t, sq - 1.4, color=MAG, lw=2.6)                 # FB, offset down
     aW.axhline(1.4, color=GREY, lw=1.0, ls=':')
     aW.axhline(-1.4, color=GREY, lw=1.0, ls=':')
-    aW.set_xlim(-0.06, 2.62)
+    aW.set_xlim(-0.06, 3.05)
     aW.set_ylim(-3.15, 3.15)
     aW.set_xticks([])
     aW.set_yticks([])
@@ -597,7 +597,9 @@ def f13_morphing():
                            (-2.4, -0.4, MAG, '2 x V$_{in}$')):
         aW.annotate('', xy=(2.28, y1), xytext=(2.28, y0),
                     arrowprops=dict(arrowstyle='<|-|>', color=c, lw=2.0))
-        aW.text(2.36, (y0 + y1) / 2, lab, color=c, fontsize=12,
+        #  the axis runs to 3.05 so this label has room to the right of
+        #  the arrow; at 2.62 it overprinted the arrowheads
+        aW.text(2.40, (y0 + y1) / 2, lab, color=c, fontsize=12,
                 fontweight='bold', va='center')
     aW.text(1.0, 0.02, 'same vertical scale',
             color=GREY, fontsize=9.5, ha='center', va='center')
@@ -614,14 +616,20 @@ def f13_morphing():
     aE.set_xlabel('mains voltage  [Vac]')
     aE.set_ylabel('what the TANK sees  [Vac equivalent]')
     aE.set_title('mains 2.93:1  ->  tank 1.92:1', fontsize=11, color=NAVY)
-    note(aE, 92, 300, 'FULL bridge\nequivalent = 2 x mains', color=MAG, size=10)
-    note(aE, 268, 196, 'HALF bridge\nequivalent = mains', color=NAVY, size=10,
+    #  Notes in the corners the curve does not visit.  Placed beside the
+    #  two branches they sat ON them, and the reader could not see which
+    #  part of the line was full bridge and which half.
+    note(aE, 92, 372, 'FULL bridge\nequivalent = 2 x mains', color=MAG, size=10,
+         va='top')
+    note(aE, 268, 152, 'HALF bridge\nequivalent = mains', color=NAVY, size=10,
          ha='right')
-    note(aE, 150, 375, '332.3 V  MAXIMUM\nat only 166 Vac mains', color=MAG,
-         size=9.8, ha='center')
-    note(aE, 232, 152, '173.2 V  minimum', color=PUR, size=9.8, ha='center')
-    aE.annotate('', xy=(167.5, 335), xytext=(163, 362),
+    note(aE, 268, 372, '332.3 V  MAXIMUM\nat only 166 Vac mains', color=MAG,
+         size=9.8, ha='right', va='top')
+    note(aE, 120, 152, '173.2 V  minimum', color=PUR, size=9.8, ha='center')
+    aE.annotate('', xy=(169, 335), xytext=(205, 352),
                 arrowprops=dict(arrowstyle='-|>', color=MAG, lw=1.5))
+    aE.annotate('', xy=(176, 172), xytext=(150, 158),
+                arrowprops=dict(arrowstyle='-|>', color=PUR, lw=1.5))
     foot(fig, 'Half bridge is entered at 245 V peak going up and full bridge '
               'returns at 235 V peak coming down - 10 V of hysteresis - and the '
               'change is made by holding LOUT2 statically high, no extra hardware. '

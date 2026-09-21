@@ -87,8 +87,8 @@ def _diode_along(ax, a, b, s=None, color=NAVY, lw=2.2, z=4):
     to sit AT the apex, not at the midpoint, or the triangle covers it and
     the symbol stops being a diode at all.
     """
-    #  the kit's diode is 0.28 tall at scale 1 and its triangle 0.62 of that
-    s = 0.62 * 0.28 * X.scale(ax) if s is None else s
+    #  the kit's diode is 0.56 tall at scale 1 and its triangle 0.62 of that
+    s = 0.62 * 0.56 * X.scale(ax) if s is None else s
     a = np.asarray(a, float)
     b = np.asarray(b, float)
     d = b - a
@@ -158,7 +158,7 @@ def an_rac(save, foot):
     #  come from.  A bridge would need one of its ac leads to cross the
     #  other, which is a crossing this figure does not have to spend.
     t = X.xfmr(ax, 3.7, 1.5, hp=3.6, hs=3.6, ct=True,
-               gap=0.52, ls=('N$_s$', 'N$_s$'))
+               gap=0.52, ls=('N$_s$', 'N$_s$'), tap_dot=False)
     S.wire(ax, [(2.5, 3.3), t['p_top']])
     S.wire(ax, [(2.5, -0.3), t['p_bot']])
     S.label(ax, 3.7, -1.05, 'n : 1', size=10.5, color=GREY)
@@ -1671,8 +1671,9 @@ def an_flyback_llc(save, foot):
     S.wire(ax, [t1['p_bot'], (XP_F, 0.40)])
     S.wire(ax, [(XP_F, -0.90), (XP_F, YB)])
     _sec(ax, t1['s_top'], t1['s_bot'], YS, 6.80, 8.50, 9.90, 3.7)
-    S.label(ax, XP_F - 0.38, 3.15, 'i$_p$', size=11, color=MAG, ha='right')
-    S.label(ax, XS_F + 0.43, 3.15, 'i$_s$', size=11, color=GRN, ha='left')
+    #  Mid-coil, not at the top: the top turn is where the polarity dot is.
+    S.label(ax, XP_F - 0.38, 2.55, 'i$_p$', size=11, color=MAG, ha='right')
+    S.label(ax, XS_F + 0.43, 2.55, 'i$_s$', size=11, color=GRN, ha='left')
     ax.text(5.0, -2.00, 'switch and rectifier are never on together',
             ha='center', va='center', fontsize=10.2, color=GREY)
 
@@ -1733,8 +1734,8 @@ def an_flyback_llc(save, foot):
     bl, _ = S.box(ax2, 11.20, 1.85, 2.6, 4.2, 'rectifier\n+ load', size=10.5)
     S.wire(ax2, [t2['s_top'], (bl[0], 3.7)])
     S.wire(ax2, [t2['s_bot'], (XS_L, YS), (bl[0], YS)])
-    S.label(ax2, XP_L - 0.38, 3.15, 'i$_p$', size=11, color=MAG, ha='right')
-    S.label(ax2, XS_L + 0.43, 3.15, 'i$_s$', size=11, color=GRN, ha='left')
+    S.label(ax2, XP_L - 0.38, 2.55, 'i$_p$', size=11, color=MAG, ha='right')
+    S.label(ax2, XS_L + 0.43, 2.55, 'i$_s$', size=11, color=GRN, ha='left')
     ax2.text(5.4, -2.00, 'both windings conduct at once',
              ha='center', va='center', fontsize=10.2, color=GREY)
 

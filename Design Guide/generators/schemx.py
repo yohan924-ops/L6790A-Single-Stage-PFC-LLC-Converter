@@ -219,8 +219,14 @@ def hcoil(ax, x, y, s=0.90, n=4, color=NAVY, lw=2.0, z=4):
     ax.plot(xs, ys, color=color, lw=lw, zorder=z, solid_capstyle='round')
 
 
-def vdiode(ax, x, y, s=0.26, up=True, color=NAVY, lw=2.2, z=4):
-    """Triangle and bar on a vertical branch; `up` = conducts upward."""
+def vdiode(ax, x, y, s=0.52, up=True, color=NAVY, lw=2.2, z=4):
+    """Triangle and bar on a vertical branch; `up` = conducts upward.
+
+    0.52 since 2026-09-21: at 0.26 a rectifier printed about two points
+    tall on A4 and read as a tick on the wire.  mosfet() draws its BODY
+    diode at 0.26 on purpose - it is a parasitic, drawn small beside the
+    switch it belongs to, and the reviewer asked for it to stay so.
+    """
     d = 1 if up else -1
     tri = [(x - s * 0.72, y - d * s * 0.62), (x + s * 0.72, y - d * s * 0.62),
            (x, y + d * s * 0.62)]
@@ -416,18 +422,20 @@ def xfmr(ax, x, y, hp=1.80, hs=None, np_t=None, ns_t=None, ct=False,
         wire(ax, [(xx, b), (xx, y1)])
         return a, b
 
-    #  A polarity dot belongs to a WINDING, so it is placed against that
-    #  winding's top turn, on the side the turns bulge towards.  Put out
-    #  beyond the lead line - which is where it used to be - it sits on
-    #  the circuit wire and a reader has to work out which coil it means.
-    #  There is room for it beside the coil now that the turns are bigger
-    #  and stand further off the core.
+    #  A polarity dot marks the START of a winding, so it sits beside the
+    #  FIRST TURN, on the outer side of the lead line - the side the turns
+    #  bulge away from, where the space beside the coil is empty.  That is
+    #  where the reviewer drew it.  Two other places were tried: out past
+    #  the lead line at terminal height (on the circuit wire, saying
+    #  nothing about which coil), and in the gap between coil and core
+    #  (crowded against the bars).
     pa, pb = _wind(xp, ybp, ytp, np_t, rp, +1)
     ext = [pa, pb]
+    DOT = 0.75                      # standoff from the lead, in turn radii
     if dots:
-        dot(ax, xp + 0.80 * rp, pb + 0.50 * rp, NAVY, 4.8)
+        dot(ax, xp - DOT * rp, pb - rp, NAVY, 4.8)
     if lp:
-        txt(ax, xp - 0.42, y, lp, size=size, ha='right')
+        txt(ax, xp - 0.55, y, lp, size=size, ha='right')
 
     out = dict(p_top=(xp, ytp), p_bot=(xp, ybp),
                s_top=(xs, yts), s_bot=(xs, ybs))
@@ -436,24 +444,29 @@ def xfmr(ax, x, y, hp=1.80, hs=None, np_t=None, ns_t=None, ct=False,
         la, lb = _wind(xs, ybs, y, ns_t, rs, -1)
         ext += [ua, ub, la, lb]
         if dots:
-            dot(ax, xs - 0.80 * rs, ub + 0.50 * rs, NAVY, 4.8)
-            dot(ax, xs - 0.80 * rs, lb + 0.50 * rs, NAVY, 4.8)
+            dot(ax, xs + DOT * rs, ub - rs, NAVY, 4.8)
+            dot(ax, xs + DOT * rs, lb - rs, NAVY, 4.8)
+        #  Three conductors meet at the tap, so the convention wants a
+        #  junction dot.  A drawing that leaves it out says so through
+        #  nodot(), and figcheck lists it instead of counting it.
         if tap_dot:
             dot(ax, xs, y)
+        else:
+            nodot(ax, xs, y)
         out['s_tap'] = (xs, y)
         if ls:
-            txt(ax, xs + 0.42, (y + yts) / 2.0, ls[0], size=size, ha='left')
-            txt(ax, xs + 0.42, (y + ybs) / 2.0, ls[1], size=size, ha='left')
+            txt(ax, xs + 0.55, (y + yts) / 2.0, ls[0], size=size, ha='left')
+            txt(ax, xs + 0.55, (y + ybs) / 2.0, ls[1], size=size, ha='left')
     else:
         sa, sb = _wind(xs, ybs, yts, ns_t, rs, -1)
         ext += [sa, sb]
         if dots:
             if s_dot == 'bot':
-                dot(ax, xs - 0.80 * rs, sa - 0.50 * rs, NAVY, 4.8)
+                dot(ax, xs + DOT * rs, sa + rs, NAVY, 4.8)
             else:
-                dot(ax, xs - 0.80 * rs, sb + 0.50 * rs, NAVY, 4.8)
+                dot(ax, xs + DOT * rs, sb - rs, NAVY, 4.8)
         if ls:
-            txt(ax, xs + 0.42, y, ls, size=size, ha='left')
+            txt(ax, xs + 0.55, y, ls, size=size, ha='left')
     #  The core spans the WINDINGS, not the terminals.  Drawn to the full
     #  terminal height it stood a long way past the coils once those were
     #  capped, and the symbol read as two bars with a small coil beside it.

@@ -43,11 +43,19 @@ def an_llc_stage(save, foot):
     yl = F.HI + 1.05
     #  The four bands must not touch, or their rules read as one long line
     #  underneath every name - which is what the first version drew.
+    #  Each band ends short of the next one's start.  When the
+    #  transformer grew (2026-09-21) its band ran into both neighbours and
+    #  the three rules read as one, so the edges are now the midpoints of
+    #  the gaps between the groups, less a fixed clearance.
+    G = 0.18
+    m_tank_tr = (F.XLM + F.XP) / 2.0
+    m_tr_rect = (F.XS + F.XQ1) / 2.0
     for x0, x1, nm, col in ((F.XL - 1.35, F.XR + 0.80, 'full bridge', GREY),
-                            (F.XCR - 0.95, F.XLM + 0.45, 'resonant tank',
+                            (F.XCR - 0.95, m_tank_tr - G, 'resonant tank',
                              CYA),
-                            (F.XP - 0.35, F.XS + 0.60, 'transformer', GREY),
-                            (F.XQ1 - 0.75, F.XQ2 + 0.80, 'rectifier', GREY)):
+                            (m_tank_tr + G, m_tr_rect - G, 'transformer',
+                             GREY),
+                            (m_tr_rect + G, F.XQ2 + 0.80, 'rectifier', GREY)):
         S.label(ax, (x0 + x1) / 2.0, yl, nm, size=11.5, color=col)
         #  zorder 1.8: a rule under a group name is not a wire, and figcheck
         #  reads zorder-2 lines as wiring
@@ -121,20 +129,23 @@ def an_fha_steps(save, foot):
     ax = axs[0]
     S.frame(ax, -0.3, 7.6, -1.3, 3.5, '1   as built')
     right, bottom = drive(ax, 'sq', None)
-    series(ax, right, 1.95, 2.9, 3.7)
-    #  The transformer sits a little left of where it used to, and the
-    #  load block is placed from the secondary's own lead line rather than
-    #  at a fixed x: xfmr widens its gap when the turns would otherwise lie
-    #  on the core bars, and the first thing that move ran into was this
-    #  block - the secondary's polarity dot ended up inside it.
-    t = S.xfmr(ax, 4.60, YS_, hp=1.6, hs=1.6, gap=0.30)
+    #  Everything to the left is packed closer than in panels 2 and 3,
+    #  because the transformer needs the width: with the bigger turns its
+    #  lead lines stand 0.9 either side of the core, and at the old
+    #  positions the primary lead landed exactly on L_m's branch and the
+    #  load block on the secondary.
+    XN = 3.05
+    series(ax, right, 1.55, 2.35, XN)
+    t = S.xfmr(ax, 4.75, YS_, hp=1.6, hs=1.6, gap=0.30)
     #  up from the node and across: orthogonal, not the slanted lead the
     #  first version drew from the node straight to the winding's top
-    S.wire(ax, [(3.7, YS_), (3.7, t['p_top'][1]), t['p_top']])
+    S.wire(ax, [(XN, YS_), (XN, t['p_top'][1]), t['p_top']])
     #  the primary's return: down to the rail, and the rail back to the
     #  source - the rail used to stop at L_m and leave this lead in the air
     S.wire(ax, [t['p_bot'], (t['p_bot'][0], YR), (XS_, YR), bottom])
-    bl, _ = S.box(ax, t['s_top'][0] + 0.52 + 0.90, YS_, 1.8, 1.9,
+    #  the block fills what is left to the frame edge, from the lead line
+    xb0, xb1 = t['s_top'][0] + 0.45, 7.45
+    bl, _ = S.box(ax, (xb0 + xb1) / 2.0, YS_, xb1 - xb0, 1.9,
                   'rectifier\n+ load', size=9.5)
     S.wire(ax, [t['s_top'], (bl[0], t['s_top'][1])])
     S.wire(ax, [t['s_bot'], (bl[0], t['s_bot'][1])])
