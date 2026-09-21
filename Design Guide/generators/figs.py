@@ -153,7 +153,10 @@ def finish(fig):
     except Exception:                                   # noqa: BLE001
         pass
     t = getattr(fig, '_foot', None)
-    if t:
+    #  The AN gives every figure a numbered caption of its own, so in PLAIN
+    #  mode the footer is not drawn - two texts under one figure said the
+    #  same thing twice (2026-09-21, user).  The training/guide PNGs keep it.
+    if t and not PLAIN:
         #  Below the lowest thing already drawn - INCLUDING figure-level
         #  text.  Measuring only the axes put this caption straight on top
         #  of two verdict lines written with fig.text, which are not in any
@@ -1148,10 +1151,10 @@ def f16_bridge_hb():
 
     _bridge(aA, dict(S1='on', S2='off', S3='off', S4='static'),
             [(_L1, _HI), (_L1, _MID), (_L2, _MID), (_L2, _LO)],
-            'first half period:  S1  (S4 standing)', 'v$_{tank}$ = + V$_{in}$')
+            'first half:  S1 on,  S4 standing', 'v$_{tank}$ = + V$_{in}$')
     _bridge(aB, dict(S1='off', S2='on', S3='off', S4='static'),
             [(_L1, _LO), (_L1, _MID), (_L2, _MID), (_L2, _LO)],
-            'second half period:  S2  (S4 standing)', 'v$_{tank}$ = 0')
+            'second half:  S2 on,  S4 standing', 'v$_{tank}$ = 0')
 
     t = np.linspace(0, 2, 1201)[:-1]
     sq = np.where((t % 1) < 0.5, 1.0, 0.0)

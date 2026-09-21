@@ -1302,11 +1302,11 @@ def an_core_section(save, foot):
     gp = _C.gap(V, R['Ae'])
     d, tp = w['d_litz'], w['t_foil'] + _C.T_FOIL_INS
 
-    fig = plt.figure(figsize=(9.3, 7.95))
+    fig = plt.figure(figsize=(9.3, 4.85))
     S1, S2, S3 = 17.2, 6.4, 2.10            # mm per inch on each panel
-    ax = _mm_ax(fig, [0.006, 0.405, 0.395, 0.570], 4.0, -3.0, S1)
-    ax2 = _mm_ax(fig, [0.412, 0.665, 0.578, 0.310], 15.0, 0.7, S2)
-    ax3 = _mm_ax(fig, [0.412, 0.398, 0.578, 0.232], 2.9, 0.20, S3)
+    ax = _mm_ax(fig, [0.006, 0.033, 0.395, 0.934], 4.0, -3.0, S1)
+    ax2 = _mm_ax(fig, [0.412, 0.470, 0.578, 0.508], 15.0, 0.7, S2)
+    ax3 = _mm_ax(fig, [0.412, 0.033, 0.578, 0.380], 2.9, 0.20, S3)
 
     #  =================================================== SECTION, 1:1
     HW, HH = M['W'] / 2.0, M['H'] / 2.0
@@ -1487,89 +1487,12 @@ def an_core_section(save, foot):
              'why the secondary is foil and not a round wire', ha='left',
              va='center', fontsize=8.0, color=GREY, zorder=8)
 
-    #  ==================================================== key and tables
-    axk = fig.add_axes([0.020, 0.030, 0.960, 0.330])
-    axk.set_xlim(0, 100)
-    axk.set_ylim(0, 34)
-    axk.axis('off')
-    KEY = [
-        (1, NAVY, 'PRIMARY  N$_p$ = %d turns' % w['Np'],
-         'Litz %d × ø%.2f mm (%.2f mm$^2$ Cu), bundle ø%.2f mm, '
-         '%d layers %s' % (w['n_strand'], _C.D_STRAND, w['ap'], d,
-                           w['layers'],
-                           '+'.join(str(n) for n in w['rows_p']))),
-        (2, MAG, 'SECONDARY  %d + %d turns' % (w['Ns'], w['Ns']),
-         'copper foil %.2f × %.1f mm, %.2f mm$^2$ each, centre-tapped'
-         % (w['t_foil'], w['w_foil'], w['asec'])),
-        (3, GOLD, 'SEPARATION  %.2f mm' % w['gap'],
-         'not slack — this gap IS the resonant inductor. '
-         'L$_{short}$/L$_{open}$ = λ/(1+λ) = %.1f %%'
-         % (100 * V['lam'] / (1 + V['lam']))),
-        (4, GREY, 'MARGIN TAPE  %.1f mm each flange' % _C.MARGIN,
-         'assumed, for reinforced isolation; it comes straight off the '
-         '%.1f mm of winding width' % M['wind_w']),
-        (5, GOLD, 'CENTRE-LEG GAP  ≈ %.2f mm' % gp,
-         'ground to A$_L$ = %.0f nH, never to a dimension; the estimate '
-         'ignores fringing so the real gap is larger' % V['AL']),
-        (6, GREY, 'WINDOW  A$_N$ = %.0f mm$^2$' % R['AN'],
-         'both halves together, against %.1f mm$^2$ of bare copper here; '
-         'A$_e$ = %.0f mm$^2$ gives B$_{pk}$ = %.0f mT'
-         % (_C.window(V), R['Ae'], bpk)),
-    ]
-    y = 32.4
-    for n, c, head, tail in KEY:
-        axk.add_patch(Circle((1.5, y - 0.35), 1.2, fc='white', ec=c, lw=1.0))
-        axk.text(1.5, y - 0.40, '%d' % n, ha='center', va='center',
-                 fontsize=8.0, color=c)
-        axk.text(3.8, y, head, ha='left', va='center', fontsize=9.0, color=c)
-        axk.text(31.0, y, tail, ha='left', va='center', fontsize=9.0,
-                 color='#333a42')
-        y -= 3.25
-
-    TOP, ROW = 11.8, 2.45
-    COL = [(0.0, 'No'), (5.0, 'Winding'), (25.0, 'Terminals'),
-           (38.0, 'Turns'), (47.0, 'Wire'), (78.0, 'Winding method')]
-    TAB = [('1', 'NP1   primary', '1 – 2', '%d Ts' % w['Np'],
-            'Litz %d × ø%.2f' % (w['n_strand'], _C.D_STRAND),
-            '%d layers, %s' % (w['layers'],
-                               '+'.join(str(n) for n in w['rows_p']))),
-           ('2', 'NS2   secondary A', '3 – 5', '%d T' % w['Ns'],
-            'foil %.2f × %.1f' % (w['t_foil'], w['w_foil']),
-            'past the separation'),
-           ('3', 'NS3   secondary B', '4 – 6', '%d T' % w['Ns'],
-            'foil %.2f × %.1f' % (w['t_foil'], w['w_foil']),
-            'past the separation'),
-           ('4', 'NAUX  auxiliary', 'a – b', '1 T',
-            'any sense wire', 'ZCD sense only, no load')]
-    for x, t in COL:
-        axk.text(x, TOP, t, ha='left', va='center', fontsize=8.5, color=NAVY)
-    for k, row in enumerate(TAB):
-        yy = TOP - ROW * (k + 1)
-        for (x, _h), t in zip(COL, row):
-            axk.text(x, yy, t, ha='left', va='center', fontsize=8.5,
-                     color='#333a42')
-    for yy in (TOP + 1.25, TOP - 1.2, TOP - ROW * len(TAB) - 1.2):
-        axk.plot([0, 100], [yy, yy], color=GREY, lw=0.7)
-    axk.text(0.0, TOP - ROW * len(TAB) - 3.2,
-             'Per transformer, %d in the series string. Inductance at '
-             '1–2 with the other windings open: %.2f µH ± 10 %%. '
-             'With NS2 + NS3 shorted: %.2f µH ± 10 %%.'
-             % (V['nser'], (V['Lr'] + V['Lm']) / V['nser'],
-                V['Lr'] / V['nser']),
-             ha='left', va='center', fontsize=8.5, color=GREY)
-
-    foot(fig, 'Drawn to scale: every panel has millimetre axes with equal '
-              'aspect and its scale is taken from the panel size, the two '
-              'details at %.1f and %.0f times the section. Core and coil '
-              'former dimensions from the TDK PQ 40/40 datasheet, core %s '
-              'page 2 and coil former %s page 3; the outer-leg inner face '
-              'at r = %.2f mm carries no dimension label and was measured '
-              'from the drawing vector geometry, a method that returns the '
-              'centre leg as 14.94 mm against its labelled 14.9. The '
-              'winding comes from cores.winding() at J = %.1f A/mm2 with a '
-              'Litz fill of %.2f, %.2f mm foil and %.1f mm of margin tape; '
-              'those four are the assumptions and everything else follows.'
-              % (S1 / S2, S1 / S3, M['core'], M['former'], M['r_win_out'],
+    foot(fig, 'Drawn to scale from the TDK PQ 40/40 datasheets, core %s '
+              'and coil former %s; the two details are enlarged %.1f and '
+              '%.0f times. The winding is laid out by cores.winding() at '
+              'J = %.1f A/mm2 with a Litz fill of %.2f, %.2f mm foil and '
+              '%.1f mm of margin tape - those four are the assumptions.'
+              % (M['core'], M['former'], S1 / S2, S1 / S3,
                  _C.J_CU, _C.K_LITZ, _C.T_FOIL, _C.MARGIN))
     save(fig, 'an_core_section')
 
@@ -2059,6 +1982,219 @@ def an_mmf(save, foot):
     save(fig, 'an_mmf')
 
 
+# ------------------------------------ 16  the transformer spec, read off the waveforms
+def an_xfmr_read(save, foot):
+    """Every transformer specification item, and where on the waveform it is.
+
+    Three traces of one switching period at the worst cycle (line peak,
+    minimum equivalent input, full load) from the same eight-interval
+    model as the mode sheets; under them the line-cycle envelope of the
+    two rms currents from the design sweep, and the bench condition of
+    the DC-overlap test.  The circled numbers are the rows of the table
+    that follows the figure in the note - the figure says WHERE, the
+    table says what it sets.
+
+    Every value is from an_pdf.V (the sheet) or from l6790.sweep at the
+    design point; the traces are drawn to the model and then labelled
+    with the sheet's numbers, as the other waveform figures are.
+    """
+    import an_pdf as _A
+    import l6790 as _L
+    V, R = _A.V, _A.R
+    ratio = V['fswA'] / V['fr']                 # worst cycle: HB corner, theta = pi/2
+    t, e, ilm, ilr, io, _ = _cycle(ratio, V['lam'], V['Icomp'], V['ILm'])
+    t1 = e[1]
+
+    fig = plt.figure(figsize=(9.35, 8.9))
+    X0, W = 0.115, 0.845
+    rows = [('i$_p$\none unit', 0.235), ('i$_{NS2}$, i$_{NS3}$\none unit', 0.165),
+            ('v$_{NS}$', 0.150)]
+    y = 0.965
+    axs = []
+    for nm, h in rows:
+        y -= h + 0.024
+        axs.append(_wave_ax(fig, [X0, y, W, h], 0, 1, -1.25, 1.25, nm))
+
+    #  interval names once, above the first trace
+    for x, nm, c, ha in ((e[1] / 2, 'power delivery', MAG, 'center'),
+                         (e[2] - 0.004, 'freewheeling', CYA, 'right'),
+                         (e[2] + 0.004, 'dead time', GREY, 'left')):
+        axs[0].text(x, 1.30, nm, ha=ha, va='bottom', fontsize=9.4, color=c)
+    for a in axs:
+        for x in (e[1], e[2], e[4], e[5], e[6]):
+            a.axvline(x, color=GREY, lw=0.7, ls=(0, (2, 3)), zorder=0)
+
+    def ring(ax, n, x, y, c, dx=0.0, dy=0.0):
+        """a circled number, in axes-data units of the trace axis"""
+        ax.annotate('%d' % n, (x, y), xytext=(x + dx, y + dy),
+                    textcoords='data', ha='center', va='center',
+                    fontsize=9.4, color='white', fontweight='bold', zorder=10,
+                    bbox=dict(boxstyle='circle,pad=0.25', fc=c, ec=c, lw=0.8))
+
+    #  ---------------- row 1: primary winding current, the whole current
+    a = axs[0]
+    m = V['Icomp']
+    a.set_ylim(-1.62, 1.45)
+    a.plot(t, ilr / m, color=NAVY, lw=2.1, zorder=3)
+    a.plot(t, ilm / m, color=PUR, lw=1.7, ls=(0, (4, 2.4)), zorder=3)
+    ip = int(np.argmax(ilr[:len(t) // 2]))
+    a.plot([t[ip]], [ilr[ip] / m], 'o', color=NAVY, ms=5, zorder=5)
+    ring(a, 1, t[ip], 1.0, NAVY, dx=-0.06, dy=0.10)
+    a.text(t[ip] + 0.025, 1.06, 'I$_{p,pk}$ = %.1f A' % V['Icomp'], ha='left',
+           va='center', fontsize=9.6, color=NAVY, path_effects=HALO, zorder=9)
+    #  the magnetising peak is AT the switching instant, on the dashed trace
+    a.plot([0.5], [V['ILm'] / m], 'o', color=PUR, ms=5, zorder=5)
+    ring(a, 3, 0.5, V['ILm'] / m, PUR, dx=0.065, dy=0.30)
+    a.text(0.585, V['ILm'] / m + 0.30, 'i$_{Lm,pk}$ = %.1f A  —  the flux '
+           'peaks here' % V['ILm'], ha='left', va='center', fontsize=9.6,
+           color=PUR, path_effects=HALO, zorder=9)
+    a.text(0.30, -0.42, 'i$_p$ = i$_{Lm}$ + reflected load',
+           ha='center', va='center', fontsize=9.4, color=NAVY,
+           path_effects=HALO, zorder=9)
+    a.text(0.30, -0.70, 'i$_{Lm}$ dashed', ha='center', va='center',
+           fontsize=9.4, color=PUR, path_effects=HALO, zorder=9)
+    #  the rms window is the WHOLE period, drawn as a bracket under the trace
+    for x0, x1 in ((0.0, 1.0),):
+        a.plot([x0, x0, x1, x1], [-1.06, -1.16, -1.16, -1.06], color=NAVY,
+               lw=1.0, zorder=4)
+    ring(a, 2, 0.5, -1.16, NAVY)
+    a.text(0.5, -1.27, 'rms over the whole period: %.1f A on this cycle'
+           % V['Iprims'], ha='center', va='top', fontsize=9.6, color=NAVY,
+           path_effects=HALO, zorder=9)
+
+    #  ---------------- row 2: the two secondary windings of one unit
+    a = axs[1]
+    a.set_ylim(-0.52, 1.42)
+    s = io / max(io.max(), 1e-9)
+    s2 = np.where(t < 0.5, s, 0.0)
+    s3 = np.where(t >= 0.5, s, 0.0)
+    a.plot(t, s2, color=MAG, lw=2.0, zorder=3)
+    a.plot(t, s3, color=GRN, lw=2.0, zorder=3)
+    a.fill_between(t, 0, s2, color=MAG, alpha=0.10, lw=0)
+    a.fill_between(t, 0, s3, color=GRN, alpha=0.10, lw=0)
+    a.text(t1 / 2, 0.30, 'NS2', ha='center', va='center', fontsize=9.6,
+           color=MAG, path_effects=HALO, zorder=9)
+    a.text(0.5 + t1 / 2, 0.30, 'NS3', ha='center', va='center', fontsize=9.6,
+           color=GRN, path_effects=HALO, zorder=9)
+    a.plot([t1 / 2], [1.0], 'o', color=MAG, ms=5, zorder=5)
+    ring(a, 4, t1 / 2, 1.0, MAG, dx=-0.055, dy=0.22)
+    a.text(t1 / 2 - 0.03, 1.22, 'I$_{s,pk}$ = %.1f A per unit  (%.0f A per '
+           'rectifier leg)' % (V['Isecpkx'], V['Isec']), ha='left',
+           va='center', fontsize=9.6, color=MAG, path_effects=HALO, zorder=9)
+    #  each winding conducts once per period; its rms counts the idle half
+    a.plot([0.0, 0.0, 1.0, 1.0], [-0.06, -0.15, -0.15, -0.06], color=MAG,
+           lw=1.0, zorder=4)
+    ring(a, 5, 0.5, -0.15, MAG)
+    a.text(0.5, -0.26, 'one pulse per period per winding: the rms is taken '
+           'over the whole period, idle half included', ha='center',
+           va='top', fontsize=9.4, color=MAG, path_effects=HALO, zorder=9)
+
+    #  ---------------- row 3: secondary winding voltage and its volt-seconds
+    a = axs[2]
+    a.set_ylim(-1.66, 1.55)
+    dil = np.gradient(ilm, t)
+    slope = dil[len(t) // 8]                    # inside the ramp
+    v = dil / slope
+    a.plot(t, v, color=NAVY, lw=2.0, zorder=3)
+    a.fill_between(t, 0, np.where(t <= t1, v, 0.0), color=GOLD, alpha=0.22,
+                   lw=0, zorder=2)
+    a.fill_between(t, 0, np.where((t >= 0.5) & (t <= 0.5 + t1), v, 0.0),
+                   color=GOLD, alpha=0.22, lw=0, zorder=2)
+    a.text(-0.012, 1.0, '+V$_{out}$', transform=a.get_yaxis_transform(),
+           ha='right', va='center', fontsize=9.4, color=GREY)
+    a.text(-0.012, -1.0, '−V$_{out}$', transform=a.get_yaxis_transform(),
+           ha='right', va='center', fontsize=9.4, color=GREY)
+    ring(a, 6, t1 / 2, 0.5, GOLD)
+    a.text(t1 / 2 + 0.035, 0.5, 'V$_{out}$ × T$_r$/2 = 2 N$_s$ A$_e$ B$_{pk}$'
+           '  →  B$_{pk}$ = %.0f mT' % V['Bpk'], ha='left', va='center',
+           fontsize=9.6, color=GOLD, path_effects=HALO, zorder=9)
+    a.text(0.5 + t1 / 2, -0.5, 'the same area, the other way',
+           ha='center', va='center', fontsize=9.4, color=GOLD,
+           path_effects=HALO, zorder=9)
+    _call(a, (e[2] + 0.012, float(np.interp(e[2] + 0.012, t, v))),
+          (0.60, 0.30), 'rectifier off: L$_m$ still sees a little',
+          color=GREY, size=9.4)
+    #  a time scale for the three rows, under the last one
+    a.annotate('', xy=(1.0, -1.34), xytext=(0.0, -1.34),
+               arrowprops=dict(arrowstyle='<->', color=GREY, lw=0.9))
+    a.text(0.5, -1.40, 'one switching period  1/f$_{sw}$', ha='center',
+           va='top', fontsize=9.4, color=GREY, path_effects=HALO, zorder=9)
+    a.annotate('', xy=(t1, 1.50), xytext=(0.0, 1.50),
+               arrowprops=dict(arrowstyle='<->', color=GOLD, lw=0.9))
+    a.text(t1 / 2, 1.42, 'T$_r$/2', ha='center', va='top', fontsize=9.4,
+           color=GOLD, path_effects=HALO, zorder=9)
+
+    #  ---------------- lower left: the same two rms currents over the line
+    rws, _s = _L.sweep(R, R['Vin_min'], 1.0)
+    rws = [r for r in rws if r]
+    th = np.array([r['th'] for r in rws])
+    thd = np.degrees(np.concatenate([th, np.pi - th[::-1]]))
+    pri = np.array([r['Ipri'] for r in rws])
+    sec = np.array([r['Isec_w'] for r in rws]) / V['nser']
+    ilmt = np.array([r['ILm'] for r in rws])
+    mir = lambda q: np.concatenate([q, q[::-1]])
+    b = fig.add_axes([X0, 0.060, 0.520, 0.235])
+    b.plot(thd, mir(pri), color=NAVY, lw=2.0, label='i$_p$ rms, each cycle')
+    b.plot(thd, mir(sec), color=MAG, lw=2.0,
+           label='i$_{NS}$ rms per unit, each cycle')
+    b.plot(thd, mir(ilmt), color=PUR, lw=1.5, ls=(0, (4, 2.4)),
+           label='i$_{Lm,pk}$: does not move')
+    b.axhline(V['Iprilc'], color=NAVY, lw=1.1, ls=(0, (1, 2)),
+              label='line-cycle rms %.1f A → primary Cu' % V['Iprilc'])
+    b.axhline(V['Isecx'], color=MAG, lw=1.1, ls=(0, (1, 2)),
+              label='line-cycle rms %.2f A → foil' % V['Isecx'])
+    b.set_xlim(0, 180)
+    b.set_ylim(0, 28)
+    b.set_xticks([0, 45, 90, 135, 180])
+    b.set_xlabel('line phase θ  [deg]', fontsize=9.4)
+    b.set_ylabel('A', fontsize=9.4)
+    b.tick_params(labelsize=9.2)
+    b.set_title('over the line half cycle, at %.0f Vac equivalent'
+                % V['Veqlo'], fontsize=9.6, color=NAVY)
+    b.legend(loc='upper right', fontsize=9.2, frameon=False, ncol=1)
+    ring(b, 2, 90, pri.max(), NAVY, dx=0, dy=-3.0)
+    ring(b, 5, 150, float(np.interp(150, thd, mir(sec))), MAG, dx=8, dy=2.2)
+
+    #  ---------------- lower right: the bench, and the one current it wants
+    c = fig.add_axes([0.700, 0.060, 0.275, 0.235])
+    c.set_xlim(0, 21)
+    c.set_ylim(0, 1.25)
+    c.set_yticks([0.9, 1.0])
+    c.set_yticklabels(['90 %', '100 %'], fontsize=8.5)
+    c.set_xlabel('dc current in the primary  [A]', fontsize=9.4)
+    c.tick_params(labelsize=9.2)
+    c.set_title('DC-overlap test: secondary open', fontsize=9.6, color=NAVY)
+    Is = V['Isatspec']
+    c.axhline(1.0, color=GREY, lw=1.0)
+    c.fill_between([0, Is], 0, 0.9, color='#f3c9c9', lw=0, zorder=1)
+    c.plot([0, Is], [0.9, 0.9], color=MAG, lw=1.6, zorder=3)
+    c.plot([Is, Is], [0.0, 0.9], color=MAG, lw=1.6, zorder=3)
+    c.text(Is / 2, 0.45, 'L at 1–2 must\nstay above', ha='center',
+           va='center', fontsize=9.4, color=MAG, zorder=4)
+    c.text(0.4, 1.03, 'L$_{open}$ initial', ha='left', va='bottom',
+           fontsize=9.4, color=GREY)
+    ring(c, 7, Is, 0.9, MAG, dx=2.6, dy=0.26)
+    c.text(Is + 0.4, 0.92, '%.1f A' % Is, ha='left', va='bottom',
+           fontsize=9.6, color=MAG, fontweight='bold')
+    c.plot([V['ILm']], [0.9], 'o', color=PUR, ms=5, zorder=5)
+    c.annotate('', xy=(Is - 0.2, 0.75), xytext=(V['ILm'] + 0.2, 0.75),
+               arrowprops=dict(arrowstyle='-|>', color=PUR, lw=1.2))
+    c.text((V['ILm'] + Is) / 2, 0.70, '× V$_{OVP2}$/V$_{out}$',
+           ha='center', va='top', fontsize=9.6, color=PUR)
+    ring(c, 3, V['ILm'], 0.9, PUR, dx=-1.6, dy=0.22)
+    c.plot([V['Icomp']], [0.9], 'x', color=NAVY, ms=7, mew=1.8, zorder=5)
+    c.text(V['Icomp'] + 0.4, 0.84, 'not\n%.1f A' % V['Icomp'], ha='left',
+           va='top', fontsize=9.6, color=NAVY)
+
+    foot(fig, 'Worst switching cycle of the design: line peak at the %.0f '
+              'Vac equivalent input, full load, f_sw/f_r = %.2f. The traces '
+              'are the eight-interval model of the mode figures, labelled '
+              'with the sheet values; the lower-left envelope is the design '
+              'sweep over the line half cycle. Circled numbers are the rows '
+              'of the reading table in the text.' % (V['Veqlo'], ratio))
+    save(fig, 'an_xfmr_read')
+
+
 FIGS = {'an_rac': an_rac, 'an_integrated': an_integrated,
         'an_pfc_cap': an_pfc_cap, 'an_pfc_boost': an_pfc_boost,
         'an_pfc_ccm': an_pfc_ccm, 'an_two_stage': an_two_stage,
@@ -2066,4 +2202,5 @@ FIGS = {'an_rac': an_rac, 'an_integrated': an_integrated,
         'an_cap_ind': an_cap_ind, 'an_loadshift': an_loadshift,
         'an_peakgain': an_peakgain, 'an_recovery': an_recovery,
         'an_core_section': an_core_section,
-        'an_flyback_llc': an_flyback_llc, 'an_mmf': an_mmf}
+        'an_flyback_llc': an_flyback_llc, 'an_mmf': an_mmf,
+        'an_xfmr_read': an_xfmr_read}

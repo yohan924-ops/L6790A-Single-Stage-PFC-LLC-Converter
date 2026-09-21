@@ -735,6 +735,7 @@ def run(names=None, cropdir=None):
     magnified crop with the text's box drawn in red.
     """
     import figs
+    figs.PLAIN = True          # check the AN's figures: no footer, as saved to figures/an
     keep = figs.save
     found = {}
 
