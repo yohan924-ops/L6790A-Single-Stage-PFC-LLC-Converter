@@ -1636,38 +1636,53 @@ def an_flyback_llc(save, foot):
              fontweight='bold', linespacing=1.35)
 
     YT, YB, YS = 4.2, -1.2, 0.0
-    XT, XP, XSEC = 7.0, 6.48, 7.52
-    LIM = (-3.2, 13.5, -2.2, 5.0)
+    #  The two circuits get DIFFERENT widths, and that is deliberate.  They
+    #  sit in separate columns, so nothing has to line up across the gap,
+    #  and sharing one layout cost both of them: the flyback was three
+    #  quarters empty loop while the LLC had its tank, its magnetising
+    #  branch and its transformer crushed into the same span, with L_m's
+    #  name landing on the riser beside it.  The axes limits are shared, so
+    #  the scale still is - a symbol is the same size in both panels - but
+    #  each circuit is laid out to the width it actually needs.
+    LIM = (-2.6, 13.4, -2.2, 5.0)
 
     # ========================================================= the flyback
     ax = _ax(fig, [0.030, 0.655, 0.462, 0.280], *LIM)
+    XT_F, XP_F, XS_F = 4.30, 3.78, 4.82
     #  The secondary polarity dot is at the BOTTOM here and at the top in
     #  the LLC panel.  That one dot is the whole difference: inverted, the
     #  rectifier can only conduct while the switch is OFF, which is what
     #  makes the two winding currents exclusive and the rest of this
     #  figure follow from it.
-    t1 = X.xfmr(ax, XT, 2.1, hp=3.2, hs=3.2, gap=0.52, s_dot='bot')
-    S.wire(ax, [t1['p_top'], (XP, YT), (-1.0, YT)])
-    _batt(ax, -1.0, YT, YB, 'V$_{in}$')
-    S.wire(ax, [(-1.0, YB), (XP, YB)])
-    X.mosfet(ax, XP, -0.25, 'S', state='plain', h=1.30, gate=0.95,
+    t1 = X.xfmr(ax, XT_F, 2.1, hp=3.2, hs=3.2, gap=0.52, s_dot='bot')
+    S.wire(ax, [t1['p_top'], (XP_F, YT), (0.80, YT)])
+    _batt(ax, 0.80, YT, YB, 'V$_{in}$')
+    S.wire(ax, [(0.80, YB), (XP_F, YB)])
+    X.mosfet(ax, XP_F, -0.25, 'S', state='plain', h=1.30, gate=0.95,
              body=False, coss=False, size=11)
-    S.wire(ax, [t1['p_bot'], (XP, 0.40)])
-    S.wire(ax, [(XP, -0.90), (XP, YB)])
-    _sec(ax, t1['s_top'], t1['s_bot'], YS, 9.2, 10.9, 12.3, 3.7)
-    S.label(ax, XP - 0.38, 3.15, 'i$_p$', size=11, color=MAG, ha='right')
-    S.label(ax, XSEC + 0.43, 3.15, 'i$_s$', size=11, color=GRN, ha='left')
-    ax.text(5.4, -2.00, 'switch and rectifier are never on together',
+    S.wire(ax, [t1['p_bot'], (XP_F, 0.40)])
+    S.wire(ax, [(XP_F, -0.90), (XP_F, YB)])
+    _sec(ax, t1['s_top'], t1['s_bot'], YS, 6.80, 8.50, 9.90, 3.7)
+    S.label(ax, XP_F - 0.38, 3.15, 'i$_p$', size=11, color=MAG, ha='right')
+    S.label(ax, XS_F + 0.43, 3.15, 'i$_s$', size=11, color=GRN, ha='left')
+    ax.text(5.0, -2.00, 'switch and rectifier are never on together',
             ha='center', va='center', fontsize=10.2, color=GREY)
 
     # ============================================================= the LLC
     ax2 = _ax(fig, [0.508, 0.655, 0.462, 0.280], *LIM)
-    #  A half-bridge LEG, drawn out, because the gate row below has to
-    #  refer to something.  With a bare square-wave source on the page the
-    #  reader was being shown two gate waveforms and no gates.
-    XLEG, YM = 0.0, 1.65
-    _batt(ax2, -2.0, YT, YB, 'V$_{in}$')
-    S.wire(ax2, [(-2.0, YT), (XLEG, YT)])
+    XT_L, XP_L, XS_L = 7.30, 6.78, 7.82
+    #  A half-bridge LEG, drawn out, because the gate row below has to refer
+    #  to something.  With a bare square-wave source on the page the reader
+    #  was being shown two gate waveforms and no gates.  The supply is a
+    #  labelled rail and a ground rather than a battery: that is how a leg
+    #  is normally drawn, and the two units it saves on the left are what
+    #  the tank needs on the right.
+    XLEG, YM, XRAIL = -0.60, 1.65, -1.80
+    S.wire(ax2, [(XRAIL, YT), (XLEG, YT)])
+    S.dot(ax2, XRAIL, YT)
+    S.label(ax2, XRAIL + 0.45, YT + 0.52, 'V$_{in}$', size=11, ha='left')
+    S.wire(ax2, [(XRAIL, YB), (XP_L, YB)])
+    S.gnd(ax2, XRAIL, YB)
     X.mosfet(ax2, XLEG, 2.75, 'S$_1$', state='plain', h=1.30, gate=0.95,
              body=False, coss=False, size=11)
     X.mosfet(ax2, XLEG, 0.55, 'S$_2$', state='plain', h=1.30, gate=0.95,
@@ -1675,29 +1690,27 @@ def an_flyback_llc(save, foot):
     S.wire(ax2, [(XLEG, YT), (XLEG, 3.40)])
     S.wire(ax2, [(XLEG, 2.10), (XLEG, 1.20)])          # the midpoint leg
     S.wire(ax2, [(XLEG, -0.10), (XLEG, YB)])
-    S.wire(ax2, [(-2.0, YB), (XP, YB)])
     S.dot(ax2, XLEG, YB)
 
-    c, d = S.cap(ax2, 1.90, YM, None)
-    S.label(ax2, 1.90, YM - 0.85, 'C$_r$', size=10.5, color=GREY)
-    a, b = S.ind(ax2, 3.30, YM, None, s=1.35)
-    S.label(ax2, 3.30, YM - 0.85, 'L$_r$', size=10.5, color=GREY)
+    c, d = S.cap(ax2, 1.30, YM, None)
+    S.label(ax2, 1.30, YM - 0.85, 'C$_r$', size=10.5, color=GREY)
+    a, b = S.ind(ax2, 2.80, YM, None, s=1.35)
+    S.label(ax2, 2.80, YM - 0.85, 'L$_r$', size=10.5, color=GREY)
     S.wire(ax2, [(XLEG, YM), c])
     S.dot(ax2, XLEG, YM)
     S.wire(ax2, [d, a])
-    S.wire(ax2, [b, (4.40, YM), (4.40, 3.7), (XP, 3.7)])
+    S.wire(ax2, [b, (4.00, YM), (4.00, 3.7), (XP_L, 3.7)])
 
-    t2 = X.xfmr(ax2, XT, 2.1, hp=3.2, hs=3.2, gap=0.52)
-    S.wire(ax2, [t2['p_bot'], (XP, YB)])
+    t2 = X.xfmr(ax2, XT_L, 2.1, hp=3.2, hs=3.2, gap=0.52)
+    S.wire(ax2, [t2['p_bot'], (XP_L, YB)])
     #  L_m is drawn as its own shunt because its current is one of the four
     #  rows below; without it on the page i_mu has no branch to be the
-    #  current of.
-    S.shunt(ax2, 5.00, 3.7, YB, 'ind', None, frac=0.42)
-    #  above its own coil: beside it, the name lands either on the
-    #  riser to its left or on the primary winding to its right
-    S.label(ax2, 5.00, 3.05, 'L$_m$', size=10.5)
-    S.dot(ax2, 5.00, 3.7)
-    S.dot(ax2, 5.00, YB)
+    #  current of.  Its name goes beside the COIL, at the coil's own height:
+    #  above the coil it landed on the riser corner and on i_p.
+    S.shunt(ax2, 5.10, 3.7, YB, 'ind', None, frac=0.42)
+    S.label(ax2, 5.55, YM - 0.40, 'L$_m$', size=10.5, ha='left')
+    S.dot(ax2, 5.10, 3.7)
+    S.dot(ax2, 5.10, YB)
 
     #  A BLOCK here, not a diode.  This design rectifies with a centre tap
     #  and its two halves conduct on alternate half periods, so the winding
@@ -1706,11 +1719,11 @@ def an_flyback_llc(save, foot):
     #  flyback panel the rectifier is drawn out because its orientation is
     #  the entire mechanism; here any full-wave rectifier does the same
     #  thing to this argument.
-    bl, _ = S.box(ax2, 11.1, 1.85, 2.6, 4.2, 'rectifier\n+ load', size=10.5)
+    bl, _ = S.box(ax2, 11.20, 1.85, 2.6, 4.2, 'rectifier\n+ load', size=10.5)
     S.wire(ax2, [t2['s_top'], (bl[0], 3.7)])
-    S.wire(ax2, [t2['s_bot'], (XSEC, YS), (bl[0], YS)])
-    S.label(ax2, XP - 0.38, 3.15, 'i$_p$', size=11, color=MAG, ha='right')
-    S.label(ax2, XSEC + 0.43, 3.15, 'i$_s$', size=11, color=GRN, ha='left')
+    S.wire(ax2, [t2['s_bot'], (XS_L, YS), (bl[0], YS)])
+    S.label(ax2, XP_L - 0.38, 3.15, 'i$_p$', size=11, color=MAG, ha='right')
+    S.label(ax2, XS_L + 0.43, 3.15, 'i$_s$', size=11, color=GRN, ha='left')
     ax2.text(5.4, -2.00, 'both windings conduct at once',
              ha='center', va='center', fontsize=10.2, color=GREY)
 
@@ -1841,18 +1854,14 @@ def an_flyback_llc(save, foot):
                     path_effects=HALO, zorder=9)
     cap_(axr[3], 'own $\\Phi$ dashed, the sum solid, the gap shaded')
 
-    foot(fig, 'The bottom row plots what each winding\'s ampere-turns '
-              'would drive on its own and, solid, what is left when they '
-              'are added. The flyback rectifier is drawn out because its '
-              'orientation is the whole mechanism; the LLC one is a block '
-              'because any full-wave rectifier does the same thing here, '
-              'and the drive is a half bridge because a full bridge '
-              'changes only the amplitude. In the flyback the two '
-              'contributions take turns and the core carries the whole of '
-              'each; in the LLC they overlap and oppose, so the core '
-              'carries only the difference - which is set by the '
-              'volt-seconds on the winding, that is by the output voltage, '
-              'and not by the load.')
+    #  Short on purpose.  The document caption under this figure carries
+    #  the reading instructions; repeating them here gave the page two
+    #  dense grey paragraphs one above the other.
+    foot(fig, 'Row three is the answer. In the flyback the magnetising '
+              'current IS the winding current, so the flux follows the peak '
+              'current. In the LLC the two windings conduct together and '
+              'their ampere-turns oppose, so the core carries only the '
+              'difference.')
     save(fig, 'an_flyback_llc')
 
 
