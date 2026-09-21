@@ -1555,10 +1555,384 @@ def an_core_section(save, foot):
     save(fig, 'an_core_section')
 
 
+# ------------------------------------------- 14  flyback against the LLC
+def _batt(ax, x, ytop, ybot, t=None):
+    """A dc source between two nodes, wired to both.  -> (top, bottom)
+
+    Two cells, long plate on the + side.  The plates are drawn at zorder 4
+    so the wiring check reads them as a symbol and not as four loose wires.
+    """
+    s = 0.22 * X.scale(ax)
+    yc = (ytop + ybot) / 2.0
+    for dy, w in ((1.5, 1.00), (0.5, 0.48), (-0.5, 1.00), (-1.5, 0.48)):
+        ax.plot([x - s * w * 1.5, x + s * w * 1.5], [yc + dy * s] * 2,
+                color=NAVY, lw=2.2, zorder=4, solid_capstyle='butt')
+    S.wire(ax, [(x, ytop), (x, yc + 1.5 * s)])
+    S.wire(ax, [(x, yc - 1.5 * s), (x, ybot)])
+    if t:
+        S.label(ax, x - 1.5 * s - 0.34, yc, t, size=11, ha='right')
+    return (x, ytop), (x, ybot)
+
+
+def _sec(ax, top, bot, ys, xd, xc, xr, yt):
+    """rectifier, output capacitor and load, hung on one secondary"""
+    di, do = S.diode(ax, xd, yt, None, horiz=True)
+    S.wire(ax, [top, di])
+    S.label(ax, xd, yt + 0.72, 'D', size=10.5, color=GREY)
+    S.wire(ax, [do, (xr, yt)])
+    S.wire(ax, [bot, (bot[0], ys), (xr, ys)])
+    S.shunt(ax, xc, yt, ys, 'cap', None)
+    S.label(ax, xc - 0.42, (yt + ys) / 2.0, 'C$_o$', size=10.5, ha='right')
+    S.dot(ax, xc, yt)
+    S.dot(ax, xc, ys)
+    S.shunt(ax, xr, yt, ys, 'res', 'R$_o$')
+
+
+def an_flyback_llc(save, foot):
+    """The two transformers side by side: circuit, currents and flux.
+
+    This is the question every reader who designed a flyback first asks
+    about the LLC transformer: if it stores no energy, why does A_e come
+    into it at all, and why is the saturation test current so much less
+    than the primary peak?
+
+    Both columns are built from the same four rows, so the difference on
+    the page is the circuit and not a choice of what to plot.  The LLC
+    column reads its waveforms from the eight-interval model the rest of
+    the document uses and its two current levels from the design, so this
+    figure cannot disagree with the ones around it.
+    """
+    import an_pdf as _A
+    V = _A.V
+    fig = plt.figure(figsize=(9.35, 7.70))
+    XL, XR, WW = 0.100, 0.590, 0.376
+
+    #  Two lines each.  On one line they ran off both edges of the page
+    #  and into each other in the middle.
+    fig.text(0.030 + 0.231, 0.975, 'FLYBACK\nan inductor with a second '
+             'winding', ha='center', va='top', fontsize=11.0, color=NAVY,
+             fontweight='bold', linespacing=1.35)
+    fig.text(0.508 + 0.231, 0.975, 'LLC\na transformer, and a magnetising '
+             'branch', ha='center', va='top', fontsize=11.0, color=NAVY,
+             fontweight='bold', linespacing=1.35)
+
+    YT, YB, YS = 4.2, -1.2, 0.0
+    XT, XP, XSEC = 5.0, 4.48, 5.52
+
+    # ========================================================= the flyback
+    ax = _ax(fig, [0.030, 0.635, 0.462, 0.305], -1.5, 13.7, -2.1, 5.0)
+    #  The secondary polarity dot is at the BOTTOM here and at the top in
+    #  the LLC panel.  That one dot is the whole difference: inverted, the
+    #  rectifier can only conduct while the switch is OFF, which is what
+    #  makes the two winding currents exclusive and the rest of this
+    #  figure follow from it.
+    t1 = X.xfmr(ax, XT, 2.1, hp=3.2, hs=3.2, gap=0.52, s_dot='bot')
+    S.wire(ax, [t1['p_top'], (XP, YT), (0.2, YT)])
+    _batt(ax, 0.2, YT, YB, 'V$_{in}$')
+    S.wire(ax, [(0.2, YB), (XP, YB)])
+    X.mosfet(ax, XP, -0.25, 'S', state='plain', h=1.30, gate=0.95,
+             body=False, coss=False, size=11)
+    S.wire(ax, [t1['p_bot'], (XP, 0.40)])
+    S.wire(ax, [(XP, -0.90), (XP, YB)])
+    _sec(ax, t1['s_top'], t1['s_bot'], YS, 8.1, 10.1, 11.7, 3.7)
+    S.label(ax, 4.10, 3.15, 'i$_p$', size=11, color=MAG, ha='right')
+    S.label(ax, 5.95, 3.15, 'i$_s$', size=11, color=GRN, ha='left')
+    ax.text(6.1, -1.90, 'switch and rectifier are never on together',
+            ha='center', va='center', fontsize=10.2, color=GREY)
+
+    # ============================================================= the LLC
+    ax2 = _ax(fig, [0.508, 0.635, 0.462, 0.305], -1.5, 13.7, -2.1, 5.0)
+    t2 = X.xfmr(ax2, XT, 2.1, hp=3.2, hs=3.2, gap=0.52)
+    S.wire(ax2, [t2['p_top'], (XP, YT), (3.0, YT)])
+    #  The two tank names sit BELOW their rail: above it they ran
+    #  into the column heading at the top of the page.
+    a, b = S.ind(ax2, 2.15, YT, None, s=1.35)
+    S.label(ax2, 2.15, YT - 0.85, 'L$_r$', size=10.5, color=GREY)
+    S.wire(ax2, [b, (3.0, YT)])
+    c, d = S.cap(ax2, 1.00, YT, None)
+    S.label(ax2, 1.00, YT - 0.85, 'C$_r$', size=10.5, color=GREY)
+    S.wire(ax2, [d, a])
+    S.wire(ax2, [(0.2, YT), c])
+    S.acsrc(ax2, 0.2, 1.50, None)
+    S.label(ax2, -0.32, 1.50, 'v$_{sq}$', size=11, ha='right')
+    S.wire(ax2, [(0.2, 1.86), (0.2, YT)])
+    S.wire(ax2, [(0.2, 1.14), (0.2, YB), (XP, YB)])
+    S.wire(ax2, [t2['p_bot'], (XP, YB)])
+    #  L_m is drawn as its own shunt because its current is one of the four
+    #  rows below; without it on the page i_mu has no branch to be the
+    #  current of.
+    S.shunt(ax2, 3.60, YT, YB, 'ind', None, frac=0.46)
+    S.label(ax2, 3.18, 1.50, 'L$_m$', size=10.5, ha='right')
+    S.dot(ax2, 3.60, YT)
+    S.dot(ax2, 3.60, YB)
+    #  A BLOCK here, not a diode.  This design rectifies with a centre tap
+    #  and its two halves conduct on alternate half periods, so the winding
+    #  current below is bipolar; one diode on one winding cannot carry that
+    #  and the panel would have contradicted its own waveform.  In the
+    #  flyback panel the rectifier is drawn out because its orientation is
+    #  the entire mechanism; here any full-wave rectifier does the same
+    #  thing to this argument.
+    bl, _ = S.box(ax2, 11.0, 1.85, 2.6, 4.2, 'rectifier\n+ load', size=10.5)
+    S.wire(ax2, [t2['s_top'], (bl[0], 3.7)])
+    S.wire(ax2, [t2['s_bot'], (t2['s_bot'][0], YS), (bl[0], YS)])
+    S.label(ax2, 4.10, 3.15, 'i$_p$', size=11, color=MAG, ha='right')
+    S.label(ax2, 5.95, 3.15, 'i$_s$', size=11, color=GRN, ha='left')
+    ax2.text(6.1, -1.90, 'both windings conduct at once',
+             ha='center', va='center', fontsize=10.2, color=GREY)
+
+    # ======================================================== the four rows
+    H, G, Y0 = 0.088, 0.031, 0.605
+    rows = ['gates', 'i$_p$ , i$_s$', 'i$_\\mu$', '$\\Phi$']
+    axl, axr, y = [], [], Y0
+    for nm in rows:
+        y -= H + G
+        axl.append(_wave_ax(fig, [XL, y, WW, H], 0, 2, -1.25, 1.25, nm))
+        axr.append(_wave_ax(fig, [XR, y, WW, H], 0, 2, -1.25, 1.25, nm))
+
+    def cap_(ax, t):
+        ax.text(0.5, 1.13, t, transform=ax.transAxes, ha='center',
+                va='bottom', fontsize=10.0, color=GREY)
+
+    #  ---- flyback, continuous conduction, one period drawn twice
+    D = 0.45
+    t = np.linspace(0, 2, 4000)
+    ph = t % 1.0
+    on = ph < D
+    lo, hi = 0.36, 1.0
+    ip = np.where(on, lo + (hi - lo) * ph / D, 0.0)
+    isr = np.where(on, 0.0, hi - (hi - lo) * (ph - D) / (1.0 - D))
+    imu = ip + isr                          # the two are exclusive in time
+
+    axl[0].set_ylim(-0.30, 1.45)
+    g = np.where(on, 1.0, 0.0)
+    axl[0].fill_between(t, 0.0, g * 0.9, color=YEL, lw=0)
+    axl[0].plot(t, g * 0.9, color=NAVY, lw=1.5)
+    cap_(axl[0], 'S on for D T, off for the rest of the period')
+
+    axl[1].set_ylim(-0.22, 1.38)
+    axl[1].plot(t, ip, color=MAG, lw=2.0)
+    axl[1].plot(t, isr, color=GRN, lw=2.0, ls=(0, (4, 2.4)))
+    cap_(axl[1], 'i$_p$ solid, i$_s$ dashed and referred - they never '
+                 'overlap')
+
+    axl[2].set_ylim(-0.22, 1.38)
+    axl[2].plot(t, imu, color=CYA, lw=2.2)
+    cap_(axl[2], 'i$_\\mu$ = i$_p$ + i$_s$ , and only one of the two is '
+                 'ever flowing')
+
+    axl[3].set_ylim(-0.50, 1.38)
+    axl[3].fill_between(t, 0.0, imu, color=PUR, alpha=0.16, lw=0)
+    axl[3].plot(t, imu, color=PUR, lw=2.2)
+    cap_(axl[3], 'unipolar: the whole swing sits on one side of zero')
+
+    #  ---- LLC, the eight-interval model with the design's own currents
+    tc, e, ilm, ilr, io, _ = _cycle(0.70, V['lam'], V['Icomp'], V['ILm'])
+    T = np.concatenate([tc, tc + 1.0])
+
+    def rep(u):
+        return np.concatenate([u, u])
+
+    sg = rep(np.where(tc < 0.5, 1.0, -1.0))
+    ILM, ILR, IO = rep(ilm), rep(ilr), rep(io) * sg
+    m = max(abs(ILR).max(), 1e-9)
+
+    axr[0].set_ylim(-0.30, 2.75)
+    g1 = rep(np.where(tc < e[2], 1.0, 0.0))
+    g2 = rep(np.where((tc >= e[4]) & (tc < e[6]), 1.0, 0.0))
+    axr[0].fill_between(T, 0.0, g1 * 0.85, color=YEL, lw=0)
+    axr[0].plot(T, g1 * 0.85, color=NAVY, lw=1.4)
+    axr[0].fill_between(T, 1.35, 1.35 + g2 * 0.85, color=YEL, lw=0)
+    axr[0].plot(T, 1.35 + g2 * 0.85, color=NAVY, lw=1.4)
+    cap_(axr[0], 'the two switch pairs, half a period apart')
+
+    axr[1].set_ylim(-1.38, 1.38)
+    for k in (0, 1):
+        axr[1].axvspan(k + e[0], k + e[1], color=GRN, alpha=0.10, lw=0)
+        axr[1].axvspan(k + e[4], k + e[5], color=GRN, alpha=0.10, lw=0)
+    axr[1].plot(T, ILR / m, color=MAG, lw=2.0)
+    axr[1].plot(T, IO / m, color=GRN, lw=2.0, ls=(0, (4, 2.4)))
+    cap_(axr[1], 'shaded: both conducting, and their ampere-turns oppose')
+
+    axr[2].set_ylim(-1.38, 1.38)
+    axr[2].plot(T, ILM / m, color=CYA, lw=2.2)
+    #  i_p is NOT ghosted in behind this trace.  It is already the row
+    #  above at full weight, and how much smaller i_mu is than the tank
+    #  peak is a number, which the ampere-turn figure gives to scale.
+    cap_(axr[2], 'i$_\\mu$ = i$_p$ $-$ i$_s$ , what the ampere-turns did '
+                 'not cancel')
+
+    axr[3].set_ylim(-1.38, 1.38)
+    axr[3].fill_between(T, 0.0, ILM / m, color=PUR, alpha=0.16, lw=0)
+    axr[3].plot(T, ILM / m, color=PUR, lw=2.2)
+    cap_(axr[3], 'bipolar: the same core area holds twice the swing')
+
+    foot(fig, 'The flyback rectifier is drawn out because its orientation '
+              'is the whole mechanism; the LLC one is a block because any '
+              'full-wave rectifier does the same thing to this argument. '
+              'Row three is the answer. In the flyback the magnetising '
+              'current IS the winding current, so the flux follows the peak '
+              'current and the core has to hold the stored energy. In the '
+              'LLC both windings conduct together and their ampere-turns '
+              'oppose, so what magnetises the core is only the difference - '
+              'and that difference is set by the volt-seconds on the '
+              'winding, which is to say by the output voltage and not by '
+              'the load.')
+    save(fig, 'an_flyback_llc')
+
+
+# --------------------------------------- 15  ampere-turns and the dc test
+def an_mmf(save, foot):
+    """Why the saturation test current is not the primary peak.
+
+    The same core twice - in service and on the vendor's bench with the
+    secondary open - and then the three currents the reader has to keep
+    apart, drawn to scale against each other.
+
+    The windings are on opposite legs here, and on the real transformer
+    they are both on the centre leg.  Separating them changes nothing in
+    Ampere's law round the closed path, and it is the only way to show
+    two ampere-turns opposing on one drawing.
+    """
+    import an_pdf as _A
+    V = _A.V
+    fig = plt.figure(figsize=(9.35, 6.55))
+
+    def core(ax, live):
+        S.frame(ax, -3.6, 9.4, -1.7, 8.4)
+        ax.add_patch(Rectangle((0.0, 0.0), 5.6, 6.6, fc='#dfe4e9',
+                               ec='#6f7883', lw=1.2, zorder=2))
+        ax.add_patch(Rectangle((1.2, 1.2), 3.2, 4.2, fc='white',
+                               ec='#6f7883', lw=1.0, zorder=3))
+        #  The flux path runs along the LEG AND YOKE CENTRELINES, which
+        #  means it passes inside both windings.  That is the point: it is
+        #  the closed path Ampere's law is taken round, and a loop drawn in
+        #  the window instead - which is what this first said - encircles
+        #  neither winding and links no current at all.  Drawn under the
+        #  coils, which are at zorder 4.
+        ax.add_patch(Rectangle((0.6, 0.6), 4.4, 5.4, fc='none', ec=PUR,
+                               lw=1.6, ls=(0, (5, 3)), zorder=2.5))
+        for x0, x1, yy in ((2.60, 3.06, 6.0), (3.06, 2.60, 0.6)):
+            ax.add_patch(FancyArrowPatch((x0, yy), (x1, yy),
+                                         arrowstyle='-|>', mutation_scale=14,
+                                         color=PUR, lw=1.6, zorder=2.5,
+                                         shrinkA=0, shrinkB=0))
+        S.label(ax, 2.80, 3.30, '$\\Phi$', size=14, color=PUR)
+
+        #  Eight turns, not four: at four the bumps came out four times
+        #  the size every other winding in the document is drawn at.  They
+        #  are transformer windings, so they are counted as such.
+        mark = len(getattr(ax, '_syms', []))
+        X.coil(ax, 0.6, 1.9, 4.7, n=8, side=1, color=MAG)
+        X.coil(ax, 5.0, 1.9, 4.7, n=8, side=-1, color=GRN)
+        syms = getattr(ax, '_syms', [])
+        for i in range(mark, len(syms)):
+            if syms[i][0] == 'turn':
+                syms[i] = ('winding',) + syms[i][1:]
+
+        #  The leads leave at the height of the winding they belong to.
+        #  Taken up over the yoke first, as they were, they ran along the
+        #  inside of the core for most of its width.
+        S.wire(ax, [(0.6, 4.7), (-2.9, 4.7)], color=MAG)
+        S.wire(ax, [(0.6, 1.9), (-2.9, 1.9)], color=MAG)
+        S.dot(ax, -2.9, 4.7, color=MAG)
+        S.dot(ax, -2.9, 1.9, color=MAG)
+        S.label(ax, -0.30, 3.30, 'N$_p$', size=11, color=MAG, ha='right')
+        S.label(ax, 5.90, 3.30, 'N$_s$', size=11, color=GRN, ha='left')
+        #  The polarity dots ARE the sense convention - a flat drawing of a
+        #  winding cannot show handedness, and the equation below the panel
+        #  is written against these two dots.
+        S.dot(ax, 0.95, 4.42, color=MAG, ms=4.8)
+        S.dot(ax, 4.65, 4.42, color=GRN, ms=4.8)
+
+        if live:
+            S.wire(ax, [(5.0, 4.7), (8.1, 4.7)], color=GRN)
+            S.wire(ax, [(5.0, 1.9), (8.1, 1.9)], color=GRN)
+            S.shunt(ax, 8.1, 4.7, 1.9, 'res', None, color=GRN)
+            S.label(ax, 8.62, 3.30, 'load', size=10.5, color=GRN, ha='left')
+        else:
+            #  Open means open: the leads stop at their terminals and
+            #  nothing is drawn between them.  Anything across the gap,
+            #  dashed or not, would read as a connection, which is the one
+            #  thing this panel must not say.
+            S.wire(ax, [(5.0, 4.7), (7.4, 4.7)], color=GRN)
+            S.wire(ax, [(5.0, 1.9), (7.4, 1.9)], color=GRN)
+            S.dot(ax, 7.4, 4.7, color=GRN)
+            S.dot(ax, 7.4, 1.9, color=GRN)
+            S.label(ax, 8.30, 3.66, 'open', size=11, color=GREY)
+            S.label(ax, 8.30, 2.94, 'i$_s$ = 0', size=10.5, color=GRN)
+
+    # --------------------------------------------------------- in service
+    ax = fig.add_axes([0.012, 0.400, 0.470, 0.510])
+    core(ax, True)
+    S.label(ax, 2.8, 7.95, 'IN SERVICE', size=11.5, color=NAVY,
+            weight='bold')
+    _call(ax, (-1.6, 4.7), (-3.4, 7.10), 'i$_p$ in', color=MAG, size=10.5,
+          ha='left')
+    _call(ax, (6.6, 4.7), (5.4, 7.10), 'i$_s$ out', color=GRN, size=10.5,
+          ha='left')
+    ax.text(2.8, -1.25, 'N$_p$ i$_p$  $-$  N$_s$ i$_s$  =  N$_p$ i$_\\mu$',
+            ha='center', va='center', fontsize=12.5, color=NAVY,
+            bbox=dict(boxstyle='round,pad=0.34', fc='white', ec=NAVY,
+                      lw=1.1))
+
+    # ---------------------------------------------- on the bench, open
+    ax2 = fig.add_axes([0.512, 0.400, 0.470, 0.510])
+    core(ax2, False)
+    S.label(ax2, 2.8, 7.95, 'ON THE BENCH, SECONDARY OPEN', size=11.5,
+            color=NAVY, weight='bold')
+    _call(ax2, (-1.6, 4.7), (-3.4, 7.10), 'I$_{dc}$ in', color=MAG,
+          size=10.5, ha='left')
+    ax2.text(2.8, -1.25, 'N$_p$ I$_{dc}$  $-$  0  =  N$_p$ i$_\\mu$',
+             ha='center', va='center', fontsize=12.5, color=NAVY,
+             bbox=dict(boxstyle='round,pad=0.34', fc='white', ec=NAVY,
+                       lw=1.1))
+
+    # ------------------------------------------------- the three currents
+    axb = fig.add_axes([0.235, 0.090, 0.700, 0.220])
+    vals = [V['Icomp'], V['Isatspec'], V['ILm']]
+    cols = [MAG, NAVY, CYA]
+    names = ['i$_{Lr,pk}$   tank peak',
+             'I$_{sat}$   on the specification',
+             'i$_{\\mu,pk}$   magnetising peak']
+    notes = ['a flyback habit would specify this',
+             'i$_{\\mu,pk}$ raised to the V$_{OVP2}$ ceiling',
+             'the only one that sets the flux']
+    top = max(vals)
+    axb.barh([2, 1, 0], vals, height=0.54, color=cols, alpha=0.85, lw=0)
+    axb.set_yticks([2, 1, 0])
+    axb.set_yticklabels(names, fontsize=10.2, color=NAVY)
+    axb.set_xlim(0, top * 2.95)
+    axb.set_ylim(-0.66, 2.66)
+    axb.set_xticks([])
+    #  The document style has horizontal grid lines on by default, and
+    #  here they ran straight through the three labels.
+    axb.grid(False)
+    axb.tick_params(axis='y', length=0)
+    for sp in ('top', 'right', 'bottom', 'left'):
+        axb.spines[sp].set_visible(False)
+    #  The values sit just past their own bar and the notes in one column
+    #  clear of the longest of them, so nothing lands on anything else.
+    for yy, vv, cc, nt in zip((2, 1, 0), vals, cols, notes):
+        axb.text(vv + top * 0.025, yy, '%.2f A' % vv, va='center',
+                 ha='left', fontsize=10.5, color=cc, fontweight='bold')
+        axb.text(top * 1.52, yy, nt, va='center', ha='left', fontsize=10.0,
+                 color=GREY)
+
+    foot(fig, 'With the secondary open there is nothing to cancel, so the '
+              'whole of the test current is magnetising current - which is '
+              'exactly the flyback condition. That is why the bench test '
+              'reaches the design flux at %.2f A and not at the %.2f A tank '
+              'peak: handing the tank peak over would ask the vendor for '
+              '%.2f times the flux the core ever sees in service.'
+              % (V['ILm'], V['Icomp'], V['Icomp'] / V['ILm']))
+    save(fig, 'an_mmf')
+
+
 FIGS = {'an_rac': an_rac, 'an_integrated': an_integrated,
         'an_pfc_cap': an_pfc_cap, 'an_pfc_boost': an_pfc_boost,
         'an_pfc_ccm': an_pfc_ccm, 'an_two_stage': an_two_stage,
         'an_llc_waves': an_llc_waves, 'an_three_cases': an_three_cases,
         'an_cap_ind': an_cap_ind, 'an_loadshift': an_loadshift,
         'an_peakgain': an_peakgain, 'an_recovery': an_recovery,
-        'an_core_section': an_core_section}
+        'an_core_section': an_core_section,
+        'an_flyback_llc': an_flyback_llc, 'an_mmf': an_mmf}

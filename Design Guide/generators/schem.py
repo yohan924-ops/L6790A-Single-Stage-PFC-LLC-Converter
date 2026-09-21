@@ -96,6 +96,12 @@ def ind(ax, x, y, t=None, horiz=True, s=0.66, n=None, color=NAVY, tdy=None):
     #  extra length is drawn as lead, which is what it is.
     n = min(4, max(2, int(round(s / (2.0 * r))))) if n is None else n
     w = min(s, 2.0 * r * n)
+    #  A lead shorter than a couple of percent of the symbol is a wire
+    #  whose two ends land on the same pixel, and the wiring check then
+    #  counts three arms at one point and asks for a junction dot that
+    #  means nothing.  Below that, the coil's own ends ARE the terminals.
+    if s - w < 0.04 * s:
+        w = s
     if horiz:
         X.hcoil(ax, x, y, s=w, n=n, color=color)
         if w < s - 1e-9:
@@ -202,10 +208,10 @@ def sqsrc(ax, x, y, t=None, r=0.38, color=NAVY, tdy=None):
 
 
 def xfmr(ax, x, y, hp=1.15, hs=1.15, gap=0.30, lp=None, ls=None, dots=True,
-         ct=False, np_t=None, ns_t=None):
+         ct=False, np_t=None, ns_t=None, s_dot='top'):
     """Two windings and a core; the kit draws it.  -> dict of terminals."""
     return X.xfmr(ax, x, y, hp=hp, hs=hs, np_t=np_t, ns_t=ns_t, ct=ct,
-                  gap=gap, lp=lp, ls=ls, dots=dots, size=10)
+                  gap=gap, lp=lp, ls=ls, dots=dots, size=10, s_dot=s_dot)
 
 
 def _coil(ax, x, y, h, side, n=4):
@@ -267,8 +273,12 @@ def shunt(ax, x, ytop, ybot, kind, t=None, frac=None, tdx=None, **kw):
     else:
         out = res(ax, x, yc, None, horiz=False, **kw)
     b, tp = out
-    wire(ax, [(x, ytop), tp if ytop > ybot else b])
-    wire(ax, [b if ytop > ybot else tp, (x, ybot)])
+    #  The leftover wire carries the SYMBOL's colour.  Left at the default
+    #  it came out navy on a branch drawn in another colour, and the two
+    #  halves of one net then read as two nets.
+    lc = kw.get('color', NAVY)
+    wire(ax, [(x, ytop), tp if ytop > ybot else b], color=lc)
+    wire(ax, [b if ytop > ybot else tp, (x, ybot)], color=lc)
     if t:
         #  clear of the symbol that was actually drawn, not a fixed guess:
         #  the symbols shrank when they became physically sized and the old

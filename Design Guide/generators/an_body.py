@@ -1381,6 +1381,101 @@ def build(A):
           'resonant design are made, because <b>two different turns ratios '
           'and two different inductances carry almost the same names</b>.'))
 
+    add(h2('Not a flyback, and why that changes the core'))
+    add(p('Almost everybody meets a transformer first in a flyback, and '
+          'almost every habit formed there is wrong here. Two of them cost '
+          'money: <b>why a core area matters at all in a converter that '
+          'stores none of the energy it delivers</b>, and <b>why the '
+          'saturation test current is nothing like the peak winding '
+          'current</b>. Both come from one difference, which is when the '
+          'two windings conduct.'))
+    add(p('<b>In a flyback they never conduct together.</b> The secondary '
+          'polarity dot is inverted, so the rectifier can only conduct while '
+          'the switch is off. At every instant exactly one winding is '
+          'carrying current, and therefore at every instant the whole '
+          'winding current is magnetising current. Energy goes into the core '
+          'during the on-time and comes out of it during the off-time, and '
+          'every joule that reaches the output was first stored in the core. '
+          'The flux follows the <i>current</i>, the core is gapped so that '
+          'it can hold that energy without saturating, and A<sub>e</sub> is '
+          'sized from the peak current.'))
+    add(p('<b>In an LLC they conduct together.</b> While the secondary is '
+          'rectifying, both windings are carrying current and their '
+          'ampere-turns oppose. Only what is left after the subtraction '
+          'magnetises the core:'))
+    add(eq(r'N_{p}\,i_{p}\;-\;N_{s}\,i_{s}\;=\;N_{p}\,i_{\mu}', key='mmf'))
+    add(p('The load current passes <i>through</i>, by transformer action; it '
+          'never enters the core as stored energy. What the core does hold '
+          'is the magnetising energy &frac12;L<sub>&mu;</sub>'
+          'i<sub>&mu;</sub>&sup2;, and in this converter that is not a '
+          'by-product but the mechanism: i<sub>&mu;</sub> is the current '
+          'that charges and discharges the bridge node during the dead time '
+          'and so makes ZVS possible. An LLC transformer is gapped too, but '
+          'the gap is there to set A<sub>L</sub> &mdash; to hold '
+          'L<sub>&mu;</sub> at the value the tank asked for &mdash; and not '
+          'to store what goes to the load.'))
+    add(fig('an_flyback_llc',
+            'The two transformers, drawn from the same four rows. On the '
+            'left the switch and the rectifier are never on together, so '
+            'whichever winding is conducting carries all of the magnetising '
+            'current and the flux is a one-sided ramp that follows it. On '
+            'the right both windings conduct at once, their ampere-turns '
+            'oppose, and what magnetises the core is the difference '
+            'i<sub>&mu;</sub> = i<sub>p</sub> &minus; i<sub>s</sub>, which '
+            'is bipolar. The two i<sub>s</sub> traces are drawn referred to '
+            'the primary so that they can be compared with '
+            'i<sub>p</sub> directly, and the sign of each is set by that '
+            'converter\'s polarity dot: added in the flyback, subtracted '
+            'here. The flyback rectifier is drawn as a diode because its '
+            'orientation is the mechanism; the LLC rectifier is a block '
+            'because this design uses a centre tap, whose halves conduct '
+            'on alternate half periods, and nothing in the argument turns '
+            'on which full-wave arrangement is used.'))
+    add(note('<b>&ldquo;An LLC transformer stores no energy&rdquo; is a '
+             'slogan, not a statement.</b> It stores the magnetising energy, '
+             'twice every switching period, and the design leans on it. What '
+             'it does not store is the energy delivered to the load.'))
+    add(p('So why does A<sub>e</sub> come into it at all? Because Faraday\'s '
+          'law does not ask whether anything is being stored:'))
+    add(eq(r'B(t)\;=\;\frac{1}{N\,A_{e}}\int v\,dt', key='faraday'))
+    add(p('A winding with a voltage across it makes flux; flux in a finite '
+          'area is a flux density; and ferrite saturates at a flux density. '
+          'That is equally true of a flyback, an LLC, a mains transformer '
+          'and a plain choke. <b>What differs is only the input to the '
+          'calculation.</b> In a flyback the volt-seconds are the input '
+          'voltage times the on-time, which is another way of writing the '
+          'peak current. In an LLC the conducting secondary clamps the '
+          'winding to the output for a resonant half period, so the '
+          'volt-seconds &mdash; and with them the flux &mdash; are set by '
+          'the <b>output voltage alone</b>. Section&nbsp;'
+          + SR('Peak flux is set by the secondary, not the primary')
+          + ' turns that into an equation with neither the input voltage '
+            'nor the load in it.'))
+    add(p('Three consequences are worth having in front of you before the '
+          'core is chosen:'))
+    ext(bullets([
+        '<b>The flux does not rise with load.</b> Twice the output current '
+        'is twice i<sub>p</sub> and twice i<sub>s</sub>, and their '
+        'difference does not move. A core that is adequate at full load is '
+        'adequate in overload; what overload threatens is the copper and '
+        'the semiconductors, not the core.',
+        '<b>The flux does rise with output voltage.</b> Anything that lets '
+        'V<sub>out</sub> climb raises the flux in proportion, so the ceiling '
+        'to design against is the over-voltage threshold and not the nominal '
+        'output.',
+        '<b>The flux does not fall with switching frequency</b>, below '
+        'resonance. The rectifier clamps the winding for a resonant half '
+        'period T<sub>r</sub>/2 whatever f<sub>sw</sub> is doing, which is '
+        'why f<sub>r</sub> and not f<sub>sw</sub> appears in the flux '
+        'equation.']))
+    add(p('The same difference decides what the vendor is asked to test. A '
+          'DC-overlap measurement is made with the secondary open, which '
+          'removes the cancellation and puts the transformer back into the '
+          'flyback condition &mdash; all of the test current is magnetising '
+          'current. Section&nbsp;'
+          + SR('The saturation test is not the peak winding current')
+          + ' takes that to a number.'))
+
     add(h2('Two ratios, two inductances'))
     add(p('When all of the leakage is referred to the primary, the tank sees '
           'an ideal transformer of ratio n, a series L<sub>r</sub> and a '
@@ -1619,12 +1714,32 @@ def build(A):
     add(h2('The saturation test is not the peak winding current'))
     add(p('A DC-overlap test leaves every other winding open, so none of the '
           'primary ampere-turns is cancelled by the secondary and the same '
-          'current makes far more flux than it does in operation. Ask for the '
-          'current that reproduces the operating flux in that test:'))
-    add(eq(r'I_{eq}=\frac{B_{pk}\,N_{p}\,A_{e}}{L_{open}}', key='Isat'))
+          'current makes far more flux than it does in operation. It is the '
+          'flyback condition of Section&nbsp;'
+          + SR('Not a flyback, and why that changes the core')
+          + ', reached deliberately. Ask for the current that reproduces the '
+            'operating flux in that test:'))
+    add(eq(r'I_{eq}=\frac{B_{pk}\,N_{p}\,A_{e}}{L_{\mu}}', key='Isat'))
+    add(note('<b>That denominator is L<sub>&mu;</sub>, not '
+             'L<sub>open</sub>.</b> In the open-circuit test the primary '
+             'current is entirely magnetising current, so what links the '
+             'core is the L<sub>&mu;</sub> part of the flux linkage and the '
+             'rest is primary leakage, which goes round no core at all. '
+             'Dividing by L<sub>open</sub> understates the current by '
+             '1/&radic;(1+&lambda;) &mdash; about a fifth at '
+             '&lambda;&nbsp;&asymp;&nbsp;0.5. There is a check that costs '
+             'nothing: the answer <b>must</b> come out equal to '
+             'i<sub>&mu;,pk</sub>, because in that test they are the same '
+             'current.'))
     add(p('Giving the supplier the peak tank current instead asks for a flux '
           'density no ferrite reaches, and the supplier will either '
-          'oversize the core or ask why.'))
+          'oversize the core or ask why. Nor is an arbitrary margin wanted '
+          'on top of I<sub>eq</sub>: the flux ceiling the core has to '
+          'survive is already defined, by the highest output voltage the '
+          'controller allows before it shuts down. Scale I<sub>eq</sub> by '
+          'that ratio and there is no number left to invent.'))
+    add(eq(r'I_{sat}\;=\;I_{eq}\;\frac{V_{OVP2}}{V_{out,eff}}',
+           key='Isatspec'))
 
     add(h2('The specification, and what it is not allowed to leave out'))
     add(note('<b>The open-circuit inductance tolerance cannot simply be the '
@@ -2442,8 +2557,8 @@ def build(A):
               '&mdash;', 'to hold B<sub>pk</sub> at 0.20 T; EE6405 offers '
               '%(Aemm).0f mm&sup2;, a factor of %(kAe).3f' % V],
              ['Saturation test current', '%(Isatspec).1f A' % V, '&mdash;',
-              'flux-equivalent %(Isateq).1f A rounded up, <b>not</b> the '
-              '%(Icomp).1f A tank peak' % V]],
+              'the flux-equivalent %(Isateq).1f A at the V<sub>OVP2</sub> '
+              'ceiling, <b>not</b> the %(Icomp).1f A tank peak' % V]],
             widths=[CW * 0.24, CW * 0.15, CW * 0.15, CW * 0.46],
             key='trafo-built'))
     add(p('Three of those rows are computed rather than specified, and this '
@@ -2465,15 +2580,31 @@ def build(A):
         'halving N<sub>s</sub> would double the requirement to '
         '%(Ae2).0f&nbsp;mm&sup2;, which EE6405 does not meet.'
         % dict(V, Ae2=2 * V['Aereq']),
-        '<b>Saturation test current.</b> Equation&nbsp;%(e)s, per unit: '
-        'I<sub>eq</sub>&nbsp;=&nbsp;B<sub>pk</sub>N<sub>p</sub>A<sub>e</sub>/'
-        'L<sub>open</sub> &nbsp;=&nbsp; %(B).4f&nbsp;T&times;%(Np)d&times;'
-        '%(Aemm).1f&nbsp;mm&sup2; / %(Lu).2f&nbsp;&micro;H '
-        '&nbsp;=&nbsp; %(Isateq).2f&nbsp;A, specified as '
-        '<b>%(Isatspec).1f&nbsp;A</b>. The tank peak is %(Icomp).1f&nbsp;A '
-        'and handing that over instead would ask for nearly twice the flux.'
-        % dict(V, e=ER('Isat'), B=V['Bpk'] / 1e3,
-               Lu=V['Lopen'] / V['nser'])]))
+        '<b>Saturation test current.</b> Equation&nbsp;%(e)s, per unit and '
+        'over L<sub>&mu;</sub>: I<sub>eq</sub>&nbsp;=&nbsp;B<sub>pk</sub>'
+        'N<sub>p</sub>A<sub>e</sub>/L<sub>&mu;</sub> &nbsp;=&nbsp; '
+        '%(B).4f&nbsp;T&times;%(Np)d&times;%(Aemm).1f&nbsp;mm&sup2; / '
+        '%(Lux).2f&nbsp;&micro;H &nbsp;=&nbsp; %(Isateq).2f&nbsp;A, which is '
+        'i<sub>&mu;,pk</sub> to the last digit, as it has to be. Raised to '
+        'the over-voltage ceiling by equation&nbsp;%(e2)s, '
+        '%(OVP2).2f&nbsp;V/%(Vout).1f&nbsp;V&nbsp;=&nbsp;%(kOV).4f, it is '
+        'specified as <b>%(Isatspec).1f&nbsp;A</b>. The tank peak is '
+        '%(Icomp).1f&nbsp;A and handing that over instead would ask the '
+        'supplier for %(over).2f times the flux the core ever sees.'
+        % dict(V, e=ER('Isat'), e2=ER('Isatspec'), B=V['Bpk'] / 1e3,
+               Lux=V['Lmu'] / V['nser'], kOV=V['OVP2'] / V['Vout'],
+               over=V['Icomp'] / V['ILm'])]))
+    add(fig('an_mmf',
+            'Why that test current is the one to ask for. In service the '
+            'secondary\'s ampere-turns cancel most of the primary\'s, and '
+            'only the difference magnetises the core; on the bench, with '
+            'the secondary open, there is nothing to cancel and the whole '
+            'of the test current is magnetising current. So the bench '
+            'reaches the design flux at %(ILm).2f&nbsp;A &mdash; the '
+            'magnetising peak &mdash; and not at the %(Icomp).2f&nbsp;A the '
+            'primary really carries. The polarity dots, not the drawn '
+            'winding sense, define the sign in the equation under each '
+            'panel.' % V))
     add(note('<b>The quantisation is a constraint on the tank, not a detail '
              'of the build.</b> With %(nser)d units in series the assembly '
              'ratio is %(nser)d&thinsp;N<sub>p</sub>/N<sub>s</sub>, so the '

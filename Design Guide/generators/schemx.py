@@ -323,7 +323,8 @@ def mosfet(ax, x, y, name, state='on', h=1.80, gate=1.00,
 
 def xfmr(ax, x, y, hp=1.80, hs=None, np_t=None, ns_t=None, ct=False,
          gap=0.34,
-         lp=None, ls=None, dots=True, core=0.13, lead=0.06, size=11):
+         lp=None, ls=None, dots=True, core=0.13, lead=0.06, size=11,
+         s_dot='top'):
     """A transformer, optionally with a centre-tapped secondary.
 
     The windings sit CLOSE to the core.  Drawn with a gap wider than their
@@ -336,6 +337,12 @@ def xfmr(ax, x, y, hp=1.80, hs=None, np_t=None, ns_t=None, ct=False,
     itself - which is exactly what makes one end conduct while the other
     blocks.  Drawing the dot on one half only leaves the second half's
     sense unstated.
+
+    s_dot picks which END of a plain secondary carries the polarity dot.
+    'top' is the usual same-sense drawing; 'bot' is the OPPOSITE sense,
+    which is the whole difference between a forward converter and a
+    flyback and must therefore be drawable.  It has no meaning on a
+    centre tap, whose two dots are fixed by the tap itself.
 
     -> dict of terminal points: p_top p_bot s_top s_bot, and s_tap when
        ct is set.
@@ -402,7 +409,10 @@ def xfmr(ax, x, y, hp=1.80, hs=None, np_t=None, ns_t=None, ct=False,
     else:
         ext += list(_wind(xs, ybs, yts, ns_t, rs, -1))
         if dots:
-            dot(ax, xs + os_, yts - os_, NAVY, 4.8)
+            if s_dot == 'bot':
+                dot(ax, xs + os_, ybs + os_, NAVY, 4.8)
+            else:
+                dot(ax, xs + os_, yts - os_, NAVY, 4.8)
         if ls:
             txt(ax, xs + 0.42, y, ls, size=size, ha='left')
     #  The core spans the WINDINGS, not the terminals.  Drawn to the full
