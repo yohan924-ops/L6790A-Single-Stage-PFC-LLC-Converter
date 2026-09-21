@@ -2382,6 +2382,16 @@ def build(A):
           'of N<sub>s</sub> = %(Ns)d turns, NS2 and NS3, joined at the centre '
           'tap; one conducts in each half period.'
           % dict(V, ref=SR('If one transformer is not practical'))))
+    add(fig('an_xfmr_read',
+            'Where each number of the table below is read. Top: the primary winding '
+            'current of one unit, the current in its two secondary windings '
+            'and the secondary winding voltage over one switching period, at '
+            'the worst cycle (line peak, %(Veqlo).0f&nbsp;Vac equivalent, '
+            'full load). Lower left: the rms of the two winding currents '
+            'over the line half cycle, and the line-cycle values the copper '
+            'is sized on. Lower right: the DC-overlap test, a bench '
+            'condition. The circled marks are the rows of Table&nbsp;%(t)s.'
+            % dict(V, t=TR('xfmr-read'))))
     add(tbl('The transformer as wound and specified, with the arithmetic '
             'behind the computed rows.',
             [['Quantity', 'Per unit', 'Assembly', 'Computed as'],
@@ -2421,16 +2431,6 @@ def build(A):
               % dict(V, e=ER('Isatspec'), kOV=V['OVP2'] / V['Vout'])]],
             widths=[CW * 0.20, CW * 0.20, CW * 0.15, CW * 0.45],
             key='trafo-built'))
-    add(fig('an_xfmr_read',
-            'Where each of those numbers is read. Top: the primary winding '
-            'current of one unit, the current in its two secondary windings '
-            'and the secondary winding voltage over one switching period, at '
-            'the worst cycle (line peak, %(Veqlo).0f&nbsp;Vac equivalent, '
-            'full load). Lower left: the rms of the two winding currents '
-            'over the line half cycle, and the line-cycle values the copper '
-            'is sized on. Lower right: the DC-overlap test, a bench '
-            'condition. The circled marks are the rows of Table&nbsp;%(t)s.'
-            % dict(V, t=TR('xfmr-read'))))
     add(fig('an_mmf',
             'Why the test current is the magnetising peak and not the tank '
             'peak. In service the secondary cancels most of the primary '
