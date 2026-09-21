@@ -67,15 +67,19 @@ def cap(ax, x, y, t=None, horiz=True, s=None, color=NAVY, tdy=None):
     """
     s = 0.30 * X.scale(ax) if s is None else s
     g = s * (0.11 / 0.30)
+    #  The terminals are the PLATES, at +-g along the run - not +-s, which
+    #  is the plate half-LENGTH, across it.  Returned as +-s, every
+    #  capacitor wired through this function stopped short of its plates
+    #  by s - g, a gap figcheck's open-end test was the first to notice.
     if horiz:
         X.hcap(ax, x, y, s=s, gap=g, color=color)
         if t:
             label(ax, x, y + (tdy if tdy is not None else s * 1.35), t)
-        return (x - s, y), (x + s, y)
+        return (x - g, y), (x + g, y)
     X.vcap(ax, x, y, s=s, gap=g, color=color)
     if t:
         label(ax, x + s * 1.45, y, t, ha='left')
-    return (x, y - s), (x, y + s)
+    return (x, y - g), (x, y + g)
 
 
 def ind(ax, x, y, t=None, horiz=True, s=0.66, n=None, color=NAVY, tdy=None):
@@ -129,26 +133,37 @@ def sw(ax, x, y, t, on=False, w=0.62, h=1.30, gate=0.56, side='gate'):
     return (x, y - h / 2), (x, y + h / 2)
 
 
-def diode(ax, x, y, t=None, horiz=True, s=0.30, flip=False, color=NAVY):
-    """triangle + bar.  -> (in, out) along the conduction direction"""
+def diode(ax, x, y, t=None, horiz=True, s=None, flip=False, color=NAVY):
+    """triangle + bar, centred on (x, y).  -> (in, out) along conduction
+
+    Same proportions as the kit's vdiode: the triangle runs from -0.62 s
+    to +0.62 s along the branch and the bar stands at its tip, so the two
+    terminals are the triangle's base and the bar.  The first version put
+    the base at x - s and the bar at x and then returned x + s as the far
+    terminal, which left every wire on that side hanging s short of the
+    bar - visible once figcheck read the wires back.  `s` defaults to the
+    kit's size at this axes' scale.
+    """
+    s = 0.28 * X.scale(ax) if s is None else s
     d = -1 if flip else 1
+    a, w = 0.62 * s, 0.72 * s                     # half-length, half-width
     if horiz:
-        tri = [(x - d * s, y - s * 0.62), (x - d * s, y + s * 0.62), (x, y)]
+        tri = [(x - d * a, y - w), (x - d * a, y + w), (x + d * a, y)]
         ax.fill(*zip(*tri), color=color, zorder=3)
-        ax.plot([x, x], [y - s * 0.62, y + s * 0.62], color=color, lw=2.2,
+        ax.plot([x + d * a] * 2, [y - w, y + w], color=color, lw=2.2,
                 zorder=3)
         if t:
-            label(ax, x, y + s * 1.1, t)
-        return (x - d * s, y), (x + d * s, y)
-    tri = [(x - s * 0.62, y - d * s), (x + s * 0.62, y - d * s), (x, y)]
+            label(ax, x, y + w + 0.26 * X.scale(ax) + 0.12, t)
+        return (x - d * a, y), (x + d * a, y)
+    tri = [(x - w, y - d * a), (x + w, y - d * a), (x, y + d * a)]
     ax.fill(*zip(*tri), color=color, zorder=3)
-    ax.plot([x - s * 0.62, x + s * 0.62], [y, y], color=color, lw=2.2, zorder=3)
+    ax.plot([x - w, x + w], [y + d * a] * 2, color=color, lw=2.2, zorder=3)
     if t:
-        label(ax, x + s * 0.95, y, t, ha='left')
-    return (x, y - d * s), (x, y + d * s)
+        label(ax, x + w + 0.16, y, t, ha='left')
+    return (x, y - d * a), (x, y + d * a)
 
 
-def acsrc(ax, x, y, t=None, r=0.36, color=NAVY):
+def acsrc(ax, x, y, t=None, r=0.36, color=NAVY, tdy=None):
     """a circle with a sine in it -> (left, right)"""
     a = np.linspace(0, 2 * np.pi, 120)
     ax.plot(x + r * np.cos(a), y + r * np.sin(a), color=color, lw=1.7, zorder=3)
@@ -156,11 +171,14 @@ def acsrc(ax, x, y, t=None, r=0.36, color=NAVY):
     ax.plot(x + u * r * 0.62, y + 0.42 * r * np.sin(np.pi * u), color=color,
             lw=1.7, zorder=4)
     if t:
-        label(ax, x, y - r - 0.24, t)
+        #  Below by default, but a source that is wired out of its BOTTOM
+        #  puts its own return wire through that label - which is where
+        #  the three source names in the FHA figure were sitting.
+        label(ax, x, y + (tdy if tdy is not None else -(r + 0.24)), t)
     return (x - r, y), (x + r, y)
 
 
-def sqsrc(ax, x, y, t=None, r=0.38, color=NAVY):
+def sqsrc(ax, x, y, t=None, r=0.38, color=NAVY, tdy=None):
     """a circle with a square wave in it -> (left, right)"""
     a = np.linspace(0, 2 * np.pi, 120)
     ax.plot(x + r * np.cos(a), y + r * np.sin(a), color=color, lw=1.7, zorder=3)
@@ -169,7 +187,7 @@ def sqsrc(ax, x, y, t=None, r=0.38, color=NAVY):
             [y - q * 0.6, y + q * 0.6, y + q * 0.6, y - q * 0.6,
              y - q * 0.6, y + q * 0.6], color=color, lw=1.7, zorder=4)
     if t:
-        label(ax, x, y - r - 0.24, t)
+        label(ax, x, y + (tdy if tdy is not None else -(r + 0.24)), t)
     return (x - r, y), (x + r, y)
 
 
@@ -246,8 +264,8 @@ def shunt(ax, x, ytop, ybot, kind, t=None, frac=None, tdx=None, **kw):
         #  the symbols shrank when they became physically sized and the old
         #  0.34 put every label on top of its own component.
         half = 0.30 * X.scale(ax)
-        for kind_, _x, _y, w_, h_ in getattr(ax, '_syms', [])[-1:]:
-            half = w_ / 2.0
+        for rec in getattr(ax, '_syms', [])[-1:]:
+            half = rec[3] / 2.0
         dx = (half + 0.34 * X.scale(ax)) if tdx is None else tdx
         label(ax, x + dx, yc, t, ha='left')
     return (x, ytop), (x, ybot)

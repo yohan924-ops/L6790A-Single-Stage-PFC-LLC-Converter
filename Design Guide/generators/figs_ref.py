@@ -24,6 +24,7 @@ Everything numeric comes from l6790.py.  Nothing in this file is a number
 typed in from a picture.
 """
 import numpy as np
+from matplotlib.patches import FancyArrowPatch
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as pe
 
@@ -76,7 +77,7 @@ def _sq(t, duty=0.5, phase_=0.0):
     return np.where(((t + phase_) % 1.0) < duty, 1.0, 0.0)
 
 
-def _diode_along(ax, a, b, s=0.17, color=NAVY, lw=2.2, z=4):
+def _diode_along(ax, a, b, s=None, color=NAVY, lw=2.2, z=4):
     """A diode ON the segment a->b, conducting in that direction.
 
     Built from the direction vector, not from a rotated marker.  The first
@@ -86,6 +87,8 @@ def _diode_along(ax, a, b, s=0.17, color=NAVY, lw=2.2, z=4):
     to sit AT the apex, not at the midpoint, or the triangle covers it and
     the symbol stops being a diode at all.
     """
+    #  the kit's diode is 0.28 tall at scale 1 and its triangle 0.62 of that
+    s = 0.62 * 0.28 * X.scale(ax) if s is None else s
     a = np.asarray(a, float)
     b = np.asarray(b, float)
     d = b - a
@@ -101,7 +104,7 @@ def _diode_along(ax, a, b, s=0.17, color=NAVY, lw=2.2, z=4):
     return tip, base
 
 
-def _bridge(ax, xm, ym, w=1.55, h=1.35, names=('D$_1$', 'D$_3$',
+def _bridge(ax, xm, ym, w=1.50, h=1.50, names=('D$_1$', 'D$_3$',
                                                'D$_2$', 'D$_4$'),
             size=9.5):
     """A diode bridge as a diamond.  -> (ac_left, ac_right, plus, minus)
@@ -111,7 +114,9 @@ def _bridge(ax, xm, ym, w=1.55, h=1.35, names=('D$_1$', 'D$_3$',
     crossing too many.  On the diamond every terminal is a corner.
 
     All four conduct TOWARDS the + corner: that is what a bridge is, and
-    it is the one thing in this drawing a reader will check.
+    it is the one thing in this drawing a reader will check.  The diamond
+    is square, so its arms are true 45-degree wires: at 1.55 by 1.35 they
+    were 4 degrees off, which figcheck's grid test reported.
     """
     L, Rt, P, Mn = (xm - w, ym), (xm + w, ym), (xm, ym + h), (xm, ym - h)
     for a, b, nm, dx, dy in ((L, P, names[0], -0.48, 0.34),
@@ -158,10 +163,15 @@ def an_rac(save, foot):
     #  riser at XT.  The tap leaves on the far side now, so that bump was
     #  a crossing symbol over nothing at all.
     S.wire(ax, [t['s_bot'], (6.9, -0.3)])
-    for y, nm, dy in ((3.3, 'D$_1$', 0.56), (-0.3, 'D$_2$', 0.56)):
-        di, do = S.diode(ax, 7.6, y, None, s=0.30)
-        S.wire(ax, [(6.9, y), di])
-        S.wire(ax, [do, (XJ, y)])
+    #  Low-side rectification, as the design has it: each diode sits in
+    #  the RETURN of its half, anode on the - rail, cathode at the winding
+    #  end, and the tap is V_o+.  Drawn conducting the other way, as the
+    #  first version was, the riser became the + rail and the tap the -
+    #  rail: the output was upside down and nothing in the picture said so.
+    for y, nm, dy in ((3.3, 'D$_1$', 0.60), (-0.3, 'D$_2$', 0.60)):
+        di, do = S.diode(ax, 7.6, y, None, flip=True)
+        S.wire(ax, [(6.9, y), do])
+        S.wire(ax, [di, (XJ, y)])
         S.label(ax, 7.6, y + dy, nm, size=9.5, color=GREY)
     #  The two rectifiers join on a riser to the LEFT of the load, so the
     #  only crossing in the secondary is the tap hopping that riser.  Join
@@ -173,16 +183,23 @@ def an_rac(save, foot):
     S.hop(ax, XJ, 1.5)
     S.wire(ax, [(XJ + 0.20, 1.5), (12.5, 1.5)])
     S.shunt(ax, 11.1, 1.5, -1.4, 'cap', 'C$_o$', frac=0.34)
+    S.dot(ax, 11.1, 1.5)
+    S.dot(ax, 11.1, -1.4)
     S.shunt(ax, 12.5, 1.5, -1.4, 'res', 'R$_o$', frac=0.52)
+    S.label(ax, 12.98, 1.18, '+', size=12, color=GREY)
+    S.label(ax, 12.98, -1.08, '$-$', size=12, color=GREY)
     S.label(ax, 13.4, 0.30, 'V$_O$', size=11.5, ha='left')
     S.label(ax, 13.4, -0.22, 'stiff', size=10, ha='left', color=GREY)
 
 
 
     ax2 = _ax(fig, [0.655, 0.34, 0.335, 0.56], -6.6, 3.6, -0.6, 4.6)
-    S.wire(ax2, [(0.4, 3.6), (2.6, 3.6)])
-    S.wire(ax2, [(0.4, 0.4), (2.6, 0.4)])
-    S.shunt(ax2, 1.5, 3.6, 0.4, 'res', None, frac=0.46)
+    #  One resistor between two terminals.  The rails the first version
+    #  ran either side of it led nowhere, and read as a bus with a part
+    #  hung on it.
+    S.shunt(ax2, 1.5, 3.6, 0.4, 'res', None)
+    S.dot(ax2, 1.5, 3.6)
+    S.dot(ax2, 1.5, 0.4)
     S.label(ax2, 2.0, 2.0, 'R$_{ac}$', size=12, ha='left')
     S.label(ax2, 1.5, 4.15, 'one resistor', size=10.5, color=MAG)
     S.arrow(ax2, (-5.4, 2.0), (-2.6, 2.0), None, color=MAG)
@@ -217,72 +234,92 @@ def an_rac(save, foot):
 
 # ------------------------------------------------- 2  the integrated magnetic
 def an_integrated(save, foot):
-    """The same transformer drawn both ways."""
+    """The same transformer drawn both ways.
+
+    Isolation is the point of a transformer, so the two sides have their
+    own return rails.  The first version ran one rail under both windings
+    and tied the secondary's bottom to it, which is a transformer with its
+    isolation shorted out - the kind of thing a reader spots at once.
+    """
     fig = plt.figure(figsize=(11.6, 7.2))
+    XSRC, YT_, YB_ = 0.9, 3.4, 0.1
+
+    def source(ax, f, name):
+        """the drive, named on its LEFT: below, the name sat on the
+        source's own return wire"""
+        left, right = f(ax, XSRC, 1.8, None)
+        r = XSRC - left[0]
+        S.label(ax, XSRC - r - 0.22, 1.8, name, size=11, ha='right')
+        S.wire(ax, [(XSRC, 1.8 + r), (XSRC, YT_)])
+        S.wire(ax, [(XSRC, 1.8 - r), (XSRC, YB_)])
+
+    def tank(ax, x_l, l_name, l_len, m_name):
+        """C_r, the series inductor, the shunt inductor -> the node x"""
+        p, q = S.cap(ax, 2.2, YT_, 'C$_r$', tdy=0.46)
+        S.wire(ax, [(XSRC, YT_), p])
+        c, d = S.ind(ax, x_l, YT_, l_name, s=l_len)
+        S.wire(ax, [q, c])
+        S.wire(ax, [d, (5.1, YT_)])
+        S.shunt(ax, 5.1, YT_, YB_, 'ind', None, frac=0.50)
+        S.label(ax, 4.62, 1.75, m_name, size=11, ha='right')
+        S.dot(ax, 5.1, YT_)
+        S.dot(ax, 5.1, YB_)
 
     # ---- as wound: leakage on both sides of an ideal n_T : 1
     ax = _ax(fig, [0.04, 0.545, 0.92, 0.40], -0.6, 15.0, -0.7, 4.3)
     S.label(ax, 7.2, 4.05, 'as wound:  leakage on both sides', size=11,
             color=GREY)
-    S.sqsrc(ax, 0.5, 1.8, None)
-    S.label(ax, 0.5, 1.10, 'v$_{in}$', size=11)
-    S.wire(ax, [(0.5, 2.18), (0.5, 3.4), (1.7, 3.4)])
-    S.wire(ax, [(0.5, 1.42), (0.5, 0.1), (10.4, 0.1)])
-    p, q = S.cap(ax, 2.2, 3.4, 'C$_r$', tdy=0.46)
-    S.wire(ax, [(1.7, 3.4), p])
-    c, d = S.ind(ax, 3.7, 3.4, 'L$_{lkp}$', s=0.95)
-    S.wire(ax, [q, c])
-    S.wire(ax, [d, (5.1, 3.4)])
-    S.shunt(ax, 5.1, 3.4, 0.1, 'ind', None, frac=0.50)
-    S.label(ax, 4.62, 1.75, 'L$_m$', size=11, ha='right')
-    S.dot(ax, 5.1, 3.4)
-    t = X.xfmr(ax, 7.5, 1.75, hp=3.3, hs=3.3, gap=0.52,
-               lp=None, ls=None)
-    S.wire(ax, [(5.1, 3.4), t['p_top']])
-    S.wire(ax, [t['p_bot'], (t['p_bot'][0], 0.1)])
+    source(ax, S.sqsrc, 'v$_{in}$')
+    tank(ax, 3.7, 'L$_{lkp}$', 0.95, 'L$_m$')
+    t = X.xfmr(ax, 7.5, 1.75, hp=3.3, hs=3.3, gap=0.52, lp=None, ls=None)
+    S.wire(ax, [(5.1, YT_), t['p_top']])
+    #  the primary's return rail ends at the primary
+    S.wire(ax, [t['p_bot'], (XSRC, YB_)])          # p_bot is at YB_
     S.label(ax, 7.5, -0.48, 'n$_T$ : 1', size=10.5, color=GREY)
     #  L_lks starts clear of the secondary's polarity dot.  At 8.6 its
     #  first turn sat on top of the dot, and a dot under a coil is the one
     #  thing a transformer symbol cannot afford to be unclear about.
-    e, f = S.ind(ax, 9.3, 3.4, 'L$_{lks}$', s=0.95)
+    e, f = S.ind(ax, 9.3, YT_, 'L$_{lks}$', s=0.95)
     S.wire(ax, [t['s_top'], e])
-    S.wire(ax, [f, (10.4, 3.4)])
-    S.wire(ax, [t['s_bot'], (t['s_bot'][0], 0.1)])
-    S.wire(ax, [(10.4, 3.4), (12.6, 3.4)])
-    S.wire(ax, [(10.4, 0.1), (12.6, 0.1)])
-    S.shunt(ax, 11.3, 3.4, 0.1, 'cap', None, frac=0.22)
-    S.shunt(ax, 12.6, 3.4, 0.1, 'res', 'R$_o$', frac=0.40)
-    S.label(ax, 13.8, 1.75, 'V$_O$', size=11, ha='left')
-    S.wire(ax, [(10.70, 3.20), (10.70, 0.30)], GREY, 1.0)
-    S.label(ax, 10.52, 1.75, 'v$_{RI}$', size=10.5, color=GREY,
-            ha='right')
+    #  What the secondary drives is the rectifier and the load - one block
+    #  here, since this figure is about the magnetics.  v_RI is what it
+    #  sees; the first version hung a bare C_o there with no rectifier.
+    bl, _ = S.box(ax, 12.0, 1.75, 2.2, 3.9, 'rectifier\n+ load', size=10.5)
+    S.wire(ax, [f, (bl[0], YT_)])
+    S.wire(ax, [t['s_bot'], (bl[0], YB_)])
+    S.label(ax, 10.45, YT_ + 0.36, '+', size=12, color=GREY)
+    S.label(ax, 10.45, YB_ - 0.36, '$-$', size=12, color=GREY)
+    S.label(ax, 10.45, 1.75, 'v$_{RI}$', size=11)
 
-    S.arrow(ax, (7.2, -0.95), (7.2, -1.9), None, color=MAG)
+    #  from this drawing to the next: drawn on the figure, in the gap
+    #  between the two panels, where neither axes can clip it
+    fig.add_artist(FancyArrowPatch((0.5, 0.538), (0.5, 0.492),
+                                   transform=fig.transFigure,
+                                   arrowstyle='-|>', mutation_scale=16,
+                                   color=MAG, lw=2.0, shrinkA=0, shrinkB=0))
 
     # ---- referred: all of it on the primary
     ax2 = _ax(fig, [0.04, 0.085, 0.92, 0.40], -0.6, 15.0, -0.7, 4.3)
     S.label(ax2, 7.2, 4.05, 'referred to the primary:  one L$_r$, one L$_m$, '
             'one ideal 1 : M$_v$', size=11, color=GREY)
-    S.sqsrc(ax2, 0.5, 1.8, None)
-    S.label(ax2, 0.5, 1.10, 'v$_{in}^F$', size=11)
-    S.wire(ax2, [(0.5, 2.18), (0.5, 3.4), (1.7, 3.4)])
-    S.wire(ax2, [(0.5, 1.42), (0.5, 0.1), (9.9, 0.1)])
-    p, q = S.cap(ax2, 2.2, 3.4, 'C$_r$', tdy=0.46)
-    S.wire(ax2, [(1.7, 3.4), p])
-    c, d = S.ind(ax2, 4.2, 3.4, 'L$_r$', s=1.05)
-    S.wire(ax2, [q, c])
-    S.wire(ax2, [d, (5.1, 3.4)])
-    S.shunt(ax2, 5.1, 3.4, 0.1, 'ind', None, frac=0.50)
-    S.label(ax2, 4.62, 1.75, 'L$_p$ $-$ L$_r$', size=11, ha='right')
-    S.dot(ax2, 5.1, 3.4)
+    #  a sine, because this is the first-harmonic circuit: the square-wave
+    #  symbol the first version used here belongs to the drawing above
+    source(ax2, S.acsrc, 'v$_{in}^F$')
+    tank(ax2, 4.2, 'L$_r$', 1.05, 'L$_p$ $-$ L$_r$')
     t2 = X.xfmr(ax2, 7.5, 1.75, hp=3.3, hs=3.3, gap=0.52)
-    S.wire(ax2, [(5.1, 3.4), t2['p_top']])
-    S.wire(ax2, [t2['p_bot'], (t2['p_bot'][0], 0.1)])
+    S.wire(ax2, [(5.1, YT_), t2['p_top']])
+    S.wire(ax2, [t2['p_bot'], (XSRC, YB_)])
     S.label(ax2, 7.5, -0.48, '1 : M$_v$   ideal', size=10.5, color=GREY)
-    S.wire(ax2, [t2['s_top'], (9.9, 3.4)])
-    S.wire(ax2, [t2['s_bot'], (t2['s_bot'][0], 0.1)])
-    S.shunt(ax2, 9.9, 3.4, 0.1, 'res', 'R$_{ac}$', frac=0.44)
-    S.label(ax2, 10.9, 1.75, 'V$_{RO}^F$', size=11, ha='left')
+    S.wire(ax2, [t2['s_top'], (9.9, YT_)])
+    S.wire(ax2, [t2['s_bot'], (9.9, YB_)])
+    S.shunt(ax2, 9.9, YT_, YB_, 'res', 'R$_{ac}$')
+    xv = 11.3
+    ax2.add_patch(FancyArrowPatch((xv, YB_), (xv, YT_), arrowstyle='<|-|>',
+                                  mutation_scale=12, color=GREY, lw=1.4,
+                                  zorder=4, shrinkA=0, shrinkB=0))
+    S.label(ax2, xv, YT_ + 0.36, '+', size=12, color=GREY)
+    S.label(ax2, xv, YB_ - 0.36, '$-$', size=12, color=GREY)
+    S.label(ax2, xv + 0.25, 1.75, 'V$_{RO}^F$', size=11, ha='left')
 
     foot(fig, 'L_r is the whole leakage seen from the primary and L_p the '
               'whole open-circuit inductance, so lambda = L_r / (L_p - L_r). '
@@ -329,6 +366,8 @@ def an_pfc_cap(save, foot):
     S.wire(ax, [(xe, 4.0), (11.6, 4.0)])
     S.wire(ax, [(xe, -0.6), (11.6, -0.6)])
     S.shunt(ax, 9.9, 4.0, -0.6, 'cap', 'C', frac=0.30)
+    S.dot(ax, 9.9, 4.0)
+    S.dot(ax, 9.9, -0.6)
     S.shunt(ax, 11.6, 4.0, -0.6, 'res', None, frac=0.46)
     S.label(ax, 12.35, 1.7, 'load', size=10.5, ha='left')
     S.label(ax, 9.15, 1.7, 'v$_C$', size=11.5, ha='right', color=MAG)
@@ -358,7 +397,9 @@ def an_pfc_cap(save, foot):
     t = tt[m] - 2.0
     aw.plot(t, vv[m], color=NAVY, lw=1.9, label='line voltage')
     aw.plot(t, vc[m], color=MAG, lw=2.2, label='v$_C$')
-    aw.plot(t, -vc[m], color=MAG, lw=2.2)
+    #  v_C is a dc voltage; its mirror is drawn so the negative half cycle's
+    #  conduction shows too, and it is named so it does not read as v_C
+    aw.plot(t, -vc[m], color=MAG, lw=2.2, label='$-$v$_C$')
     aw.fill_between(t, 0, ic[m], color=MAG, alpha=0.34, lw=0,
                     label='line current')
     aw.plot(t, ic[m], color=MAG, lw=1.3)
@@ -369,7 +410,7 @@ def an_pfc_cap(save, foot):
     for sp in aw.spines.values():
         sp.set_visible(False)
     aw.axhline(0, color=GREY, lw=0.9)
-    aw.legend(loc='lower right', frameon=False, fontsize=10, ncol=3)
+    aw.legend(loc='lower right', frameon=False, fontsize=10, ncol=4)
     for xc in (0.5, 2.5):
         _call(aw, (xc - 0.02, 0.30), (xc + 0.16, 1.24),
               'conducts only here', size=10)
@@ -401,9 +442,11 @@ def an_pfc_boost(save, foot):
         S.wire(ax, [(xe, 4.0), c])
         S.wire(ax, [d, (9.6, 4.0)])
         S.dot(ax, 9.6, 4.0)
-        di, do = S.diode(ax, 10.6, 4.0, 'D', s=0.30)
+        di, do = S.diode(ax, 10.6, 4.0, 'D')
         S.wire(ax, [(9.6, 4.0), di])
-        S.wire(ax, [do, (12.0, 4.0)])
+        #  on past C to the load: stopped at C, the load's top lead ended
+        #  in the air, which figcheck was the first to notice
+        S.wire(ax, [do, (13.4, 4.0)])
         X.mosfet(ax, 9.6, 2.0, 'Q', 'on' if on else 'off', h=1.40,
                  gate=0.78, body=False, coss=False, name_at='gate', size=10)
         S.wire(ax, [(9.6, 4.0), (9.6, 2.70)])
@@ -411,8 +454,12 @@ def an_pfc_boost(save, foot):
         S.wire(ax, [(xe, -0.6), (13.4, -0.6)])
         S.shunt(ax, 12.0, 4.0, -0.6, 'cap', 'C', frac=0.30)
         S.shunt(ax, 13.4, 4.0, -0.6, 'res', None, frac=0.46)
+        for xd, yd in ((9.6, -0.6), (12.0, 4.0), (12.0, -0.6)):
+            S.dot(ax, xd, yd)
         S.label(ax, 13.4, -1.15, 'load', size=10.5)
-        S.label(ax, 12.0, -1.15, 'V$_{bus}$', size=11)
+        #  the bus voltage is named on the + rail, where it is - under the
+        #  - rail it read as the name of the return
+        S.label(ax, 12.7, 4.45, 'V$_{bus}$', size=11)
 
         #  Only the boost loop is highlighted.  The bridge carries the same
         #  current in both panels, so colouring it would say nothing.
@@ -494,16 +541,16 @@ def an_two_stage(save, foot):
     S.box(ax, 9.8, 1.0, 2.6, 1.5, '400 V\nbulk C', fc=YEL, ec=MAG, size=10.5)
     S.label(ax, 15.6, 2.35, 'dc / dc converter', size=10, color=GREY)
     S.shade(ax, 11.9, 0.05, 22.4, 1.95, None, color=CYA, alpha=0.07)
-    S.label(ax, 0.1, 1.0, 'V$_{in}$', size=11.5, ha='right', weight='bold')
-    S.label(ax, 23.0, 1.0, 'V$_{out}$', size=11.5, ha='left', weight='bold')
-    xs = [0.1] + [x + 1.45 for x, _ in blocks[:-1]] + [22.4]
-    prev = 0.1
-    for x, _ in blocks:
-        S.wire(ax, [(prev, 1.0), (x - 1.45, 1.0)])
-        prev = x + 1.45
-    S.wire(ax, [(7.65, 1.0), (8.5, 1.0)])
-    S.wire(ax, [(11.1, 1.0), (11.95, 1.0)])
-    S.wire(ax, [(22.25, 1.0), (23.0, 1.0)])
+    S.label(ax, -0.08, 1.0, 'V$_{in}$', size=11.5, ha='right', weight='bold')
+    S.label(ax, 23.18, 1.0, 'V$_{out}$', size=11.5, ha='left', weight='bold')
+    #  Gap by gap.  The first version ran the boost-to-LLC wire straight
+    #  on under the capacitor's box and laid two short wires over it, which
+    #  figcheck read as a T at each edge of the box.
+    for x0, x1 in ((0.1, 1.15), (4.05, 4.75), (7.65, 8.5), (11.1, 11.95),
+                   (14.85, 15.95), (18.85, 19.35), (22.25, 23.0)):
+        S.wire(ax, [(x0, 1.0), (x1, 1.0)])
+    S.dot(ax, 0.1, 1.0)
+    S.dot(ax, 23.0, 1.0)
     S.label(ax, 9.8, -0.42, 'the buffer sits here', size=10, color=MAG)
 
     # a strip of node waveforms, each above the wire it belongs to
@@ -575,8 +622,13 @@ def _cycle(ratio, lam, ilr_pk, ilm_pk, td=0.05, n=2400):
     t = np.linspace(0.0, 1.0, n)
     h = np.where(t < H, t, t - H)
     ilm = np.where(h <= t1, -ilm_pk + 2.0 * ilm_pk * h / t1, ilm_pk)
-    io_pk = ilr_pk - ilm_pk * 0.0
-    io = np.where(h <= t1, np.sin(np.pi * np.clip(h, 0, t1) / tres), 0.0)
+    #  The switches commutate a rectifier that is still conducting, and an
+    #  inductor current cannot step: i_D falls to zero across the dead time
+    #  (a ramp here; the reverse voltage on L_r sets the real slope) and
+    #  i_Lr follows it down onto i_Lm instead of jumping there.
+    io_end = np.sin(np.pi * t1 / tres)
+    io = np.where(h <= t1, np.sin(np.pi * np.clip(h, 0, t1) / tres),
+                  io_end * np.clip((H - h) / (H - t1), 0.0, 1.0))
     #  scale the load component so the sum peaks at the design tank peak
     tot = ilm + io
     io = io * (ilr_pk - ilm.max()) / max(tot.max() - ilm.max(), 1e-9)
@@ -616,7 +668,11 @@ def an_llc_waves(save, foot):
 
     #  S1 conducts for as long as it is gated on: intervals 1 and 2.  It
     #  starts NEGATIVE, which is what the annotation is about.
-    s1 = np.where(t < e[2], ilr / m, 0.0)
+    #  ... and again from the moment its own node has swung back (8): the
+    #  body diode takes the current the gate then closes on.  That stretch
+    #  is the same negative current the trace starts with, one period
+    #  earlier; drawn at zero it contradicted its own first millimetre.
+    s1 = np.where((t < e[2]) | (t >= e[7]), ilr / m, 0.0)
     axs[1].plot(t, s1, color=NAVY, lw=1.9)
     axs[1].fill_between(t, 0, s1, color=NAVY, alpha=0.13, lw=0)
 
@@ -926,35 +982,3 @@ FIGS = {'an_rac': an_rac, 'an_integrated': an_integrated,
         'an_llc_waves': an_llc_waves, 'an_three_cases': an_three_cases,
         'an_cap_ind': an_cap_ind, 'an_loadshift': an_loadshift,
         'an_peakgain': an_peakgain}
-
-
-# ---------------------------------------- 12  the two conducting intervals
-def _pair(save, name, nums, figsize=(17.2, 5.4)):
-    """Two mode panels side by side, for the places in the note that need
-    only the conducting intervals.
-
-    The full eight-panel sheets carry the dead time as well, which is the
-    thing the borrowed figures had no picture of at all.  These two are the
-    drop-in pair: same drawing, same colours, the intervals the surrounding
-    text is about and nothing else.
-    """
-    import figs_modes8 as F
-    fig, axs = plt.subplots(1, 2, figsize=figsize)
-    for ax, n in zip(axs, nums):
-        F.panel(ax, F.MODES[n - 1])
-    fig.subplots_adjust(left=0.004, right=0.996, top=0.995, bottom=0.075,
-                        wspace=0.02)
-    F._legend(fig, y=0.012)
-    save(fig, name)
-
-
-def an_op_power(save, foot):
-    _pair(save, 'an_op_power', (1, 5))
-
-
-def an_op_free(save, foot):
-    _pair(save, 'an_op_free', (2, 6))
-
-
-FIGS['an_op_power'] = an_op_power
-FIGS['an_op_free'] = an_op_free

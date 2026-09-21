@@ -70,6 +70,9 @@ def txt(ax, x, y, t, size=10.5, color=NAVY, ha='center', va='center',
 #  figure modules records each axes' own units-per-inch for it to read.
 #  The mode panels' x span - the drawing the symbols were reviewed on.
 REF_SPAN = 22.45
+#  The mode sheets put 22.45 units across 0.491 of the figure: 45.7 units per
+#  figure width.  Rounded UP so the floor never quite reaches them.
+REF_FIGSPAN = 46.0
 #  Turn radii, at the mode panels' scale.  A transformer winding is drawn
 #  with bigger turns than a filter inductor - that is ordinary practice -
 #  but the ratio between them is fixed here instead of falling out of
@@ -79,32 +82,44 @@ TURN_R, WIND_R = 0.14, 0.28
 
 
 def scale(ax):
-    """How big a data unit is here, against the mode panels.
+    """The size factor for every symbol drawn on this axes.
 
-    Taken from the axes' own DATA WIDTH, not from its position on the
-    paper.  Position was the first attempt and it is wrong twice over:
-    `tight_layout` moves the axes after the symbols are drawn, and with
-    aspect 'equal' the box matplotlib finally uses is not the one
-    `get_position` reports.  Both showed up as a 1.35x spread in resistor
-    sizes between figures that should have matched.
+    Two rules, and the larger wins:
 
-    Data width has neither problem, and it is what a reader actually
-    judges: a symbol that is the same fraction of its own drawing looks
-    the same whatever size that drawing is printed at.
+      own    the drawing's own width, against the mode panels' (REF_SPAN).
+             A schematic that is bigger on the page gets bigger symbols.
+      floor  the FIGURE width, in this axes' data units, against the mode
+             sheets' (REF_FIGSPAN).  A symbol is never smaller on paper
+             than it is on the mode panels - which is what happened to a
+             three-panel figure whose panels were each a third of the page:
+             sized by their own width the capacitors came out at 60 % of
+             the mode panels' and the wires swallowed them.
+
+    The floor reads the axes' nominal position, so a figure that lays out
+    with subplots_adjust BEFORE it draws gets the floor it asked for.  The
+    mode sheets fall a hair under 1.0 on the floor and exactly 1.0 on their
+    own width, so they are governed by the first rule and do not move.
     """
-    try:
-        x0, x1 = ax.get_xlim()
-        span = abs(x1 - x0)
-    except Exception:                                   # noqa: BLE001
+    x0, x1 = ax.get_xlim()
+    span = abs(x1 - x0)
+    if span < 1e-9:
         return 1.0
-    return (span / REF_SPAN) if span > 1e-9 else 1.0
+    own = span / REF_SPAN
+    try:
+        w = ax.get_position().width
+        floor = (span / w) / REF_FIGSPAN if w > 1e-6 else 0.0
+    except Exception:                                    # noqa: BLE001
+        floor = 0.0
+    return max(own, floor)
 
 
 def note_symbol(ax, kind, x, y, w, h):
-    """Remember a symbol's drawn extent so figcheck can measure it."""
+    """Record a drawn symbol so figcheck can measure it: what, where, its
+    size, and the scale it was drawn at - dividing the last out is what
+    makes symbols in different figures comparable."""
     if not hasattr(ax, '_syms'):
         ax._syms = []
-    ax._syms.append((kind, x, y, w, h))
+    ax._syms.append((kind, x, y, w, h, scale(ax)))
 
 
 def _cap_size(ax, s, gap):
@@ -255,15 +270,21 @@ def mosfet(ax, x, y, name, state='on', h=1.80, gate=1.00,
             ec='none', zorder=1))
 
     xg, xc = x - 0.62 * u, x - 0.38 * u
-    wire(ax, [(x - gate, y), (xg, y)], cm, 1.5)          # gate lead
+    wire(ax, [(x - gate, y), (xg, y)], cm, 1.5, gid='symbol')   # gate lead
     ax.plot([xg, xg], [y - 0.58 * u, y + 0.58 * u], color=cm,
             lw=2.3 * min(u, 1.0) ** 0.4, zorder=4)
     for y0, y1 in ((0.30, 0.58), (-0.14, 0.14), (-0.58, -0.30)):
         ax.plot([xc, xc], [y + y0 * u, y + y1 * u], color=cm,
                 lw=2.3 * min(u, 1.0) ** 0.4, zorder=4)     # three bars
-    wire(ax, [(xc, y + 0.44 * u), (x, y + 0.44 * u), (x, yt)], cm)  # drain
-    wire(ax, [(xc, y - 0.44 * u), (x, y - 0.44 * u), (x, yb)], cm)  # source
-    wire(ax, [(xc, y), (x, y), (x, y - 0.44 * u)], cm)         # bulk, tied
+    #  gid='symbol': figcheck reads these as part of the device, not as
+    #  wiring - the bulk tie lands on the source lead's corner and the
+    #  parasitics hang off the drain and source nodes without dots, both
+    #  by the convention of the symbol, not of the wiring around it.
+    wire(ax, [(xc, y + 0.44 * u), (x, y + 0.44 * u), (x, yt)], cm,
+         gid='symbol')                                          # drain
+    wire(ax, [(xc, y - 0.44 * u), (x, y - 0.44 * u), (x, yb)], cm,
+         gid='symbol')                                          # source
+    wire(ax, [(xc, y), (x, y), (x, y - 0.44 * u)], cm, gid='symbol')  # bulk
     ax.add_patch(FancyArrowPatch((x - 0.13 * u, y), (xc + 0.05 * u, y),
                                  arrowstyle='-|>',
                                  mutation_scale=10 * min(u, 1.0) ** 0.5,
@@ -276,16 +297,18 @@ def mosfet(ax, x, y, name, state='on', h=1.80, gate=1.00,
     far = x
     if body or coss:
         far = x + (dx_c if coss else dx_d)
-        wire(ax, [(x, yt), (far, yt)], OFF_C, 1.4)
-        wire(ax, [(x, yb), (far, yb)], OFF_C, 1.4)
+        wire(ax, [(x, yt), (far, yt)], OFF_C, 1.4, gid='symbol')
+        wire(ax, [(x, yb), (far, yb)], OFF_C, 1.4, gid='symbol')
     if body:
         wire(ax, [(x + dx_d, yb), (x + dx_d, yt)], cd,
-             2.0 if cd == GRN else 1.4)
+             2.0 if cd == GRN else 1.4, gid='symbol')
         vdiode(ax, x + dx_d, y, 0.26 * u, up=True, color=cd,
                lw=2.2 if cd == GRN else 1.6)
     if coss:
-        wire(ax, [(x + dx_c, yb), (x + dx_c, y - 0.12 * u)], cc, 1.4)
-        wire(ax, [(x + dx_c, y + 0.12 * u), (x + dx_c, yt)], cc, 1.4)
+        wire(ax, [(x + dx_c, yb), (x + dx_c, y - 0.12 * u)], cc, 1.4,
+             gid='symbol')
+        wire(ax, [(x + dx_c, y + 0.12 * u), (x + dx_c, yt)], cc, 1.4,
+             gid='symbol')
         vcap(ax, x + dx_c, y, 0.28 * u, 0.12 * u, color=cc, lw=2.0)
     if name:
         nc = GREY if state == 'off' else NAVY

@@ -84,8 +84,16 @@ DX_D, DX_C = 0.80, 1.50             # body diode and C_oss, right of the leg
 XGATE = 1.00                        # gate lead reaches this far left
 
 
-def _skeleton(ax, states):
-    """Everything that is the same in every panel."""
+def _skeleton(ax, states, parts=True):
+    """Everything that is the same in every panel.
+
+    `parts` draws each switch's body diode and C_oss beside it.  The mode
+    panels need them, because intervals 3, 4, 7 and 8 are about nothing
+    else.  A figure that is only saying what an LLC stage IS does not, and
+    showing them there raises a question chapter 2 has not reached yet - so
+    that figure reuses this drawing with parts off rather than keeping a
+    second, half-bridge copy of the same converter.
+    """
     ax.set_xlim(-0.75, XEND + 2.05)
     ax.set_ylim(-1.75, 10.30)
     ax.set_xticks([])
@@ -95,19 +103,26 @@ def _skeleton(ax, states):
         sp.set_visible(False)
 
     # ---- primary rails and the two legs
-    wire(ax, [(0.25, HI), (XR + DX_C + 0.85, HI)])
-    wire(ax, [(0.25, LO), (XR + DX_C + 0.85, LO)])
+    x_rail = (XR + DX_C if parts else XR) + 0.85
+    wire(ax, [(0.25, HI), (x_rail, HI)])
+    wire(ax, [(0.25, LO), (x_rail, LO)])
     dot(ax, 0.25, HI)
     dot(ax, 0.25, LO)
     txt(ax, 0.10, HI + 0.38, 'V$_{in}$', size=11.5, weight='bold', ha='left')
     txt(ax, 0.10, LO - 0.38, '0', size=11.5, ha='left')
 
     for x, hi_name, lo_name in ((XL, 'S1', 'S2'), (XR, 'S3', 'S4')):
-        dh, _ = mosfet(ax, x, SH[0], hi_name, states[hi_name])
-        _, sl = mosfet(ax, x, SH[1], lo_name, states[lo_name])
+        dh, _ = mosfet(ax, x, SH[0], hi_name, states[hi_name],
+                       body=parts, coss=parts)
+        _, sl = mosfet(ax, x, SH[1], lo_name, states[lo_name],
+                       body=parts, coss=parts)
         wire(ax, [(x, HI), dh])
         wire(ax, [sl, (x, LO)])
         wire(ax, [(x, SH[0] - DEVH / 2), (x, SH[1] + DEVH / 2)])
+        #  Each leg is a T on its rail.  Every other T in this drawing
+        #  carries a junction dot, and figcheck found these four bare.
+        dot(ax, x, HI)
+        dot(ax, x, LO)
     dot(ax, XL, YT)
     dot(ax, XR, YB)
 
@@ -168,6 +183,7 @@ def _skeleton(ax, states):
     dot(ax, XQ1, YB)
     dot(ax, XQ2, YT)
     dot(ax, XCT, VP)
+    dot(ax, XQ2, VN)          # D2's return joins the - rail mid-run: a T
     # Set on one line it is wider than any gap left on this side, and
     # it landed on N_s2 twice and on the riser once. Two lines fit the
     # pocket between the winding labels and the riser.
@@ -566,14 +582,23 @@ def _legend(fig, y=0.010):
                  va='center')
 
 
-def sheet(nums, out, dpi=150):
-    """Four panels, two by two, with the colour key underneath."""
+def sheet_fig(nums):
+    """Four panels, two by two, with the colour key underneath - the figure
+    itself, so figcheck can read it the way it reads every other drawing."""
     fig, axs = plt.subplots(2, 2, figsize=(17.6, 10.4))
-    for ax, n in zip(axs.ravel(), nums):
-        panel(ax, MODES[n - 1])
+    #  Laid out first: symbol scale reads the axes' position, and adjusted
+    #  afterwards the panels recorded a scale for a layout they never had.
+    #  (The panels themselves draw at explicit sizes, so nothing moves.)
     fig.subplots_adjust(left=0.004, right=0.996, top=0.995, bottom=0.042,
                         wspace=0.02, hspace=0.02)
+    for ax, n in zip(axs.ravel(), nums):
+        panel(ax, MODES[n - 1])
     _legend(fig)
+    return fig
+
+
+def sheet(nums, out, dpi=150):
+    fig = sheet_fig(nums)
     fig.savefig(out, dpi=dpi, facecolor='white')
     plt.close(fig)
     return out

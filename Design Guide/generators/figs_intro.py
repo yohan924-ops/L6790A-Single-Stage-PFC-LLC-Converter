@@ -21,160 +21,141 @@ from schem import NAVY, MAG, CYA, GRN, PUR, GREY, LT, YEL
 
 # ------------------------------------------------------------------ 1
 def an_llc_stage(save, foot):
-    fig, ax = plt.subplots(figsize=(11.6, 4.5))
-    S.frame(ax, -0.4, 15.2, -1.5, 4.4)
+    """What an LLC stage physically is - the converter this note designs.
 
-    # half bridge
-    S.wire(ax, [(0.5, 3.7), (2.2, 3.7)])
-    S.label(ax, 0.35, 3.7, 'V$_{in}$', ha='right', weight='bold')
-    S.wire(ax, [(0.5, -0.9), (2.2, -0.9)])
-    S.gnd(ax, 0.9, -0.95)
-    S.sw(ax, 2.2, 2.75, 'Q1')
-    S.sw(ax, 2.2, 0.15, 'Q2')
-    S.wire(ax, [(2.2, 3.7), (2.2, 3.01)])
-    S.wire(ax, [(2.2, 2.49), (2.2, 0.41)])
-    S.wire(ax, [(2.2, -0.11), (2.2, -0.9)])
-    S.dot(ax, 2.2, 1.45)
-    S.label(ax, 2.2, 3.95, 'half bridge', size=10.5, color=GREY)
+    This used to be a half bridge with its own hand-built centre tap, which
+    was a second drawing of a converter the note already draws properly:
+    the mode panels' full bridge with a centre-tapped secondary.  Two
+    drawings of one circuit drift apart, and this one had, down to a ground
+    symbol the panels do not use - the panels name the return rail 0, which
+    is what it is.  So this figure is now that drawing, with the switches
+    at rest and the group names written above it.
+    """
+    import figs_modes8 as F
+    fig, ax = plt.subplots(figsize=(13.0, 6.4))
+    fig.subplots_adjust(left=0.01, right=0.99, top=0.99, bottom=0.10)
+    rest = dict(S1='plain', S2='plain', S3='plain', S4='plain',
+                D1=True, D2=True)
+    F._skeleton(ax, rest, parts=False)
 
-    # the tank
-    S.shade(ax, 2.85, 0.55, 7.35, 2.65, 'resonant tank', color=CYA)
-    a, b = S.cap(ax, 3.55, 1.45, 'C$_r$', tdy=0.55)
-    S.wire(ax, [(2.2, 1.45), a])
-    c, d = S.ind(ax, 5.05, 1.45, 'L$_r$', s=0.95)
-    S.wire(ax, [b, c])
-    S.wire(ax, [d, (6.55, 1.45)])
-    S.dot(ax, 6.55, 1.45)
-    S.shunt(ax, 6.55, 1.45, -0.9, 'ind', 'L$_m$', frac=0.52)
-    S.wire(ax, [(2.2, -0.9), (9.0, -0.9)])
+    #  Group names go ABOVE the rails, in the band the panels leave empty
+    #  for their step number and title.  Nothing of the circuit is up there.
+    yl = F.HI + 1.05
+    #  The four bands must not touch, or their rules read as one long line
+    #  underneath every name - which is what the first version drew.
+    for x0, x1, nm, col in ((F.XL - 1.35, F.XR + 0.80, 'full bridge', GREY),
+                            (F.XCR - 0.95, F.XLM + 0.45, 'resonant tank',
+                             CYA),
+                            (F.XP - 0.35, F.XS + 0.60, 'transformer', GREY),
+                            (F.XQ1 - 0.75, F.XQ2 + 0.80, 'rectifier', GREY)):
+        S.label(ax, (x0 + x1) / 2.0, yl, nm, size=11.5, color=col)
+        #  zorder 1.8: a rule under a group name is not a wire, and figcheck
+        #  reads zorder-2 lines as wiring
+        ax.plot([x0, x1], [yl - 0.42] * 2, color=col, lw=1.2, alpha=0.55,
+                zorder=1.8)
+    S.label(ax, F.XTR, F.YB - 1.15, 'n : 1', size=10.5, color=GREY)
 
-    # transformer
-    t = S.xfmr(ax, 8.05, 1.45, hp=1.9, hs=1.9, gap=0.34, ct=True)
-    S.wire(ax, [(6.55, 1.45), (6.55, 2.40), (t['p_top'][0], 2.40),
-                t['p_top']])
-    S.wire(ax, [t['p_bot'], (t['p_bot'][0], -0.9)])
-    S.label(ax, 8.05, 3.30, 'n : 1', size=10.5, color=GREY)
+    #  The tank band, behind everything, over the three reactive elements
+    S.shade(ax, F.XCR - 0.95, F.YB - 0.95, F.XLM + 0.75, F.YT + 1.05,
+            None, color=CYA, alpha=0.09)
 
-    # secondary, centre tap
-    XTAP = 9.05
-    S.wire(ax, [t['s_top'], (9.6, t['s_top'][1])])
-    di, do = S.diode(ax, 10.3, t['s_top'][1], s=0.30)
-    S.wire(ax, [(9.6, t['s_top'][1]), di])
-    S.wire(ax, [do, (11.6, t['s_top'][1])])
-    #  The tap leaves on its own riser, so the lower end's wire has to cross
-    #  it.  Run flat through the riser and the drawing shorts the lower half
-    #  winding to the return - which is what it did before this hop.
-    S.wire(ax, [t['s_bot'], (XTAP - 0.20, t['s_bot'][1])])
-    S.hop(ax, XTAP, t['s_bot'][1])
-    S.wire(ax, [(XTAP + 0.20, t['s_bot'][1]), (9.6, t['s_bot'][1])])
-    di2, do2 = S.diode(ax, 10.3, t['s_bot'][1], s=0.30)
-    S.wire(ax, [(9.6, t['s_bot'][1]), di2])
-    S.wire(ax, [do2, (11.6, t['s_bot'][1])])
-    S.wire(ax, [(11.6, t['s_top'][1]), (11.6, t['s_bot'][1])])
-    S.dot(ax, 11.6, 1.45)
-    S.wire(ax, [(11.6, 1.45), (14.3, 1.45)])
-    S.label(ax, 10.3, t['s_top'][1] + 0.42, 'rectifier', size=10, color=GREY)
-
-    # centre tap return
-    S.wire(ax, [t['s_tap'], (XTAP, 1.45), (XTAP, -0.9), (14.3, -0.9)])
-
-    ca, cb = S.cap(ax, 12.8, 0.28, None, horiz=False)
-    S.wire(ax, [(12.8, 1.45), (12.8, 0.62)])
-    S.wire(ax, [(12.8, -0.06), (12.8, -0.9)])
-    S.dot(ax, 12.8, 1.45)
-    S.label(ax, 13.1, 0.28, 'C$_{out}$', ha='left')
-    S.res(ax, 14.3, 0.28, None, horiz=False, s=1.0)
-    S.wire(ax, [(14.3, 1.45), (14.3, 0.78)])
-    S.wire(ax, [(14.3, -0.22), (14.3, -0.9)])
-    S.label(ax, 14.6, 0.28, 'load', ha='left')
-    S.label(ax, 13.4, 2.0, 'V$_{out}$', weight='bold')
-
-    S.note = None
-    #  The callout used to start above the tank and reach down across it,
-    #  so its text lay over the shading and over C_r, L_r and the tank's
-    #  own name.  Below the half bridge there is clear air and a shorter
-    #  leader.
-    ax.annotate('the square wave the tank\nis driven with',
-                xy=(2.32, 1.30), xytext=(2.95, -0.55), fontsize=10.5,
-                color=MAG, ha='left', linespacing=1.4,
+    #  The callout points at the tank wire itself, from the empty middle
+    #  of the bridge.  Coming up from below it had to cross the return rail
+    #  and pass through S2 to reach the junction.
+    #  Centred in the pocket between the two legs.  Set flush left it ran
+    #  its last word onto the right leg, and the halo that keeps text
+    #  readable then cut a white gap in that wire.
+    #  Measured, not guessed: the pocket between the legs is 3.85 units and
+    #  'the tank is driven with' sets 3.62 wide, so its halo ate into the
+    #  right leg.  'that drives the tank' is 3.19 and clears both.
+    ax.annotate('the square wave\nthat drives the tank',
+                xy=(F.XL + 1.15, F.YT), xytext=((F.XL + F.XR) / 2.0 + 0.05,
+                                                F.YMID - 0.75),
+                fontsize=10.5, color=MAG, ha='center', linespacing=1.4,
                 arrowprops=dict(arrowstyle='-|>', color=MAG, lw=1.6,
-                                connectionstyle='arc3,rad=0.18'))
+                                connectionstyle='arc3,rad=0.20'))
+
     foot(fig, 'Three reactive elements and a square wave. The switches only '
               'set the frequency; the tank decides how much power flows and '
               'the transformer sets the voltage.')
-    fig.tight_layout()
     save(fig, 'an_llc_stage')
 
 
 # ------------------------------------------------------------------ 2
 def an_fha_steps(save, foot):
+    """As built, referred, first harmonic: the three steps to M(f_n, Q).
+
+    The panels are laid out BEFORE anything is drawn.  Symbol size reads
+    the axes' position on the figure, and a tight_layout afterwards moved
+    the panels under symbols sized for where they used to be.
+    """
     fig, axs = plt.subplots(1, 3, figsize=(14.4, 4.0))
+    fig.subplots_adjust(left=0.01, right=0.99, top=0.88, bottom=0.04,
+                        wspace=0.06)
+    XS_, YS_, YR = 0.55, 1.1, -0.9              # source; the return rail
+
+    def drive(ax, kind, name):
+        """the source, wired out of its right side and back into its
+        bottom -> (right terminal, bottom terminal)"""
+        f = S.sqsrc if kind == 'sq' else S.acsrc
+        left, right = f(ax, XS_, YS_, name, tdy=0.92)
+        return right, (XS_, YS_ - (XS_ - left[0]))
+
+    def series(ax, right, x_c, x_l, x_n):
+        """source -> C_r -> L_r -> the node at x_n, dotted"""
+        a, b = S.cap(ax, x_c, YS_, 'C$_r$', tdy=0.42)
+        S.wire(ax, [right, a])
+        c, d = S.ind(ax, x_l, YS_, 'L$_r$', s=0.8, tdy=0.36)
+        S.wire(ax, [b, c])
+        S.wire(ax, [d, (x_n, YS_)])
+        S.dot(ax, x_n, YS_)
+        S.shunt(ax, x_n, YS_, YR, 'ind', 'L$_m$', frac=0.4)
+        S.dot(ax, x_n, YR)                       # L_m's foot is a T on the rail
 
     # ---- (a) as built
     ax = axs[0]
-    S.frame(ax, -0.3, 7.6, -1.3, 3.5,
-            '1   as built')
-    S.sqsrc(ax, 0.55, 1.1, 'square\nwave')
-    S.wire(ax, [(0.91, 1.1), (1.3, 1.1)])
-    a, b = S.cap(ax, 1.6, 1.1, 'C$_r$', tdy=0.48)
-    c, d = S.ind(ax, 2.6, 1.1, 'L$_r$', s=0.8)
-    S.wire(ax, [b, c])
-    S.wire(ax, [d, (3.5, 1.1)])
-    S.dot(ax, 3.5, 1.1)
-    S.shunt(ax, 3.5, 1.1, -0.9, 'ind', 'L$_m$', frac=0.5)
-    S.wire(ax, [(3.5, -0.9), (0.55, -0.9), (0.55, 0.74)])
-    S.wire(ax, [(3.5, 1.1), (3.5, 2.2), (4.4, 2.2)])
-    t = S.xfmr(ax, 4.75, 1.1, hp=1.6, hs=1.6, gap=0.30)
-    S.wire(ax, [(4.4, 2.2), t['p_top']])
-    S.wire(ax, [t['p_bot'], (t['p_bot'][0], -0.9)])
-    S.wire(ax, [t['s_top'], (5.9, t['s_top'][1])])
-    S.wire(ax, [t['s_bot'], (5.9, t['s_bot'][1])])
-    S.wire(ax, [(5.9, t['s_top'][1]), (5.9, t['s_bot'][1])])
-    S.box(ax, 6.6, 1.1, 1.3, 1.7, 'rectifier\n+ load', size=9.5)
+    S.frame(ax, -0.3, 7.6, -1.3, 3.5, '1   as built')
+    right, bottom = drive(ax, 'sq', 'square\nwave')
+    series(ax, right, 1.95, 2.9, 3.7)
+    t = S.xfmr(ax, 4.95, YS_, hp=1.6, hs=1.6, gap=0.30)
+    #  up from the node and across: orthogonal, not the slanted lead the
+    #  first version drew from the node straight to the winding's top
+    S.wire(ax, [(3.7, YS_), (3.7, t['p_top'][1]), t['p_top']])
+    #  the primary's return: down to the rail, and the rail back to the
+    #  source - the rail used to stop at L_m and leave this lead in the air
+    S.wire(ax, [t['p_bot'], (t['p_bot'][0], YR), (XS_, YR), bottom])
+    bl, _ = S.box(ax, 6.55, YS_, 1.3, 1.9, 'rectifier\n+ load', size=9.5)
+    S.wire(ax, [t['s_top'], (bl[0], t['s_top'][1])])
+    S.wire(ax, [t['s_bot'], (bl[0], t['s_bot'][1])])
 
     # ---- (b) referred
     ax = axs[1]
-    S.frame(ax, -0.3, 7.6, -1.3, 3.5,
-            '2   secondary referred to the primary')
-    S.sqsrc(ax, 0.55, 1.1, 'square\nwave')
-    S.wire(ax, [(0.91, 1.1), (1.3, 1.1)])
-    a, b = S.cap(ax, 1.6, 1.1, 'C$_r$', tdy=0.48)
-    c, d = S.ind(ax, 2.8, 1.1, 'L$_r$', s=0.8)
-    S.wire(ax, [b, c])
-    S.wire(ax, [d, (4.0, 1.1)])
-    S.dot(ax, 4.0, 1.1)
-    S.shunt(ax, 4.0, 1.1, -0.9, 'ind', 'L$_m$', frac=0.5)
-    S.wire(ax, [(4.0, 1.1), (5.6, 1.1)])
-    S.dot(ax, 5.6, 1.1)
-    S.shunt(ax, 5.6, 1.1, -0.9, 'res', 'n$^2$R$_{load}$', frac=0.5,
-            tdx=0.36)
-    S.wire(ax, [(5.6, -0.9), (0.55, -0.9), (0.55, 0.74)])
-    S.note = None
+    S.frame(ax, -0.3, 7.6, -1.3, 3.5, '2   secondary referred to the primary')
+    right, bottom = drive(ax, 'sq', 'square\nwave')
+    series(ax, right, 1.95, 3.1, 4.2)
+    XR_ = 5.9
+    S.wire(ax, [(4.2, YS_), (XR_, YS_)])
+    S.shunt(ax, XR_, YS_, YR, 'res', 'n$^2$R$_{load}$', tdx=0.30)
+    S.wire(ax, [(XR_, YR), (XS_, YR), bottom])
     ax.annotate('the ideal transformer disappears;\n'
                 'the load is scaled by n$^2$',
-                xy=(5.6, 1.75), xytext=(2.2, 2.75), fontsize=10,
+                xy=(XR_ - 0.16, 0.30), xytext=(1.6, 2.75), fontsize=10,
                 color=GREY, ha='left',
                 arrowprops=dict(arrowstyle='-|>', color=GREY, lw=1.3))
 
     # ---- (c) FHA
     ax = axs[2]
-    S.frame(ax, -0.3, 7.6, -1.3, 3.5,
-            '3   first harmonic only')
-    S.acsrc(ax, 0.55, 1.1, 'fundamental\nof the drive')
-    S.wire(ax, [(0.91, 1.1), (1.3, 1.1)])
-    a, b = S.cap(ax, 1.6, 1.1, 'C$_r$', tdy=0.48)
-    c, d = S.ind(ax, 2.8, 1.1, 'L$_r$', s=0.8)
-    S.wire(ax, [b, c])
-    S.wire(ax, [d, (4.0, 1.1)])
-    S.dot(ax, 4.0, 1.1)
-    S.shunt(ax, 4.0, 1.1, -0.9, 'ind', 'L$_m$', frac=0.5)
-    S.wire(ax, [(4.0, 1.1), (5.6, 1.1)])
-    S.dot(ax, 5.6, 1.1)
-    S.shunt(ax, 5.6, 1.1, -0.9, 'res', 'R$_{ac}$', frac=0.5)
-    S.wire(ax, [(5.6, -0.9), (0.55, -0.9), (0.55, 0.74)])
-    S.shade(ax, 1.32, 0.05, 6.45, 2.05, None, color=CYA)
+    S.frame(ax, -0.3, 7.6, -1.3, 3.5, '3   first harmonic only')
+    right, bottom = drive(ax, 'ac', 'fundamental\nof the drive')
+    series(ax, right, 1.95, 3.1, 4.2)
+    S.wire(ax, [(4.2, YS_), (XR_, YS_)])
+    S.shunt(ax, XR_, YS_, YR, 'res', 'R$_{ac}$')
+    S.wire(ax, [(XR_, YR), (XS_, YR), bottom])
+    #  The band is the whole network, return rail included - drawn to the
+    #  node line only, it cut L_m and R_ac in half.
+    S.shade(ax, 1.45, -1.18, 7.05, 1.95, None, color=CYA)
     ax.annotate('one ac network.\nM and Q are read off it',
-                xy=(3.6, 2.05), xytext=(1.5, 2.78), fontsize=10,
+                xy=(3.6, 1.95), xytext=(1.6, 2.75), fontsize=10,
                 color=CYA, ha='left', fontweight='bold',
                 arrowprops=dict(arrowstyle='-|>', color=CYA, lw=1.3))
 
@@ -182,7 +163,6 @@ def an_fha_steps(save, foot):
               'square wave becomes its fundamental. Everything in this note '
               'that is written as M(f_n, Q) is read from the right-hand '
               'circuit.')
-    fig.tight_layout()
     save(fig, 'an_fha_steps')
 
 
@@ -258,7 +238,9 @@ def an_architectures(save, foot):
         return x
 
     ax = axs[0]
-    S.frame(ax, -0.2, 15.4, -1.9, 1.5, 'two stages, the usual arrangement')
+    #  17.2: the upper chain runs to 16.9, and at 15.4 its last box was
+    #  clipped off with only its label left to say it had been there
+    S.frame(ax, -0.2, 17.2, -1.9, 1.5, 'two stages, the usual arrangement')
     chain(ax, [(1.5, 'mains', 'white', GREY),
                (1.6, 'bridge', LT, GREY),
                (2.3, 'boost PFC', LT, GREY),
@@ -272,7 +254,7 @@ def an_architectures(save, foot):
                 arrowprops=dict(arrowstyle='-|>', color=MAG, lw=1.5))
 
     ax = axs[1]
-    S.frame(ax, -0.2, 15.4, -1.9, 1.5, 'one stage')
+    S.frame(ax, -0.2, 17.2, -1.9, 1.5, 'one stage')
     chain(ax, [(1.5, 'mains', 'white', GREY),
                (1.6, 'bridge', LT, GREY),
                (2.5, 'PF LLC', CYA, NAVY),

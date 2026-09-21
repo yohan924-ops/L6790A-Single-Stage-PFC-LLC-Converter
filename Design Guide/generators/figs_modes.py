@@ -107,14 +107,29 @@ def an_zvs_zcs(save, foot):
     ax.plot(t, s, color=GRN, lw=2.4, label='rectifier current')
     ax.fill_between(t, 0, s, color=GRN, alpha=0.15)
     ax.axvspan(d, 1.0, color=LT, alpha=0.9)
-    ax.text((d + 1) / 2, 0.5, 'dead\ninterval', ha='center', fontsize=9.6,
-            color=GREY)
+    #  the interval after the current has reached zero is the secondary-off
+    #  part of the same half cycle (step 2 in the mode figures), not the
+    #  dead time - the note is careful about that word elsewhere
+    ax.text((d + 1) / 2, 0.5, 'secondary\noff (step 2)', ha='center',
+            fontsize=9.6, color=GREY)
     ax.annotate('current reaches zero on its own,\n'
                 'so the rectifier turns off with no reverse recovery',
                 xy=(d, 0.02), xytext=(0.04, 0.78), fontsize=9.6, color=GRN,
                 arrowprops=dict(arrowstyle='-|>', color=GRN, lw=1.4))
-    ax.plot(t, np.where(t < 1.0, np.sin(np.pi * t), 0), color=GREY, lw=1.4,
-            ls=':', label='above f$_r$ : cut off while still flowing')
+    #  Above f_r the resonant half sine is LONGER than the half period, so
+    #  the half period ends with the current still flowing and the switches
+    #  cut it.  The first version drew a sine that reached zero exactly at
+    #  the end - the opposite of its own label.
+    t2 = np.linspace(0, 1.06, 640)
+    hi = np.sin(np.pi / 1.25)
+    above = np.where(t2 < 1.0, np.sin(np.pi * t2 / 1.25),
+                     hi * np.clip(1.0 - (t2 - 1.0) / 0.03, 0.0, 1.0))
+    ax.plot(t2, above, color=GREY, lw=1.4, ls=':',
+            label='above f$_r$ : cut off while still flowing')
+    ax.axvline(1.0, color=GREY, lw=0.9, ls='--')
+    ax.text(1.0, -0.085, 'half period ends', ha='center', va='center',
+            fontsize=8.8, color=GREY)
+    ax.set_xlim(0, 1.06)
     ax.set_ylim(-0.15, 1.35)
     ax.set_xlabel('one switching half period')
     ax.set_xticks([])

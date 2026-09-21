@@ -1183,6 +1183,25 @@ FIGS['an_above_below'] = lambda: figs_modes.an_above_below(
     save, foot, R, sweep, FR)
 FIGS['an_zvs_zcs'] = lambda: figs_modes.an_zvs_zcs(save, foot)
 
+
+def an_modes8():
+    """The two eight-mode sheets and the numbered waveform strip.
+
+    figs_modes8 writes them itself - its own dpi, no tight bbox - so the
+    panels come out pixel for pixel as they were reviewed.  One entry for
+    the three files, because one build() makes all three.
+    """
+    import figs_modes8
+    d = os.path.join(OUT, 'an') if PLAIN else OUT
+    if not os.path.isdir(d):
+        os.makedirs(d)
+    for p in figs_modes8.build(d):
+        print('  %-28s %6.1f KB' % (os.path.basename(p),
+                                     os.path.getsize(p) / 1024))
+
+
+FIGS['an_modes8'] = an_modes8
+
 if __name__ == '__main__':
     argv = sys.argv[1:]
     if '--plain' in argv:
