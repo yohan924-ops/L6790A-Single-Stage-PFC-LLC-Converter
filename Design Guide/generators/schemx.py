@@ -48,6 +48,18 @@ def dot(ax, x, y, color=NAVY, ms=5.0, z=6):
     ax.plot([x], [y], 'o', color=color, ms=ms, zorder=z)
 
 
+def nodot(ax, x, y):
+    """Declare a junction that this drawing leaves undotted on purpose.
+
+    Three conductors meeting want a dot, so the wiring check asks for
+    one.  When a drawing has a reason to leave it out, the reason has to
+    be recorded HERE rather than by loosening the check - otherwise the
+    next real missing dot is lost in the same silence.  figcheck lists
+    these and does not count them, the way it lists rail stubs.
+    """
+    ax._nodots = getattr(ax, '_nodots', []) + [(x, y)]
+
+
 def txt(ax, x, y, t, size=10.5, color=NAVY, ha='center', va='center',
         weight='normal', z=8, halo=False):
     ax.text(x, y, t, ha=ha, va=va, fontsize=size, color=color,
@@ -78,7 +90,12 @@ REF_FIGSPAN = 46.0
 #  but the ratio between them is fixed here instead of falling out of
 #  whatever height and turn count each drawing happened to pass, which is
 #  how one figure ended up with windings five times another's.
-TURN_R, WIND_R = 0.14, 0.28
+#  One half circle of a winding, as a radius.  Raised by half in
+#  2026-09-21: at 0.14 and 0.28 a turn printed about a point across
+#  on A4 and the coils read as a ripple in the wire rather than as
+#  windings.  Turn COUNT falls to suit, which is the intended trade -
+#  a schematic winding is a few legible bumps, not a spring.
+TURN_R, WIND_R = 0.21, 0.42
 
 
 def scale(ax):
@@ -324,7 +341,7 @@ def mosfet(ax, x, y, name, state='on', h=1.80, gate=1.00,
 def xfmr(ax, x, y, hp=1.80, hs=None, np_t=None, ns_t=None, ct=False,
          gap=0.34,
          lp=None, ls=None, dots=True, core=0.13, lead=0.06, size=11,
-         s_dot='top'):
+         s_dot='top', tap_dot=True):
     """A transformer, optionally with a centre-tapped secondary.
 
     The windings sit CLOSE to the core.  Drawn with a gap wider than their
@@ -371,10 +388,6 @@ def xfmr(ax, x, y, hp=1.80, hs=None, np_t=None, ns_t=None, ct=False,
         hh = (hs / 2.0 if ct else hs) - 2 * lead
         ns_t = min(4, max(2, int(round(hh / (2.0 * r)))))
     mark = len(getattr(ax, '_syms', []))
-    #  The dot offsets are a FRACTION of the turn radius, not a constant.
-    #  Fixed at 0.17 they were fine on the mode panels, whose turns are
-    #  small, and on a transformer drawn three times that size the tap's
-    #  junction dot and the lower half's polarity dot merged into one blob.
     rp = min(r, abs(hp - 2 * lead) / (2.0 * max(np_t, 1)))
     rs = min(r, abs((hs / (2.0 if ct else 1.0)) - 2 * lead)
              / (2.0 * max(ns_t, 1)))
@@ -391,7 +404,6 @@ def xfmr(ax, x, y, hp=1.80, hs=None, np_t=None, ns_t=None, ct=False,
     #  what the page actually gets, for figcheck to convert into points
     ax._xfmr_clear = getattr(ax, '_xfmr_clear', []) + [
         gap - core - rp, gap - core - rs]
-    op, os_ = max(0.17, 0.55 * rp), max(0.17, 0.55 * rs)
     ytp, ybp = y + hp / 2.0, y - hp / 2.0
     yts, ybs = y + hs / 2.0, y - hs / 2.0
     def _wind(xx, y0, y1, n, rr, side):
@@ -404,42 +416,53 @@ def xfmr(ax, x, y, hp=1.80, hs=None, np_t=None, ns_t=None, ct=False,
         wire(ax, [(xx, b), (xx, y1)])
         return a, b
 
-    ext = list(_wind(xp, ybp, ytp, np_t, rp, +1))
-    #  Beside the coil there is no spot that clears the widest loop and
-    #  still sits nearer its own winding than the next one.  Above the
-    #  terminal there is, and it is unambiguous.
+    #  A polarity dot belongs to a WINDING, so it is placed against that
+    #  winding's top turn, on the side the turns bulge towards.  Put out
+    #  beyond the lead line - which is where it used to be - it sits on
+    #  the circuit wire and a reader has to work out which coil it means.
+    #  There is room for it beside the coil now that the turns are bigger
+    #  and stand further off the core.
+    pa, pb = _wind(xp, ybp, ytp, np_t, rp, +1)
+    ext = [pa, pb]
     if dots:
-        dot(ax, xp - op, ytp - op, NAVY, 4.8)
+        dot(ax, xp + 0.80 * rp, pb + 0.50 * rp, NAVY, 4.8)
     if lp:
         txt(ax, xp - 0.42, y, lp, size=size, ha='right')
 
     out = dict(p_top=(xp, ytp), p_bot=(xp, ybp),
                s_top=(xs, yts), s_bot=(xs, ybs))
     if ct:
-        ext += list(_wind(xs, y, yts, ns_t, rs, -1))
-        ext += list(_wind(xs, ybs, y, ns_t, rs, -1))
+        ua, ub = _wind(xs, y, yts, ns_t, rs, -1)
+        la, lb = _wind(xs, ybs, y, ns_t, rs, -1)
+        ext += [ua, ub, la, lb]
         if dots:
-            dot(ax, xs + os_, yts - os_, NAVY, 4.8)
-            dot(ax, xs + os_, y - os_ * 1.25, NAVY, 4.8)
-        dot(ax, xs, y)
+            dot(ax, xs - 0.80 * rs, ub + 0.50 * rs, NAVY, 4.8)
+            dot(ax, xs - 0.80 * rs, lb + 0.50 * rs, NAVY, 4.8)
+        if tap_dot:
+            dot(ax, xs, y)
         out['s_tap'] = (xs, y)
         if ls:
             txt(ax, xs + 0.42, (y + yts) / 2.0, ls[0], size=size, ha='left')
             txt(ax, xs + 0.42, (y + ybs) / 2.0, ls[1], size=size, ha='left')
     else:
-        ext += list(_wind(xs, ybs, yts, ns_t, rs, -1))
+        sa, sb = _wind(xs, ybs, yts, ns_t, rs, -1)
+        ext += [sa, sb]
         if dots:
             if s_dot == 'bot':
-                dot(ax, xs + os_, ybs + os_, NAVY, 4.8)
+                dot(ax, xs - 0.80 * rs, sa - 0.50 * rs, NAVY, 4.8)
             else:
-                dot(ax, xs + os_, yts - os_, NAVY, 4.8)
+                dot(ax, xs - 0.80 * rs, sb + 0.50 * rs, NAVY, 4.8)
         if ls:
             txt(ax, xs + 0.42, y, ls, size=size, ha='left')
     #  The core spans the WINDINGS, not the terminals.  Drawn to the full
     #  terminal height it stood a long way past the coils once those were
     #  capped, and the symbol read as two bars with a small coil beside it.
+    #  Overhang from the turn radius, not a constant.  At a fixed 0.30 a
+    #  short winding got a core half as long again as itself, and the
+    #  symbol read as two long bars with a coil beside them.
+    over = 0.45 * max(rp, rs)
     for xx in (x - core, x + core):
-        ax.plot([xx, xx], [min(ext) - 0.30, max(ext) + 0.30],
+        ax.plot([xx, xx], [min(ext) - over, max(ext) + over],
                 color=GREY, lw=2.4, zorder=3)
 
     #  a transformer's turns are their own class, and are checked as one

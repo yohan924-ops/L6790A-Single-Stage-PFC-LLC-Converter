@@ -47,7 +47,7 @@ from matplotlib.patches import Rectangle, FancyArrowPatch, FancyBboxPatch
 #  MOSFET, the same windings and the same current highlight as these panels.
 from schemx import (NAVY, YEL, MAG, CYA, GRN, PUR, GREY, LT, OFF_C, LW, BRK,
                     wire, dot, txt, vcap, hcap, coil_pts, hcoil_pts, coil,
-                    hcoil, vdiode, resbox, hop, mosfet, path, register)
+                    hcoil, vdiode, resbox, hop, mosfet, path, register, nodot)
 
 # ------------------------------------------------------------- the geometry
 #  One proportion table.  Nothing below computes a coordinate twice, and the
@@ -62,15 +62,21 @@ XCR, XLR, XLM, XTR = 8.70, 10.05, 11.30, 12.75
 YMID = (YT + YB) / 2.0
 VP, VN = YMID + 2.60, YMID - 2.60   # output rails, symmetric about the tank
 #  Windings sit close to the core - a transformer symbol with a gap wider
-#  than its own turns reads as two unrelated inductors.  The lead lines are
-#  placed so the turns stop about one turn-radius short of the core bars.
-XP = XTR - 0.34                     # primary lead line, turns face the core
-XS = XTR + 0.34                     # secondary lead line, turns face it too
+#  than its own turns reads as two unrelated inductors.  Close, but not
+#  touching: core half-width 0.13 + one turn radius 0.21 + a clear 0.28.
+#  The clearance was 0.07; three times that is the 0.21 asked for, and the
+#  extra 0.07 is what lets the polarity dot sit in the gap without
+#  touching either the outermost loop or the core bar.
+XP = XTR - 0.62                     # primary lead line, turns face the core
+XS = XTR + 0.62                     # secondary lead line, turns face it too
 LEAD = 0.06                         # straight bit before the first turn
 #  Turn counts are picked so every winding on the sheet has a turn radius
-#  between 0.13 and 0.15 - fewer, bigger turns read at the size a panel is
-#  actually printed, where eight primary turns came out as a fine ripple.
-NP_T_N, NS_T_N = 6, 3               # turns drawn: primary, each half of N_s
+#  near 0.21 - fewer, bigger turns read at the size a panel is actually
+#  printed, where eight primary turns came out as a fine ripple.  The
+#  radius follows from the height and the count, so raising the radius by
+#  half means dropping the count by a third: 1.68 / (2 x 4) = 0.21 on the
+#  primary and 0.78 / (2 x 2) = 0.195 on each half of the secondary.
+NP_T_N, NS_T_N = 4, 2               # turns drawn: primary, each half of N_s
 #  Centre tap, the way this design actually rectifies: the tap is V_o+ and
 #  the two winding ends are pulled to the return through one device each.
 #  Order matters - with the near leg fed from the LOWER end and the far one
@@ -132,14 +138,19 @@ def _skeleton(ax, states, parts=True):
     wire(ax, [(XR + 0.20, YT), (XCR - 0.11, YT)])
     hcap(ax, XCR, YT, 0.30)
     txt(ax, XCR, YT + 0.66, 'C$_r$', size=11.5)
-    wire(ax, [(XCR + 0.11, YT), (XLR - 0.45, YT)])
-    hcoil(ax, XLR, YT, 0.90, 3)
+    wire(ax, [(XCR + 0.11, YT), (XLR - 0.63, YT)])
+    #  0.90 over 3 turns gave a 0.15 radius against the transformer's
+    #  0.21, so the tank inductor read as the fine one.  1.26 over 3
+    #  is 0.21, and it still clears C_r at 8.70 and L_m at 11.30.
+    hcoil(ax, XLR, YT, 1.26, 3)
     txt(ax, XLR, YT + 0.66, 'L$_r$', size=11.5)
-    wire(ax, [(XLR + 0.45, YT), (XP, YT)])
+    wire(ax, [(XLR + 0.63, YT), (XP, YT)])
     wire(ax, [(XR, YB), (XP, YB)])
 
     # L_m across the winding, bulging away from the transformer
-    coil(ax, XLM, YB + 0.24, YT - 0.24, n=5, side=-1)
+    #  1.32 of height: five turns made a 0.132 radius, three make 0.22,
+    #  which is the transformer's.
+    coil(ax, XLM, YB + 0.24, YT - 0.24, n=3, side=-1)
     wire(ax, [(XLM, YT), (XLM, YT - 0.24)])
     wire(ax, [(XLM, YB + 0.24), (XLM, YB)])
     dot(ax, XLM, YT)
@@ -147,15 +158,21 @@ def _skeleton(ax, states, parts=True):
     txt(ax, XLM - 0.50, YMID, 'L$_m$', size=11.5, ha='right')
 
     # ---- the transformer, centre-tapped secondary
+    #  The core spans the WINDINGS.  At +-0.38 it ran a fifth of its own
+    #  length past both coils and the symbol read as two long bars with a
+    #  winding beside them; 0.10 past the terminals is about half a turn
+    #  radius clear of the outermost loop.
     for xx in (XTR - 0.13, XTR + 0.13):
-        ax.plot([xx, xx], [YB - 0.38, YT + 0.38], color=GREY, lw=2.4, zorder=3)
+        ax.plot([xx, xx], [YB - 0.10, YT + 0.10], color=GREY, lw=2.4, zorder=3)
     coil(ax, XP, YB + LEAD, YT - LEAD, n=NP_T_N, side=+1)
     wire(ax, [(XP, YB), (XP, YB + LEAD)])
     wire(ax, [(XP, YT - LEAD), (XP, YT)])
-    # A dot beside a coil has to clear the widest loop AND stay nearer its
-    # own coil than the next one; there is no such spot here.  Above the
-    # terminal there is, and it is unambiguous.
-    dot(ax, XP - 0.17, YT - 0.17, NAVY, 4.8)
+    # Against its own coil, on the side the turns bulge towards.  There is
+    # room for that now the turns stand a clear radius off the core.
+    #  0.30 out and 0.10 down.  At that height the top loop reaches 0.12
+    #  out and the core bar is 0.49 out, so the dot clears both by about
+    #  its own radius - which is the whole reason the gap is 0.62.
+    dot(ax, XP + 0.30, YT - 0.10, NAVY, 4.8)
     txt(ax, XP, YB - 0.70, 'N$_p$', size=11.5)
 
     coil(ax, XS, YMID + LEAD, YT - LEAD, n=NS_T_N, side=-1)
@@ -166,11 +183,20 @@ def _skeleton(ax, states, parts=True):
     # Both halves are drawn as separate windings, so both carry a polarity
     # dot.  They are one continuous winding in the same sense, so N_s2's
     # dot is at ITS start, which is the tap: the finish of N_s1.  That is
-    # what makes the lower end conduct while the upper one blocks.  The
-    # tap's own junction dot is on the lead line and sits clear of it.
-    dot(ax, XS + 0.17, YT - 0.17, NAVY, 4.8)
-    dot(ax, XS + 0.17, YMID - 0.20, NAVY, 4.8)
-    dot(ax, XS, YMID)
+    # what makes the lower end conduct while the upper one blocks.
+    #
+    # The dots sit against their own coil, on the side the turns bulge
+    # towards, not out beyond the lead line where they lie on the circuit
+    # wire and say nothing about which winding they belong to.
+    #
+    # NO junction dot at the tap.  Three conductors do meet there, so the
+    # convention asks for one, and this drawing leaves it out at the
+    # reader's request: stacked under N_s2's polarity dot the two read as
+    # one smeared pair.  The tap is unambiguous without it - the lead
+    # leaves a corner where two coils end, and nothing else passes through.
+    dot(ax, XS - 0.30, YT - 0.10, NAVY, 4.8)
+    dot(ax, XS - 0.30, YMID - 0.10, NAVY, 4.8)
+    nodot(ax, XS, YMID)
     txt(ax, XS + 0.42, (YMID + YT) / 2.0, 'N$_{s1}$', size=11, ha='left')
     txt(ax, XS + 0.42, (YMID + YB) / 2.0, 'N$_{s2}$', size=11, ha='left')
 
@@ -236,11 +262,11 @@ HOPS = [(XR, YT), (XCT, YT)]
 #  Every winding the current can run through, as (x, ylo, yhi, turns, side)
 #  for the vertical ones and (x, y, span, turns) for L_r.  A segment that
 #  covers one of these is replaced by the winding's own polyline.
-VCOILS = [(XLM, YB + 0.24, YT - 0.24, 5, -1),
+VCOILS = [(XLM, YB + 0.24, YT - 0.24, 3, -1),
           (XP, YB + LEAD, YT - LEAD, NP_T_N, +1),
           (XS, YMID + LEAD, YT - LEAD, NS_T_N, -1),
           (XS, YB + LEAD, YMID - LEAD, NS_T_N, -1)]
-HCOILS = [(XLR, YT, 0.90, 3)]
+HCOILS = [(XLR, YT, 1.26, 3)]
 register(HOPS, VCOILS, HCOILS)
 
 

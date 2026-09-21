@@ -1662,6 +1662,10 @@ def an_flyback_llc(save, foot):
     S.wire(ax, [t1['p_top'], (XP_F, YT), (0.80, YT)])
     _batt(ax, 0.80, YT, YB, 'V$_{in}$')
     S.wire(ax, [(0.80, YB), (XP_F, YB)])
+    #  The flyback had no ground at all while the LLC beside it had one,
+    #  so the two panels disagreed about what the return rail was.  Same
+    #  symbol, same place on both: under the source's negative terminal.
+    S.gnd(ax, 0.80, YB, lead=0.34)
     X.mosfet(ax, XP_F, -0.25, 'S', state='plain', h=1.30, gate=0.95,
              body=False, coss=False, size=11)
     S.wire(ax, [t1['p_bot'], (XP_F, 0.40)])
@@ -1688,7 +1692,9 @@ def an_flyback_llc(save, foot):
     S.dot(ax2, XRAIL, YT)
     S.label(ax2, XRAIL + 0.45, YT + 0.52, 'V$_{in}$', size=11, ha='left')
     S.wire(ax2, [(XRAIL, YB), (XP_L, YB)])
-    S.gnd(ax2, XRAIL, YB)
+    #  Below the rail, not on it.  Drawn at the rail's own height the
+    #  widest bar lies along the wire and the symbol reads as a blob.
+    S.gnd(ax2, XRAIL, YB, lead=0.34)
     X.mosfet(ax2, XLEG, 2.75, 'S$_1$', state='plain', h=1.30, gate=0.95,
              body=False, coss=False, size=11)
     X.mosfet(ax2, XLEG, 0.55, 'S$_2$', state='plain', h=1.30, gate=0.95,

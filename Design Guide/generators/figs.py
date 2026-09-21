@@ -129,13 +129,27 @@ def note(ax, x, y, text, color=NAVY, size=10.5, ha='left', va='center',
                        bbox=bb, zorder=6, **kw)
 
 
-def save(fig, name):
+PAD_IN = 0.14           # what savefig pads the tight box with, below
+
+
+def finish(fig):
+    """Everything save() does to a figure before it writes the file.
+
+    Split out because figcheck has to read the SAME figure the reader
+    gets - halos applied, footer in place - and an_locate has to know
+    the box savefig will actually crop to.  Two callers reproducing
+    twelve lines of this by hand is how the checker and the document
+    drift apart.
+
+    Returns whatever text the halo had to rescue, for the report.
+    """
+    rescued = []
     #  Anything written over the drawing gets a white halo, decided by
     #  looking at what was actually drawn rather than by remembering at
     #  each call site.  figcheck.py uses the same test to report them.
     try:
         import figcheck
-        figcheck.shield(fig)
+        rescued = figcheck.shield(fig)
     except Exception:                                   # noqa: BLE001
         pass
     t = getattr(fig, '_foot', None)
@@ -150,8 +164,60 @@ def save(fig, name):
                  + [x.get_window_extent(r).y0 for x in fig.texts
                     if x.get_visible() and x.get_text().strip()])
         y = lo / fig.bbox.height - 0.055
-        fig.text(0.5, y, t, ha='center', va='top', fontsize=10.5, color=GREY,
-                 wrap=True)
+        ft = fig.text(0.5, y, t, ha='center', va='top', fontsize=10.5,
+                      color=GREY, wrap=True)
+        #  It hangs below the canvas on purpose - the tight crop grows to
+        #  take it in.  Tagged so figcheck does not report the caption for
+        #  leaving a frame the saved file does not have.
+        ft._is_foot = True
+        fig._foot = None            # finish() twice must not stack captions
+    return rescued
+
+
+def saved_box(fig):
+    """the region savefig will crop to, in display pixels
+
+    bbox_inches='tight' means the PNG is NOT the figure canvas, so a
+    position measured against the canvas lands somewhere else in the
+    file - which is exactly how an_locate's first rings came out an inch
+    low.  This is the one place that arithmetic is written down.
+    """
+    fig.canvas.draw()
+    r = fig.canvas.get_renderer()
+    b = fig.get_tightbbox(r).padded(PAD_IN)          # inches
+    d = fig.dpi
+    return (b.x0 * d, b.y0 * d, b.x1 * d, b.y1 * d)
+
+
+class HangulFontError(RuntimeError):
+    """This machine cannot draw the Korean set - see _hangul_guard."""
+
+
+def _hangul_guard(fig, name):
+    """Refuse to write a Korean figure on a machine with no Korean font.
+
+    This container has none, so every Hangul glyph comes out as a dummy
+    box - and the file still writes, overwriting a good PNG made on a PC
+    that does have one.  It happened: one regenerated label turned the
+    whole Korean loop-plot into tofu and only a git status caught it.
+    Failing here costs a rebuild; not failing costs a figure.
+    """
+    if _KR:
+        return
+    han = []
+    for t in [x for a in fig.axes for x in a.texts] + list(fig.texts):
+        s = t.get_text() or ''
+        if any('\uac00' <= c <= '\ud7a3' for c in s):
+            han.append(s[:24])
+    if han:
+        raise HangulFontError(
+            u'%s: 한글이 들어간 그림인데 이 PC 에 한글 글꼴이 없다 - '
+            u'쓰면 네모로 덮어쓴다.  %s' % (name, ' / '.join(han[:3])))
+
+
+def save(fig, name):
+    finish(fig)
+    _hangul_guard(fig, name)
     d = os.path.join(OUT, 'an') if PLAIN else OUT
     if not os.path.isdir(d):
         os.makedirs(d)
@@ -734,7 +800,14 @@ def an_tank_current():
 
 
 def _loop_bode(T, name):
-    """open-loop gain and phase margin - T carries every visible string"""
+    """open-loop gain and 180 deg + arg T - T carries every visible string
+
+    The lower frame is NOT phase margin except at one frequency.  What is
+    plotted is the distance from -180 deg, and that distance is the
+    margin only where |T| crosses 0 dB; everywhere else it is a number
+    with no stability meaning.  The sheet's own pane carries the same
+    warning for the same curve.
+    """
     import snapshot as S
     v, _ = S.read_sheet(S.SM)
     g = lambda k: v[k][0]
@@ -917,10 +990,10 @@ _MORPH_EN = {
 }
 
 _LOOP_BODE_KO = {
-    'ylab2':  '위상 여유  [deg]',
+    'ylab2':  '180° + arg T  [deg]',
     'xlab':   '주파수 [Hz]',
     'fc':     '교차 %.1f Hz',
-    'pm':     '$\\Phi_M$ = %.1f°\n합격선 45°',
+    'pm':     '$\\Phi_M$ = %.1f°  (0 dB 에서)\n합격선 45°',
     'fl2':    '$2f_l$ = %d Hz\n여기 이득이 3차 고조파를 정한다',
     'ask':    '루프는 $2f_l$ 리플을 따라가면 안 된다 — 그래서 %.0f Hz 에서 교차한다',
     'foot':   '선정 보상망의 개루프 이득. 교차를 더 올리면 루프가 출력 리플을 좇아 '
@@ -928,10 +1001,10 @@ _LOOP_BODE_KO = {
 }
 
 _LOOP_BODE_EN = {
-    'ylab2':  'phase margin  [deg]',
+    'ylab2':  '180° + arg T  [deg]',
     'xlab':   'frequency  [Hz]',
     'fc':     'crossover %.1f Hz',
-    'pm':     '$\\Phi_M$ = %.1f°\nlimit 45°',
+    'pm':     '$\\Phi_M$ = %.1f°  at 0 dB\nlimit 45°',
     'fl2':    '$2f_l$ = %d Hz\nthe gain here sets the 3rd harmonic',
     'ask':    'The loop must NOT follow the $2f_l$ ripple - hence a %.0f Hz crossover',
     'foot':   'Open-loop gain of the selected compensation network. Raising '
@@ -1283,8 +1356,22 @@ if __name__ == '__main__':
         PLAIN = True
     want = argv or sorted(FIGS)
     print('figures -> %s' % OUT)
+    #  A machine without a Korean font skips the Korean figures rather
+    #  than writing boxes over them, and says so at the end.  Skipping
+    #  quietly is how a bad PNG gets committed; stopping the whole sweep
+    #  at the first one is how the English set stops being rebuildable.
+    skipped = []
     for k in want:
         if k not in FIGS:
             raise SystemExit('unknown figure %s  (have: %s)'
                              % (k, ' '.join(sorted(FIGS))))
-        FIGS[k]()
+        try:
+            FIGS[k]()
+        except HangulFontError as e:
+            skipped.append(str(e))
+    if skipped:
+        print('\n%d 장을 건너뛰었다 - 한글 글꼴이 있는 PC 에서 다시 그릴 것:'
+              % len(skipped))
+        for m in skipped:
+            print('  ' + m)
+        sys.exit(2)

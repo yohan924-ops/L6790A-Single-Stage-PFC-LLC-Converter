@@ -100,7 +100,13 @@ def ind(ax, x, y, t=None, horiz=True, s=0.66, n=None, color=NAVY, tdy=None):
     #  whose two ends land on the same pixel, and the wiring check then
     #  counts three arms at one point and asks for a junction dot that
     #  means nothing.  Below that, the coil's own ends ARE the terminals.
-    if s - w < 0.04 * s:
+    #
+    #  Measured against the TURN RADIUS, not against s.  A fraction of s
+    #  scales with the inductor and the pixel does not: raising the turn
+    #  radius by half left a 0.042 lead on a 1.35 inductor, which is four
+    #  hundredths of s - over the old threshold - and one pixel on paper.
+    #  Half a turn radius is the shortest lead that is visibly a lead.
+    if (s - w) / 2.0 < 0.5 * r:
         w = s
     if horiz:
         X.hcoil(ax, x, y, s=w, n=n, color=color)
@@ -208,10 +214,11 @@ def sqsrc(ax, x, y, t=None, r=0.38, color=NAVY, tdy=None):
 
 
 def xfmr(ax, x, y, hp=1.15, hs=1.15, gap=0.30, lp=None, ls=None, dots=True,
-         ct=False, np_t=None, ns_t=None, s_dot='top'):
+         ct=False, np_t=None, ns_t=None, s_dot='top', tap_dot=True):
     """Two windings and a core; the kit draws it.  -> dict of terminals."""
     return X.xfmr(ax, x, y, hp=hp, hs=hs, np_t=np_t, ns_t=ns_t, ct=ct,
-                  gap=gap, lp=lp, ls=ls, dots=dots, size=10, s_dot=s_dot)
+                  gap=gap, lp=lp, ls=ls, dots=dots, size=10, s_dot=s_dot,
+                  tap_dot=tap_dot)
 
 
 def _coil(ax, x, y, h, side, n=4):
@@ -219,7 +226,22 @@ def _coil(ax, x, y, h, side, n=4):
     X.coil(ax, x, y - h / 2, y + h / 2, n=n, side=side)
 
 
-def gnd(ax, x, y, s=0.22, color=NAVY):
+def gnd(ax, x, y, s=None, color=NAVY, lead=0.0):
+    """Ground.  (x, y) is the point it CONNECTS to, not the first bar.
+
+    With lead 0 the widest bar lands on that point, so a ground hung on a
+    rail is drawn straight across the rail and reads as a blob on the
+    wire.  Give it a lead and the bars stand clear.  The lead is drawn at
+    the symbol's own zorder, so the wiring check reads it as part of the
+    symbol rather than as a wire ending at nothing.
+    """
+    #  Sized like every other symbol, so a ground is the same size on
+    #  paper wherever it is drawn - it was the one symbol still fixed in
+    #  data units, and in a wide panel it came out as three short ticks.
+    s = 0.22 * X.scale(ax) if s is None else s
+    if lead:
+        ax.plot([x, x], [y, y - lead], color=color, lw=1.8, zorder=3)
+    y -= lead
     for k, w in enumerate((1.0, 0.62, 0.28)):
         ax.plot([x - s * w, x + s * w], [y - k * s * 0.34] * 2, color=color,
                 lw=1.8, zorder=3)

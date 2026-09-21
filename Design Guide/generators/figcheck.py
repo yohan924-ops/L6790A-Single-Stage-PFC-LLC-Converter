@@ -16,7 +16,7 @@ What it reports, per figure:
             leader lines, so a line that STARTS or ENDS inside the box is
             not counted.
   text-text two text boxes overlapping each other.
-  no-dot / open-end / stub / crossing / off-grid
+  no-dot / nodot / open-end / stub / crossing / off-grid
             the wiring itself, read back off the axes - see topology().
   clipped   a patch drawn past its own axes, so the reader sees its label
             and not the box.
@@ -59,6 +59,8 @@ def _boxes(fig):
             except Exception:
                 pass
     for t in fig.texts:
+        if getattr(t, '_is_foot', False):
+            continue               # the caption, laid out by save() itself
         if t.get_visible() and t.get_text().strip():
             try:
                 out.append((t, None, Text.get_window_extent(t, r)))
@@ -322,6 +324,41 @@ def windings(fig, name, floor=1.5):
     return bad
 
 
+#  ---------------------------------------------------------------- where
+#  A finding printed as one line tells the reader a figure is wrong and
+#  not where to look.  ITEMS carries, for every individual offender, the
+#  box it occupies as a fraction of its own figure, so an_locate.py can
+#  put that box back on the printed page and ring it.  Fractions, because
+#  the figure is a PNG by the time the page has it and the only thing
+#  that survives the trip is relative position.
+ITEMS = []
+
+
+def _frac(fig, b):
+    """a display-pixel box as fractions of the SAVED image, y from the top
+
+    Of the saved image and not of the figure canvas, because savefig
+    crops to the tight box: the two differ by an inch at the top of a
+    tall figure, and a ring drawn an inch out is worse than no ring.
+    """
+    import figs
+    #  Cached on the figure: saved_box draws the whole canvas, and one
+    #  figure here has seventy-eight offenders.  Measuring it once per
+    #  text turned a four minute sweep into a ten minute one.
+    box = getattr(fig, '_saved_box', None)
+    if box is None:
+        box = fig._saved_box = figs.saved_box(fig)
+    x0, y0, x1, y1 = box
+    W, H = max(x1 - x0, 1e-9), max(y1 - y0, 1e-9)
+    return ((b.x0 - x0) / W, (y1 - b.y1) / H,
+            (b.x1 - x0) / W, (y1 - b.y0) / H)
+
+
+def _item(kind, name, fig, b, note):
+    ITEMS.append({'kind': kind, 'fig': name, 'box': _frac(fig, b),
+                  'note': note})
+
+
 def tiny(fig, name, floor=6.5):
     """Text that will be unreadable once the page shrinks the figure.
 
@@ -346,6 +383,8 @@ def tiny(fig, name, floor=6.5):
             continue
         if s < floor:
             small.append((s, _short(t)))
+            _item('tiny', name, fig, b,
+                  '%.1f pt on the page: %s' % (s, _short(t)))
     if not small:
         return []
     small.sort()
@@ -575,8 +614,16 @@ def topology(fig, tol=2.0):
         corners = [(i, q) for i, pl in enumerate(wires) for q in pl[1:-1]]
         ssegs = [(a, b) for pl in syms for a, b in zip(pl[:-1], pl[1:])]
 
+        #  Junctions the drawing declares undotted on purpose - see
+        #  schemx.nodot.  Listed below, never counted.
+        declared = [np.asarray(T(np.array([q]))[0], float)
+                    for q in getattr(ax, '_nodots', [])]
+
         def near_dot(p):
             return any(np.hypot(*(p - d)) <= tol for d in dots)
+
+        def declared_nodot(p):
+            return any(np.hypot(*(p - d)) <= tol * 3 for d in declared)
 
         def on_symbol(p):
             return any(_seg_dist(p, a, b)[0] <= tol for a, b in ssegs)
@@ -610,8 +657,8 @@ def topology(fig, tol=2.0):
                 junction_pieces.update(thru)
                 if not near_dot(p) and not any(
                         np.hypot(*(p - q)) <= tol for q in junctions[:-1]):
-                    bad.append(('no-dot', 'junction at %s has no dot'
-                                % where(p)))
+                    bad.append(('nodot' if declared_nodot(p) else 'no-dot',
+                                'junction at %s has no dot' % where(p)))
         for i, p in ends:
             if arms(p) >= 2 or through(p) or on_symbol(p) or near_dot(p):
                 continue
@@ -703,7 +750,11 @@ def run(names=None, cropdir=None):
         #  has to run on the same thing the reader gets.  Checking before
         #  the shield reports twenty faults that the saved figure does not
         #  have, which is worse than not checking.
-        rescued[nm] = shield(fig)
+        #  finish() is what save() does to a figure before writing it:
+        #  halos, and the footer caption.  Checking anything else reports
+        #  faults the reader's copy does not have, and measures positions
+        #  against a canvas the reader's copy was cropped out of.
+        rescued[nm] = figs.finish(fig)
         found[nm] = check(fig, nm)
         plt.close(fig)
 
@@ -732,7 +783,7 @@ def run(names=None, cropdir=None):
         b = found[k]
         if not b:
             continue
-        total += sum(1 for kind, _ in b if kind != 'stub')
+        total += sum(1 for kind, _ in b if kind not in ('stub', 'nodot'))
         print('%s' % k)
         seen = set()
         for kind, msg in b:
