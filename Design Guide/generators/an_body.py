@@ -669,7 +669,9 @@ def build(A):
     add(p('So why does A<sub>e</sub> come into it at all? Because Faraday\'s '
           'law does not ask whether anything is being stored:'))
     add(eq(r'B(t)\;=\;\frac{1}{N\,A_{e}}\int v\,dt', key='faraday'))
-    add(p('A winding with a voltage across it makes flux; flux in a finite '
+    add(p('with v the voltage across the winding, N its turns and '
+          'A<sub>e</sub> the effective area of the core it is wound on. '
+          'A winding with a voltage across it makes flux; flux in a finite '
           'area is a flux density; and ferrite saturates at a flux density. '
           'That is equally true of a flyback, an LLC, a mains transformer '
           'and a plain choke. <b>What differs is only the input to the '
@@ -1536,7 +1538,7 @@ def build(A):
     add(p('<b>Which side of resonance the converter runs on is not a '
           'separate choice. The turns ratio decides it.</b> The demand is '
           'M<sub>req</sub> = '
-          '2nV<sub>o,eff</sub>/(&radic;2&nbsp;V<sub>eq</sub>), so a larger n '
+          '2n&thinsp;V<sub>o,eff</sub>/(&radic;2&nbsp;V<sub>eq</sub>), so a larger n '
           'asks for more gain, and more gain means further below resonance. '
           'Two candidate transformers on the same tank can end up on opposite '
           'sides of f<sub>r</sub> at the same mains voltage.'))
@@ -1682,8 +1684,9 @@ def build(A):
           'it, and a part that meets it can still miss the tank. Also state '
           'the turns as numbers: with one or two secondary turns, the '
           'inductance of that winding is dominated by the lead-out loop, '
-          'so &radic;(L<sub>1</sub>/L<sub>2</sub>) does not give the turns '
-          'ratio.'))
+          'so &radic;(L<sub>1</sub>/L<sub>2</sub>) &mdash; the open-circuit '
+          'inductance measured at the primary and at one secondary &mdash; '
+          'does not give the turns ratio.'))
 
     add(h2('Peak flux is set by the secondary, not the primary'))
     add(p('Mark <b>6</b> of Figure&nbsp;%(f)s: the secondary winding voltage '
@@ -1785,7 +1788,9 @@ def build(A):
            r'\qquad\qquad '
            r'g\;\approx\;\frac{\mu_{0}\,A_{e}}{A_{L}}', key='ALgap'))
     add(p('with N<sub>x</sub> the number of units the assembly is built '
-          'from. The second expression is only an estimate: it assumes the '
+          'from, &mu;<sub>0</sub> the permeability of free space and g the '
+          'total gap in the centre leg. The second expression is only an '
+          'estimate: it assumes the '
           'gap carries the whole reluctance and it ignores fringing, which '
           'always makes the real gap larger than it predicts. <b>Specify '
           'A<sub>L</sub>, or better L<sub>open</sub> itself, and leave the '
@@ -1824,8 +1829,11 @@ def build(A):
     add(p('At the switching frequency current does not fill a conductor. It '
           'crowds into a surface layer of depth'))
     add(eq(r'\delta=\sqrt{\frac{\rho}{\pi f\mu_{0}}}', key='skin'))
-    add(p('which for a series resonance in the 100 to 200&nbsp;kHz range '
-          'is about <b>0.2&nbsp;mm</b> in copper at 100&nbsp;&deg;C. A '
+    add(p('with &rho; the resistivity of copper at the temperature the '
+          'winding runs at and f the frequency it carries, which for a '
+          'winding in this converter is f<sub>r</sub>. That depth, for a '
+          'series resonance in the 100 to 200&nbsp;kHz range '
+          'is about <b>0.2&nbsp;mm</b> at 100&nbsp;&deg;C. A '
           'conductor thicker '
           'than about 2&delta; carries no more current than one of 2&delta; '
           '&mdash; it only adds weight. Worse, the field from the '
@@ -3530,7 +3538,7 @@ def build(A):
                  e=ER('VFB'))))
     add(eqagain('Gplant'))
     add(calc(r'G_{o}=\frac{%.1f\ \mathrm{W}}{%.1f\ \mathrm{V}\times %.3f\ \mathrm{V}'
-             r'\times %.1f\ \mathrm{mF}}=\mathbf{%.1f\ rad/s},\qquad'
+             r'\times %.1f\ \mathrm{mF}}=\mathbf{%.1f\ rad/s},\qquad '
              r'f_{cto}=\frac{%.1f}{2\pi}=%.1f\ \mathrm{Hz}'
              % (V['Pout'], V['Vout'], V['VFBv'], V['Cout'], V['Go'], V['Go'],
                 V['fcto'])))
@@ -4216,70 +4224,153 @@ def build(A):
     add(p('The symbols used in this note. The controller&rsquo;s own '
           'electrical parameters are in its datasheet.'))
     _SYM = [
-        ('A<sub>e</sub>, A<sub>min</sub>', 'core effective area, and its narrowest section'),
-        ('A<sub>L</sub>', 'inductance factor of the gapped core (inductance per turn squared)'),
-        ('A<sub>N</sub>', 'winding window area of the coil former'),
-        ('B<sub>pk</sub>, B<sub>max</sub>', 'peak flux density, and the ceiling it is designed to'),
+        ('<b>The tank and its gain</b>', ''),
         ('C<sub>r</sub>, L<sub>r</sub>, L<sub>m</sub>', 'resonant capacitor, series inductance and magnetising inductance of the tank model'),
-        ('C<sub>out</sub>, C<sub>in</sub>', 'output capacitor bank, input film capacitor'),
-        ('C<sub>o(tr)</sub>', 'time-related output capacitance of a MOSFET (charge equivalent)'),
-        ('C<sub>T</sub>, R<sub>T</sub>', 'oscillator timing capacitor and resistor'),
-        ('C<sub>Fo</sub>, C<sub>F</sub>, R<sub>F</sub>, C<sub>fx</sub>', 'compensator parts: the two capacitors and the resistor of the TL431 network, and the FB-pin capacitor'),
-        ('CTR<sub>s</sub>, CTR<sub>m</sub>', 'optocoupler current transfer ratio at the steady-state and at the maximum LED current'),
-        ('D<sub>3</sub>', 'third harmonic on the input current, as a fraction of the fundamental'),
-        ('EA<sub>o</sub>', 'gain constant of the compensator, in rad/s'),
-        ('d', 'conduction ratio f<sub>sw</sub>/f<sub>r</sub> of the secondary, 1 above resonance'),
-        ('f<sub>l</sub>', 'line frequency; f<sub>l,min</sub> its lowest value'),
+        ('L<sub>p</sub>', 'L<sub>r</sub> + L<sub>m</sub>, the inductance the tank shows at no load'),
+        ('Z<sub>0</sub>, Z<sub>0,design</sub>', 'characteristic impedance &radic;(L<sub>r</sub>/C<sub>r</sub>); the value the tank is designed to, R<sub>ac</sub>Q<sub>ZVS</sub>'),
+        ('Z<sub>in</sub>', 'input impedance the bridge drives; arg Z<sub>in</sub> = 0 is the capacitive boundary'),
         ('f<sub>r</sub>, f<sub>o</sub>', 'series resonance, and the lower resonance with L<sub>m</sub> included'),
         ('f<sub>sw</sub>, f<sub>n</sub>', 'switching frequency, and the same normalised to f<sub>r</sub>'),
-        ('f<sub>sw,max</sub>', 'the specified maximum switching frequency, an input to &lambda;'),
-        ('f<sub>Min</sub>, f<sub>Max</sub>', 'oscillator floor and ceiling set by R<sub>T</sub>, C<sub>T</sub> and T<sub>idle</sub>'),
-        ('f<sub>cross</sub>, &Phi;<sub>M</sub>, GM', 'loop crossover frequency, phase margin, gain margin'),
-        ('f<sub>z</sub>, f<sub>p</sub>, f<sub>px</sub>, f<sub>180</sub>', 'compensator zero, pole and high-frequency pole; the frequency where arg T = &minus;180&deg;'),
-        ('G<sub>o</sub>', 'gain of the plant integrator, in rad/s'),
-        ('&Gamma;<sub>v</sub>, &alpha;<sub>v</sub>', 'input-voltage margin factor and weighting constant of the K-factor method'),
-        ('I<sub>Lr,pk</sub>', 'composite tank current peak: reflected load plus magnetising'),
-        ('I<sub>trafo,pk</sub>', 'peak of the reflected load current alone'),
-        ('i<sub>Lm</sub>, i<sub>&mu;</sub>', 'magnetising current of the tank model, and of the physical transformer'),
-        ('I<sub>sec,pk</sub>', 'peak secondary current per rectifier leg'),
-        ('I<sub>eq</sub>, I<sub>sat</sub>', 'open-circuit current that reproduces the operating flux; the DC-overlap test current'),
-        ('I<sub>OCP1</sub>, I<sub>OCP2</sub>', 'over-current thresholds set by R<sub>CS</sub>'),
-        ('J', 'current density the copper is sized to'),
-        ('k', 'a verification margin, what the design has over what it needs'),
-        ('k<sub>T</sub>', 'R<sub>DS(on)</sub> multiplier from 25 &deg;C to T<sub>j,max</sub>'),
-        ('K<sub>v</sub>', 'K factor of the Type II compensator'),
-        ('L<sub>open</sub>, L<sub>short</sub>', 'primary inductance with the secondaries open, and shorted'),
-        ('L<sub>&mu;</sub>, L<sub>L1</sub>, L<sub>L2</sub>', 'physical magnetising inductance and the two leakage inductances'),
+        ('f<sub>sw,max</sub>, f<sub>sw,min</sub>', 'the specified maximum and minimum switching frequency; f<sub>sw,max</sub> is an input to &lambda;'),
+        ('T<sub>sw</sub>, T<sub>r</sub>', 'switching period 1/f<sub>sw</sub>, and the resonant period 1/f<sub>r</sub>'),
         ('&lambda;, m', 'L<sub>r</sub>/L<sub>m</sub>, and (L<sub>r</sub>+L<sub>m</sub>)/L<sub>r</sub> = 1 + 1/&lambda;'),
-        ('&lambda;<sub>act</sub>', 'the &lambda; of the selected parts'),
-        ('M', 'tank gain, n V<sub>o,eff</sub> over the drive'),
-        ('M<sub>&infin;</sub>', 'no-load gain asymptote 1/(1+&lambda;)'),
-        ('n, n<sub>T</sub>', 'equivalent-model turns ratio, and the physical (wound) turns ratio'),
-        ('N<sub>p</sub>, N<sub>s</sub>, N<sub>x</sub>', 'primary turns, secondary turns per winding, number of units in the assembly'),
-        ('N<sub>rect</sub>', 'devices in the secondary conduction path: 1 centre tap, 2 full bridge'),
-        ('P<sub>in</sub>, P<sub>in,LLC</sub>, P<sub>out</sub>', 'input power, power into the tank, output power'),
+        ('&lambda;<sub>act</sub>, &lambda;<sub>req</sub>', 'the &lambda; of the selected parts, and the &lambda; the design asked for'),
+        ('&lambda;<sub>1</sub>, &lambda;<sub>2</sub>, &lambda;<sub>TD</sub>, &lambda;<sub>3</sub>', 'the four candidate &lambda;: minimum gain, the same with the frequency ceiling, the dead-time condition, and the practical floor; the smallest wins'),
         ('Q, Q<sub>pk</sub>, Q<sub>ZVS</sub>', 'quality factor Z<sub>0</sub>/R<sub>ac</sub>; its value at the line peak; the cap the ZVS condition puts on it'),
         ('R<sub>ac</sub>', 'the rectifier and load as one resistance at the fundamental'),
-        ('R<sub>BM</sub>, R<sub>CFG</sub>, R<sub>CS</sub>', 'burst-mode, configuration and current-sense resistors'),
-        ('R<sub>I</sub>, R<sub>O</sub>', 'output divider of the compensator'),
-        ('R<sub>B</sub>, R<sub>P</sub>, R<sub>FB</sub>', 'optocoupler LED resistor, TL431 bias resistor, and the pull-up inside the FB pin'),
-        ('R<sub>ZCD,H</sub>, R<sub>ZCD,L</sub>', 'the ZCD divider'),
-        ('t<sub>D</sub>, T<sub>ZC</sub>', 'bridge dead time, and the time the tank current takes to reach zero after the transition'),
-        ('T<sub>hold</sub>, V<sub>o,min</sub>', 'hold-up time, and the lowest output allowed at its end'),
-        ('T<sub>idle</sub>', 'oscillator idle time'),
-        ('&theta;', 'line phase angle'),
-        ('V<sub>ac,eq</sub>', 'equivalent input voltage the tank sees after morphing'),
-        ('V<sub>o,eff</sub>', 'V<sub>out</sub> + N<sub>rect</sub> V<sub>f</sub>'),
+        ('M', 'tank gain, n V<sub>o,eff</sub> over the drive'),
+        ('M<sub>req</sub>, M<sub>pk</sub>', 'the gain the operating point demands, and its value at the line peak'),
+        ('M<sub>min</sub>, M<sub>max</sub>', 'the gain range the tank must cover, from the two equivalent-input corners'),
+        ('M<sub>low</sub>, M<sub>high</sub>', 'the required gain at the low and the high equivalent corner'),
+        ('M<sub>no load</sub>, M<sub>&infin;</sub>', 'the gain curve at Q = 0, and the floor 1/(1+&lambda;) it flattens onto'),
+        ('M<sub>Z</sub>', 'the locus of the gain peaks, which is the capacitive/inductive boundary'),
+        ('x, u, q', 'the substitutions that turn the gain equation into a cubic: 1/f<sub>n</sub>&sup2;, sin&sup2;&thinsp;&theta;, and Q<sub>pk</sub>&sup2;u&sup2;'),
+        ('d', 'conduction ratio f<sub>sw</sub>/f<sub>r</sub> of the secondary, 1 above resonance'),
+        ('n, n<sub>T</sub>', 'equivalent-model turns ratio, and the physical (wound) turns ratio'),
+        ('N<sub>rect</sub>', 'devices in the secondary conduction path: 1 centre tap, 2 full bridge'),
+        ('V<sub>drive</sub>', 'the amplitude the bridge applies to the tank: the rectified mains in full bridge, half of it in half bridge'),
         ('V<sub>refl</sub>', 'reflected output voltage n V<sub>o,eff</sub>'),
-        ('V<sub>OVP1</sub>, V<sub>OVP2</sub>', 'the two over-voltage thresholds'),
-        ('V<sub>BO</sub>', 'brown-out threshold'),
-        ('&Delta;v, &Delta;v<sub>pp</sub>', 'allowed and achieved 2f<sub>l</sub> output ripple'),
-        ('Z<sub>0</sub>', 'characteristic impedance &radic;(L<sub>r</sub>/C<sub>r</sub>)'),
-        ('&delta;', 'skin depth in copper at f<sub>r</sub>'),
-        ('V<sub>FB</sub>', 'feedback voltage above its 0.5 V offset at rated power'),
-        ('V<sub>R</sub>, V<sub>Z</sub>, V<sub>Fo</sub>', 'TL431 reference, the regulated rail that feeds the LED, and the LED forward drop'),
-        ('&Delta;V<sub>loop</sub>, &Delta;V<sub>FB</sub>', '2f<sub>l</sub> output ripple seen by the loop, and the ripple it leaves on the FB pin'),
+        ('V<sub>o,eff</sub>', 'V<sub>out</sub> + N<sub>rect</sub> V<sub>f</sub>'),
+        ('V<sub>f</sub>', 'forward drop of one secondary rectifier'),
+
+        ('<b>The mains, and power factor</b>', ''),
+        ('&theta;', 'line phase angle'),
+        ('f<sub>l</sub>, f<sub>l,min</sub>, &omega;<sub>l</sub>', 'line frequency, its lowest specified value, and 2&pi;f<sub>l</sub>'),
+        ('v<sub>ac</sub>, V<sub>ac</sub>, I<sub>ac</sub>', 'the instantaneous mains voltage, and the rms voltage and current drawn'),
+        ('V<sub>rms</sub>, I<sub>rms</sub>, I<sub>1,rms</sub>', 'rms input voltage and current, and the rms of the current&rsquo;s fundamental alone'),
+        ('p<sub>in</sub>(t), P', 'instantaneous and average input power'),
+        ('PF, THD', 'power factor, and total harmonic distortion of the input current'),
+        ('&phi;<sub>1</sub>, D', 'displacement angle of the fundamental, and the distortion factor I<sub>1,rms</sub>/I<sub>rms</sub>'),
+        ('D<sub>3</sub>', 'third harmonic on the input current, as a fraction of the fundamental'),
+        ('V<sub>in</sub>, V<sub>pk</sub>', 'the rail the bridge works from, and the peak of the mains'),
+        ('V<sub>ac,eq</sub>, V<sub>eq</sub>, V<sub>ac,eq,low</sub>, V<sub>ac,eq,high</sub>', 'equivalent input voltage the tank sees after morphing, and its value at the two morphing thresholds'),
+        ('V<sub>eq,min</sub>, V<sub>eq,max</sub>', 'the two ends of that equivalent range, at the two morphing thresholds'),
+
+        ('<b>Power and loss</b>', ''),
+        ('P<sub>in</sub>, P<sub>out</sub>', 'input power, output power'),
+        ('P<sub>LLC</sub>, P<sub>EMI</sub>, P<sub>BR</sub>', 'the three budgeted losses: the LLC stage, the EMI filter, the input bridge'),
+        ('P<sub>in,LLC</sub>', 'power into the tank, P<sub>out</sub>/&eta;<sub>HB</sub>'),
         ('&eta;<sub>HB</sub>', 'assumed efficiency of the LLC stage'),
+        ('P<sub>cond</sub>, P<sub>mos,dc</sub>', 'conduction loss of the primary device that stands on in half-bridge morphing'),
+        ('P<sub>SR</sub>, P<sub>SR,leg</sub>', 'secondary rectifier loss, per device and per rectifier leg'),
+        ('P<sub>CS</sub>', 'dissipation in the current-sense resistors'),
+        ('P<sub>budget</sub>', 'the loss a device position is allowed, before parts are chosen'),
+        ('P<sub>v</sub>', 'core loss per unit volume, from the material curve'),
+        ('E, C, V, V<sub>min</sub>', 'the energy a capacitance C gives up between two voltages, in the hold-up expression'),
+
+        ('<b>Currents and times of one switching cycle</b>', ''),
+        ('i<sub>Lr</sub>, I<sub>Lr,pk</sub>', 'tank current, and its peak: reflected load plus magnetising'),
+        ('i<sub>trafo</sub>, I<sub>trafo,pk</sub>', 'the reflected load current alone, and its peak'),
+        ('i<sub>Lm</sub>, I<sub>Lm,pk</sub>', 'magnetising current of the tank model, and its peak'),
+        ('i<sub>&mu;</sub>, i<sub>&mu;,pk</sub>', 'magnetising current of the physical transformer, and its peak'),
+        ('i<sub>p</sub>, i<sub>s</sub>', 'the instantaneous primary and secondary winding currents'),
+        ('I<sub>sec,pk</sub>', 'peak secondary current per rectifier leg'),
+        ('I<sub>pri,rms</sub>', 'primary rms over the worst switching cycle'),
+        ('I<sub>lc</sub>, I<sub>pri</sub>, I<sub>rect</sub>', 'a line-cycle rms: the rms of each switching period, averaged in I&sup2; over the line half cycle; for the primary and for one rectifier leg'),
+        ('I<sub>Cout</sub>, I<sub>out</sub>', 'ripple current in the output bank, and the load current'),
+        ('t<sub>D</sub>, T<sub>ZC</sub>, T<sub>ZC,min</sub>', 'bridge dead time; the time the tank current takes to reach zero after the transition, and its smallest value over the operating space'),
+        ('v<sub>d</sub>, V<sub>ds</sub>', 'bridge mid-point voltage, and a device&rsquo;s drain-source voltage'),
+        ('S<sub>1</sub>, S<sub>2</sub>, S<sub>3</sub>, S<sub>4</sub>, D<sub>1</sub>, D<sub>2</sub>', 'the four bridge switches, and the two secondary rectifiers'),
+
+        ('<b>The transformer and its core</b>', ''),
+        ('B(t), B<sub>pk</sub>, B<sub>max</sub>', 'flux density, its peak, and the ceiling the design keeps under'),
+        ('N', 'turns of the winding a voltage is applied to, in Faraday&rsquo;s law'),
+        ('A<sub>e</sub>, A<sub>min</sub>', 'core effective area, and its narrowest section'),
+        ('A<sub>N</sub>', 'winding window area of the coil former'),
+        ('A<sub>L</sub>, g, &mu;<sub>0</sub>', 'inductance factor of the gapped core, the total centre-leg gap, and the permeability of free space'),
+        ('N<sub>p</sub>, N<sub>s</sub>, N<sub>x</sub>', 'primary turns, secondary turns per winding, number of units in the assembly'),
+        ('N<sub>aux</sub>, n<sub>aux</sub>/n<sub>sec</sub>', 'auxiliary winding turns, and its turns ratio to one secondary'),
+        ('L<sub>open</sub>, L<sub>short</sub>', 'primary inductance with the secondaries open, and shorted'),
+        ('L<sub>&mu;</sub>, L<sub>L1</sub>, L<sub>L2</sub>', 'physical magnetising inductance and the two leakage inductances'),
+        ('L<sub>1</sub>, L<sub>2</sub>', 'the open-circuit inductance measured at the primary and at one secondary'),
+        ('L, &Delta;L', 'an inductance and the change of it a tolerance allows'),
+        ('I<sub>eq</sub>, I<sub>sat</sub>', 'open-circuit current that reproduces the operating flux; the DC-overlap test current'),
+        ('l<sub>N</sub>', 'mean length of one turn on the coil former'),
+
+        ('<b>The copper</b>', ''),
+        ('A<sub>cu</sub>, J', 'copper cross-section one winding needs, and the current density it is sized to'),
+        ('N<sub>w</sub>, A<sub>cu,w</sub>', 'turns and copper area of winding w, in the sum over all the windings'),
+        ('k<sub>u</sub>', 'window utilisation: the share of A<sub>N</sub> that ends up copper'),
+        ('&delta;, &rho;, &rho;<sub>20</sub>, f', 'skin depth, the resistivity of copper at the working temperature and at 20&nbsp;&deg;C, and the frequency the depth is evaluated at'),
+        ('d<sub>s</sub>, a<sub>s</sub>, n<sub>s</sub>', 'Litz strand diameter, the copper cross-section of one strand, and the number of strands a winding needs'),
+        ('d<sub>litz</sub>, k<sub>litz</sub>', 'outside diameter of the served bundle, and the share of that area which is copper'),
+        ('t<sub>f</sub>, w<sub>f</sub>, w<sub>f,max</sub>, n<sub>f</sub>', 'foil thickness, the width one turn needs, the widest strip the bobbin takes, and the number of strips in parallel'),
+
+        ('<b>Semiconductors</b>', ''),
+        ('R<sub>DS(on)</sub>, R<sub>DS(on),25</sub>, k<sub>T</sub>', 'on-resistance, its 25&nbsp;&deg;C headline value, and the multiplier from 25&nbsp;&deg;C to T<sub>j,max</sub>'),
+        ('T<sub>j</sub>, T<sub>j,max</sub>, T<sub>a</sub>', 'junction temperature, its rating, and ambient temperature'),
+        ('C<sub>oss</sub>, C<sub>o(er)</sub>, C<sub>o(tr)</sub>, Q<sub>oss</sub>', 'the small-signal, energy-related and time-related output capacitance of a MOSFET, and the charge that time-related one stands for'),
+
+        ('<b>The controller and its network</b>', ''),
+        ('V<sub>FB</sub>, v<sub>FB</sub>', 'feedback voltage above its 0.5&nbsp;V offset at rated power, and its small-signal part'),
+        ('V<sub>os</sub>, K<sub>HV</sub>, K<sub>M</sub>, K<sub>FF</sub>', 'the offset and the three internal gains of the feedback law, quoted from the datasheet block diagram'),
+        ('K<sub>pwr</sub>', 'slope of the power command, P<sub>out</sub> per volt of V<sub>FB</sub>'),
+        ('R<sub>CS</sub>, R<sub>CS,max1</sub>, R<sub>CS,max2</sub>', 'current-sense resistor, and the two conditions that bound it: the maximum-power law and the OCP1 trip'),
+        ('I<sub>OCP1</sub>, I<sub>OCP2</sub>', 'over-current thresholds set by R<sub>CS</sub>'),
+        ('C<sub>T</sub>, R<sub>T</sub>', 'oscillator timing capacitor and resistor'),
+        ('C<sub>T,min</sub>, C<sub>T,max</sub>, R<sub>T,ceil</sub>, R<sub>T,max</sub>', 'the window those two have to be chosen inside'),
+        ('V<sub>ref</sub>, I<sub>EA</sub>, I<sub>EA,max</sub>', 'the oscillator reference, the error-amplifier current that is the only control input, and its maximum'),
+        ('f<sub>Min</sub>, f<sub>Max</sub>, f<sub>SU</sub>', 'oscillator floor, ceiling and start-up frequency set by R<sub>T</sub>, C<sub>T</sub> and T<sub>idle</sub>'),
+        ('T<sub>idle</sub>', 'oscillator idle time'),
+        ('R<sub>BM</sub>, r<sub>BM</sub>, V<sub>BM,eq</sub>, P<sub>in,BM</sub>', 'burst-mode resistor, the fraction of rated power burst starts at, the equivalent FB threshold, and the input power that corresponds to'),
+        ('R<sub>CFG</sub>, R<sub>CFG,max</sub>', 'configuration resistor, and the largest value the minimum line allows'),
+        ('V<sub>BO</sub>, V<sub>BO,pk</sub>, V<sub>BO,rms</sub>', 'brown-out threshold, as a mains peak and as an rms voltage'),
+        ('R<sub>ZCD,H</sub>, R<sub>ZCD,L</sub>, I<sub>bias</sub>', 'the ZCD divider, and the current it is designed to draw'),
+        ('V<sub>OVP1</sub>, V<sub>OVP2</sub>, V<sub>OVP1,out</sub>', 'the two over-voltage thresholds, and the output voltage OVP1 is aimed at'),
+        ('V<sub>CC</sub>, V<sub>CCon</sub>, V<sub>CCoff</sub>', 'the IC supply, and the two thresholds of its under-voltage lockout'),
+
+        ('<b>The voltage loop</b>', ''),
+        ('G<sub>plant</sub>(s), G<sub>EA</sub>(s), T(s)', 'plant, compensator and loop gain; T = G<sub>plant</sub>G<sub>EA</sub>'),
+        ('G<sub>o</sub>, EA<sub>o</sub>', 'gain constant of the plant integrator and of the compensator, in rad/s'),
+        ('&omega;<sub>z</sub>, &omega;<sub>p</sub>, &omega;<sub>px</sub>, &omega;<sub>c</sub>', 'compensator zero, pole, high-frequency pole, and the crossover, in rad/s'),
+        ('f<sub>z</sub>, f<sub>p</sub>, f<sub>px</sub>, f<sub>180</sub>', 'the same zero and poles in hertz, and the frequency where arg T = &minus;180&deg;'),
+        ('f<sub>c</sub>, f<sub>cross</sub>, &Phi;<sub>M</sub>, GM', 'loop crossover frequency, phase margin, gain margin'),
+        ('f<sub>cto</sub>', 'where the bare plant integrator would cross 0&nbsp;dB, G<sub>o</sub>/2&pi;'),
+        ('f<sub>PHF</sub>, f<sub>MB</sub>', 'the geometric mean of the two poles, and the frequency the K-factor method balances the loop about'),
+        ('K<sub>v</sub>, &Gamma;<sub>v</sub>, &alpha;<sub>v</sub>', 'K factor of the Type II compensator, and the input-voltage margin factor and weighting constant it is built from'),
+        ('Z<sub>f</sub>', 'feedback impedance of the compensator, C<sub>Fo</sub> in parallel with R<sub>F</sub>+C<sub>F</sub>'),
+        ('R<sub>I</sub>, R<sub>O</sub>', 'output divider of the compensator'),
+        ('C<sub>Fo</sub>, C<sub>F</sub>, R<sub>F</sub>, C<sub>fx</sub>', 'compensator parts: the two capacitors and the resistor of the TL431 network, and the FB-pin capacitor'),
+        ('C<sub>opto</sub>, C<sub>ser</sub>', 'the optocoupler&rsquo;s own output capacitance, and C<sub>F</sub>+C<sub>Fo</sub> in series'),
+        ('R<sub>B</sub>, R<sub>B,max</sub>, R<sub>B,min</sub>, R<sub>P</sub>, R<sub>FB</sub>', 'optocoupler LED resistor and the window it has to sit in, the TL431 bias resistor, and the pull-up inside the FB pin'),
+        ('CTR, CTR<sub>s</sub>, CTR<sub>m</sub>, i<sub>LED</sub>', 'optocoupler current transfer ratio, its value at the steady-state and at the maximum LED current, and the LED current itself'),
+        ('I<sub>FB,steady</sub>, I<sub>FB,max</sub>, I<sub>min</sub>', 'FB-pin current at steady state and at maximum, and the least current the TL431 needs to stay in regulation'),
+        ('V<sub>R</sub>, V<sub>Z</sub>, V<sub>Fo</sub>', 'TL431 reference, the regulated rail that feeds the LED, and the LED forward drop'),
+        ('v<sub>out</sub>, v<sub>C</sub>', 'small-signal output voltage, and the voltage on a capacitor in a waveform'),
+        ('&Delta;V<sub>loop</sub>, &Delta;V<sub>FB</sub>', '2f<sub>l</sub> output ripple seen by the loop, and the ripple it leaves on the FB pin'),
+
+        ('<b>The output, and hold-up</b>', ''),
+        ('C<sub>out</sub>, C<sub>in</sub>', 'output capacitor bank, input film capacitor'),
+        ('V<sub>out</sub>, V<sub>o</sub>, V<sub>out,eff</sub>, I<sub>out</sub>', 'output voltage and load current; V<sub>out,eff</sub> is V<sub>o,eff</sub> spelled out'),
+        ('&Delta;v, &Delta;v<sub>pp</sub>', 'allowed and achieved 2f<sub>l</sub> output ripple'),
+        ('T<sub>hold</sub>, t<sub>hold</sub>, V<sub>o,min</sub>', 'required and achieved hold-up time, and the lowest output allowed at its end'),
+        ('ESR', 'equivalent series resistance of the bank, taken at the switching frequency'),
+
+        ('<b>Verification margins</b>', ''),
+        ('k, X, X<sub>act</sub>, X<sub>req</sub>', 'a verification margin X<sub>act</sub>/X<sub>req</sub>, where X is whatever quantity the row is about; every k in this note is &ge; 1 when the design passes'),
+        ('k<sub>floor</sub>, k<sub>ceil</sub>', 'how far f<sub>Min</sub> clears f<sub>o</sub>, and how far f<sub>Max</sub> clears the highest operating frequency'),
+        ('k<sub>Ploss</sub>', 'the loss budget of a device position over the loss computed for it'),
+        ('w<sub>k</sub>, &theta;<sub>k</sub>', 'the weights and the nodes of the five-point Simpson rule the line-cycle rms values are integrated with'),
     ]
     s.extend(tbl('Symbols.', [['Symbol', 'Meaning']] + [list(r) for r in _SYM],
              widths=[CW * 0.26, CW * 0.74], split=True))
