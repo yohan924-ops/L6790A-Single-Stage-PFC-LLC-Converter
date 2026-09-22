@@ -1651,9 +1651,12 @@ def an_comp_opamp(save, foot):
     ax.plot([XBB, XBB], [YC - 0.40, YC + 0.40], color=NAVY, lw=2.2, zorder=4)
     ax.plot([XBB, XN], [YC + 0.21, YC + 0.61], color=NAVY, lw=1.7, zorder=4)
     ax.plot([XBB, XN], [YC - 0.21, YC - 0.61], color=NAVY, lw=1.7, zorder=4)
+    #  the emitter arrowhead at twice the default size: it is what says
+    #  NPN rather than PNP, and at the size the rest of the symbol was
+    #  shrunk to it had become a speck (2026-09-22, user)
     ax.annotate('', (XN, YC - 0.61), (XBB + 0.13, YC - 0.34),
                 arrowprops=dict(arrowstyle='-|>', color=NAVY, lw=1.4,
-                                mutation_scale=9), zorder=4)
+                                mutation_scale=18), zorder=4)
     S.wire(ax, [(XN, YC + 0.61), (XN, 8.1)])          # collector riser
     S.wire(ax, [(XN, YC - 0.61), (XN, 1.75)])         # emitter riser
     S.gnd(ax, XN, 1.75)
