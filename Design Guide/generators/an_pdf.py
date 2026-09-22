@@ -462,7 +462,7 @@ def st(name, **kw):
 
 
 S = {
-    'p': st('p', alignment=TA_JUSTIFY, spaceAfter=7),
+    'p': st('p', alignment=TA_JUSTIFY, spaceAfter=8),
     'h1': st('h1', fontName=FONTB, fontSize=13.5, leading=17,
              spaceBefore=16, spaceAfter=9, textColor=colors.black),
     'h2': st('h2', fontName=FONTB, fontSize=10.8, leading=14,
@@ -470,10 +470,13 @@ S = {
     # leading has to clear a subscript, or an I_Lr in a two-line caption
     # lands on the line below it
     'cap': st('cap', fontName=FONTB, fontSize=8.6, leading=12.6,
-              alignment=TA_CENTER, spaceBefore=5, spaceAfter=11),
+              alignment=TA_CENTER, spaceBefore=5, spaceAfter=13),
     'eqn': st('eqn', fontName=FONTB, fontSize=9, alignment=TA_RIGHT),
+    #  air round the equations: the design example is a run of short
+    #  lead-in sentences, labels, equations and substituted lines, and at
+    #  5 / 0 pt they packed into a slab (2026-09-21, user)
     'eql': st('eql', fontName=FONTB, fontSize=9.3, leading=12,
-              spaceBefore=5, spaceAfter=0),
+              spaceBefore=12, spaceAfter=2),
     'tc': st('tc', fontSize=8.4, leading=11.2),
     'th': st('th', fontName=FONTB, fontSize=8.4, leading=10.6,
              textColor=colors.white),
@@ -549,6 +552,8 @@ def eq(tex, size=EQSIZE, number=True, key=None, again=False):
                            ('RIGHTPADDING', (0, 0), (-1, -1), 0),
                            ('TOPPADDING', (0, 0), (-1, -1), 1),
                            ('BOTTOMPADDING', (0, 0), (-1, -1), 1)]))
+    t.spaceBefore = 3
+    t.spaceAfter = 10
     if not number:
         return t
     if again:
@@ -708,7 +713,7 @@ def tbl(caption, rows, widths=None, align=None, key=None, split=False):
         for col, a in align.items():
             style.append(('ALIGN', (col, 0), (col, -1), a))
     t.setStyle(TableStyle(style))
-    t.spaceBefore = 6
+    t.spaceBefore = 10
     cap = Paragraph(T('%s %d:  %s' % (TBLWORD, _TBL[0], caption)), S['cap'])
     if split:
         return [t, cap]
