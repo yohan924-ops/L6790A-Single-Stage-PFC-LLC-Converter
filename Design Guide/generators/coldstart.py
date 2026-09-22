@@ -1,6 +1,12 @@
 # -*- coding: utf-8 -*-
 """Can a session that knows nothing pick this project up from CLAUDE.md alone?
 
+CLAUDE.md sends the reader to generators/README.md for the tool chain and the
+tool traps (sections 9 and 11, moved there 2026-09-22 to cut the per-turn cost).
+So "alone" now means CLAUDE.md plus whatever it names as required reading - and
+the pointer is FOLLOWED, not assumed: if CLAUDE.md stops naming the README, the
+questions it answers go back to failing, which is the point.
+
 Not "does it read well" - that is what I already believed when the document said
 80 mF and the sheet said 71.4. This asks whether the specific questions a cold
 session must answer are answerable from the text, and whether every instruction
@@ -21,6 +27,13 @@ ROOT = os.path.normpath(os.path.join(os.path.dirname(
 GEN = os.path.join(ROOT, 'Design Guide', 'generators')
 c = io.open(os.path.join(ROOT, 'CLAUDE.md'), encoding='utf-8').read()
 h = io.open(os.path.join(ROOT, 'HISTORY.md'), encoding='utf-8').read()
+
+README = os.path.join(GEN, 'README.md')
+POINTER = 'Design Guide/generators/README.md'
+r = ''
+if POINTER in c and os.path.exists(README):
+    r = io.open(README, encoding='utf-8').read()
+reach = c + '\n' + r                 # what a cold session can actually get to
 
 # The questions a cold session has to answer before it can do anything useful,
 # and a phrase that only appears if CLAUDE.md answers it.
@@ -48,18 +61,29 @@ QUESTIONS = [
     ('실측으로 뭘 확인해야 하나', ['최우선 실측 항목']),
 ]
 
-miss = []
+miss, via_readme = [], []
 for q, needles in QUESTIONS:
-    if not all(nd in c for nd in needles):
+    if all(nd in c for nd in needles):
+        continue
+    if all(nd in reach for nd in needles):
+        via_readme.append(q)
+    else:
         miss.append(q)
 
 print('■ 새 세션이 답해야 하는 질문 %d개' % len(QUESTIONS))
+if not r:
+    print('  !! CLAUDE.md 가 %s 를 가리키지 않는다 — 옮긴 절을 못 찾는다' % POINTER)
+if via_readme:
+    print('  CLAUDE.md 의 안내를 따라가 README.md 에서 답한 것 %d개:' % len(via_readme))
+    for m in via_readme:
+        print('    - ' + m)
 if miss:
     print('  CLAUDE.md 에서 답을 못 찾는 것 %d개:' % len(miss))
     for m in miss:
         print('    - ' + m)
 else:
-    print('  전부 CLAUDE.md 안에서 답이 나온다')
+    print('  전부 답이 나온다 (CLAUDE.md %d개 · README.md %d개)'
+          % (len(QUESTIONS) - len(via_readme), len(via_readme)))
 
 # every command the document tells you to run must actually run
 print()

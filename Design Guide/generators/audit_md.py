@@ -32,7 +32,7 @@ SM = os.path.join(ROOT, 'Smath', 'L6790A_SingleStage_PF_LLC_Design_Guide.sm')
 # 'AN ' joined the list when the application note became a deliverable
 # with numbered sections of its own - "AN §6.5" is qualified, "§6.5" is not.
 QUALIFIERS = ('가이드', '시트', 'DS', '데이터시트', '스프레드시트', '워크북',
-              'HISTORY.md', 'CLAUDE.md', '부록', '논문', 'AN ', 'AN§')
+              'HISTORY.md', 'CLAUDE.md', 'README', '부록', '논문', 'AN ', 'AN§')
 
 # Paths the docs mention on purpose while saying they are not here
 ABSENT_OK = {
@@ -70,9 +70,14 @@ def find_anywhere(name):
 
 
 def main():
+    # README.md carries CLAUDE.md's old sections 9 and 11 (moved 2026-09-22).
+    # It is read here so the path / script / count checks keep their reach -
+    # otherwise moving a section would silently switch its checks off.
     docs = {}
     for n in ('CLAUDE.md', 'HISTORY.md'):
         docs[n] = io.open(os.path.join(ROOT, n), encoding='utf-8').read()
+    docs['README.md'] = io.open(os.path.join(HERE, 'README.md'),
+                                encoding='utf-8').read()
 
     # ---------------------------------------------------------- paths
     path_re = re.compile(r'`([A-Za-z0-9_./ &\-]+\.'
@@ -134,7 +139,18 @@ def main():
     m = re.search(r'(\d+) x (\d+) px', chk)
     facts['paper'] = '%s x %s' % m.groups() if m else '?'
 
-    c = docs['CLAUDE.md']
+    # counts and the on-disk map may be quoted in either document; keep the
+    # name so the report points at the file that actually carries the claim
+    QUOTERS = ('CLAUDE.md', 'README.md')
+
+    def where(pat):
+        for n in QUOTERS:
+            m = re.search(pat, docs[n])
+            if m:
+                return n, m
+        return QUOTERS[0], None
+
+    c = docs['CLAUDE.md'] + '\n' + docs['README.md']
     for phrase, key, expect in (('노란 입력 셀 %s개' % facts['yellow'], 'yellow', None),
                                 ('yellow inputs', 'yellow', None),
                                 ('regions', 'regions', None),
@@ -153,20 +169,20 @@ def main():
         # if the doc quotes a different number the stale one shows up here
         stem = phrase.rsplit(' ', 1)[0] if key != 'paper' else 'x'
         if key == 'paper':
-            m2 = re.search(r'(\d+) x (\d+) px', c)
+            doc, m2 = where(r'(\d+) x (\d+) px')
             if m2 and '%s x %s' % m2.groups() != facts['paper']:
-                bad('CLAUDE.md', 'paper claim %s x %s, tool says %s'
+                bad(doc, 'paper claim %s x %s, tool says %s'
                     % (m2.group(1), m2.group(2), facts['paper']))
             continue
-        m2 = re.search(re.escape(stem) + r' ([\d.]+)', c)
+        doc, m2 = where(re.escape(stem) + r' ([\d.]+)')
         if key == 'bom' and locked:
             continue                      # cannot read the workbook right now
         if m2 and m2.group(1) != facts[key]:
-            bad('CLAUDE.md', 'claims "%s %s" but tool reports %s'
+            bad(doc, 'claims "%s %s" but tool reports %s'
                 % (stem, m2.group(1), facts[key]))
 
     # -------------------------------------------- internal consistency
-    rows = len(re.findall(r'^\| \*\*`\w+\.md`\*\*', c, re.M))
+    rows = len(re.findall(r'^\| \*\*`\w+\.md`\*\*', docs['CLAUDE.md'], re.M))
     m = re.search(r'ꬸ서는? (\S+?)(?:이고|인데)', c)
     if m and {2: '둘', 3: '셋'}.get(rows) not in (None, m.group(1)):
         bad('CLAUDE.md', 'says 문서는 %s but the table lists %d' % (m.group(1), rows))
