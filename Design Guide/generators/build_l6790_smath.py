@@ -40,6 +40,14 @@ VARIANTS = {
                   kaux=1, RzH=220, CT=470, label='8 : 1'),
     '6to1':   dict(nT=6.0, Cr=180, Lr=6.4, Lm=14.2, Nx=3, Np=2, Ns=1,
                   kaux=3, RzH=680, CT=330, label='6 : 1'),
+    #  ONE transformer, 15 : 2 on a single core (2026-09-22, user: the
+    #  guide's example is one transformer).  Same tank as 7p5to1; N.aux =
+    #  1.5 * 2 / 1 = 3 turns.  The core is TDK ETD 49/25/16DG, A.e 211 mm2
+    #  - the PQ 40/40 of the three-unit build has no room for a 15-turn
+    #  primary (cores.winding, HISTORY.md 2026-09-22).
+    '7p5to1_x1': dict(nT=7.5, Cr=100, Lr=11.0, Lm=20.0, Nx=1, Np=15, Ns=2,
+                      kaux=1.5, RzH=330, CT=470, label='7.5 : 1',
+                      Ae=211.0),
 }
 VAR = os.environ.get('L6790_VARIANT', '9to1')
 V = VARIANTS[VAR]
@@ -696,7 +704,7 @@ S.row('- Wound turns ratio:', 'n.T_act', 'N.x*N.p/N.s', None, 4)
 S.row('- Resulting equivalent-model turns ratio:', 'n.act', "n.T_act/sqrt(1+λ.act)", None, 4)
 S.row('- Resulting reflected voltage:', 'V.refl_act', 'n.act*V.o_eff', 'V', 2,
       note='compare with V.refl of section 5 and keep the deviation within about 1 %.')
-S.const('- Core effective area [mm^2]:', 'A.e_mm', '113.1', None, 2)
+S.const('- Core effective area [mm^2]:', 'A.e_mm', '%g' % V.get('Ae', 113.1), None, 2)
 S.row('- Core effective area:', 'A.e', "A.e_mm*'mm*'mm", None, 8)
 S.row('- Open-circuit inductance per transformer:', 'L.open_x', 'L.open/N.x', 'μH', 3)
 S.row('- Physical magnetizing inductance per transformer:', 'L.mu_x',

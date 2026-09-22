@@ -84,7 +84,7 @@ def _sheet_early(k):
 # different variant, so name the variant here rather than following it - the
 # workbook and the vendor specification are kept per variant and the note is
 # not allowed to drift between them.
-AN_VARIANT = os.environ.get('AN_VARIANT', '7p5to1')
+AN_VARIANT = os.environ.get('AN_VARIANT', '7p5to1_x1')   # one transformer (2026-09-22)
 AN_SM = os.path.join(GUIDE, '..', 'Smath', 'variants',
                      'L6790A_%s.sm' % AN_VARIANT)
 
@@ -181,6 +181,7 @@ V = dict(
     GM=SH['GM'], dVFBBM=SH['ΔV.FBBM'], dRBM=SH['ΔR.BM'],
     CFo=82.0, CF=560.0, RF=47.0, Cfx=1.55, RP=1.3, RB=6.2,
     Np=int(SH['N.p']), Ns=int(SH['N.s']), nser=int(SH['N.x']),
+    Naux=int(round(SH['N.aux'])),
     AL=SH['A.L'], Bpk=SH['B.pk'],
     Lmu=SH['L.mu'], LL1=SH['L.L1'], LL2=SH['L.L2'] / 1e3,
     Lopen=SH['L.open'], Lshort=SH['L.short'],

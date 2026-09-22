@@ -36,6 +36,7 @@ from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 VARIANTS = {
     '9to1':   dict(label='9 : 1'),
     '7p5to1': dict(label='7.5 : 1'),
+    '7p5to1_x1': dict(label='7.5 : 1'),        # ONE transformer, ETD 49/25/16DG
     '8to1':   dict(label='8 : 1'),
     '6to1':   dict(label='6 : 1'),
 }
@@ -74,6 +75,23 @@ V.update(
 # 비대칭 공차는 양산 공정이 맞추지 못한다 - 2026-09-07 사용자 결정.
 # 7.5:1 을 채택한다면 R.T 를 10 kohm 으로 내려 k.floor 를 1.117 로 올려야 한다.
 V['tol_open'] = V['tol_short'] = '±10 %'
+
+# 보빈과 핀 배정: 단일 코어 설계점은 cores.CHOSEN(ETD 49/25/16DG, 20핀), 3코어
+# 설계점은 PQ 40/40(12핀) 을 쓴다.  둘 다 cores.BOBBINS 한 곳에서 읽는다.
+BOB_NAME = CORES.CHOSEN if V['Nx'] == 1 else 'PQ 40/40'
+BOB = CORES.BOBBINS[BOB_NAME]
+_MAP = BOB['map']
+
+
+def pins(w, dash='\u2013'):
+    a, b = _MAP[w]
+    return '%s %s %s' % (CORES._plus(a), dash, CORES._plus(b))
+
+
+def tap_text():
+    t = [str(n) for n in _MAP['NS2'][1] + _MAP['NS3'][0]]
+    return ', '.join(t[:-1]) + ' and ' + t[-1]
+
 
 NAVY, BAND, LINE, MUTED = '1F3864', 'EDF0F7', 'B4B4B4', '5A6472'
 thin = Side(style='thin', color=LINE)
@@ -155,9 +173,13 @@ ws.row_dimensions[4].height = 4
 
 # ------------------------------------------------------------- 1. 구성
 section(6, '1.    CONFIGURATION')
-COUNT = {2: 'Two', 3: 'Three', 4: 'Four'}.get(V['Nx'], str(V['Nx']))
+COUNT = {1: 'One', 2: 'Two', 3: 'Three', 4: 'Four'}.get(V['Nx'], str(V['Nx']))
 for i, (t, red) in enumerate([
-        ('%s identical transformers per set — primaries in series, '
+        ('One transformer per set on TDK %s (core %s, coil former %s, %d pins).'
+         % (BOB_NAME, CORES.CORES[BOB_NAME]['core'],
+            BOB['former'], BOB['pins'])
+         if V['Nx'] == 1 else
+         '%s identical transformers per set — primaries in series, '
          'secondaries in parallel.' % COUNT, False),
         ('EVERY VALUE BELOW IS PER TRANSFORMER.', True)]):
     row = 7 + i
@@ -171,21 +193,24 @@ section(10, '2.    WINDING')
 head(11, [('B', 'No'), ('C', 'Winding'), ('D', 'Terminal'), ('E', 'Turns'),
           ('F', 'Winding current           rms   /   peak')])
 WIND = [
-    ('1', 'NP1     Primary', CORES.pins('NP1'), '%d Ts' % V['Np'], V['Ipri']),
-    ('2', 'NS2     Secondary A', CORES.pins('NS2'), '%d T' % V['Ns'], V['Isec']),
-    ('3', 'NS3     Secondary B', CORES.pins('NS3'), '%d T' % V['Ns'], V['Isec']),
-    ('4', 'NAUX   Auxiliary (ZCD)', CORES.pins('NAUX'), '%d T' % V['Naux'], 'sense only'),
+    ('1', 'NP1     Primary', pins('NP1'), '%d Ts' % V['Np'], V['Ipri']),
+    ('2', 'NS2     Secondary A', pins('NS2'), '%d T' % V['Ns'], V['Isec']),
+    ('3', 'NS3     Secondary B', pins('NS3'), '%d T' % V['Ns'], V['Isec']),
+    ('4', 'NAUX   Auxiliary (ZCD)', pins('NAUX'), '%d T' % V['Naux'], 'sense only'),
 ]
 for i, (n, des, term, turns, cur) in enumerate(WIND):
     line(12 + i, [('B', n, 'center'), ('C', des, 'left'), ('D', term, 'center'),
                   ('E', turns, 'center'), ('F', cur, 'center')])
     ws['E%d' % (12 + i)].font = Font(name='Calibri', size=10, bold=True)
 
-note(17, 'Centre tap is made on the PCB by joining pins %d and %d — do NOT join '
-         'them inside the transformer.' % CORES.CENTRE_TAP)
-note(18, 'Coil former TDK B65884E (PQ 40/40), 12 pins.   Pin numbers count '
-         'from the pin-1 marking of the TDK drawing — confirm the direction '
-         'on the bobbin drawing before winding.')
+note(17, 'Centre tap is made on the PCB by joining pins %s — do NOT join '
+         'them inside the transformer.%s'
+         % (tap_text(), '   Two pins per secondary terminal: confirm the pin '
+            'current rating or bring the foil out as lugs.'
+            if V['Nx'] == 1 else ''))
+note(18, 'Coil former TDK %s (%s), %d pins.   Pin numbers count along one row '
+         'from pin 1 and back along the other — confirm on the bobbin drawing '
+         'before winding.' % (BOB['former'], BOB_NAME, BOB['pins']))
 
 # ------------------------------------------------- 3. 전기 요구사양
 section(19, '3.    ELECTRICAL  REQUIREMENTS',
@@ -193,12 +218,12 @@ section(19, '3.    ELECTRICAL  REQUIREMENTS',
 head(21, [('B', 'No'), ('C', 'Item'), ('D', 'Terminal'), ('E', 'Requirement'),
           ('F', 'Condition')])
 REQ = [
-    ('1', 'INDUCTANCE', CORES.pins('NP1'), '%.2f µH    %s' % (V['Lopen'], V['tol_open']),
+    ('1', 'INDUCTANCE', pins('NP1'), '%.2f µH    %s' % (V['Lopen'], V['tol_open']),
      'All other windings OPEN.   L.mag + L.leak, not L.mag alone.', 18),
-    ('2', 'LEAKAGE INDUCTANCE', CORES.pins('NP1'), '%.2f µH    %s' % (V['Lshort'], V['tol_short']),
+    ('2', 'LEAKAGE INDUCTANCE', pins('NP1'), '%.2f µH    %s' % (V['Lshort'], V['tol_short']),
      'SECONDARY ALL SHORT (NS2 + NS3).   NAUX open.   '
      'Resonant inductor — a target, not a maximum.', 22),
-    ('3', 'D.C OVERLAP', CORES.pins('NP1'), '≥ 90 % of initial inductance',
+    ('3', 'D.C OVERLAP', pins('NP1'), '≥ 90 % of initial inductance',
      'Test current %d A, normal temperature' % V['Isat'], 18),
 ]
 for i, (n, item, term, req, cond, h) in enumerate(REQ):
@@ -209,8 +234,10 @@ for i, (n, item, term, req, cond, h) in enumerate(REQ):
     ws['C%d' % row].alignment = Alignment(horizontal='left', vertical='center',
                                           wrap_text=True)
 
-note(25, 'Both measured at %s of ONE transformer.   ' % CORES.pins('NP1') +
-         '%s in series give a total ratio of %s.' % (COUNT, V['label']))
+note(25, 'Both measured at %s of ONE transformer.   ' % pins('NP1') +
+         ('Item 2 is set by the winding arrangement (split primary or spacer): '
+          'the vendor proposes it.' if V['Nx'] == 1 else
+          '%s in series give a total ratio of %s.' % (COUNT, V['label'])))
 note(26, 'Item 2 follows the existing production part 26OP-LM83W clause 4-2, '
          '"SECONDARY ALL SHORT" — same vendor, same centre-tapped construction.   '
          'The auxiliary is NOT shorted.')

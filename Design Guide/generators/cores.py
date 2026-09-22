@@ -39,7 +39,8 @@ CORES = {
         core='B65981Q', former='B65982E',
         le=113.0, Ae=332.0, Amin=314.0, Ve=37630.0, mass=190.0,
         AN=340.0, lN=100.5,
-        AL_ungapped=None, material='N95'),
+        AL_ungapped=None, material='N95',
+        AL_gaps={100: 1.67 + 0.85, 250: 0.62 + 0.23, 400: 0.31 + 0.18}),
     #  ETD 49/25/16DG - B66367 core (distributed gap, gapped only: A_L 100
     #  / 250 nH stock), B66368 coil former, 20 pins.  October 2022,
     #  received 2026-09-22 from the user.
@@ -47,7 +48,9 @@ CORES = {
         core='B66367', former='B66368',
         le=114.0, Ae=211.0, Amin=209.0, Ve=24100.0, mass=124.0,
         AN=269.4, lN=86.0,
-        AL_ungapped=None, material='N95'),
+        AL_ungapped=None, material='N95',
+        #  stock A_L -> total gap G2 + G3 [mm], datasheet page 2
+        AL_gaps={100: 1.06 + 0.48, 250: 0.39 + 0.15}),
     #  ETD 54/28/19 - B66395 core (ungapped N87 4450 nH; gapped examples
     #  g 1.0 / 1.5 / 2.0 mm -> 393 / 287 / 229 nH, K1 393 K2 -0.779 for
     #  A_L(s) between 0.10 and 3.50 mm), B66396 coil former, 22 pins.
@@ -88,6 +91,29 @@ def gap(V, Ae_mm2):
     not to be put on a drawing - the drawing carries A_L.
     """
     return 1e3 * MU0 * Ae_mm2 * 1e-6 / (V['AL'] * 1e-9)
+
+
+def dg_gap(V, name=None):
+    """Total gap [mm] for the design A_L on a distributed-gap core.
+
+    Interpolates 1/A_L against the total gap between the two nearest
+    stock values of the datasheet - the reluctance of the gap is what
+    A_L sets, and it is linear in the gap length to first order.  Falls
+    back to gap() when the core has no stock table.
+    """
+    name = name or CHOSEN
+    R = CORES[name]
+    tab = R.get('AL_gaps')
+    if not tab:
+        return gap(V, R['Ae'])
+    al = V['AL']
+    keys = sorted(tab)
+    lo = max([k for k in keys if k <= al] or [keys[0]])
+    hi = min([k for k in keys if k >= al] or [keys[-1]])
+    if lo == hi:
+        return tab[lo]
+    f = (1.0 / al - 1.0 / lo) / (1.0 / hi - 1.0 / lo)
+    return tab[lo] + (tab[hi] - tab[lo]) * f
 
 
 def copper(V):
@@ -177,55 +203,110 @@ MECH = {
 }
 
 # ===================================================================
-#  Coil-former terminals: where each winding of one unit comes out
+#  The core this note builds on, and its coil-former terminals
 # ===================================================================
-#  Geometry is the B65884E drawing (page 3, plan view FPK0430): twelve
-#  terminals, six per side, each side in two groups of three, pitch 5.08
-#  within a group, 15.24 between the inner pins of the two groups, and
-#  the two rows 38.1 apart.  The drawing carries a "pin 1 marking" at the
-#  bottom-left corner of the plan view and NO other pin number.
+#  CHOSEN names the core the design example is drawn and specified on.
+#  Everything downstream - the section figure, the pin figure, the tables
+#  of the note and the vendor specification - reads it from here.
 #
-#  NUMBERING IS THEREFORE AN ASSUMPTION: 1 at the marking, 1-6 up the
-#  marked side, 7-12 down the other, so that 12 is opposite 1.  That is
-#  the usual coil-former convention, but the datasheet does not say so,
-#  and the direction has to be confirmed against the vendor's bobbin
-#  drawing before the specification goes out.  The ASSIGNMENT below does
-#  not depend on it - which group carries which winding is fixed by the
-#  drawing - only the printed numbers do.
+#  2026-09-22: ONE transformer (the note's example is a single part), so
+#  the PQ 40/40 of the three-unit build gave way to ETD 49/25/16DG: the
+#  15-turn primary needs a window that is deep (7.1 mm radial for three
+#  layers) or wide (19 mm axial for two), and every PQ is shallow.  The
+#  comparison is winding() on each entry of CORES; HISTORY.md 2026-09-22.
+CHOSEN = 'ETD 49/25/16DG'
+
+#  Terminals, per coil former.  'xy' is pin number -> (x, y) in mm in the
+#  datasheet's mounting-direction view; 'map' is winding -> (start pins,
+#  finish pins), each a tuple because a heavy terminal may take two pins;
+#  'plan' is the outline drawn under the pins.
 #
-#  Assignment, one unit (three identical units per set):
-#      marked side   group 1-3   NP1  primary,   start 1, finish 3
-#                    group 4-6   NAUX auxiliary, start 4, finish 6
-#      other side    group 7-9   NS2  secondary, start 7, finish 9
-#                    group 10-12 NS3  secondary, start 10, finish 12
-#  The primary-referenced windings (NP1 and the ZCD auxiliary) share one
-#  side and the two secondaries the other, so the isolation distance is
-#  the whole bobbin width.  The centre tap is pins 9 and 10, adjacent
-#  across the 15.24 gap, and is made ON THE PCB, not inside the part.
-#  "start" is the end the polarity dot marks; NS2 and NS3 are wound in
-#  the same sense, so joining NS2's finish to NS3's start makes the tap.
-#  The middle pin of each group is left free: a Litz bundle and a foil
-#  end each take one pin, and the spare keeps the two terminations of a
-#  winding apart.
-PIN_XY = {}
+#  PQ 40/40 (B65884E, page 3, plan view FPK0430): twelve terminals, six
+#  per side in two groups of three, pitch 5.08 within a group, 15.24
+#  between the inner pins of the groups, rows 38.1 apart, a "pin 1
+#  marking" at the bottom-left corner and NO other pin number.
+#
+#  ETD 49/25/16DG (B66368, page 3, "hole arrangement, view in mounting
+#  direction"): twenty terminals in two rows of ten, pitch 5.08 (9 x 5.08
+#  = 45.72), rows 40.64 apart, square 0.8 mm pins.  The drawing carries
+#  no pin numbers and no pin-1 marking at all.
+#
+#  NUMBERING IS THEREFORE AN ASSUMPTION on both: 1 at one end of one row,
+#  counted along that row, then back along the other row so that the
+#  last pin faces pin 1 (the usual coil-former convention; the PQ
+#  50/50DG drawing, which does print its numbers, counts that way).  It
+#  has to be confirmed against the vendor's bobbin drawing before the
+#  specification goes out.  The ASSIGNMENT does not depend on it - which
+#  row carries which winding is fixed - only the printed numbers do.
+#
+#  Assignment: the primary-referenced windings (NP1 and the ZCD auxiliary
+#  NAUX) share one row and the two secondaries the other, so the
+#  isolation distance is the whole bobbin.  The centre tap is made ON THE
+#  PCB from the finish of NS2 and the start of NS3, which keeps the two
+#  windings measurable one at a time; "start" is the end the polarity
+#  dot marks, and NS2 and NS3 are wound in the same sense so that joining
+#  NS2's finish to NS3's start makes the tap.  On the 20-pin former each
+#  secondary terminal takes TWO pins: one winding carries the whole
+#  secondary current (28 A rms) and a 0.8 mm pin is not rated for that -
+#  the vendor confirms the pin rating or brings the foil out as a lug.
+_ETD49_XY = {}
+for _i in range(10):
+    _x = -22.86 + 5.08 * _i
+    _ETD49_XY[1 + _i] = (_x, -20.32)          # front row, left to right
+    _ETD49_XY[20 - _i] = (_x, 20.32)          # back row, right to left
+_PQ40_XY = {}
 for _i, _y in enumerate((-17.78, -12.70, -7.62, 7.62, 12.70, 17.78)):
-    PIN_XY[1 + _i] = (-19.05, _y)            # marked side, upwards
-    PIN_XY[12 - _i] = (19.05, _y)            # other side, downwards
-PINMAP = {                                  # winding -> (start, finish)
-    'NP1': (1, 3), 'NAUX': (4, 6), 'NS2': (7, 9), 'NS3': (10, 12)}
-PIN_SIDE = {'NP1': 'marked', 'NAUX': 'marked', 'NS2': 'other', 'NS3': 'other'}
-CENTRE_TAP = (PINMAP['NS2'][1], PINMAP['NS3'][0])
-PIN_NOTE = ('The datasheet marks pin 1 only; the numbers run counter-'
-            'clockwise from it in the plan view, which is the usual '
-            'convention. Confirm the direction against the bobbin drawing '
-            'before the specification is released; the assignment does not '
-            'depend on it, only the printed numbers do.')
+    _PQ40_XY[1 + _i] = (-19.05, _y)           # marked side, upwards
+    _PQ40_XY[12 - _i] = (19.05, _y)           # other side, downwards
+BOBBINS = {
+    'ETD 49/25/16DG': dict(
+        former='B66368', pins=20, pin='square 0.8 mm', xy=_ETD49_XY,
+        map={'NP1': ((1, 2), (4, 5)), 'NAUX': ((8,), (10,)),
+             'NS2': ((11, 12), (14, 15)), 'NS3': ((16, 17), (19, 20))},
+        rows=('front row 1-10', 'back row 11-20'),
+        #  outline of the mounting-direction view: 54.5 across the pins,
+        #  56.2 along the coil axis; the coil sits between the flanges
+        plan=dict(w=54.5, h=56.2, coil_w=35.9, coil_h=32.7, mark=None),
+        pitch=5.08, rows_apart=40.64),
+    'PQ 40/40': dict(
+        former='B65884E', pins=12, pin='round 1.0 mm', xy=_PQ40_XY,
+        map={'NP1': ((1,), (3,)), 'NAUX': ((4,), (6,)),
+             'NS2': ((7,), (9,)), 'NS3': ((10,), (12,))},
+        rows=('marked side 1-6', 'other side 7-12'),
+        plan=dict(w=42.0, h=40.0, coil_w=None, coil_h=None,
+                  mark=(-21.0, -20.0)),
+        pitch=5.08, rows_apart=38.1),
+}
+BOBBIN = BOBBINS[CHOSEN]
+PIN_XY = BOBBIN['xy']
+PINMAP = BOBBIN['map']
+CENTRE_TAP = PINMAP['NS2'][1] + PINMAP['NS3'][0]
+PIN_NOTE = ('The datasheet prints no pin numbers; the numbering shown counts '
+            'along one row from pin 1 and back along the other, the usual '
+            'convention. Confirm it against the bobbin drawing before the '
+            'specification is released; the assignment does not depend on '
+            'it, only the printed numbers do.')
+
+
+def _plus(t):
+    return '+'.join(str(n) for n in t)
 
 
 def pins(w, dash='\u2013'):
-    """'1 - 3' style terminal text for the spec and the tables."""
+    """'1+2 - 4+5' style terminal text for the spec and the tables."""
     a, b = PINMAP[w]
-    return '%d %s %d' % (a, dash, b)
+    return '%s %s %s' % (_plus(a), dash, _plus(b))
+
+
+def tap_text():
+    """'14, 15, 16 and 17' - the pins joined on the board as the tap."""
+    t = [str(n) for n in CENTRE_TAP]
+    return ', '.join(t[:-1]) + ' and ' + t[-1]
+
+
+def free_pins():
+    used = {n for a, b in PINMAP.values() for n in a + b}
+    return [n for n in sorted(PIN_XY) if n not in used]
 
 
 #  Three more assumptions, kept beside J_CU and K_U for the same reason.
@@ -245,7 +326,7 @@ def litz(area_mm2):
     return (4.0 * area_mm2 / (pi * K_LITZ)) ** 0.5, n
 
 
-def winding(V, name='PQ 40/40'):
+def winding(V, name=None):
     """The winding laid out along the bobbin, in millimetres.
 
     Side by side, not interleaved: a single-stage tank needs
@@ -258,6 +339,7 @@ def winding(V, name='PQ 40/40'):
     for appearance: if the copper does not fit, 'gap' comes out negative
     and 'fits' is False.
     """
+    name = name or CHOSEN
     M = MECH[name]
     rows = copper(V)
     ap, asec = rows[0][3], rows[1][3]
@@ -300,8 +382,9 @@ def winding(V, name='PQ 40/40'):
         fits=(gap_ax > 0 and build_p <= r_free and build_s <= r_free))
 
 
-def report(V, name='PQ 40/40'):
+def report(V, name=None):
     """Print the fit arithmetic.  Run this before believing the drawing."""
+    name = name or CHOSEN
     w = winding(V, name)
     M = w['M']
     out = [

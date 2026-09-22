@@ -130,7 +130,7 @@ def spec_from_xlsx(path):
 def main():
     import re as _re
     bad = 0
-    for var in ('9to1', '7p5to1', '8to1', '6to1'):
+    for var in ('9to1', '7p5to1', '7p5to1_x1', '8to1', '6to1'):
         smp = os.path.join(SMDIR, 'L6790A_%s.sm' % var)
         xlp = os.path.join(HERE, '..', '..', 'Calculation Excel Sheet',
                            'variants', 'Transformer_Spec_%s.xlsx' % var)

@@ -1294,7 +1294,7 @@ def an_core_section(save, foot):
     import cores as _C
     import an_pdf as _A
     V = _A.V
-    NAME = 'PQ 40/40'
+    NAME = _C.CHOSEN
     R = _C.CORES[NAME]
     w = _C.winding(V, NAME)
     M = w['M']
@@ -1302,11 +1302,15 @@ def an_core_section(save, foot):
     gp = _C.gap(V, R['Ae'])
     d, tp = w['d_litz'], w['t_foil'] + _C.T_FOIL_INS
 
-    fig = plt.figure(figsize=(9.3, 4.85))
-    S1, S2, S3 = 17.2, 6.4, 2.10            # mm per inch on each panel
-    ax = _mm_ax(fig, [0.006, 0.033, 0.395, 0.934], 4.0, -3.0, S1)
-    ax2 = _mm_ax(fig, [0.412, 0.470, 0.578, 0.508], 15.0, 0.7, S2)
-    ax3 = _mm_ax(fig, [0.412, 0.033, 0.578, 0.380], 2.9, 0.20, S3)
+    #  Panel sizes follow the chosen core: the ETD 49 is 48.5 x 49.8 mm
+    #  in section and its primary is three layers deep, so the figure is
+    #  taller than it was for the PQ 40/40 and the detail scales are set
+    #  from the winding width (S2) and the foil stack (S3).
+    fig = plt.figure(figsize=(9.3, 5.9))
+    S1, S2, S3 = 17.2, 7.7, 2.40            # mm per inch on each panel
+    ax = _mm_ax(fig, [0.006, 0.033, 0.425, 0.934], 1.5, -3.0, S1)
+    ax2 = _mm_ax(fig, [0.440, 0.500, 0.550, 0.470], 17.7, 2.0, S2)
+    ax3 = _mm_ax(fig, [0.440, 0.033, 0.550, 0.420], 2.4, 0.30, S3)
 
     #  =================================================== SECTION, 1:1
     HW, HH = M['W'] / 2.0, M['H'] / 2.0
@@ -1351,7 +1355,7 @@ def an_core_section(save, foot):
                 ax.add_patch(Circle((sgn * r, y0 - k * d), d / 2.0, fc=NAVY,
                                     ec='#12315c', lw=0.7, alpha=0.45,
                                     zorder=6))
-    for k in range(2 * w['Ns']):
+    for k in range(2 * w['Ns'] * w['n_foil']):
         for sgn in (-1, 1):
             x0 = RT + k * tp if sgn > 0 else -(RT + k * tp + w['t_foil'])
             ax.add_patch(Rectangle((x0, yS0), w['t_foil'], w['w_foil'],
@@ -1366,7 +1370,7 @@ def an_core_section(save, foot):
           side=-1)
     _dimv(ax, -HH, HH, HW + 7.6, '%.1f' % M['H'], ext=HW)
     _dimv(ax, -WH, WH, HW + 2.4, '%.1f' % M['win_h'], ext=RW)
-    ax.text(0.0, HH + 9.4, 'PQ 40/40 in section', ha='center', va='bottom',
+    ax.text(0.0, HH + 9.4, '%s in section' % NAME, ha='center', va='bottom',
             fontsize=10.5, color=NAVY, zorder=8)
     ax.text(0.0, -HH - 14.6, 'all dimensions in mm', ha='center', va='top',
             fontsize=8.5, color=GREY, zorder=8)
@@ -1387,7 +1391,7 @@ def an_core_section(save, foot):
     L = M['wind_w']
     fl = (M['flange_h'] - M['wind_w']) / 2.0
     BH = w['build_p'] + 1.1
-    ax2.add_patch(Rectangle((OX - fl - 1.6, OY - 1.9), L + 2 * fl + 3.2, 1.9,
+    ax2.add_patch(Rectangle((OX - fl - 1.6, OY - 1.9), L + 2 * fl + 2.4, 1.9,
                             fc=FERR, ec=FERRE, lw=1.0, hatch='////', zorder=3))
     for x0 in (OX - fl, OX + L):
         ax2.add_patch(Rectangle((x0, OY), fl, BH, **bob))
@@ -1405,7 +1409,8 @@ def an_core_section(save, foot):
     ax2.add_patch(Rectangle((xG, OY), w['gap'], BH, fc='none', ec=GOLD,
                             lw=1.1, ls=(0, (3.5, 2.5)), zorder=7))
     xS = xG + w['gap']
-    for k in range(2 * w['Ns']):
+    NF = w['n_foil']
+    for k in range(2 * w['Ns'] * NF):
         ax2.add_patch(Rectangle((xS, OY + k * tp), w['w_foil'], w['t_foil'],
                                 fc=MAG, ec=MAG, lw=0.4, zorder=6))
     ax2.text(OX + L / 2.0, OY + BH + 5.4,
@@ -1426,13 +1431,13 @@ def an_core_section(save, foot):
              OX - 1.5, OY + BH + 3.1, GREY, r=0.62)
     #  which bit the bottom panel magnifies
     ax2.add_patch(Rectangle((xS + w['w_foil'] * 0.30, OY - 0.12),
-                            w['w_foil'] * 0.40, 2 * w['Ns'] * tp + 0.24,
+                            w['w_foil'] * 0.40, w['Ns'] * NF * tp + 0.24,
                             fc='none', ec=MAG, lw=0.9, ls=(0, (2.5, 2)),
                             zorder=8))
     ax2.annotate('magnified\nbelow', xy=(xS + w['w_foil'] * 0.70,
-                 OY + 2 * w['Ns'] * tp + 0.35),
-                 xytext=(xS + w['w_foil'] + 1.0, OY + 3.2), fontsize=8.0,
-                 color=MAG, ha='left', va='center', zorder=9,
+                 OY + w['Ns'] * NF * tp + 0.35),
+                 xytext=(xG + w['gap'] * 0.5, OY + BH * 0.62), fontsize=8.0,
+                 color=MAG, ha='center', va='center', zorder=9,
                  arrowprops=dict(arrowstyle='-|>', color=MAG, lw=0.9))
 
     #  ========================= FOIL STACK, magnified again S1/S3
@@ -1441,28 +1446,38 @@ def an_core_section(save, foot):
     #  millimetres of the foil's WIDTH are shown - the width is not the
     #  point, the four layers and the skin depth are.
     FW = 3.6
-    ax3.text(-2.7, 1.62, 'the secondary foil stack  —  enlarged '
+    ax3.text(-2.7, 2.30, 'the secondary foil stack  —  enlarged '
              '%.0f×' % (S1 / S3), ha='left', va='center',
              fontsize=10.5, color=NAVY, zorder=8)
     ax3.add_patch(Rectangle((-0.35, -1.28), FW + 0.7, 0.55, fc=PLAS,
                             ec='#55606c', lw=0.9, zorder=3))
     ax3.text(FW / 2.0, -1.00, 'bobbin', ha='center', va='center',
              fontsize=8.0, color='#55606c', zorder=6)
-    LBL = ['NS2  turn 1', 'NS2  turn 2', 'NS3  turn 1', 'NS3  turn 2']
-    for k in range(2 * w['Ns']):
+    #  Only NS2 is drawn: NS3 stacks the same layers on top, and with
+    #  the foil split into parallel strips the full stack no longer fits
+    #  the panel at this magnification.  Each turn's strips are labelled
+    #  once, at the middle strip.
+    NL = w['Ns'] * NF
+    for k in range(NL):
         y0 = -0.70 + k * tp
         ax3.add_patch(Rectangle((0, y0), FW, w['t_foil'], fc=MAG, ec=MAG,
                                 lw=0.4, zorder=6))
-        if k < 2 * w['Ns'] - 1:
+        if k < NL - 1:
             ax3.add_patch(Rectangle((0, y0 + w['t_foil']), FW,
                                     _C.T_FOIL_INS, fc='#d9dde2',
                                     ec='#b6bcc4', lw=0.3, zorder=6))
-        ax3.annotate(LBL[k], xy=(FW + 0.05, y0 + w['t_foil'] / 2.0),
-                     xytext=(FW + 2.55, y0 + w['t_foil'] / 2.0),
+    for t in range(w['Ns']):
+        y0 = -0.70 + (t * NF + NF // 2) * tp
+        lbl = ('NS2  turn %d' % (t + 1)) + (
+            ', %d strips' % NF if NF > 1 else '')
+        ax3.annotate(lbl, xy=(FW + 0.05, y0 + w['t_foil'] / 2.0),
+                     xytext=(FW + 1.9, y0 + w['t_foil'] / 2.0),
                      fontsize=8.0, color=MAG, ha='left', va='center',
                      zorder=8, arrowprops=dict(arrowstyle='-', color=MAG,
                                                lw=0.6, shrinkA=2,
                                                shrinkB=1))
+    ax3.text(FW / 2.0, -0.70 + NL * tp + 0.30, 'NS3 stacks the same on top',
+             ha='center', va='center', fontsize=8.0, color=GREY, zorder=8)
     #  0.05 mm will not carry a dimension arrow at any magnification that
     #  still fits on the page, so both thicknesses are leader callouts.
     ax3.annotate('%.2f mm copper' % w['t_foil'],
@@ -1479,20 +1494,20 @@ def an_core_section(save, foot):
     ax3.add_patch(Rectangle((FW + 0.25, -0.70), 0.55, V['delta'], fc=CYA,
                             ec=CYA, lw=0.4, zorder=6))
     ax3.annotate('one skin depth\nδ = %.3f mm at f$_r$' % V['delta'],
-                 xy=(FW + 0.52, -0.70 + V['delta']), xytext=(FW + 0.95, 1.05),
+                 xy=(FW + 0.52, -0.70 + V['delta']), xytext=(FW + 0.95, 1.75),
                  fontsize=8.0, color='#0d6b74', ha='left', va='center',
                  zorder=9,
                  arrowprops=dict(arrowstyle='-|>', color='#0d6b74', lw=0.9))
-    ax3.text(-2.7, -1.62, 'the copper is one skin depth thick — that is '
+    ax3.text(-2.7, -1.75, 'the copper is one skin depth thick — that is '
              'why the secondary is foil and not a round wire', ha='left',
              va='center', fontsize=8.0, color=GREY, zorder=8)
 
-    foot(fig, 'Drawn to scale from the TDK PQ 40/40 datasheets, core %s '
+    foot(fig, 'Drawn to scale from the TDK %s datasheets, core %s '
               'and coil former %s; the two details are enlarged %.1f and '
               '%.0f times. The winding is laid out by cores.winding() at '
               'J = %.1f A/mm2 with a Litz fill of %.2f, %.2f mm foil and '
               '%.1f mm of margin tape - those four are the assumptions.'
-              % (M['core'], M['former'], S1 / S2, S1 / S3,
+              % (NAME, M['core'], M['former'], S1 / S2, S1 / S3,
                  _C.J_CU, _C.K_LITZ, _C.T_FOIL, _C.MARGIN))
     save(fig, 'an_core_section')
 
@@ -2007,7 +2022,8 @@ def an_xfmr_read(save, foot):
 
     fig = plt.figure(figsize=(9.35, 8.9))
     X0, W = 0.115, 0.845
-    rows = [('i$_p$\none unit', 0.235), ('i$_{NS2}$, i$_{NS3}$\none unit', 0.165),
+    _pu = '\none unit' if V['nser'] > 1 else ''
+    rows = [('i$_p$' + _pu, 0.235), ('i$_{NS2}$, i$_{NS3}$' + _pu, 0.165),
             ('v$_{NS}$', 0.150)]
     y = 0.965
     axs = []
@@ -2078,8 +2094,10 @@ def an_xfmr_read(save, foot):
            color=GRN, path_effects=HALO, zorder=9)
     a.plot([t1 / 2], [1.0], 'o', color=MAG, ms=5, zorder=5)
     ring(a, 4, t1 / 2, 1.0, MAG, dx=-0.055, dy=0.22)
-    a.text(t1 / 2 - 0.03, 1.22, 'I$_{s,pk}$ = %.1f A per unit  (%.0f A per '
-           'rectifier leg)' % (V['Isecpkx'], V['Isec']), ha='left',
+    a.text(t1 / 2 - 0.03, 1.22, ('I$_{s,pk}$ = %.1f A per unit  (%.0f A per '
+           'rectifier leg)' % (V['Isecpkx'], V['Isec'])) if V['nser'] > 1
+           else 'I$_{s,pk}$ = %.1f A, each winding in its half period'
+           % V['Isec'], ha='left',
            va='center', fontsize=9.6, color=MAG, path_effects=HALO, zorder=9)
     #  each winding conducts once per period; its rms counts the idle half
     a.plot([0.0, 0.0, 1.0, 1.0], [-0.06, -0.15, -0.15, -0.06], color=MAG,
@@ -2136,7 +2154,8 @@ def an_xfmr_read(save, foot):
     b = fig.add_axes([X0, 0.060, 0.520, 0.235])
     b.plot(thd, mir(pri), color=NAVY, lw=2.0, label='i$_p$ rms, each cycle')
     b.plot(thd, mir(sec), color=MAG, lw=2.0,
-           label='i$_{NS}$ rms per unit, each cycle')
+           label='i$_{NS}$ rms per unit, each cycle' if V['nser'] > 1
+           else 'i$_{NS}$ rms, each winding, each cycle')
     b.plot(thd, mir(ilmt), color=PUR, lw=1.5, ls=(0, (4, 2.4)),
            label='i$_{Lm,pk}$: does not move')
     b.axhline(V['Iprilc'], color=NAVY, lw=1.1, ls=(0, (1, 2)),
@@ -2198,32 +2217,33 @@ def an_xfmr_read(save, foot):
 
 # ------------------------------------ 17  one unit: symbol, windings and bobbin pins
 def an_xfmr_pins(save, foot):
-    """Which winding comes out on which pin of the PQ 40/40 coil former.
+    """Which winding comes out on which pin of the chosen coil former.
 
-    Left: the schematic symbol of ONE unit with every terminal carrying
-    its pin number - primary NP1, the ZCD auxiliary NAUX, and the two
-    secondary windings NS2 / NS3 that make the centre tap.  Right: the
-    B65884E coil former in the plan view of the TDK drawing, twelve pins
-    at their drawn positions (5.08 pitch, 15.24 between the groups, rows
-    38.1 apart), each ringed in the colour of the winding it carries.
+    Left: the schematic symbol of the transformer with every terminal
+    carrying its pin numbers - primary NP1, the ZCD auxiliary NAUX, and
+    the two secondary windings NS2 / NS3 that make the centre tap.
+    Right: the coil former in the mounting-direction view of the TDK
+    drawing, every pin at its drawn position, each ringed in the colour
+    of the winding it carries.
 
-    The numbers, positions and the assignment all come from cores.PIN_XY
-    and cores.PINMAP - the same source the vendor specification and the
-    tables in the note are written from - so the three cannot disagree.
-    The datasheet marks pin 1 only; the numbering direction is the
-    assumption recorded in cores.py and repeated in the caption.
+    Numbers, positions and the assignment all come from cores.BOBBIN -
+    the same source the vendor specification and the tables in the note
+    are written from - so the three cannot disagree.  The numbering
+    direction is the assumption recorded in cores.py and repeated in
+    the caption.
     """
     import an_pdf as _A
     import cores as C
     V = _A.V
+    B = C.BOBBIN
     COL = {'NP1': MAG, 'NAUX': PUR, 'NS2': GRN, 'NS3': CYA}
-    fig = plt.figure(figsize=(9.35, 5.55))
+    fig = plt.figure(figsize=(9.35, 6.3))
 
     # ---------------------------------------------------------- symbol
     ax = fig.add_axes([0.010, 0.060, 0.455, 0.860])
-    S.frame(ax, -0.6, 15.6, -0.3, 10.9)
-    S.label(ax, 7.2, 10.45, 'ONE UNIT, SCHEMATIC', size=11.5, color=NAVY,
-            weight='bold')
+    S.frame(ax, -0.6, 16.9, -0.3, 10.9)
+    S.label(ax, 7.6, 10.45, 'THE TRANSFORMER, SCHEMATIC', size=11.5,
+            color=NAVY, weight='bold')
     XP, XS, XC = 5.2, 7.2, 6.2          # winding columns and the core
     for xx in (XC - 0.2, XC + 0.2):
         ax.plot([xx, xx], [1.1, 9.1], color=GREY, lw=2.4, zorder=3)
@@ -2238,17 +2258,17 @@ def an_xfmr_pins(save, foot):
         if syms[i][0] == 'turn':
             syms[i] = ('winding',) + syms[i][1:]
 
-    def pin(x, y, n, w):
-        """a terminal: the pin as a marker (a port), its number beside it"""
+    def pin(x, y, pl, w):
+        """a terminal: the pin as a marker (a port), its number(s) beside it"""
         c = COL[w]
         ax.plot([x], [y], 'o', ms=3.4, color=c, zorder=6)
         ax.add_patch(Circle((x, y), 0.30, fc='white', ec=c, lw=1.3,
                             zorder=5))
-        S.label(ax, x + (-0.75 if x < XC else 0.75), y, str(n), size=9.8,
-                color=c, weight='bold', ha='right' if x < XC else 'left', z=7)
+        S.label(ax, x + (-0.75 if x < XC else 0.75), y, C._plus(pl),
+                size=9.8, color=c, weight='bold',
+                ha='right' if x < XC else 'left', z=7)
 
     XL, XR = 2.3, 10.1                  # terminal columns
-    # primary: start (dot) at the top
     a, b = C.PINMAP['NP1']
     S.wire(ax, [(XP, 8.6), (XP, 9.2), (XL, 9.2)], color=COL['NP1'])
     S.wire(ax, [(XP, 5.4), (XP, 4.9), (XL, 4.9)], color=COL['NP1'])
@@ -2257,16 +2277,14 @@ def an_xfmr_pins(save, foot):
     S.dot(ax, XP - 0.42, 8.20, color=COL['NP1'], ms=4.8)
     S.label(ax, 3.55, 7.05, 'NP1\n%d T' % V['Np'], size=10.5,
             color=COL['NP1'], weight='bold')
-    # auxiliary
     a, b = C.PINMAP['NAUX']
     S.wire(ax, [(XP, 3.2), (XP, 3.7), (XL, 3.7)], color=COL['NAUX'])
     S.wire(ax, [(XP, 1.6), (XP, 1.0), (XL, 1.0)], color=COL['NAUX'])
     pin(XL, 3.7, a, 'NAUX')
     pin(XL, 1.0, b, 'NAUX')
     S.dot(ax, XP - 0.42, 2.80, color=COL['NAUX'], ms=4.8)
-    S.label(ax, 3.55, 2.30, 'NAUX\n1 T', size=10.5, color=COL['NAUX'],
-            weight='bold')
-    # secondaries and the tap
+    S.label(ax, 3.55, 2.30, 'NAUX\n%d T' % V['Naux'], size=10.5,
+            color=COL['NAUX'], weight='bold')
     a2, b2 = C.PINMAP['NS2']
     a3, b3 = C.PINMAP['NS3']
     S.wire(ax, [(XS, 8.3), (XS, 9.2), (XR, 9.2)], color=COL['NS2'])
@@ -2289,82 +2307,104 @@ def an_xfmr_pins(save, foot):
             color=COL['NS2'], weight='bold')
     S.label(ax, 8.75, 2.75, 'NS3\n%d T' % V['Ns'], size=10.5,
             color=COL['NS3'], weight='bold')
-    S.label(ax, 12.0, YT, 'centre tap:\njoined on the PCB', size=9.6,
+    S.label(ax, 12.6, YT, 'centre tap:\njoined on the PCB', size=9.6,
             color=NAVY, ha='left')
     S.label(ax, 0.45, 9.2, 'start', size=9.4, color=GREY, ha='right')
     S.label(ax, 0.45, 4.9, 'finish', size=9.4, color=GREY, ha='right')
-    S.label(ax, 12.0, 9.2, 'start', size=9.4, color=GREY, ha='left')
-    S.label(ax, 12.0, 1.0, 'finish', size=9.4, color=GREY, ha='left')
+    S.label(ax, 12.6, 9.2, 'start', size=9.4, color=GREY, ha='left')
+    S.label(ax, 12.6, 1.0, 'finish', size=9.4, color=GREY, ha='left')
     S.label(ax, 7.2, 0.05, u'●  start of the winding (the dot end) '
-            '= the first pin of the pair', size=9.6, color=GREY)
+            '= the first pins of the pair', size=9.6, color=GREY)
 
     # ---------------------------------------------------- coil former
+    P = B['plan']
     bx = fig.add_axes([0.485, 0.060, 0.505, 0.860])
-    S.frame(bx, -38.0, 36.0, -30.8, 32.4)
-    S.label(bx, 0.0, 31.0, 'B65884E COIL FORMER, PLAN VIEW OF THE TDK '
-            'DRAWING', size=11.5, color=NAVY, weight='bold')
-    bx.add_patch(Rectangle((-21.0, -20.0), 42.0, 40.0, fc='#f3f4f6',
+    hw, hh = P['w'] / 2.0, P['h'] / 2.0
+    S.frame(bx, -hw - 13.0, hw + 13.0, -hh - 17.0, hh + 16.0)
+    S.label(bx, 0.0, hh + 14.2, '%s COIL FORMER, VIEW IN MOUNTING DIRECTION'
+            % B['former'], size=11.0, color=NAVY, weight='bold')
+    bx.add_patch(Rectangle((-hw, -hh), P['w'], P['h'], fc='#f3f4f6',
                            ec=GREY, lw=1.2, zorder=1))
-    bx.add_patch(Circle((0, 0), 8.75, fc='white', ec=GREY, lw=1.0,
-                        zorder=1.5))
-    bx.add_patch(Circle((0, 0), 7.75, fc='none', ec=GREY, lw=0.8,
-                        ls=(0, (3, 2)), zorder=1.5))
-    S.label(bx, 0, 0, 'centre\nleg', size=9.4, color=GREY)
-    #  the pin-1 marking is a notch at that corner on the drawing
-    bx.add_patch(Polygon([(-21.0, -20.0), (-23.6, -20.0), (-21.0, -17.4)],
-                         closed=True, fc=GREY, ec=GREY, zorder=2))
-    bx.annotate('pin 1 marking', xy=(-22.6, -19.3), xytext=(-35.0, -23.6),
-                fontsize=9.6, color=GREY, ha='left',
-                arrowprops=dict(arrowstyle='-|>', color=GREY, lw=1.0),
-                zorder=9)
+    if P['coil_w']:
+        #  the coil between the flanges, seen edge-on from below
+        bx.add_patch(Rectangle((-P['coil_w'] / 2.0, -P['coil_h'] / 2.0),
+                               P['coil_w'], P['coil_h'], fc='#e4e7ec',
+                               ec=GREY, lw=0.8, hatch='////', zorder=1.5))
+        bx.text(0, 0, 'coil\n(between the flanges)', fontsize=9.4,
+                color=GREY, ha='center', va='center', zorder=2,
+                bbox=dict(boxstyle='round,pad=0.25', fc='white', ec='none'))
+    if P['mark']:
+        mx, my = P['mark']
+        bx.add_patch(Polygon([(mx, my), (mx - 2.6, my), (mx, my + 2.6)],
+                             closed=True, fc=GREY, ec=GREY, zorder=2))
+        bx.annotate('pin 1 marking', xy=(mx - 1.6, my + 0.7),
+                    xytext=(-hw - 12.0, -hh - 4.6), fontsize=9.6,
+                    color=GREY, ha='left',
+                    arrowprops=dict(arrowstyle='-|>', color=GREY, lw=1.0),
+                    zorder=9)
     by_pin = {}
     for w, (a, b) in C.PINMAP.items():
-        by_pin[a] = by_pin[b] = w
+        for n in a + b:
+            by_pin[n] = w
+    #  pins run along rows (ETD) or columns (PQ): number them on the side
+    #  away from the coil
     for n, (x, y) in C.PIN_XY.items():
         w = by_pin.get(n)
         c = COL[w] if w else '#9aa0a8'
-        bx.add_patch(Circle((x, y), 2.05, fc='white', ec=c, lw=1.6,
+        bx.add_patch(Circle((x, y), 1.85, fc='white', ec=c, lw=1.6,
                             zorder=3))
-        bx.add_patch(Circle((x, y), 0.5, fc=c if w else GREY, ec='none',
+        bx.add_patch(Circle((x, y), 0.45, fc=c if w else GREY, ec='none',
                             zorder=4))
-        S.label(bx, x + (3.0 if x < 0 else -3.0), y, str(n), size=9.6,
-                color=c, weight='bold', ha='left' if x < 0 else 'right')
-    #  winding name at each group of three, outside the pin row
-    def grp(w, ha):
+        if B['pins'] > 12:                              # rows top/bottom
+            S.label(bx, x, y + (3.4 if y > 0 else -3.4), str(n), size=8.8,
+                    color=c, weight='bold')
+        else:
+            S.label(bx, x + (3.0 if x < 0 else -3.0), y, str(n), size=9.6,
+                    color=c, weight='bold',
+                    ha='left' if x < 0 else 'right')
+    #  winding name beside its group of pins
+    def grp(w):
         a, b = C.PINMAP[w]
-        ys = [C.PIN_XY[a][1], C.PIN_XY[b][1]]
-        x = C.PIN_XY[a][0]
-        S.label(bx, x + (-3.4 if x < 0 else 3.4), sum(ys) / 2.0,
-                '%s\n%s' % (w, C.pins(w)), size=10.0, color=COL[w],
-                weight='bold', ha=ha)
-    grp('NP1', 'right')
-    grp('NAUX', 'right')
-    grp('NS2', 'left')
-    grp('NS3', 'left')
-    S.label(bx, -19.05, 22.8, 'primary side', size=9.8, color=NAVY)
-    S.label(bx, 19.05, 22.8, 'secondary side', size=9.8, color=NAVY)
-    #  three datasheet dimensions, so the drawing can be checked against it
-    def dim(x0, y0, x1, y1, t, tx, ty, rot=0):
-        bx.annotate('', xy=(x1, y1), xytext=(x0, y0), zorder=1,
+        xs = [C.PIN_XY[n][0] for n in a + b]
+        ys = [C.PIN_XY[n][1] for n in a + b]
+        x, y = sum(xs) / len(xs), sum(ys) / len(ys)
+        if B['pins'] > 12:
+            S.label(bx, x, (hh + 3.4) if y > 0 else -(hh + 3.4),
+                    '%s   %s' % (w, C.pins(w)), size=9.6, color=COL[w],
+                    weight='bold')
+        else:
+            S.label(bx, x + (-3.4 if x < 0 else 3.4), y,
+                    '%s\n%s' % (w, C.pins(w)), size=10.0, color=COL[w],
+                    weight='bold', ha='right' if x < 0 else 'left')
+    for w in ('NP1', 'NAUX', 'NS2', 'NS3'):
+        grp(w)
+    if B['pins'] > 12:
+        S.label(bx, -hw - 3.0, -20.32, 'primary\nside', size=9.4,
+                color=NAVY, ha='right')
+        S.label(bx, -hw - 3.0, 20.32, 'secondary\nside', size=9.4,
+                color=NAVY, ha='right')
+        #  the two datasheet numbers that place the pins
+        bx.annotate('', xy=(C.PIN_XY[2][0], -hh - 8.0),
+                    xytext=(C.PIN_XY[1][0], -hh - 8.0), zorder=1,
                     arrowprops=dict(arrowstyle='<->', color=GREY, lw=0.8,
                                     shrinkA=0, shrinkB=0))
-        bx.text(tx, ty, t, fontsize=9.4, color=GREY, ha='center',
-                va='center', rotation=rot, zorder=1)
-    #  the vertical dimensions stand outside the winding names, and their
-    #  text is turned so it does not reach back over them
-    dim(-19.05, 26.2, 19.05, 26.2, '38.1', 0, 27.9)
-    dim(-33.6, 12.70, -33.6, 17.78, '5.08', -35.6, 15.24, 90)
-    dim(-33.6, -7.62, -33.6, 7.62, '15.24', -35.6, 0.0, 90)
-    for yy in (-7.62, 7.62):
-        bx.plot([-33.6, -25.5], [yy, yy], color=GREY, lw=0.6, zorder=1)
-    S.label(bx, 0.0, -28.6, 'ring = winding on that pin;  the middle pin of '
-            'each group is left free', size=9.6, color=GREY)
+        bx.text((C.PIN_XY[1][0] + C.PIN_XY[2][0]) / 2, -hh - 10.6,
+                '%.2f' % B['pitch'], fontsize=9.0, color=GREY, ha='center',
+                va='center', zorder=1)
+        bx.annotate('', xy=(hw + 5.0, 20.32), xytext=(hw + 5.0, -20.32),
+                    zorder=1,
+                    arrowprops=dict(arrowstyle='<->', color=GREY, lw=0.8,
+                                    shrinkA=0, shrinkB=0))
+        bx.text(hw + 7.2, 0.0, '%.2f' % B['rows_apart'], fontsize=9.0,
+                color=GREY, ha='center', va='center', rotation=90, zorder=1)
+    S.label(bx, 0.0, -hh - 14.6, 'ring = winding on that pin;  grey pins are '
+            'free', size=9.4, color=GREY)
 
-    foot(fig, 'One transformer unit: the schematic symbol with its pin numbers, '
-              'and the same pins on the PQ 40/40 coil former. Primary and '
-              'auxiliary share the marked side, the two secondaries the '
-              'other; the centre tap is pins %d and %d, joined on the board.'
-              % C.CENTRE_TAP)
+    foot(fig, 'The transformer: the schematic symbol with its pin numbers, '
+              'and the same pins on the %s coil former. Primary and '
+              'auxiliary share one row, the two secondaries the other; the '
+              'centre tap is pins %s, joined on the board.'
+              % (B['former'], C.tap_text()))
     save(fig, 'an_xfmr_pins')
 
 
