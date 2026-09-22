@@ -1,0 +1,26 @@
+---
+paths:
+  - "Design Guide/generators/an_*.py"
+  - "Design Guide/generators/tx_*.py"
+  - "Design Guide/*.pdf"
+---
+# Application Note (PDF) 를 고칠 때
+
+- **손으로 적은 수치가 없다.** 전부 `an_pdf.V` 보간 · `eqref` · `calc` · `figs_pf.gain_points()` 같은 계산에서 온다.
+  설계 수치는 **7장(설계 예제)에만** 싣고 2~6장은 기호와 IC 상수만. 설계점은 `an_pdf.AN_VARIANT` = `7p5to1_x1`.
+- **교차 참조는 이름으로**(`figref/tblref/secref/eqref`, 2-pass). 번호를 손으로 적지 않는다. 안 풀리면 `check_refs()` 가 빌드를 실패시킨다.
+- 수식마다 **문장 → `Equation N` → 가운데 수식 → 그것을 쓰는 문장**, 7장은 `eqagain` 으로 되부르고 바로 아래 대입 한 줄(AN4932 방식).
+  **기호는 쓰기 전에 정의한다** — `an_symbols.py` 가 MISSING 0 · SILENT 를 보고한다. 빌드 뒤 `an_check.py` 와 함께 돌린다.
+- `T()` 는 포맷 안 된 `%%` · `%(…)` 를 거부한다. 캡션에 dict 를 `%s` 로 넣지 말 것(`%(key)s`).
+- **mathtext:** `\mathrm{}` 안의 빈칸은 사라진다 → `\mathrm{ripple\ decides}`. `\qquad` 뒤에 빈칸. `\bigl|` 은 없다(`\left|`).
+- **본문 서체에 없는 글자:** Liberation Sans 에 U+2272(`≲`)가 없다 → `&le;`. NanumGothic 에 그리스 문자가 없어
+  `an_pdf.T()` 가 `_wrap_missing()` 으로 Liberation Sans 에 넘긴다. 새 특수문자를 쓰면 `charToGlyph` 로 확인.
+- 그림은 `figs.py --plain` 이 `figures/an/` 에 쓴 제목 없는 판을 읽는다. `FigBlock` 이 쪽 밑 빈 공간을 그림 하나로 메운다 —
+  전역 축소는 답이 아니다. 캡션은 **그림의 출처가 아니라 논지의 출처**를 인용한다.
+- **레이아웃 코드는 한 벌**(`an_pdf.py`) — 한국어판 `an_kr_pdf.py` · 트랜스포머 `tx_pdf.py` 는 `use_korean()` 과
+  `TITLE/COVER/EQWORD/FIGWORD/TBLWORD` 만 바꾼다. 두 판의 본문은 절 단위로 같다(그림·표·수식 호출과 키가 같은 순서).
+- **순서:** 영문판 먼저 → 사용자 확인 → 한국어판 이식. PDF 는 직접 전달(ZIP 아님).
+- **한국어판 용어**(2026-09-17 사용자 지시): 용량성/유도성 → `capacitive`/`inductive` · 공진 아래/위 → `below`/`above` ·
+  첨두 → 피크 · 승압/강압 → `boost`/`buck` · 이득 → 게인, 이득 여유 → `gain margin` · 왜형 → `distortion` ·
+  완충기 → 버퍼 · 응력 → `stress`. 천이 · 실효 · 영교차 · 역회복 · 기자력은 그대로. **Q 는 품질계수.**
+- 응용 특정 서술(패널 · TV · 세트)은 넣지 않는다. 의인화(lives / 사는 곳)도. 3분할은 선택지 한 절이지 뼈대가 아니다.

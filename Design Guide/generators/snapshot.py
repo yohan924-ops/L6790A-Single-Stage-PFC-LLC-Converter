@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-"""Rewrite the design-values section of CLAUDE.md from the worksheet itself.
+"""Rewrite the design-values section of docs/DESIGN.md from the worksheet itself.
+
+(It was CLAUDE.md section 3 until 2026-09-22; the section kept its number.)
 
 The problem this solves is small and specific. CLAUDE.md is what a new session
 reads first, and its section 3 used to be numbers TYPED IN BY HAND. That block
@@ -36,7 +38,7 @@ import smresult
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 SM = os.path.join(ROOT, 'Smath', 'L6790A_SingleStage_PF_LLC_Design_Guide.sm')
-DOC = os.path.join(ROOT, 'CLAUDE.md')
+DOC = os.path.join(ROOT, 'docs', 'DESIGN.md')
 PREV = os.path.join(HERE, '.snapshot_prev.json')
 
 BEGIN = '<!-- BEGIN GENERATED  ...  snapshot.py 가 씁니다. 손으로 고치지 마십시오 -->'
@@ -318,16 +320,16 @@ def main():
 
     if check_only:
         if cur is None:
-            print('CLAUDE.md has no generated block - run snapshot.py once')
+            print('docs/DESIGN.md has no generated block - run snapshot.py once')
             return 1
         if cur.strip() != block.strip():
-            print('CLAUDE.md section 3 is stale - run snapshot.py')
+            print('docs/DESIGN.md section 3 is stale - run snapshot.py')
             return 1
-        print('CLAUDE.md section 3 is current')
+        print('docs/DESIGN.md section 3 is current')
         return 0
 
     if cur is None:
-        print('no marker block in CLAUDE.md; nothing written.')
+        print('no marker block in docs/DESIGN.md; nothing written.')
         print('Put these two lines around the section 3 code block first:')
         print('  ' + BEGIN)
         print('  ' + END)
@@ -348,7 +350,7 @@ def main():
     io.open(PREV, 'w', encoding='utf-8').write(
         json.dumps({'vals': snap, 'picks': picked}, ensure_ascii=False, indent=0))
 
-    print('CLAUDE.md section 3 rewritten from the worksheet.')
+    print('docs/DESIGN.md section 3 rewritten from the worksheet.')
     print('  values %d · yellow picks %d · checks %d%s'
           % (len(vals), len([p for p in picks if p[2]]), len(checks),
              '' if not missing else ' · MISSING ' + ','.join(sorted(set(missing)))))

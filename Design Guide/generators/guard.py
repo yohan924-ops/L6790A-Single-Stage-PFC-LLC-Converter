@@ -12,7 +12,7 @@ What it checks, only when one of the tracked files has actually changed:
     1. is the sheet older than the builder that makes it?   -> rebuild needed
     2. check_sm.py    - geometry, overlaps, functions, XML
     3. bom_compare.py - the 29 BOM items, workbook against sheet
-    4. snapshot.py    - does CLAUDE.md still describe the sheet it points at?
+    4. snapshot.py    - does docs/DESIGN.md still describe the sheet it points at?
     5. audit_md.py    - do the documents describe things that exist?
 
 Check 4 is the one that matters across machines. CLAUDE.md is what a session
@@ -38,7 +38,7 @@ SM = os.path.join(ROOT, 'Smath', 'L6790A_SingleStage_PF_LLC_Design_Guide.sm')
 XL = os.path.join(ROOT, 'Calculation Excel Sheet',
                   'L6790_spreadsheet_r1_0_corrected_rev0_6.xlsx')
 BUILDERS = [os.path.join(HERE, n) for n in ('build_l6790_smath.py', 'smsheet.py', 'l6790.py')]
-DOC = os.path.join(ROOT, 'CLAUDE.md')
+DOC = os.path.join(ROOT, 'docs', 'DESIGN.md')
 STAMP = os.path.join(HERE, '.guard_stamp.json')
 
 TRACKED = [SM, XL, DOC] + BUILDERS
@@ -112,14 +112,14 @@ def main():
     rc, out = run(['snapshot.py', '--check'])
     if rc != 0:
         problems.append(
-            'CLAUDE.md section 3 no longer matches the worksheet. Run snapshot.py - it '
+            'docs/DESIGN.md section 3 no longer matches the worksheet. Run snapshot.py - it '
             'rewrites the block and prints what moved. Do not edit those numbers by hand.\n'
             + tail(out, 4))
 
     # 5. do the documents still describe things that exist?
     rc, out = run(['audit_md.py'])
     if rc != 0:
-        problems.append('CLAUDE.md / HISTORY.md claim something that is not true '
+        problems.append('CLAUDE.md / DESIGN.md / README.md / HISTORY.md claim something that is not true '
                         '(missing path, dangling section reference, stale count):'
                         + chr(10) + tail(out, 8))
 

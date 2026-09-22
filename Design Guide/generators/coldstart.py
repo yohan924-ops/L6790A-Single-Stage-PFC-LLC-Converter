@@ -28,11 +28,21 @@ GEN = os.path.join(ROOT, 'Design Guide', 'generators')
 c = io.open(os.path.join(ROOT, 'CLAUDE.md'), encoding='utf-8').read()
 h = io.open(os.path.join(ROOT, 'HISTORY.md'), encoding='utf-8').read()
 
-README = os.path.join(GEN, 'README.md')
-POINTER = 'Design Guide/generators/README.md'
-r = ''
-if POINTER in c and os.path.exists(README):
-    r = io.open(README, encoding='utf-8').read()
+# CLAUDE.md names three documents as required reading; each is followed only
+# while CLAUDE.md actually names it (drop the pointer and its answers fail again)
+FOLLOW = {'Design Guide/generators/README.md': os.path.join(GEN, 'README.md'),
+          'docs/DESIGN.md': os.path.join(ROOT, 'docs', 'DESIGN.md'),
+          '.claude/rules/': os.path.join(ROOT, '.claude', 'rules')}
+r, followed = '', []
+for pointer, path in FOLLOW.items():
+    if pointer not in c or not os.path.exists(path):
+        continue
+    if os.path.isdir(path):
+        for f in sorted(os.listdir(path)):
+            r += io.open(os.path.join(path, f), encoding='utf-8').read() + '\n'
+    else:
+        r += io.open(path, encoding='utf-8').read() + '\n'
+    followed.append(pointer)
 reach = c + '\n' + r                 # what a cold session can actually get to
 
 # The questions a cold session has to answer before it can do anything useful,
@@ -43,14 +53,14 @@ QUESTIONS = [
     ('왜 하는가 (목적)', ['400 V 벌크 커패시터와 승압단']),
     ('그 대가는', ['75 mF']),
     ('산출물이 무엇무엇인가', ['산출물은 넷']),
-    ('지금 어디까지 왔나', ['지금 어디까지']),
-    ('다음에 뭘 하나', ['다음에 할 일']),
-    ('사람이 해야 할 일이 있나', ['사람이 해야 할 일']),
+    ('지금 어디까지 왔나', ['설계 수치는 **닫혔다**']),
+    ('다음에 뭘 하나', ['다음 할 일']),
+    ('사람이 해야 할 일이 있나', ['사람이 PC 에서 해야 할 일']),
     ('검증은 어떻게 하나', ['python build_l6790_smath.py', 'python xl_sm_compare.py']),
     ('통과 기준이 뭔가', ['mismatches: 0', 'VERDICT OK', 'different: 0']),
     ('설계값은 어디 있나', ['BEGIN GENERATED']),
-    ('설계값을 손으로 고쳐도 되나', ['손으로 고치지 마십시오']),
-    ('숫자를 헷갈리지 않으려면', ['가장 많이 헷갈리는 것']),
+    ('설계값을 손으로 고쳐도 되나', ['손으로 고치지 마십시오', '손으로 적지 않는다']),
+    ('숫자를 헷갈리지 않으려면', ['숫자를 볼 때마다 어느 것인지 확인']),
     ('시트를 재빌드해도 안전한가', ['사용자가 SMath에서 손으로 옮긴 것은']),
     ('워크북을 직접 고쳐도 되나', ['xlsx_patch.py']),
     ('SMath에서 쓰면 안 되는 함수는', ['정의되지 않은 함수입니다']),
@@ -71,10 +81,11 @@ for q, needles in QUESTIONS:
         miss.append(q)
 
 print('■ 새 세션이 답해야 하는 질문 %d개' % len(QUESTIONS))
-if not r:
-    print('  !! CLAUDE.md 가 %s 를 가리키지 않는다 — 옮긴 절을 못 찾는다' % POINTER)
+for pointer in FOLLOW:
+    if pointer not in followed:
+        print('  !! CLAUDE.md 가 %s 를 가리키지 않는다 — 옮긴 절을 못 찾는다' % pointer)
 if via_readme:
-    print('  CLAUDE.md 의 안내를 따라가 README.md 에서 답한 것 %d개:' % len(via_readme))
+    print('  CLAUDE.md 의 안내를 따라간 문서에서 답한 것 %d개:' % len(via_readme))
     for m in via_readme:
         print('    - ' + m)
 if miss:
@@ -82,7 +93,7 @@ if miss:
     for m in miss:
         print('    - ' + m)
 else:
-    print('  전부 답이 나온다 (CLAUDE.md %d개 · README.md %d개)'
+    print('  전부 답이 나온다 (CLAUDE.md %d개 · 안내를 따라간 문서 %d개)'
           % (len(QUESTIONS) - len(via_readme), len(via_readme)))
 
 # every command the document tells you to run must actually run

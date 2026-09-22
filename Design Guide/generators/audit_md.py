@@ -32,7 +32,7 @@ SM = os.path.join(ROOT, 'Smath', 'L6790A_SingleStage_PF_LLC_Design_Guide.sm')
 # 'AN ' joined the list when the application note became a deliverable
 # with numbered sections of its own - "AN §6.5" is qualified, "§6.5" is not.
 QUALIFIERS = ('가이드', '시트', 'DS', '데이터시트', '스프레드시트', '워크북',
-              'HISTORY.md', 'CLAUDE.md', 'README', '부록', '논문', 'AN ', 'AN§')
+              'HISTORY.md', 'CLAUDE.md', 'DESIGN.md', 'README', '부록', '논문', 'AN ', 'AN§')
 
 # Paths the docs mention on purpose while saying they are not here
 ABSENT_OK = {
@@ -78,6 +78,9 @@ def main():
         docs[n] = io.open(os.path.join(ROOT, n), encoding='utf-8').read()
     docs['README.md'] = io.open(os.path.join(HERE, 'README.md'),
                                 encoding='utf-8').read()
+    # docs/DESIGN.md holds the design sections (old CLAUDE.md 1.3/3/4.2/4.3/5/6/7)
+    docs['DESIGN.md'] = io.open(os.path.join(ROOT, 'docs', 'DESIGN.md'),
+                                encoding='utf-8').read()
 
     # ---------------------------------------------------------- paths
     path_re = re.compile(r'`([A-Za-z0-9_./ &\-]+\.'
@@ -103,7 +106,7 @@ def main():
 
     H = {k: headings(v) for k, v in docs.items()}
     for name, txt in docs.items():
-        for m in re.finditer(r'`(CLAUDE|HISTORY)\.md`\s*§\s*([\d.]+[a-z]?)', txt):
+        for m in re.finditer(r'`(?:docs/)?(CLAUDE|HISTORY|DESIGN)\.md`\s*§\s*([\d.]+[a-z]?)', txt):
             sec = m.group(2).rstrip('.')
             if sec not in H[m.group(1) + '.md']:
                 bad(name, 'cross-ref %s.md §%s: no such section' % (m.group(1), sec))
@@ -141,7 +144,7 @@ def main():
 
     # counts and the on-disk map may be quoted in either document; keep the
     # name so the report points at the file that actually carries the claim
-    QUOTERS = ('CLAUDE.md', 'README.md')
+    QUOTERS = ('CLAUDE.md', 'DESIGN.md', 'README.md')
 
     def where(pat):
         for n in QUOTERS:
@@ -150,7 +153,7 @@ def main():
                 return n, m
         return QUOTERS[0], None
 
-    c = docs['CLAUDE.md'] + '\n' + docs['README.md']
+    c = '\n'.join(docs[n] for n in QUOTERS)
     for phrase, key, expect in (('노란 입력 셀 %s개' % facts['yellow'], 'yellow', None),
                                 ('yellow inputs', 'yellow', None),
                                 ('regions', 'regions', None),
@@ -182,9 +185,9 @@ def main():
                 % (stem, m2.group(1), facts[key]))
 
     # -------------------------------------------- internal consistency
-    rows = len(re.findall(r'^\| \*\*`\w+\.md`\*\*', docs['CLAUDE.md'], re.M))
-    m = re.search(r'ꬸ서는? (\S+?)(?:이고|인데)', c)
-    if m and {2: '둘', 3: '셋'}.get(rows) not in (None, m.group(1)):
+    rows = len(re.findall(r'^\| \*\*`[\w/ ]+\.md`\*\*', docs['CLAUDE.md'], re.M))
+    m = re.search(r'문서는 (\S+?)(?:이고|인데)', docs['CLAUDE.md'])
+    if m and {2: '둘', 3: '셋', 4: '넷'}.get(rows) not in (None, m.group(1)):
         bad('CLAUDE.md', 'says 문서는 %s but the table lists %d' % (m.group(1), rows))
 
     for sub, ext in (('Smath', '.sm'), ('Calculation Excel Sheet', '.xlsx')):
