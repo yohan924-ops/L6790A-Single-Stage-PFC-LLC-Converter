@@ -16,6 +16,7 @@ from the design the way a transcribed value would.
     python an_pdf.py --figs     -> re-render the plain figures first
 """
 import hashlib
+import re
 import os
 import subprocess
 import sys
@@ -512,6 +513,12 @@ EQSIZE = 12.0      # mathtext points on the page; the body is 9.3 pt
 def eqpng(tex, size=EQSIZE):
     if not os.path.isdir(EQD):
         os.makedirs(EQD)
+    #  \frac sets its numerator and denominator in text style, which
+    #  mathtext shrinks to 70 %; a variable inside a fraction then came
+    #  out smaller than the same variable beside it (2026-09-21, user).
+    #  \dfrac keeps display style at every level, so nothing shrinks
+    #  but the sub- and superscripts.
+    tex = re.sub(r'\\frac(?![a-zA-Z])', r'\\dfrac', tex)
     key = hashlib.md5(('%s|%s' % (tex, size)).encode('utf-8')).hexdigest()[:14]
     p = os.path.join(EQD, key + '.png')
     if not os.path.exists(p):
@@ -525,6 +532,7 @@ def eqpng(tex, size=EQSIZE):
 
 
 _EQN = [0]
+WIDE = []                  # equations wider than the column
 EQTEX = {}                 # key -> tex, so the design example can repeat one
 
 
@@ -538,22 +546,38 @@ def eq(tex, size=EQSIZE, number=True, key=None, again=False):
     example substitutes into it (AN4932 restates each one before use).
     """
     from PIL import Image as PIm
-    p = eqpng(tex, size)
-    iw, ih = PIm.open(p).size
-    w = iw / 340.0 * 72
-    h = ih / 340.0 * 72
-    if w > CW - 30:                       # never let a long one run wide
-        h *= (CW - 30) / w
-        w = CW - 30
-    t = Table([[Image(p, w, h)]], colWidths=[CW], rowHeights=[h + 8])
-    t.setStyle(TableStyle([('ALIGN', (0, 0), (0, 0), 'CENTER'),
-                           ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                           ('LEFTPADDING', (0, 0), (-1, -1), 0),
-                           ('RIGHTPADDING', (0, 0), (-1, -1), 0),
-                           ('TOPPADDING', (0, 0), (-1, -1), 1),
-                           ('BOTTOMPADDING', (0, 0), (-1, -1), 1)]))
-    t.spaceBefore = 3
-    t.spaceAfter = 10
+    #  a list of tex strings is one equation set on several lines, each
+    #  centred, under one label - the way a wide one is broken
+    lines = list(tex) if isinstance(tex, (list, tuple)) else [tex]
+    if len(lines) > 1:
+        rows = [eq(t, size, number=False) for t in lines]
+        t = Table([[r] for r in rows], colWidths=[CW])
+        t.setStyle(TableStyle([('LEFTPADDING', (0, 0), (-1, -1), 0),
+                               ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+                               ('TOPPADDING', (0, 0), (-1, -1), 0),
+                               ('BOTTOMPADDING', (0, 0), (-1, -1), 0)]))
+        t.spaceBefore, t.spaceAfter = 3, 10
+        tex = lines[0]
+    else:
+        p = eqpng(tex, size)
+        iw, ih = PIm.open(p).size
+        w = iw / 340.0 * 72
+        h = ih / 340.0 * 72
+    #  Never scaled to fit: a long equation shrunk to the column came out
+    #  visibly smaller than its neighbours (2026-09-21, user).  A wide one
+    #  is reported so the author breaks it into lines, and the build fails
+    #  on it, as it does on a dangling cross reference.
+        if w > CW:
+            WIDE.append('%6.0f pt  %s' % (w, tex[:70]))
+        t = Table([[Image(p, w, h)]], colWidths=[CW], rowHeights=[h + 8])
+        t.setStyle(TableStyle([('ALIGN', (0, 0), (0, 0), 'CENTER'),
+                               ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                               ('LEFTPADDING', (0, 0), (-1, -1), 0),
+                               ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+                               ('TOPPADDING', (0, 0), (-1, -1), 1),
+                               ('BOTTOMPADDING', (0, 0), (-1, -1), 1)]))
+        t.spaceBefore = 3
+        t.spaceAfter = 10
     if not number:
         return t
     if again:
@@ -566,7 +590,7 @@ def eq(tex, size=EQSIZE, number=True, key=None, again=False):
         lab = 'Equation %d' % n
         if key:
             REFS['eq'][key] = n
-            EQTEX[key] = tex
+            EQTEX[key] = lines if len(lines) > 1 else tex
     return KeepTogether([Paragraph(lab, S['eql']), t])
 
 
@@ -623,6 +647,10 @@ def check_refs():
     if dead:
         raise SystemExit(u'풀리지 않는 상호참조 %d건:\n%s'
                          % (len(dead), '\n'.join(dead)))
+    wide = sorted(set(WIDE))
+    if wide:
+        raise SystemExit(u'열 폭(%.0f pt)을 넘는 수식 %d건 — 줄을 나눌 것:\n%s'
+                         % (CW, len(wide), '\n'.join(wide)))
 
 
 

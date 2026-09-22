@@ -2538,12 +2538,12 @@ def build(A):
           'worst case anywhere on the line cycle, and without N<sub>p</sub>, '
           'which is the whole point of the equation:'))
     add(eqagain('Bpk'))
-    add(calc(r'B_{pk}=\frac{%.1f\ \mathrm{V}}{4\times %.2f\ \mathrm{kHz}'
-             r'\times %d\times %.1f\ \mathrm{mm^{2}}}=\mathbf{%.0f\ mT}'
-             r'\qquad A_{e}\geq\frac{%.1f}{4\times %.2f\ \mathrm{kHz}\times %d'
-             r'\times 0.20\ \mathrm{T}}=\mathbf{%.0f\ mm^{2}}'
-             % (V['Vout'], V['fr'], V['Ns'], V['Aemm'], V['Bpk'],
-                V['Vout'], V['fr'], V['Ns'], V['Aereq'])))
+    add(calc([r'B_{pk}=\frac{%.1f\ \mathrm{V}}{4\times %.2f\ \mathrm{kHz}'
+              r'\times %d\times %.1f\ \mathrm{mm^{2}}}=\mathbf{%.0f\ mT}'
+              % (V['Vout'], V['fr'], V['Ns'], V['Aemm'], V['Bpk']),
+              r'A_{e}\geq\frac{%.1f\ \mathrm{V}}{4\times %.2f\ \mathrm{kHz}\times %d'
+              r'\times 0.20\ \mathrm{T}}=\mathbf{%.0f\ mm^{2}}'
+              % (V['Vout'], V['fr'], V['Ns'], V['Aereq'])]))
     add(p('<b>The magnetising peak.</b> Per unit and over L<sub>&mu;</sub>, '
           'not L<sub>open</sub>; the answer must equal i<sub>&mu;,pk</sub>, '
           'because in the open-circuit test they are the same current:'))
