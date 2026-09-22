@@ -1833,18 +1833,55 @@ def build(A):
           '(the proximity effect), and in a side-by-side winding, where the '
           'two windings sit in each other’s leakage field, that term '
           'can dominate the skin term.'))
+    add(p('So a winding is not made of one wire. There are two ways out of '
+          'it, and this note uses both.'))
     ext(bullets([
-        'Use <b>Litz</b> on the primary: many strands, each well under '
-        '2&delta;, individually insulated and transposed. Strand diameter '
-        'around %(ds).1f&nbsp;mm is a usual choice at this frequency.'
-        % dict(ds=0.2),
-        'On a two-turn, high-current secondary, <b>copper foil</b> is '
-        'usually better than wire: the thickness can be held near &delta; '
-        'while the width fills the window, and it terminates well into a '
-        'centre tap.',
+        '<b>Litz wire</b> on the primary. A Litz conductor is a bundle of '
+        'many fine wires, twisted and transposed so that each one takes a '
+        'turn at every position in the bundle, and each one insulated from '
+        'its neighbours by its own enamel. One of those fine wires is a '
+        '<b>strand</b>: d<sub>s</sub> is its diameter and '
+        'a<sub>s</sub> is its copper cross-section, the area of that '
+        'one little circle. Because the strands are separately '
+        'insulated they cannot share a skin, the rule to satisfy is '
+        'd<sub>s</sub>&nbsp;&le;&nbsp;2&delta; <b>per strand</b>, not '
+        'for the bundle as a whole.',
+        '<b>Copper foil</b> on a low-voltage, high-current secondary: a thin '
+        'strip whose thickness t<sub>f</sub> is held near &delta; while its '
+        'width does the carrying. It also terminates well into a centre tap.',
         'Whatever is chosen, the ac resistance is what heats the winding. '
         'The dc resistance &rho;&thinsp;l<sub>N</sub>N/A<sub>cu</sub> is a '
         'floor, not an answer.']))
+    add(p('<b>Sizing the Litz.</b> Pick a standard strand diameter at or '
+          'below 2&delta;; its copper area is then a circle, and the number '
+          'of strands is simply the copper the winding needs divided by what '
+          'one strand provides:'))
+    add(eq(r'a_{s}=\frac{\pi d_{s}^{2}}{4}\,,\qquad '
+           r'n_{s}=\left\lceil\frac{A_{cu}}{a_{s}}\right\rceil',
+           key='astrand'))
+    add(p('with A<sub>cu</sub> from Equation&nbsp;%s. The finished bundle is '
+          'wider than that copper, because round strands in a round bundle '
+          'leave gaps between them and every strand carries enamel and the '
+          'bundle a serving. That is collected into a fill factor '
+          'k<sub>litz</sub>, the fraction of the bundle&rsquo;s area that is '
+          'copper &mdash; about 0.5 to 0.6 for a served bundle &mdash; and '
+          'the outside diameter the bobbin has to take is'
+          % ER('window')))
+    add(eq(r'd_{litz}=\sqrt{\frac{4A_{cu}}{\pi k_{litz}}}', key='litz'))
+    add(p('<b>Sizing the foil.</b> The thickness is chosen first, from the '
+          'skin depth and from what the supplier stocks, and the width '
+          'follows. If that width is more than the bobbin can take, the turn '
+          'is made of several narrower strips connected in parallel and '
+          'stacked radially rather than one wide strip laid axially:'))
+    add(eq(r'w_{f}=\frac{A_{cu}}{t_{f}}\,,\qquad '
+           r'n_{f}=\left\lceil\frac{w_{f}}{w_{f,max}}\right\rceil',
+           key='foil'))
+    add(note('<b>Neither equation is a loss calculation.</b> They size the '
+             'copper so that the current density and the skin depth are both '
+             'respected, and they say what will fit. The ac resistance that '
+             'follows &mdash; skin plus proximity &mdash; is a separate '
+             'question, and on a side-by-side winding the proximity term is '
+             'usually the larger of the two.'))
 
     add(h2('Isolation, margins and what they cost in window'))
     add(p('The transformer is the isolation barrier of the whole supply, so '
@@ -2728,7 +2765,7 @@ def build(A):
     add(calc((r'n_{T}=n\sqrt{1+\lambda_{act}}=%.3f\times %.4f=\mathbf{%.3f}'
               % (V['n'], _rt, V['nT']))
              + (r'\ =\ %d:%d' % (V['NpSet'], V['Ns']) if V['nser'] == 1 else
-                r'\ =\ %d:%d\ \mathrm{across the assembly},\ %d:%d\ \mathrm{per unit}'
+                r'\ =\ %d:%d\ \mathrm{across\ the\ assembly},\ %d:%d\ \mathrm{per\ unit}'
                 % (V['NpSet'], V['Ns'], V['Np'], V['Ns']))))
     add(tbl('The design, step by step: the results of the nine steps.',
             [['Step', 'Quantity', 'Eq.', 'Result'],
@@ -3181,42 +3218,47 @@ def build(A):
              r'=%(d).3f\;\mathrm{mm}'
              % dict(fr=V['fr'], d=V['delta'])))
     add(p('A round conductor thicker than about 2&delta;&nbsp;=&nbsp;'
-          '%(d2).2f&nbsp;mm carries no more current than one of 2&delta;, so '
-          'the primary is Litz. The standard strand nearest and safely '
-          'inside that is <b>&oslash;%(ds).2f&nbsp;mm</b>, which is '
+          '%(d2).2f&nbsp;mm carries no more current than one of 2&delta; '
+          '(Section&nbsp;%(sec)s), so the primary is Litz. The standard '
+          '<b>strand</b> &mdash; one of the individually insulated fine '
+          'wires the bundle is made of &mdash; nearest and safely inside '
+          'that is <b>d<sub>s</sub> = &oslash;%(ds).2f&nbsp;mm</b>, which is '
           '%(rat).1f times smaller than 2&delta; and therefore fully '
-          'penetrated. Each strand carries'
+          'penetrated. Its copper cross-section a<sub>s</sub>, and the '
+          'number of strands the winding needs, are Equation&nbsp;%(e)s:'
           % dict(d2=2 * V['delta'], ds=_CORE.D_STRAND,
-                 rat=2 * V['delta'] / _CORE.D_STRAND)))
-    add(eq(r'a_{s}=\frac{\pi d_{s}^{2}}{4}', key='astrand'))
+                 rat=2 * V['delta'] / _CORE.D_STRAND,
+                 sec=SR('Skin depth, and why the wire is not a wire'),
+                 e=ER('astrand'))))
+    add(eqagain('astrand'))
     add(calc(r'a_{s}=\frac{\pi\cdot(%(ds).2f)^{2}}{4}'
-             r'=%(a).5f\;\mathrm{mm^{2}}'
-             % dict(ds=_CORE.D_STRAND,
+             r'=%(a).5f\;\mathrm{mm^{2}}\,,\qquad '
+             r'n_{s}=\left\lceil\frac{%(ap).2f}{%(a).5f}\right\rceil'
+             r'=%(n)d'
+             % dict(ds=_CORE.D_STRAND, ap=_rp[3], n=_w['n_strand'],
                     a=3.141592653589793 * _CORE.D_STRAND ** 2 / 4)))
-    add(p('so the strand count is the copper area divided by that, and the '
-          'served bundle is bigger than the bare copper because round '
-          'strands in a round bundle leave gaps and every strand is '
-          'insulated. With a bundle fill factor '
-          'k<sub>litz</sub>&nbsp;=&nbsp;%(kl).2f:' % dict(kl=_CORE.K_LITZ)))
-    add(eq([r'n_{s}=\left\lceil\frac{A_{cu}}{a_{s}}\right\rceil',
-            r'd_{litz}=\sqrt{\frac{4A_{cu}}{\pi k_{litz}}}'],
-           key='litz'))
-    add(calc(r'n_{s}=\left\lceil\frac{%(ap).2f}{%(a).5f}\right\rceil'
-             r'=%(n)d,\qquad d_{litz}=\sqrt{\frac{4\cdot%(ap).2f}'
-             r'{\pi\cdot%(kl).2f}}=%(dl).2f\;\mathrm{mm}'
-             % dict(ap=_rp[3], a=3.141592653589793 * _CORE.D_STRAND ** 2 / 4,
-                    n=_w['n_strand'], kl=_CORE.K_LITZ, dl=_w['d_litz'])))
+    add(p('The served bundle is bigger than that bare copper, so its outside '
+          'diameter comes from Equation&nbsp;%(e)s with a fill factor '
+          'k<sub>litz</sub>&nbsp;=&nbsp;%(kl).2f:'
+          % dict(kl=_CORE.K_LITZ, e=ER('litz'))))
+    add(eqagain('litz'))
+    add(calc(r'd_{litz}=\sqrt{\frac{4\cdot%(ap).2f}{\pi\cdot%(kl).2f}}'
+             r'=%(dl).2f\;\mathrm{mm}'
+             % dict(ap=_rp[3], kl=_CORE.K_LITZ, dl=_w['d_litz'])))
     add(p('<b>The secondary is foil instead.</b> Two turns of %(a).2f&nbsp;'
           'mm&sup2; as round wire would be a bundle thicker than the whole '
-          'build; as foil the thickness can be held near &delta; and the '
-          'width does the rest. At the standard gauge '
-          't<sub>f</sub>&nbsp;=&nbsp;%(t).2f&nbsp;mm the width one turn '
-          'needs is A<sub>cu</sub>/t<sub>f</sub>&nbsp;=&nbsp;'
-          '%(w).1f&nbsp;mm, which is wider than the bobbin, so it is made '
-          'as <b>%(n)d strips of %(ws).1f&nbsp;mm in parallel</b> stacked '
-          'radially rather than one strip laid axially.'
-          % dict(a=_rs[3], t=_CORE.T_FOIL, w=_rs[3] / _CORE.T_FOIL,
-                 n=_w['n_foil'], ws=_w['w_foil'])))
+          'build. At the standard gauge t<sub>f</sub>&nbsp;=&nbsp;'
+          '%(t).2f&nbsp;mm, Equation&nbsp;%(e)s gives'
+          % dict(a=_rs[3], t=_CORE.T_FOIL, e=ER('foil'))))
+    add(calc(r'w_{f}=\frac{%(a).2f}{%(t).2f}=%(w).1f\;\mathrm{mm}'
+             r'\,,\qquad n_{f}=\left\lceil\frac{%(w).1f}{%(wm).1f}'
+             r'\right\rceil=%(n)d\;\Rightarrow\;%(n)d\times'
+             r'%(ws).1f\;\mathrm{mm}'
+             % dict(a=_rs[3], t=_CORE.T_FOIL, w=_rs[3] / _CORE.T_FOIL,
+                    wm=_CORE.W_FOIL_MAX, n=_w['n_foil'], ws=_w['w_foil'])))
+    add(p('so one turn is <b>%(n)d strips of %(ws).1f&nbsp;mm in '
+          'parallel</b>, stacked radially rather than one strip laid '
+          'axially.' % dict(n=_w['n_foil'], ws=_w['w_foil'])))
     add(tbl('The winding, from current to copper. NS3 is the same as NS2.',
 
             [['Step', 'Primary NP1', 'Secondary NS2'],
@@ -3313,7 +3355,7 @@ def build(A):
     add(eqagain('Chold'))
     add(calc(r'C_{out}\geq\frac{2\times %.1f\ \mathrm{W}\times %.3f\ \mathrm{s}}'
              r'{%.2f^{2}-%.0f^{2}}=\mathbf{%.2f\ mF}'
-             r'\qquad(\mathrm{started at }V_{out}:\ %.2f\ \mathrm{mF})'
+             r'\qquad(\mathrm{started\ at\ }V_{out}:\ %.2f\ \mathrm{mF})'
              % (V['Pout'], V['Thold'] / 1e3, V['Vout'] - V['dVo'] / 2,
                 V['Vomin'], V['Chold'],
                 2 * V['Pout'] * V['Thold'] / 1e3
@@ -3322,7 +3364,7 @@ def build(A):
           'at k = V<sub>o,min</sub>/V<sub>out</sub> = %(k).3f:'
           % dict(k=V['Vomin'] / V['Vout'])))
     add(eqagain('ripscreen'))
-    add(calc(r'%.3f\ >\ %.3f\quad\Longrightarrow\quad\mathrm{ripple decides}'
+    add(calc(r'%.3f\ >\ %.3f\quad\Longrightarrow\quad\mathrm{ripple\ decides}'
              % (V['ripLHS'], V['ripRHS'])))
     add(p('The two are only %(ripK).3f apart; relaxed to 10&nbsp;%% ripple '
           'the two sides would swap. The bank fitted is the next assembly '
