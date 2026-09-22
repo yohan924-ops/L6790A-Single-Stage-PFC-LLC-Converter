@@ -15,7 +15,7 @@ ST **L6790A** 로 **단일단(Single-Stage) PF LLC** 를 설계한다. 90–264 
 | **`CLAUDE.md`** (이 파일) | 무엇을 만들고, 지금 어디이고, 뭘 하면 되나 | 매 세션 자동 |
 | **`docs/DESIGN.md`** | 설계 판단 · **현재 설계값(정본)** · 미확정 · 동작 원리 · 반복 실수 · 핀 규칙 | **설계 수치·설계 서술을 쓰거나 고치기 전에** |
 | **`Design Guide/generators/README.md`** | 스크립트 50여 개가 각각 뭘 하나 · 표준 절차와 기대값 · 시트 구조 | 도구를 돌리기 전에 |
-| **`HISTORY.md`** | 왜 그렇게 정했나 — 근거 · 정오표 · 사고 기록 · 날짜별 타임라인 | 근거가 필요할 때 |
+| **`docs/HISTORY.md`** | 왜 그렇게 정했나 — 근거 · 정오표 · 사고 기록 · 날짜별 타임라인 | 근거가 필요할 때 |
 
 `.claude/rules/` 의 규칙 4개(`smath` · `xlsx` · `figures` · `an`)는 **해당 파일을 건드릴 때 로드**된다 —
 `.sm` 과 `.xlsx` 를 깨뜨리는 함정 목록이 거기 있다. **경로 조건이 안 먹는 버전이면 항상 로드된다.**
@@ -51,6 +51,7 @@ ST **L6790A** 로 **단일단(Single-Stage) PF LLC** 를 설계한다. 90–264 
 | `Design Guide/L6790A_Transformer_Design_KR_v1.0.pdf` | 트랜스포머 설계 정리 9쪽(`tx_pdf.py`+`tx_body.py`) | v1.0 |
 | `Design Guide/generators/` | 도구 체인 전부 — README 참조 | |
 | `Training Material/…Design_Training.pptx` | 영문 교육자료 61장 | 한국어판 남음 |
+| **`LGE_670W_L6790A Single Stage PFC LLC TV Power/`** | **본 보드의 Altium 회로도 프로젝트** — `L6790A_Si.SchDoc`(1차 Si) · `L6790A_GaN.SchDoc`(1차 GaN) · `Library/Schematic.SCHLIB` · 1쪽 PDF(Si 시트, 표제 "LG L6790A Single Stage PFC LLC"). 2026-09-16 Drive 에서 들어왔고 **어느 문서도 대조한 적이 없다** — 회로도가 있으면 회로도와 함께 판단한다는 규칙에 걸리는 미완 항목 | 원본 · **미대조** |
 | `Datasheet/` · `EVB Schematic/` · `LGE Material/` · `Reference/` | 입력 자료. DS 는 **DRAFT**(TBD · 내부 모순 있음). `Reference/Visio-LLC drawing.pdf` 가 본 설계 회로도(벡터) | 원본 |
 
 ## 지금 상태와 다음 할 일
@@ -62,6 +63,7 @@ ST **L6790A** 로 **단일단(Single-Stage) PF LLC** 를 설계한다. 90–264 
 | 스프레드시트 rev 0.7 | 정리만 남았다 — `CHANGELOG_rev0_7` 시트 분리, 그때 **CHANGELOG 에 없는 설계 셀 48개**를 채운다 | 대기 |
 | 교육자료 한국어판 | 영문 61장 끝, 한국어판 | 대기 |
 | 열린 설계 항목 3 | 코어 미선정(`k.Ae`) · `n.SR` 2→3(`k.PSR`) · `R.T` 11→10 kΩ(7.5:1 채택 시) — `docs/DESIGN.md` §4.2 | 대기 |
+| **Altium 회로도 대조** | `LGE_670W_…/L6790A_Si.SchDoc` 의 부품값·핀 연결을 BOM(시트 §19)·핀 규칙(`docs/DESIGN.md` §6.2)과 대조. 한 번도 안 했다 | 대기 |
 | 시제품 실측 | `docs/DESIGN.md` §4.3 의 11항목 | 보드 |
 
 **사람이 PC 에서 해야 할 일** (기계가 대신 못 한다): ① 6:1 워크북을 한 번 열었다 저장(`calcChain` 없음, `f.Min` 캐시가 옛 390 pF 값)

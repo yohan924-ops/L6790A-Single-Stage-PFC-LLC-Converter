@@ -6,3 +6,11 @@ __pycache__/
 #  itself.  It is a 7 MB diagnostic that one command regenerates from the
 #  real PDF, and committing it would double the note in every clone.
 *_marked.pdf
+
+#  per-machine state written by guard.py and snapshot.py (mtimes and the
+#  last snapshot); committing them makes every clone disagree with itself
+Design Guide/generators/.guard_stamp.json
+Design Guide/generators/.snapshot_prev.json
+
+#  Altium writes an ECO log on every compile; they are not part of the design
+LGE_670W_L6790A Single Stage PFC LLC TV Power/Project Logs/

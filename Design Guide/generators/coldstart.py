@@ -26,7 +26,7 @@ ROOT = os.path.normpath(os.path.join(os.path.dirname(
     os.path.abspath(__file__)), '..', '..'))
 GEN = os.path.join(ROOT, 'Design Guide', 'generators')
 c = io.open(os.path.join(ROOT, 'CLAUDE.md'), encoding='utf-8').read()
-h = io.open(os.path.join(ROOT, 'HISTORY.md'), encoding='utf-8').read()
+h = io.open(os.path.join(ROOT, 'docs', 'HISTORY.md'), encoding='utf-8').read()
 
 # CLAUDE.md names three documents as required reading; each is followed only
 # while CLAUDE.md actually names it (drop the pointer and its answers fail again)

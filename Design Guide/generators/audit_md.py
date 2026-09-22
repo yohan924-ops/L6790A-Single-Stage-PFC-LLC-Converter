@@ -74,8 +74,8 @@ def main():
     # It is read here so the path / script / count checks keep their reach -
     # otherwise moving a section would silently switch its checks off.
     docs = {}
-    for n in ('CLAUDE.md', 'HISTORY.md'):
-        docs[n] = io.open(os.path.join(ROOT, n), encoding='utf-8').read()
+    docs['CLAUDE.md'] = io.open(os.path.join(ROOT, 'CLAUDE.md'), encoding='utf-8').read()
+    docs['HISTORY.md'] = io.open(os.path.join(ROOT, 'docs', 'HISTORY.md'), encoding='utf-8').read()
     docs['README.md'] = io.open(os.path.join(HERE, 'README.md'),
                                 encoding='utf-8').read()
     # docs/DESIGN.md holds the design sections (old CLAUDE.md 1.3/3/4.2/4.3/5/6/7)
