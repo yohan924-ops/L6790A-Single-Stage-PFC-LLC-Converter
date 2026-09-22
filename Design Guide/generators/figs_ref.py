@@ -887,10 +887,10 @@ def an_cap_ind(save, foot):
     times the tank current, drawn into a device that is still standing at
     the full rail.  The shape follows ON Semiconductor AN-4151 figure 12.
     """
-    fig = plt.figure(figsize=(9.2, 8.4))
+    fig = plt.figure(figsize=(9.2, 10.2))
     lam, q = 0.55, 0.766
 
-    ax = fig.add_axes([0.095, 0.712, 0.845, 0.252])
+    ax = fig.add_axes([0.095, 0.838, 0.845, 0.147])
     fn = np.linspace(0.34, 2.4, 1200)
     g = np.array([M(f, q, lam) for f in fn])
     edge = zvs_edge(q, lam)
@@ -930,19 +930,34 @@ def an_cap_ind(save, foot):
     for c, (fnx, nm, col) in enumerate(((edge * 0.80, 'capacitive', MAG),
                                         (edge * 1.45, 'inductive', GRN))):
         phi = phase(fnx, q, lam)               # arg Z_in, radians
-        xc = 0.095 + c * 0.462 + 0.188
-        fig.text(xc, 0.648, nm, ha='center',
-                 fontsize=13, color=col, fontweight='bold')
-        fig.text(xc, 0.626,
-                 'f$_{sw}$/f$_r$ = %.2f,   arg Z$_{in}$ = %+.0f$\degree$'
-                 % (fnx, np.degrees(phi)), ha='center', fontsize=10.5,
-                 color=GREY)
         tt = np.linspace(0, 2, 4000)
         vd = np.where((tt % 1.0) < 0.5, 1.0, -1.0)
         cur = np.sin(2 * np.pi * tt - phi)
         on = (tt % 1.0) < 0.5                  # S1 conducting
-        ids = np.where(on, cur, 0.0)
         hard = np.sin(-phi) > 0
+        xc = 0.095 + c * 0.462 + 0.188
+        fig.text(xc, 0.795, nm, ha='center',
+                 fontsize=13, color=col, fontweight='bold')
+        fig.text(xc, 0.776,
+                 'f$_{sw}$/f$_r$ = %.2f,   arg Z$_{in}$ = %+.0f$\degree$'
+                 % (fnx, np.degrees(phi)), ha='center', fontsize=10.5,
+                 color=GREY)
+        #  THE CIRCUIT, above its own waveforms.  Read on their own the
+        #  three traces do not say why one case recovers a diode and the
+        #  other closes on a conducting one and is fine (2026-09-22,
+        #  user): the answer is which device is carrying the tank current
+        #  when the gate rises, and only a circuit shows that.
+        cx = _ax(fig, [0.030 + c * 0.492, 0.445, COMM_W, 0.321], *COMM_XY)
+        commutation(cx, hard, title=False)
+        fig.text(xc, 0.428,
+                 ('S1 closes onto S2\u2019s conducting body diode: the rail '
+                  'is\nshorted through both until that charge is swept out'
+                  if hard else
+                  'the node is already over and S1\u2019s own body diode is\n'
+                  'conducting, so S1 closes across zero volts'),
+                 ha='center', va='top', fontsize=10.2, color=col,
+                 linespacing=1.45)
+        ids = np.where(on, cur, 0.0)
         if hard:
             #  Reverse recovery of the OPPOSITE body diode, swept out
             #  through the device that is closing. Height and width are
@@ -952,12 +967,12 @@ def an_cap_ind(save, foot):
                 ids = ids + np.where(on & (tt >= k),
                                      2.35 * np.exp(-(tt - k) / 0.009), 0.0)
             ids = np.clip(ids, ILOW, IHI)
-        y = 0.600
-        rows = (('v$_d$', 0.092, -1.45, 1.45),
-                ('i$_{Lr}$', 0.092, -1.45, 1.45),
-                ('i$_{DS}$', 0.118, ILOW, IHI))
+        y = 0.410
+        rows = (('v$_d$', 0.0735, -1.45, 1.45),
+                ('i$_{Lr}$', 0.0735, -1.45, 1.45),
+                ('i$_{DS}$', 0.0931, ILOW, IHI))
         for nmx, h, lo, hi in rows:
-            y -= h + 0.034
+            y -= h + 0.0245
             a = _wave_ax(fig, [0.095 + c * 0.462, y, 0.376, h], 0, 2,
                          lo, hi, nmx if c == 0 else None)
             if nmx.startswith('v$_d$'):
@@ -982,24 +997,21 @@ def an_cap_ind(save, foot):
                           color=GRN, size=10, ha='left')
             for k in (0.0, 1.0):
                 a.axvline(k, color=GREY, lw=0.8, ls=(0, (2, 3)))
-        tail = ('The current was ALREADY flowing the other way, so the\n'
-                'diode of the switch about to close is conducting and\n'
-                'has to be recovered. Hard switching, and the spike is\n'
-                'dissipated in the closing device.'
+        tail = ('The current was ALREADY flowing the other way, so\n'
+                'the diode of the switch about to close conducts and\n'
+                'has to be recovered: the spike lands in that device.'
                 if hard else
                 'The current had already swung the node over, so this\n'
                 'switch closes across its own conducting body diode.\n'
                 'Zero volts, no recovery, no spike.')
-        fig.text(xc, y - 0.026, tail, ha='center',
-                 va='top', fontsize=10.5, color=col, linespacing=1.5)
+        fig.text(xc, y - 0.020, tail, ha='center',
+                 va='top', fontsize=10.2, color=col, linespacing=1.45)
 
-    foot(fig, 'The boundary is where the tank input impedance phase crosses '
-              'zero, and that is a little above the peak of the gain curve - '
-              'so quoting the peak reports a band of hard switching as '
-              'inductive. The shaded regions come from l6790.zvs_edge, which '
-              'solves the phase for zero in closed form; the two drain '
-              'currents are drawn to one scale. i$_{DS}$ is the drain '
-              'current of the device that is closing.')
+    foot(fig, 'Top: where the boundary sits on the gain curve. Middle: the '
+              'leg at the instant S1 is gated on - which device is carrying '
+              'the tank current is the whole of the difference. Bottom: what '
+              'that costs, in the drain current of S1. The two drain '
+              'currents are drawn to one scale.')
     save(fig, 'an_cap_ind')
 
 
@@ -1010,83 +1022,92 @@ def _bd(x, y, h, dx=0.80):
             (x, y + h / 2)]
 
 
-def an_recovery(save, foot):
-    """The two commutations, drawn - why one recovers a diode and one does not.
+COMM_XY = (-0.6, 9.4, -0.9, 7.0)      # the data box a commutation panel needs
+COMM_W = 0.450                        # ... at this width on a 9.2 in figure
 
-    The gain curve says which side of the boundary the converter is on and
-    the waveforms say what the switch current looks like, but neither says
-    WHY the capacitive side destroys devices.  It is one sentence and it
-    needs a circuit: on the capacitive side the incoming switch closes onto
-    a body diode that is still conducting, and a diode does not block until
-    its stored charge has been swept out.  For that moment the rail is
-    short-circuited through both devices.
+
+def commutation(ax, cap, title=True):
+    """One switching instant in one leg, either side of the boundary.
+
+    Drawn here rather than inside a figure because two figures need it:
+    the section that introduces capacitive and inductive has to show WHY
+    one of them recovers a diode - the waveforms alone do not say it
+    (2026-09-22, user) - and the section that goes through the recovery
+    in detail draws the same instant.  One drawing, called twice, so the
+    two cannot drift apart.
+
+    `ax` must already be framed on COMM_XY.
     """
     RED = '#C21807'
     HI, LO, XL = 6.0, 0.0, 3.0
     YM, HS = 3.0, 1.8
     YS1, YS2 = 4.5, 1.5
     XB0, XB1, XR = 5.3, 7.5, 8.6
-    fig = plt.figure(figsize=(9.2, 5.3))
+    #  rails.  The top one stops at the leg, so it has no loose end;
+    #  the bottom one carries the tank return home.
+    S.wire(ax, [(0.25, HI), (XL, HI)])
+    S.wire(ax, [(0.25, LO), (XR, LO)])
+    S.dot(ax, 0.25, HI)
+    S.dot(ax, 0.25, LO)
+    S.label(ax, 0.25, HI + 0.52, 'V$_{in}$', size=11)
+    S.label(ax, 0.25, LO - 0.52, '0', size=11)
+    #  the leg
+    S.wire(ax, [(XL, HI), (XL, YS1 + HS / 2)])
+    S.wire(ax, [(XL, YS1 - HS / 2), (XL, YS2 + HS / 2)])
+    S.wire(ax, [(XL, YS2 - HS / 2), (XL, LO)])
+    S.dot(ax, XL, LO)
+    X.mosfet(ax, XL, YS1, 'S1', 'on' if cap else 'diode', h=HS,
+             gate=0.95, coss=False, size=11)
+    X.mosfet(ax, XL, YS2, 'S2', 'diode' if cap else 'off', h=HS,
+             gate=0.95, coss=False, size=11)
+    #  the tank, as a block: this figure is about the leg
+    S.wire(ax, [(XL, YM), (XB0, YM)])
+    S.wire(ax, [(XB1, YM), (XR, YM), (XR, LO)])
+    S.dot(ax, XL, YM)
+    ax.add_patch(Rectangle((XB0, YM - 0.70), XB1 - XB0, 1.40, fc=LT,
+                           ec=GREY, lw=1.3, zorder=4))
+    X.txt(ax, (XB0 + XB1) / 2, YM, 'resonant\ntank', size=10.5, z=5)
 
-    for k, cap in enumerate((True, False)):
-        ax = _ax(fig, [0.030 + k * 0.492, 0.300, 0.450, 0.610],
-                 -0.6, 9.4, -0.9, 7.0)
-        #  rails.  The top one stops at the leg, so it has no loose end;
-        #  the bottom one carries the tank return home.
-        S.wire(ax, [(0.25, HI), (XL, HI)])
-        S.wire(ax, [(0.25, LO), (XR, LO)])
-        S.dot(ax, 0.25, HI)
-        S.dot(ax, 0.25, LO)
-        S.label(ax, 0.25, HI + 0.52, 'V$_{in}$', size=11)
-        S.label(ax, 0.25, LO - 0.52, '0', size=11)
-        #  the leg
-        S.wire(ax, [(XL, HI), (XL, YS1 + HS / 2)])
-        S.wire(ax, [(XL, YS1 - HS / 2), (XL, YS2 + HS / 2)])
-        S.wire(ax, [(XL, YS2 - HS / 2), (XL, LO)])
-        S.dot(ax, XL, LO)
-        X.mosfet(ax, XL, YS1, 'S1', 'on' if cap else 'diode', h=HS,
-                 gate=0.95, coss=False, size=11)
-        X.mosfet(ax, XL, YS2, 'S2', 'diode' if cap else 'off', h=HS,
-                 gate=0.95, coss=False, size=11)
-        #  the tank, as a block: this figure is about the leg
-        S.wire(ax, [(XL, YM), (XB0, YM)])
-        S.wire(ax, [(XB1, YM), (XR, YM), (XR, LO)])
-        S.dot(ax, XL, YM)
-        ax.add_patch(Rectangle((XB0, YM - 0.70), XB1 - XB0, 1.40, fc=LT,
-                               ec=GREY, lw=1.3, zorder=4))
-        X.txt(ax, (XB0 + XB1) / 2, YM, 'resonant\ntank', size=10.5, z=5)
-
-        if cap:
+    if cap:
+        if title:
             ax.set_title('CAPACITIVE — S1 closes onto a conducting diode',
                          fontsize=11.5, color=MAG, pad=6)
-            #  vertices at the device edges, so a head can be put on a
-            #  clear stretch of leg instead of inside a symbol
-            X.path(ax, [(0.25, HI), (XL, HI), (XL, YS1 + HS / 2),
-                        (XL, YS1 - HS / 2), (XL, YS2 + HS / 2)]
-                   + _bd(XL, YS2, HS)[::-1] + [(XL, LO), (0.25, LO)],
-                   heads=((2, 0.50), (4, 0.78), (7, 0.50), (9, 0.50)),
-                   color=RED)
-            #  the tank current is what put that diode into conduction, so
-            #  it is named - but not highlighted, or it would run along the
-            #  same leg as the fault current and neither would be readable
-            ax.annotate('', xy=(XB0 - 0.25, YM), xytext=(XL + 0.55, YM),
-                        arrowprops=dict(arrowstyle='-|>', color=MAG, lw=2.0))
-            X.txt(ax, (XL + XB0) / 2 + 0.45, YM + 0.60,
-                  'i$_{Lr}$ > 0', size=10.5, color=MAG, halo=True, z=9)
-            _call(ax, (XL + 0.80, YS2), (XL + 1.35, YS2 - 1.25),
-                  'still carrying,\nstill charged', color=GRN, size=10.5)
-        else:
+        #  vertices at the device edges, so a head can be put on a
+        #  clear stretch of leg instead of inside a symbol
+        X.path(ax, [(0.25, HI), (XL, HI), (XL, YS1 + HS / 2),
+                    (XL, YS1 - HS / 2), (XL, YS2 + HS / 2)]
+               + _bd(XL, YS2, HS)[::-1] + [(XL, LO), (0.25, LO)],
+               heads=((2, 0.50), (4, 0.78), (7, 0.50), (9, 0.50)),
+               color=RED)
+        #  the tank current is what put that diode into conduction, so
+        #  it is named - but not highlighted, or it would run along the
+        #  same leg as the fault current and neither would be readable
+        ax.annotate('', xy=(XB0 - 0.25, YM), xytext=(XL + 0.55, YM),
+                    arrowprops=dict(arrowstyle='-|>', color=MAG, lw=2.0))
+        X.txt(ax, (XL + XB0) / 2 + 0.45, YM + 0.60,
+              'i$_{Lr}$ > 0', size=10.5, color=MAG, halo=True, z=9)
+        _call(ax, (XL + 0.80, YS2), (XL + 1.35, YS2 - 1.25),
+              'still carrying,\nstill charged', color=GRN, size=10.5)
+    else:
+        if title:
             ax.set_title('INDUCTIVE — the node is already over',
                          fontsize=11.5, color=GRN, pad=6)
-            X.path(ax, [(0.25, LO), (XR, LO), (XR, YM), (XB1, YM),
-                        (XB0, YM), (XL, YM)]
-                   + _bd(XL, YS1, HS) + [(XL, HI), (0.25, HI)],
-                   heads=((1, 0.55), (5, 0.55), (8, 0.50), (10, 0.45)))
-            X.txt(ax, (XL + XB0) / 2 + 0.45, YM + 0.60,
-                  'i$_{Lr}$ < 0', size=10.5, color=MAG, halo=True, z=9)
-            _call(ax, (XL + 0.80, YS1), (XL + 1.35, YS1 + 1.15),
-                  'the body diode of S1 itself —\nV$_{ds}$ = 0 before the gate rises', color=GRN,
-                  size=10.5)
+        X.path(ax, [(0.25, LO), (XR, LO), (XR, YM), (XB1, YM),
+                    (XB0, YM), (XL, YM)]
+               + _bd(XL, YS1, HS) + [(XL, HI), (0.25, HI)],
+               heads=((1, 0.55), (5, 0.55), (8, 0.50), (10, 0.45)))
+        X.txt(ax, (XL + XB0) / 2 + 0.45, YM + 0.60,
+              'i$_{Lr}$ < 0', size=10.5, color=MAG, halo=True, z=9)
+        _call(ax, (XL + 0.80, YS1), (XL + 1.35, YS1 + 1.15),
+              'the body diode of S1 itself —\nV$_{ds}$ = 0 before the gate rises', color=GRN,
+              size=10.5)
+
+def an_recovery(save, foot):
+    """The two commutations at full size, with the argument written out."""
+    fig = plt.figure(figsize=(9.2, 5.3))
+    for k, cap in enumerate((True, False)):
+        ax = _ax(fig, [0.030 + k * 0.492, 0.300, COMM_W, 0.610], *COMM_XY)
+        commutation(ax, cap)
 
     fig.text(0.255, 0.225,
              'S2 was carrying the tank current in its body diode. A diode\n'
@@ -2510,59 +2531,88 @@ def an_xfmr_read(save, foot):
     sec = np.array([r['Isec_w'] for r in rws]) / V['nser']
     ilmt = np.array([r['ILm'] for r in rws])
     mir = lambda q: np.concatenate([q, q[::-1]])
+    #  TWO axes, because these are two windings and their currents are not
+    #  the same size.  On one axis scaled to the primary the secondary
+    #  trace ran off the top for two thirds of the half cycle, and the
+    #  legend entry for its line-cycle rms named a line that was not on
+    #  the picture at all.  The legend itself sat on the secondary trace
+    #  (2026-09-22, user), so every trace is now named ON itself.
     b = fig.add_axes([X0, 0.060, 0.520, 0.235])
-    b.plot(thd, mir(pri), color=NAVY, lw=2.0, label='i$_p$ rms, each cycle')
-    b.plot(thd, mir(sec), color=MAG, lw=2.0,
-           label='i$_{NS}$ rms per unit, each cycle' if V['nser'] > 1
-           else 'i$_{NS}$ rms, each winding, each cycle')
-    b.plot(thd, mir(ilmt), color=PUR, lw=1.5, ls=(0, (4, 2.4)),
-           label='i$_{Lm,pk}$: does not move')
-    b.axhline(V['Iprilc'], color=NAVY, lw=1.1, ls=(0, (1, 2)),
-              label='line-cycle rms %.1f A → primary Cu' % V['Iprilc'])
-    b.axhline(V['Isecx'], color=MAG, lw=1.1, ls=(0, (1, 2)),
-              label='line-cycle rms %.2f A → foil' % V['Isecx'])
+    bs = b.twinx()
+    b.set_zorder(bs.get_zorder() + 1)
+    b.patch.set_visible(False)
+    bs.plot(thd, mir(sec), color=MAG, lw=2.0)
+    bs.axhline(V['Isecx'], color=MAG, lw=1.1, ls=(0, (1, 2)))
+    b.plot(thd, mir(pri), color=NAVY, lw=2.0)
+    b.plot(thd, mir(ilmt), color=PUR, lw=1.5, ls=(0, (4, 2.4)))
+    b.axhline(V['Iprilc'], color=NAVY, lw=1.1, ls=(0, (1, 2)))
     b.set_xlim(0, 180)
-    b.set_ylim(0, 28)
+    b.set_ylim(0, 1.55 * max(pri.max(), ilmt.max()))
+    bs.set_ylim(0, 1.30 * max(sec.max(), V['Isecx']))
     b.set_xticks([0, 45, 90, 135, 180])
-    b.set_xlabel('line phase θ  [deg]', fontsize=9.4)
-    b.set_ylabel('A', fontsize=9.4)
-    b.tick_params(labelsize=9.2)
+    b.set_xlabel(u'line phase \u03b8  [deg]', fontsize=9.4)
+    b.set_ylabel('primary side  [A]', fontsize=9.4, color=NAVY)
+    bs.set_ylabel('secondary winding  [A]', fontsize=9.4, color=MAG)
+    b.tick_params(labelsize=9.2, colors=NAVY)
+    bs.tick_params(labelsize=9.2, colors=MAG)
     b.set_title('over the line half cycle, at %.0f Vac equivalent'
                 % V['Veqlo'], fontsize=9.6, color=NAVY)
-    b.legend(loc='upper right', fontsize=9.2, frameon=False, ncol=1)
-    ring(b, 2, 90, pri.max(), NAVY, dx=0, dy=-3.0)
-    ring(b, 5, 150, float(np.interp(150, thd, mir(sec))), MAG, dx=8, dy=2.2)
+    b.text(135, float(np.interp(135, thd, mir(pri))) - 0.5,
+           'i$_p$ rms, each cycle', ha='center', va='top', fontsize=9.2,
+           color=NAVY, path_effects=HALO, zorder=9)
+    b.text(176, V['ILm'] + 0.4, 'i$_{Lm,pk}$: does not move', ha='right',
+           va='bottom', fontsize=9.2, color=PUR, path_effects=HALO, zorder=9)
+    b.text(3, V['Iprilc'] + 0.30,
+           u'line-cycle rms %.1f A \u2192 primary Cu' % V['Iprilc'],
+           ha='left', va='bottom', fontsize=9.2, color=NAVY,
+           path_effects=HALO, zorder=9)
+    bs.text(90, sec.max() + 2.4,
+            ('i$_{NS}$ rms per unit, each cycle' if V['nser'] > 1
+             else 'i$_{NS}$ rms, each winding, each cycle'), ha='center',
+            va='bottom', fontsize=9.2, color=MAG, path_effects=HALO, zorder=9)
+    bs.text(3, V['Isecx'] - 1.0,
+            u'line-cycle rms %.2f A \u2192 foil' % V['Isecx'], ha='left',
+            va='top', fontsize=9.2, color=MAG, path_effects=HALO, zorder=9)
+    ring(b, 2, 90, pri.max(), NAVY, dx=0, dy=1.4)
+    ring(bs, 5, 152, float(np.interp(152, thd, mir(sec))), MAG, dx=-10, dy=2.8)
 
     #  ---------------- lower right: the bench, and the one current it wants
     c = fig.add_axes([0.700, 0.060, 0.275, 0.235])
-    c.set_xlim(0, 21)
-    c.set_ylim(0, 1.25)
+    Is = V['Isatspec']
+    c.set_xlim(0, 1.45 * max(Is, V['Icomp']))
+    c.set_ylim(0, 1.34)
     c.set_yticks([0.9, 1.0])
     c.set_yticklabels(['90 %', '100 %'], fontsize=8.5)
     c.set_xlabel('dc current in the primary  [A]', fontsize=9.4)
     c.tick_params(labelsize=9.2)
     c.set_title('DC-overlap test: secondary open', fontsize=9.6, color=NAVY)
-    Is = V['Isatspec']
     c.axhline(1.0, color=GREY, lw=1.0)
     c.fill_between([0, Is], 0, 0.9, color='#f3c9c9', lw=0, zorder=1)
     c.plot([0, Is], [0.9, 0.9], color=MAG, lw=1.6, zorder=3)
     c.plot([Is, Is], [0.0, 0.9], color=MAG, lw=1.6, zorder=3)
-    c.text(Is / 2, 0.45, 'L at 1–2 must\nstay above', ha='center',
+    c.text(Is / 2, 0.33, 'L at 1\u20132 must\nstay above', ha='center',
            va='center', fontsize=9.4, color=MAG, zorder=4)
-    c.text(0.4, 1.03, 'L$_{open}$ initial', ha='left', va='bottom',
+    c.text(0.4, 1.02, 'L$_{open}$ initial', ha='left', va='bottom',
            fontsize=9.4, color=GREY)
-    ring(c, 7, Is, 0.9, MAG, dx=2.6, dy=0.26)
-    c.text(Is + 0.4, 0.92, '%.1f A' % Is, ha='left', va='bottom',
-           fontsize=9.6, color=MAG, fontweight='bold')
+    #  the test current is named ABOVE its own line, where nothing else is:
+    #  written beside it at 90 % it sat on the ring, on the arrow and on
+    #  the "not 18.3 A" label all at once (2026-09-22, user)
+    c.text(Is, 1.12, '%.1f A' % Is, ha='center', va='bottom', fontsize=9.6,
+           color=MAG, fontweight='bold')
+    ring(c, 7, Is, 0.9, MAG, dx=0.0, dy=0.17)
     c.plot([V['ILm']], [0.9], 'o', color=PUR, ms=5, zorder=5)
-    c.annotate('', xy=(Is - 0.2, 0.75), xytext=(V['ILm'] + 0.2, 0.75),
+    c.annotate('', xy=(Is - 0.15, 0.68), xytext=(V['ILm'] + 0.15, 0.68),
                arrowprops=dict(arrowstyle='-|>', color=PUR, lw=1.2))
-    c.text((V['ILm'] + Is) / 2, 0.70, '× V$_{OVP2}$/V$_{out}$',
-           ha='center', va='top', fontsize=9.6, color=PUR)
-    ring(c, 3, V['ILm'], 0.9, PUR, dx=-1.6, dy=0.22)
+    c.text(Is - 0.2, 0.71, u'\u00d7 V$_{OVP2}$/V$_{out}$',
+           ha='right', va='bottom', fontsize=9.4, color=PUR,
+           path_effects=HALO, zorder=9)
+    ring(c, 3, V['ILm'], 0.9, PUR, dx=-1.7, dy=0.20)
     c.plot([V['Icomp']], [0.9], 'x', color=NAVY, ms=7, mew=1.8, zorder=5)
-    c.text(V['Icomp'] + 0.4, 0.84, 'not\n%.1f A' % V['Icomp'], ha='left',
-           va='top', fontsize=9.6, color=NAVY)
+    c.annotate('not %.1f A' % V['Icomp'],
+               xy=(V['Icomp'], 0.88), xytext=(V['Icomp'] + 0.5, 0.60),
+               ha='left', va='top', fontsize=9.4, color=NAVY,
+               arrowprops=dict(arrowstyle='-|>', color=NAVY, lw=1.1),
+               path_effects=HALO, zorder=9)
 
     foot(fig, 'Worst switching cycle of the design: line peak at the %.0f '
               'Vac equivalent input, full load, f_sw/f_r = %.2f. The traces '

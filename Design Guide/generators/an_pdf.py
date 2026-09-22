@@ -198,7 +198,7 @@ V = dict(
     Aemm=SH['k.Ae'] * SH['A.e_req_mm'],
     Isateq=SH['I.sat_eq'], Isatspec=SH['I.sat_spec'],
     Isecx=SH['I.diode_lc'] / SH['N.x'], Isecpkx=SH['I.sec_pk'] / SH['N.x'],
-    MFBmax=R['MFBmax'], Minf=1 / (1 + R['lam_a']),
+    MFBmax=R['MFBmax'], Minf=1 / (1 + R['lam_a']), MVmin=R['MVmin'],
     # no-load corner: real only when the requirement is ABOVE the asymptote
     fnl=_noload(R), NpSet=int(round(SH['n.T_act'] * SH['N.s'])),
     # how much the open-circuit inductance may fall before f.o climbs past

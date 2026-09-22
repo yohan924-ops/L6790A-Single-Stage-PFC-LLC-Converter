@@ -8,6 +8,7 @@ stays below it at low line. That is the picture this file draws.
 """
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 
 from schem import NAVY, MAG, CYA, GRN, PUR, GREY, LT, YEL
 
@@ -30,37 +31,40 @@ def an_above_below(save, foot, R, sweep, FR):
         # whole half cycle the converter actually walks through
         t = np.concatenate([t, 180.0 - t[::-1]])
         y = np.concatenate([y, y[::-1]])
-        ax.plot(t, y, color=col, lw=2.2, label=lab)
+        ax.plot(t, y, color=col, lw=2.2)
         frac = 100.0 * np.trapezoid((y > 1.0).astype(float), t) / 180.0
-        txt.append((lab.split()[0], frac, col))
+        txt.append((lab, frac, col))
 
     ax.axhline(1.0, color=GREY, lw=1.8, ls='--')
-    ax.text(2, 1.03, 'f$_r$  —  the boundary', color=GREY, fontsize=10.5,
+    ax.text(2, 1.03, 'f$_r$  \u2014  the boundary', color=GREY, fontsize=10.5,
             va='bottom')
     ax.axhspan(1.0, 2.6, color=CYA, alpha=0.10)
     ax.axhspan(0.0, 1.0, color=YEL, alpha=0.13)
-    ax.text(176, 1.72, 'ABOVE resonance\ntank BUCKS  ·  M < 1\n'
-                      'secondary conducts the whole half period',
-            color=NAVY, fontsize=10, ha='right', va='center',
+    ax.text(4, 2.08, 'ABOVE resonance\ntank BUCKS  \u00b7  M < 1\n'
+                     'secondary conducts the whole half period',
+            color=NAVY, fontsize=10, ha='left', va='center',
             bbox=dict(boxstyle='round,pad=0.4', fc='white', ec=CYA, lw=1.2))
-    ax.text(176, 0.40, 'BELOW resonance\ntank BOOSTS  ·  M > 1\n'
+    ax.text(176, 0.40, 'BELOW resonance\ntank BOOSTS  \u00b7  M > 1\n'
                        'secondary stops early, then a dead interval',
             color=NAVY, fontsize=10, ha='right', va='center',
             bbox=dict(boxstyle='round,pad=0.4', fc='white', ec='#B8860B',
                       lw=1.2))
 
-    y0 = 2.34
-    for name, frac, col in txt:
-        ax.text(3, y0, '%s Vac eq. : %.0f %% of the half cycle above f$_r$'
-                % (name, frac), color=col, fontsize=10, fontweight='bold')
-        y0 -= 0.135
-
     ax.set_xlim(0, 180)
-    ax.set_ylim(0.0, 2.6)
+    ax.set_ylim(0.0, 2.45)
     ax.set_xlabel('line phase  $\\theta$  [deg]')
     ax.set_ylabel('f$_{sw}$ / f$_r$')
     ax.set_xticks(range(0, 181, 30))
-    ax.legend(loc='upper right', fontsize=9.2, ncol=1)
+    #  The percentage used to sit in a block of its own on the left, which
+    #  said the same four names as the legend and never said what it was a
+    #  percentage OF (2026-09-22, user).  It belongs to the curve, so it
+    #  goes in that curve's legend entry, under a title that names it once.
+    hs = [Line2D([], [], color=c, lw=2.2) for _l, _f, c in txt]
+    ax.legend(hs, ['%s  \u2014  %.0f %%' % (l, f) for l, f, _c in txt],
+              loc='upper right', fontsize=9.2, ncol=1,
+              title='equivalent input, and the share of the\n'
+                    'half cycle it spends above f$_r$',
+              title_fontsize=9.2)
     foot(fig, 'At low line the converter never leaves the boosting region. '
               'At the high morphing edge it crosses into the bucking region '
               'around the line peak and comes back. A single-stage converter '

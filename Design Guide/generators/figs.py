@@ -1351,6 +1351,12 @@ import figs_ref                                                      # noqa: E40
 # the drawings that replaced the borrowed screenshots
 FIGS.update({k: (lambda f=f: f(save, foot)) for k, f in figs_ref.FIGS.items()})
 
+import figs_pf                                                       # noqa: E402
+#  the three that need the design point AND the sweep
+for _k in ('an_pf_chain', 'an_gain_compare', 'an_gain_design'):
+    FIGS[_k] = (lambda f=getattr(figs_pf, _k):
+                f(save, foot, R, sweep))
+
 import figs_modes                                                    # noqa: E402
 FIGS['an_above_below'] = lambda: figs_modes.an_above_below(
     save, foot, R, sweep, FR)

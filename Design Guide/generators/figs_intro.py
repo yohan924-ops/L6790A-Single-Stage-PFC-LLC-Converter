@@ -101,13 +101,24 @@ def an_fha_steps(save, foot):
     fig.subplots_adjust(left=0.01, right=0.99, top=0.88, bottom=0.04,
                         wspace=0.06)
     XS_, YS_, YR = 0.55, 1.1, -0.9              # source; the return rail
+    YMID = (YS_ + YR) / 2.0                     # the source stands on this
 
-    def drive(ax, kind, name):
-        """the source, wired out of its right side and back into its
-        bottom -> (right terminal, bottom terminal)"""
-        f = S.sqsrc if kind == 'sq' else S.acsrc
-        left, right = f(ax, XS_, YS_, name, tdy=0.92)
-        return right, (XS_, YS_ - (XS_ - left[0]))
+    def drive(ax, kind):
+        """The source, standing IN the left branch of the loop.
+
+        It used to be wired out of its right side and down out of its
+        bottom, which put the symbol itself on the top-left corner of the
+        loop and left the reader looking for the corner (2026-09-22,
+        user).  A two-terminal source belongs in a branch: terminals up
+        and down, the loop square around it.
+
+        -> the node on the top rail it feeds
+        """
+        f, r = (S.sqsrc, 0.38) if kind == 'sq' else (S.acsrc, 0.36)
+        f(ax, XS_, YMID, None, r=r)
+        S.wire(ax, [(XS_, YMID + r), (XS_, YS_)])
+        S.wire(ax, [(XS_, YMID - r), (XS_, YR)])
+        return (XS_, YS_)
 
     def series(ax, right, x_c, x_l, x_n):
         """source -> C_r -> L_r -> the node at x_n, dotted"""
@@ -128,24 +139,24 @@ def an_fha_steps(save, foot):
     # ---- (a) as built
     ax = axs[0]
     S.frame(ax, -0.3, 7.6, -1.3, 3.5, '1   as built')
-    right, bottom = drive(ax, 'sq', None)
+    top = drive(ax, 'sq')
     #  Everything to the left is packed closer than in panels 2 and 3,
     #  because the transformer needs the width: with the bigger turns its
     #  lead lines stand 0.9 either side of the core, and at the old
     #  positions the primary lead landed exactly on L_m's branch and the
     #  load block on the secondary.
     XN = 3.05
-    series(ax, right, 1.55, 2.35, XN)
-    t = S.xfmr(ax, 4.75, YS_, hp=1.6, hs=1.6, gap=0.30)
-    #  up from the node and across: orthogonal, not the slanted lead the
-    #  first version drew from the node straight to the winding's top
-    S.wire(ax, [(XN, YS_), (XN, t['p_top'][1]), t['p_top']])
-    #  the primary's return: down to the rail, and the rail back to the
-    #  source - the rail used to stop at L_m and leave this lead in the air
-    S.wire(ax, [t['p_bot'], (t['p_bot'][0], YR), (XS_, YR), bottom])
+    series(ax, top, 1.55, 2.35, XN)
+    #  The primary spans the SAME two rails as L_m, so its terminals land
+    #  on them and both leads are straight.  Centred on the node line it
+    #  needed a step up to reach the top rail and a step down to reach the
+    #  bottom one, and that step was the only bend in the figure.
+    t = S.xfmr(ax, 4.75, YMID, hp=YS_ - YR, hs=YS_ - YR, gap=0.30)
+    S.wire(ax, [(XN, YS_), t['p_top']])
+    S.wire(ax, [t['p_bot'], (XS_, YR)])
     #  the block fills what is left to the frame edge, from the lead line
     xb0, xb1 = t['s_top'][0] + 0.45, 7.45
-    bl, _ = S.box(ax, (xb0 + xb1) / 2.0, YS_, xb1 - xb0, 1.9,
+    bl, _ = S.box(ax, (xb0 + xb1) / 2.0, YMID, xb1 - xb0, 2.3,
                   'rectifier\n+ load', size=9.5)
     S.wire(ax, [t['s_top'], (bl[0], t['s_top'][1])])
     S.wire(ax, [t['s_bot'], (bl[0], t['s_bot'][1])])
@@ -153,12 +164,12 @@ def an_fha_steps(save, foot):
     # ---- (b) referred
     ax = axs[1]
     S.frame(ax, -0.3, 7.6, -1.3, 3.5, '2   secondary referred to the primary')
-    right, bottom = drive(ax, 'sq', None)
-    series(ax, right, 1.95, 3.1, 4.2)
+    top = drive(ax, 'sq')
+    series(ax, top, 1.95, 3.1, 4.2)
     XR_ = 5.9
     S.wire(ax, [(4.2, YS_), (XR_, YS_)])
     S.shunt(ax, XR_, YS_, YR, 'res', 'n$^2$R$_{load}$', tdx=0.30)
-    S.wire(ax, [(XR_, YR), (XS_, YR), bottom])
+    S.wire(ax, [(XR_, YR), (XS_, YR)])
     ax.annotate('the ideal transformer disappears;\n'
                 'the load is scaled by n$^2$',
                 xy=(XR_ - 0.16, 0.30), xytext=(1.6, 2.75), fontsize=10,
@@ -168,11 +179,11 @@ def an_fha_steps(save, foot):
     # ---- (c) FHA
     ax = axs[2]
     S.frame(ax, -0.3, 7.6, -1.3, 3.5, '3   first harmonic only')
-    right, bottom = drive(ax, 'ac', None)
-    series(ax, right, 1.95, 3.1, 4.2)
+    top = drive(ax, 'ac')
+    series(ax, top, 1.95, 3.1, 4.2)
     S.wire(ax, [(4.2, YS_), (XR_, YS_)])
     S.shunt(ax, XR_, YS_, YR, 'res', 'R$_{ac}$')
-    S.wire(ax, [(XR_, YR), (XS_, YR), bottom])
+    S.wire(ax, [(XR_, YR), (XS_, YR)])
     #  The band is the whole network, return rail included - drawn to the
     #  node line only, it cut L_m and R_ac in half.
     S.shade(ax, 1.45, -1.18, 7.05, 1.95, None, color=CYA)

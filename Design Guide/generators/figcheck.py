@@ -210,6 +210,12 @@ def check(fig, name, margin=3.0):
         for a, ab in others:
             if a is ax:
                 continue
+            #  A twinned axes occupies the SAME rectangle as its partner,
+            #  so every label in either one lands "in another panel".  Two
+            #  axes that share a position are one panel to the reader.
+            if ax is not None \
+                    and a.get_position().bounds == ax.get_position().bounds:
+                continue
             if not b.overlaps(ab):
                 continue
             w = min(b.x1, ab.x1) - max(b.x0, ab.x0)
