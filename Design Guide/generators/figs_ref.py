@@ -1617,15 +1617,15 @@ def an_comp_opamp(save, foot):
                 color=color, math_fontfamily='stix', zorder=6)
 
     YR = 5.6                              # the REF / divider line
-    XA, XN = 2.0, 6.27                    # REF node, cathode node
+    XA, XN = 2.0, 6.15                    # REF node, cathode node
     XT_, XB_ = 3.5, 4.95                  # amplifier left edge, apex
     YC = 5.15                             # amplifier centre = base centre
     YK, YA_ = 6.6, 2.6                    # cathode rail, anode rail
     # ------------------------------------------------ inside the TL431
     ax.add_patch(Polygon([(XT_, 4.30), (XT_, 6.00), (XB_, YC)], closed=True,
                          fc='white', ec=NAVY, lw=1.8, zorder=4))
-    S.label(ax, XT_ + 0.30, YR, '+', size=11)
-    S.label(ax, XT_ + 0.30, 4.70, '$-$', size=11)
+    S.label(ax, XT_ + 0.26, YR, '+', size=22)
+    S.label(ax, XT_ + 0.26, 4.70, '$-$', size=22)
     #  the internal reference, returned to the anode
     XR, r = 3.05, 0.30
     S.wire(ax, [(XT_, 4.70), (XR, 4.70), (XR, 4.05)])
@@ -1641,22 +1641,22 @@ def an_comp_opamp(save, foot):
     #  the output transistor: base from the amplifier, collector K, emitter A
     XBB = 5.75
     S.wire(ax, [(XB_, YC), (XBB, YC)])
-    ax.plot([XBB, XBB], [YC - 0.53, YC + 0.53], color=NAVY, lw=2.4, zorder=4)
-    ax.plot([XBB, XN], [YC + 0.27, YC + 0.79], color=NAVY, lw=1.8, zorder=4)
-    ax.plot([XBB, XN], [YC - 0.27, YC - 0.79], color=NAVY, lw=1.8, zorder=4)
-    ax.annotate('', (XN, YC - 0.79), (XBB + 0.17, YC - 0.44),
-                arrowprops=dict(arrowstyle='-|>', color=NAVY, lw=1.5,
-                                mutation_scale=10), zorder=4)
-    S.wire(ax, [(XN, YC + 0.79), (XN, 8.1)])          # collector riser
-    S.wire(ax, [(XN, YC - 0.79), (XN, 1.75)])         # emitter riser
+    ax.plot([XBB, XBB], [YC - 0.40, YC + 0.40], color=NAVY, lw=2.2, zorder=4)
+    ax.plot([XBB, XN], [YC + 0.21, YC + 0.61], color=NAVY, lw=1.7, zorder=4)
+    ax.plot([XBB, XN], [YC - 0.21, YC - 0.61], color=NAVY, lw=1.7, zorder=4)
+    ax.annotate('', (XN, YC - 0.61), (XBB + 0.13, YC - 0.34),
+                arrowprops=dict(arrowstyle='-|>', color=NAVY, lw=1.4,
+                                mutation_scale=9), zorder=4)
+    S.wire(ax, [(XN, YC + 0.61), (XN, 8.1)])          # collector riser
+    S.wire(ax, [(XN, YC - 0.61), (XN, 1.75)])         # emitter riser
     S.gnd(ax, XN, 1.75)
     #  the outline holds only what the part contains
-    ax.add_patch(Rectangle((2.75, 2.15), 3.87, 4.05, fc='none', ec=GREY,
+    ax.add_patch(Rectangle((2.75, 2.15), 3.75, 4.05, fc='none', ec=GREY,
                            lw=1.0, ls=(0, (4, 3)), zorder=1))
     S.label(ax, 2.85, 2.38, 'TL431', size=9.5, ha='left', color=GREY)
     S.label(ax, 2.85, YR + 0.28, 'REF', size=8.8, ha='left', color=GREY)
-    S.label(ax, 6.72, 6.02, 'K', size=9.0, ha='left', color=GREY)
-    S.label(ax, 6.72, 2.02, 'A', size=9.0, ha='left', color=GREY)
+    S.label(ax, 6.60, 6.02, 'K', size=9.0, ha='left', color=GREY)
+    S.label(ax, 6.60, 2.02, 'A', size=9.0, ha='left', color=GREY)
     # ------------------------------------------- divider R_I, R_O, REF node
     S.dot(ax, 0.2, YR)
     S.label(ax, 0.2, YR + 0.5, 'v$_{out}$', size=11)
