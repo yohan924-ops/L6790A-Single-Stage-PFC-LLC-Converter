@@ -11,6 +11,3 @@ __pycache__/
 #  last snapshot); committing them makes every clone disagree with itself
 Design Guide/generators/.guard_stamp.json
 Design Guide/generators/.snapshot_prev.json
-
-#  Altium writes an ECO log on every compile; they are not part of the design
-LGE_670W_L6790A Single Stage PFC LLC TV Power/Project Logs/

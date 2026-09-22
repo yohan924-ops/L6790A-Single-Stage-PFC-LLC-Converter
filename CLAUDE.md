@@ -51,7 +51,6 @@ ST **L6790A** 로 **단일단(Single-Stage) PF LLC** 를 설계한다. 90–264 
 | `Design Guide/L6790A_Transformer_Design_KR_v1.0.pdf` | 트랜스포머 설계 정리 9쪽(`tx_pdf.py`+`tx_body.py`) | v1.0 |
 | `Design Guide/generators/` | 도구 체인 전부 — README 참조 | |
 | `Training Material/…Design_Training.pptx` | 영문 교육자료 61장 | 한국어판 남음 |
-| `LGE_670W_L6790A Single Stage PFC LLC TV Power/` | Altium 회로도 프로젝트(Si·GaN 시트). **검사·대조 대상이 아니다 — 2026-09-22 사용자 지시.** 지도에 없다고 다시 올리지 말 것 | 무시 |
 | `Datasheet/` · `EVB Schematic/` · `LGE Material/` · `Reference/` | 입력 자료. DS 는 **DRAFT**(TBD · 내부 모순 있음). `Reference/Visio-LLC drawing.pdf` 가 본 설계 회로도(벡터) | 원본 |
 
 ## 지금 상태와 다음 할 일
