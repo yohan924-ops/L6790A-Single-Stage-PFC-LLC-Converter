@@ -124,7 +124,8 @@ class Sheet:
         if s.y>s.maxy: s.maxy=s.y
     def text(s,lines,size=10,bold=False,box=False,color='#000000',w=760):
         if isinstance(lines,str): lines=[lines]
-        ps=''.join(f'<p{" bold=\"true\"" if bold else ""}>{html.escape(l)}</p>' for l in lines)
+        attr = ' bold="true"' if bold else ''      # no backslash inside an f-string: Python 3.11
+        ps=''.join(f'<p{attr}>{html.escape(l)}</p>' for l in lines)
         extra=' border="true" bgColor="#dde8f0"' if box else ''
         h=(19 if size<=8 else 27)*len(lines)+12
         s._brk(h)
