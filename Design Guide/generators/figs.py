@@ -48,7 +48,7 @@ GREY, LT = '#464650', '#E8E8E9'
 # no CJK glyphs - they come out as boxes with no error, only a warning. Keep a
 # Korean face in the chain behind the Latin one; matplotlib falls back per
 # glyph, so Latin comes from the first family and Hangul from the second.
-_KR = next((n for n in ('Malgun Gothic', 'NanumBarunGothic', 'Gulim')
+_KR = next((n for n in ('Malgun Gothic', 'NanumBarunGothic', 'NanumGothic', 'Gulim')
             if any(f.name == n for f in matplotlib.font_manager.fontManager.ttflist)),
            None)
 
@@ -60,6 +60,15 @@ _KR = next((n for n in ('Malgun Gothic', 'NanumBarunGothic', 'Gulim')
 #  compatible with Arial and carries the Greek and the operators the labels
 #  need, so mathtext is pointed at it too and only the symbols it does not
 #  have fall back.
+#  the Korean-only figures, and a face that has Latin + Greek + Hangul in
+#  one file for their mathtext (see the dispatcher in main)
+KR_FIGS = {'fsw_theta', 'gain_regions', 'loop_bode', 'morphing_levels',
+           'tank_current'}
+_CJK_ALL = next((n for n in ('Malgun Gothic', 'WenQuanYi Zen Hei')
+                 if any(f.name == n
+                        for f in matplotlib.font_manager.fontManager.ttflist)),
+                None)
+
 _SANS = next((n for n in ('Liberation Sans', 'Arial', 'Helvetica')
               if any(f.name == n
                      for f in matplotlib.font_manager.fontManager.ttflist)),
@@ -1383,7 +1392,21 @@ if __name__ == '__main__':
             raise SystemExit('unknown figure %s  (have: %s)'
                              % (k, ' '.join(sorted(FIGS))))
         try:
-            FIGS[k]()
+            #  The Korean figures mix Hangul into mathtext strings, and a
+            #  custom mathtext set draws every glyph from ONE face - so the
+            #  Latin face used for the English set turns Hangul into boxes.
+            #  WenQuanYi Zen Hei carries Latin, Greek and Hangul together;
+            #  the Korean set is drawn in it end to end (2026-09-22).
+            if k in KR_FIGS and _CJK_ALL:
+                with matplotlib.rc_context({
+                        'font.family': [_CJK_ALL],
+                        'mathtext.rm': _CJK_ALL, 'mathtext.sf': _CJK_ALL,
+                        'mathtext.cal': _CJK_ALL,
+                        'mathtext.it': _CJK_ALL + ':italic',
+                        'mathtext.bf': _CJK_ALL + ':bold'}):
+                    FIGS[k]()
+            else:
+                FIGS[k]()
         except HangulFontError as e:
             skipped.append(str(e))
     if skipped:

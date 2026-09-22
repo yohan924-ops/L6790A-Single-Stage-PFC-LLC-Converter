@@ -46,7 +46,7 @@ from PIL import Image                                         # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DEFAULT = os.path.normpath(os.path.join(
-    HERE, '..', 'AN_L6790A_SingleStage_PFC_LLC_ApplicationNote_v1.2.pdf'))
+    HERE, '..', 'AN_L6790A_SingleStage_PFC_LLC_ApplicationNote_v1.3.pdf'))
 FIGDIR = os.path.normpath(os.path.join(HERE, '..', 'figures', 'an'))
 
 THUMB = (48, 48)           # what the pixel match compares

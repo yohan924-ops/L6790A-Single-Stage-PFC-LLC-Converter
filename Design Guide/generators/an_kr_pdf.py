@@ -19,7 +19,7 @@ from reportlab.platypus import (NextPageTemplate, PageBreak,      # noqa: E402
                                 Paragraph, Spacer, Table, TableStyle)
 
 OUT = os.path.join(
-    A.GUIDE, 'AN_L6790A_SingleStage_PFC_LLC_ApplicationNote_KR_v1.2.pdf')
+    A.GUIDE, 'AN_L6790A_SingleStage_PFC_LLC_ApplicationNote_KR_v1.3.pdf')
 
 
 def legal():
@@ -31,8 +31,8 @@ def legal():
         '데이터시트로 다시 확인할 것.',
         '본문의 설계 예제는 아직 만들어 보지 않았다. 실측이라고 적은 값만 '
         '실측이고 나머지는 계산값이다.',
-        'LLC 이론 그림 몇 장은 참고문헌의 Application Note 에서 가져왔다. '
-        '각각 출처를 캡션에 적어 두었다.',
+        '그림은 전부 이 문서를 위해 그린 것이다. 발표된 Application Note 의 '
+        '논지를 따른 그림은 캡션에 그렇게 적었다.',
     ):
         s.append(Paragraph(A.T(t), A.S['p']))
         s.append(Spacer(1, 3))
@@ -51,6 +51,12 @@ def legal():
                         '정의 신설. 계산값을 설계 절차에서 설계 예제로 '
                         '옮기고, 값마다 어느 식에서 나왔는지와 넣은 숫자를 '
                         '함께 적었다. 영문판과 판 번호를 맞췄다.'),
+                    A.S['tc'])],
+         [Paragraph('V1.3', A.S['tc']), Paragraph('2026년 9월', A.S['tc']),
+          Paragraph(A.T('설계 예제를 트랜스포머 한 개(ETD 49/25/16DG)로 하고 '
+                        '권선과 핀 배정을 그렸다. 보상망 장을 루프 수식, TL431 '
+                        '회로의 OPAMP 등가, 루프 설계 예제와 함께 다시 썼다. '
+                        '전문을 다시 읽고 영문판과 같은 내용으로 맞췄다.'),
                     A.S['tc'])]],
         colWidths=[70, 90, A.CW - 160],
         style=TableStyle([('BACKGROUND', (0, 0), (-1, 0), A.NAVY),
@@ -87,7 +93,8 @@ def main():
     A.TITLE = 'Single-Stage PFC LLC 컨버터 설계'
     A.HEADSIZE = 12.5
     A.FIGWORD, A.TBLWORD = '그림', '표'
-    A.DOCID = ['Application Note AN-SS-L6790A-01 KR', 'V1.2  2026년 9월']
+    A.EQWORD, A.EQAGAIN = '식', '식 %s, 다시'
+    A.DOCID = ['Application Note AN-SS-L6790A-01 KR', 'V1.3  2026년 9월']
     A.COVER = {
         'title': ['Single-Stage PFC LLC', '컨버터 설계'],
         'sub': 'STMicroelectronics L6790A',

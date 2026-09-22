@@ -1579,6 +1579,188 @@ def an_loop_blocks(save, foot):
     save(fig, 'an_loop_blocks')
 
 
+# ------------------------------------- the TL431 compensator as an op-amp
+def an_comp_opamp(save, foot):
+    """The TL431 network of the ST drawing redrawn as an op-amp circuit.
+
+    The TL431 is an op-amp whose non-inverting input is tied to V_R inside
+    the part and whose output is the cathode; R_I is the input resistor of
+    an inverting amplifier and C_Fo || (R_F + C_F) its feedback impedance.
+    The cathode current through R_B is the LED current, the optocoupler
+    scales it by CTR and R_FB turns it into the FB voltage, with the pole
+    of C_opto + C_fx.  Three blocks in a row; their product is G_EA(s).
+    """
+    from matplotlib.patches import Polygon
+    fig = plt.figure(figsize=(9.3, 4.6))
+    ax = _ax(fig, [0.02, 0.03, 0.96, 0.94], -0.6, 14.6, -0.4, 8.6)
+    YI, YO, YP = 5.0, 4.5, 4.0            # - input, output, + input
+    XA, XO = 3.6, 6.4                     # - input node, output node
+    #  op-amp: a triangle at symbol zorder, leads drawn as wires
+    ax.add_patch(Polygon([(4.2, 5.6), (4.2, 3.4), (6.4, 4.5)], closed=True,
+                         fc='white', ec=NAVY, lw=1.8, zorder=4))
+    S.label(ax, 4.55, YI, '$-$', size=12)
+    S.label(ax, 4.55, YP, '+', size=12)
+    S.label(ax, 5.15, 4.5, 'TL431', size=8.6, color=GREY)
+    #  input: v_out -> R_I -> node A
+    S.dot(ax, 0.5, YI)
+    S.label(ax, 0.5, YI + 0.5, 'v$_{out}$', size=11)
+    ra, rb = S.res(ax, 1.7, YI, 'R$_I$', tdy=0.55)
+    S.wire(ax, [(0.5, YI), ra])
+    S.wire(ax, [rb, (XA, YI), (4.2, YI)])
+    S.dot(ax, XA, YI)
+    #  + input: V_R
+    ba, bb = S.box(ax, 2.6, YP, 1.1, 0.62, 'V$_R$', size=9.5)
+    S.wire(ax, [(4.2, YP), bb])
+    S.wire(ax, [ba, (1.5, YP), (1.5, 3.1)])
+    S.gnd(ax, 1.5, 3.1)
+    #  feedback: two branches between node A (up) and node O (up)
+    S.wire(ax, [(XA, YI), (XA, 7.4)])
+    S.wire(ax, [(XO, YO), (XO, 7.4)])
+    S.dot(ax, XA, 6.4)
+    S.dot(ax, XO, 6.4)
+    fa, fb = S.res(ax, 4.5, 6.4, 'R$_F$', tdy=0.50)
+    ca, cb = S.cap(ax, 5.6, 6.4, 'C$_F$', tdy=0.50)
+    S.wire(ax, [(XA, 6.4), fa])
+    S.wire(ax, [fb, ca])
+    S.wire(ax, [cb, (XO, 6.4)])
+    oa, ob = S.cap(ax, 5.0, 7.4, 'C$_{Fo}$', tdy=0.42)
+    S.wire(ax, [(XA, 7.4), oa])
+    S.wire(ax, [ob, (XO, 7.4)])
+    S.label(ax, 2.0, 7.4, 'Z$_f$ = C$_{Fo}$ $\\parallel$ (R$_F$ + C$_F$)',
+            size=9.5, color=GREY)
+    S.label(ax, XO + 0.15, YO - 0.80, 'v$_K$  (cathode)', size=9.5,
+            ha='left', color=GREY)
+    #  the optocoupler as a current gain, then the FB pin
+    ka, kb = S.box(ax, 8.6, YO, 2.3, 0.95,
+                   'i$_{LED}$ = $-$v$_K$ / R$_B$\ni$_C$ = CTR $\\cdot$ i$_{LED}$',
+                   size=9.0)
+    S.wire(ax, [(XO, YO), ka])
+    S.label(ax, 8.6, YO - 1.15, 'optocoupler', size=9.0, color=GREY)
+    XF = 11.4
+    S.wire(ax, [kb, (XF, YO), (13.4, YO)])
+    S.dot(ax, XF, YO)
+    S.dot(ax, 13.4, YO)
+    S.label(ax, 13.4, YO + 0.5, 'v$_{FB}$', size=11)
+    #  R_FB up to the pull-up, C_opto + C_fx down to ground
+    pa, pb = S.res(ax, XF, YO + 1.35, 'R$_{FB}$', horiz=False)
+    S.wire(ax, [(XF, YO), pa])
+    S.wire(ax, [pb, (XF, 7.0)])
+    S.dot(ax, XF, 7.0)
+    S.label(ax, XF, 7.45, 'pull-up inside the FB pin', size=9.0, color=GREY)
+    qa, qb = S.cap(ax, XF, YO - 1.35, 'C$_{opto}$ + C$_{fx}$', horiz=False)
+    S.wire(ax, [(XF, YO), qb])
+    S.wire(ax, [qa, (XF, 2.5)])
+    S.gnd(ax, XF, 2.5)
+    #  the three factors, under the drawing
+    for x, t in ((3.9, 'v$_K$ / v$_{out}$ = $-$Z$_f$ / R$_I$'),
+                 (8.6, 'v$_{FB}$ = $-$i$_C$ $\\cdot$ R$_{FB}$ $\\parallel$ (C$_{opto}$ + C$_{fx}$)'),
+                 ):
+        S.label(ax, x, 1.5, t, size=9.5, color=NAVY)
+    S.label(ax, 7.0, 0.55,
+            'G$_{EA}$(s) = v$_{FB}$ / v$_{out}$ = (Z$_f$ / R$_I$) $\\cdot$ (CTR R$_{FB}$ / R$_B$) '
+            '$\\cdot$ 1 / (1 + s R$_{FB}$(C$_{opto}$ + C$_{fx}$))',
+            size=9.5, color=NAVY)
+    foot(fig, 'The TL431 compensator as an op-amp circuit: an inverting '
+              'amplifier, a current gain, and one RC pole.')
+    save(fig, 'an_comp_opamp')
+
+
+def _note(ax, x, y, text, color=NAVY, size=9.5, ha='left', va='center'):
+    """a boxed annotation, the same look as figs.note (not importable here)"""
+    return ax.annotate(text, (x, y), color=color, fontsize=size, ha=ha, va=va,
+                       bbox=dict(boxstyle='round,pad=0.35', fc='white',
+                                 ec=color, lw=1.1, alpha=0.95), zorder=6)
+
+
+# ------------------------------------------ an annotated example loop plot
+def an_loop_example(save, foot):
+    """Where the three loop numbers are read on a Bode plot.
+
+    A generic two-integrator loop with a Type II compensator, drawn in
+    units of its own crossover so that no design value appears: the zero
+    a factor K below f_c, the pole K above, the extra pole far up.  What
+    is marked is what the text computes - crossover, phase margin, gain
+    margin, and the compensator gain read at 2f_l.
+    """
+    K, FPX, F2L = 3.0, 50.0, 5.0
+    fz, fp = 1.0 / K, K
+    f = np.logspace(-2, 3, 1200)
+    A = lambda x: (np.sqrt(1 + (x / fz) ** 2)
+                   / (np.sqrt(1 + (x / fp) ** 2) * np.sqrt(1 + (x / FPX) ** 2)))
+    T = A(f) / f ** 2 / A(1.0)
+    TdB = 20 * np.log10(T)
+    ph = -180 + np.degrees(np.arctan(f / fz) - np.arctan(f / fp)
+                           - np.arctan(f / FPX))
+    pm = 180 + (-180 + np.degrees(np.arctan(1 / fz) - np.arctan(1 / fp)
+                                  - np.arctan(1 / FPX)))
+    f180 = np.sqrt(fp * FPX - fz * (fp + FPX))
+    gm = -20 * np.log10(A(f180) / f180 ** 2 / A(1.0))
+    T2l = 20 * np.log10(A(F2L) / F2L ** 2 / A(1.0))
+
+    fig, (a1, a2) = plt.subplots(2, 1, figsize=(8.4, 6.4), sharex=True,
+                                 gridspec_kw={'height_ratios': [1.15, 1]})
+    a1.semilogx(f, TdB, color=NAVY, lw=2.4)
+    a1.axhline(0, color=GREY, lw=1.0)
+    a2.semilogx(f, ph, color=MAG, lw=2.4)
+    a2.axhline(-180, color=GREY, lw=1.0)
+    for a in (a1, a2):
+        a.axvline(1.0, color=YEL, lw=2.0, zorder=1)
+        a.axvline(f180, color='#2d7a4c', lw=1.1, ls='-.')
+        a.axvline(F2L, color=GREY, lw=1.0, ls=':')
+        for x in (fz, fp, FPX):
+            a.axvline(x, color=LT, lw=1.0)
+        a.set_xlim(0.01, 1000)
+    a1.set_ylim(-70, 70)
+    a2.set_ylim(-280, -60)
+    a1.set_ylabel('|T|  [dB]')
+    a2.set_ylabel('arg T  [deg]')
+    a2.set_xlabel('f / f$_c$   (log)')
+    a2.set_yticks([-270, -225, -180, -135, -90])
+    #  crossover
+    a1.plot([1.0], [0.0], 'o', color=YEL, ms=8, zorder=5)
+    _note(a1, 1.35, 22, 'crossover f$_c$:  |T| = 1  (0 dB)', color=NAVY,
+         size=9.5)
+    #  phase margin, as the arrow it is
+    a2.annotate('', xy=(1.0, -180 + pm), xytext=(1.0, -180),
+                arrowprops=dict(arrowstyle='<->', color=MAG, lw=1.6))
+    _note(a2, 1.35, -180 + pm / 2, 'phase margin $\\Phi_M$ = 180° + arg T at f$_c$',
+         color=MAG, size=9.5)
+    #  gain margin
+    a1.annotate('', xy=(f180, -gm), xytext=(f180, 0),
+                arrowprops=dict(arrowstyle='<->', color='#2d7a4c', lw=1.6))
+    _note(a1, f180 * 1.4, -gm / 2, 'gain margin GM = $-$|T| at f$_{180}$',
+         color='#2d7a4c', size=9.5)
+    a2.plot([f180], [-180], 'o', color='#2d7a4c', ms=7, zorder=5)
+    _note(a2, f180 * 1.4, -215, 'f$_{180}$:  arg T = $-$180°', color='#2d7a4c',
+         size=9.5)
+    #  the gain at 2f_l
+    a1.plot([F2L], [T2l], 'o', color=GREY, ms=6, zorder=5)
+    _note(a1, 0.012, -45, 'at 2f$_l$ the loop gain is |T(2f$_l$)|;  the '
+         'compensator alone has\nG$_{EA}$(2f$_l$) = |T| / |G$_{plant}$|,  the '
+         'number the D$_3$ check needs', color=GREY, size=8.6)
+    #  slopes and the corner names
+    for x, t in ((fz, 'f$_z$ = f$_c$/K'), (fp, 'f$_p$ = K f$_c$'),
+                 (FPX, 'f$_{px}$')):
+        a1.text(x, 62, t, ha='center', va='top', fontsize=8.6, color=GREY,
+                bbox=dict(boxstyle='round,pad=0.2', fc='white', ec='none'))
+    for x, y, t in ((0.04, 45, '$-$40 dB/dec'), (1.0, -12, '$-$20 dB/dec'),
+                    (15, -42, '$-$40 dB/dec'), (200, -66, '$-$60')):
+        a1.text(x, y, t, fontsize=8.2, color=GREY, ha='center', va='center',
+                rotation=0)
+    a2.text(0.02, -172, 'two integrators: $-$180°', fontsize=8.6,
+            color=GREY, va='bottom')
+    a2.text(0.02, -95, 'the zero lifts the phase,\nthe poles bring it back down',
+            fontsize=8.6, color=GREY, va='top')
+    a1.text(F2L, 55, '2f$_l$', ha='center', va='top', fontsize=8.6, color=GREY,
+            bbox=dict(boxstyle='round,pad=0.2', fc='white', ec='none'))
+    fig.subplots_adjust(left=0.10, right=0.98, top=0.97, bottom=0.10,
+                        hspace=0.12)
+    foot(fig, 'A two-integrator loop with a Type II compensator, in units of '
+              'its own crossover. The three loop numbers and the gain at '
+              '2f_l, marked where they are read.')
+    save(fig, 'an_loop_example')
+
+
 # ------------------------------------------- 14  flyback against the LLC
 def _batt(ax, x, ytop, ybot, t=None, size=11):
     """A dc source between two nodes, wired to both.  -> (top, bottom)
@@ -2483,5 +2665,6 @@ FIGS = {'an_rac': an_rac, 'an_integrated': an_integrated,
         'an_peakgain': an_peakgain, 'an_recovery': an_recovery,
         'an_core_section': an_core_section,
         'an_loop_blocks': an_loop_blocks,
+        'an_comp_opamp': an_comp_opamp, 'an_loop_example': an_loop_example,
         'an_flyback_llc': an_flyback_llc, 'an_mmf': an_mmf,
         'an_xfmr_read': an_xfmr_read, 'an_xfmr_pins': an_xfmr_pins}

@@ -2065,6 +2065,26 @@ def build(A):
           'the output ripple reaches the LED only through the TL431. There '
           'is no second path (what TND381 calls the &ldquo;fast '
           'lane&rdquo;), and the compensator is the TL431 network alone.'))
+    add(p('<b>The same network as an op-amp.</b> Figure&nbsp;%(f)s redraws '
+          'it. The TL431 is an op-amp whose non-inverting input is tied to '
+          'V<sub>R</sub> inside the part and whose output is the cathode. '
+          'R<sub>I</sub> is the input resistor of an inverting amplifier, '
+          'and C<sub>Fo</sub> in parallel with R<sub>F</sub> + C<sub>F</sub> '
+          'is its feedback impedance Z<sub>f</sub>, so the cathode moves by '
+          '&minus;Z<sub>f</sub>/R<sub>I</sub> times the output change. The '
+          'cathode current flows through R<sub>B</sub>, so it is the LED '
+          'current; the optocoupler turns it into CTR times as much '
+          'collector current; and that current makes the FB voltage across '
+          'the pull-up R<sub>FB</sub>, with the pole of C<sub>opto</sub> + '
+          'C<sub>fx</sub>. Multiplying the three blocks gives the transfer '
+          'function below; the sign is negative, which is the negative '
+          'feedback the loop needs.'
+          % dict(f=FR('an_comp_opamp'))))
+    add(fig('an_comp_opamp',
+            'The TL431 compensator drawn as an op-amp circuit: an inverting '
+            'amplifier with Z<sub>f</sub>/R<sub>I</sub>, a current gain '
+            'CTR/R<sub>B</sub> in the optocoupler, and the FB-pin pole. '
+            'The three factors multiply to G<sub>EA</sub>(s).'))
     add(p('<b>Its transfer function</b> from the output to the FB pin is a '
           'Type&nbsp;II network with one more pole:'))
     add(eq(r'G_{EA}(s)=\frac{EA_{o}}{s}\cdot'
@@ -2172,6 +2192,27 @@ def build(A):
     add(eq(r'\Phi_{M}=\arctan\frac{\omega_{c}}{\omega_{z}}'
            r'-\arctan\frac{\omega_{c}}{\omega_{p}}'
            r'-\arctan\frac{\omega_{c}}{\omega_{px}}', key='PMeq'))
+    add(p('Figure&nbsp;%(f)s shows where the three numbers are read on '
+          'the Bode plot of such a loop. It is drawn in units of its own '
+          'crossover, with the zero a factor K below f<sub>c</sub> and the '
+          'pole K above, so it is the shape of every loop of this kind and '
+          'not of one design. The gain falls at 40&nbsp;dB per decade where '
+          'both integrators act, at 20&nbsp;dB per decade between the zero '
+          'and the pole, and steeper again above the pole and above '
+          'f<sub>px</sub>. The phase starts at &minus;180&deg;, is lifted by '
+          'the zero, peaks near the crossover, and is pulled down again by '
+          'the two poles until it crosses &minus;180&deg; at f<sub>180</sub>. '
+          'Section&nbsp;%(s)s puts this design&rsquo;s numbers on the same '
+          'plot.' % dict(f=FR('an_loop_example'),
+                         s=SR('The voltage loop, as built'))))
+    add(fig('an_loop_example',
+            'A two-integrator loop with a Type II compensator, in units of '
+            'its own crossover f<sub>c</sub>. The crossover is where |T| '
+            'crosses 0&nbsp;dB; the phase margin is the distance from '
+            '&minus;180&deg; there; the gain margin is how far |T| is below '
+            '0&nbsp;dB at f<sub>180</sub>, where the phase reaches '
+            '&minus;180&deg;. The dot at 2f<sub>l</sub> is the loop gain the '
+            'third-harmonic check reads.'))
 
     add(h2('Gain margin, and why it needs checking'))
     add(p('Phase margin alone does not prove the loop is safe. Above '
@@ -3760,6 +3801,8 @@ def build(A):
     s.extend(tbl('Symbols.', [['Symbol', 'Meaning']] + [list(r) for r in _SYM],
              widths=[CW * 0.26, CW * 0.74], split=True))
 
+    # =============================================================== 9
+    add(h1('References'))
     ext(bullets([
         'STMicroelectronics, <i>L6790A LLC-PFC controller</i>, preliminary '
         'datasheet, 30 April 2026. <b>Draft.</b>',
@@ -3781,7 +3824,7 @@ def build(A):
         'onsemi, <i>The TL431 in the control of switching power supplies</i>, '
         'TND381-D (compensator design with a TL431 and an optocoupler).']))
 
-    # =============================================================== 9
+    # =============================================================== 10
     add(h1('Errata and open items'))
     add(p('Everything in this chapter is something the note works around '
           'rather than something it solves. It is last because none of it is '

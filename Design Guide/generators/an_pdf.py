@@ -12,7 +12,7 @@ Every number in the text comes out of VAL, which is built from l6790.py and
 the SMath sheet. Nothing here is typed by hand, so the note cannot drift away
 from the design the way a transcribed value would.
 
-    python an_pdf.py            -> Design Guide/AN_L6790A_..._v1.2.pdf
+    python an_pdf.py            -> Design Guide/AN_L6790A_..._v1.3.pdf
     python an_pdf.py --figs     -> re-render the plain figures first
 """
 import hashlib
@@ -44,12 +44,14 @@ GUIDE = os.path.normpath(os.path.join(HERE, '..'))
 FIGS = os.path.join(GUIDE, 'figures', 'an')
 EQD = os.path.join(HERE, '.eqcache')
 OUT = os.path.join(GUIDE,
-                   'AN_L6790A_SingleStage_PFC_LLC_ApplicationNote_v1.2.pdf')
+                   'AN_L6790A_SingleStage_PFC_LLC_ApplicationNote_v1.3.pdf')
 
-DOCID = ['Application Note AN-SS-L6790A-01', 'V1.2  September 2026']
+DOCID = ['Application Note AN-SS-L6790A-01', 'V1.3  September 2026']
 TITLE = 'Single-Stage PFC LLC Converter Design'
 HEADSIZE = 14.5                 # 머리글 크기 - 한글 제목은 줄여야 상자를 안 문다
 FIGWORD, TBLWORD = 'Figure', 'Table'
+EQWORD = 'Equation'                 # the Korean edition says 식
+EQAGAIN = 'Equation %s, repeated'
 COVER = {
     'title': ['Single-Stage PFC LLC', 'Converter Design'],
     'sub': 'with the STMicroelectronics L6790A',
@@ -390,6 +392,14 @@ _FALLBACK = {
     '&plusmn;': (0xB1, '+/-'),
 }
 _ENTFIX = {}
+# The body face's own glyph table, and the name of a Latin face that carries
+# Greek and the maths signs. NanumGothic has Hangul and Latin but no Greek at
+# all, so lambda, theta and pi vanished from the Korean edition when it was
+# built on Linux (2026-09-22). reportlab does not fall back per glyph; T()
+# does it instead, wrapping every run the body face cannot draw in the
+# Latin face.
+_C2G = None
+_ALT = None
 
 
 def _entity_fixups(tag):
@@ -417,9 +427,26 @@ def _register(tag, triple):
                                   italic=tag + '-I', boldItalic=tag + '-B')
     _ENTFIX.clear()
     _ENTFIX.update(_entity_fixups(tag))
+    global _C2G
+    try:
+        _C2G = pdfmetrics.getFont(tag).face.charToGlyph
+    except Exception:
+        _C2G = None
     if _ENTFIX:
         print('  이 서체에 없는 글자를 바꿔 넣는다: %s'
               % ' '.join(sorted(_ENTFIX)))
+
+
+def _latin_triple():
+    """a Latin face with Greek and the maths signs, or None"""
+    return _pick([(_winfonts(), 'arial.ttf', 'arialbd.ttf', 'ariali.ttf'),
+                  ('/usr/share/fonts/truetype/liberation',
+                   'LiberationSans-Regular.ttf', 'LiberationSans-Bold.ttf',
+                   'LiberationSans-Italic.ttf'),
+                  ('/usr/share/fonts/truetype/dejavu', 'DejaVuSans.ttf',
+                   'DejaVuSans-Bold.ttf', 'DejaVuSans-Oblique.ttf')]
+                 + [(d, 'DejaVuSans.ttf', 'DejaVuSans-Bold.ttf',
+                     'DejaVuSans-Oblique.ttf') for d in _pkgfonts()])
 
 
 def use_unicode():
@@ -435,14 +462,7 @@ def use_unicode():
     and does shift the line breaks slightly.
     """
     global FONT, FONTB, FONTI
-    t = _pick([(_winfonts(), 'arial.ttf', 'arialbd.ttf', 'ariali.ttf'),
-               ('/usr/share/fonts/truetype/liberation',
-                'LiberationSans-Regular.ttf', 'LiberationSans-Bold.ttf',
-                'LiberationSans-Italic.ttf'),
-               ('/usr/share/fonts/truetype/dejavu', 'DejaVuSans.ttf',
-                'DejaVuSans-Bold.ttf', 'DejaVuSans-Oblique.ttf')]
-              + [(d, 'DejaVuSans.ttf', 'DejaVuSans-Bold.ttf',
-                  'DejaVuSans-Oblique.ttf') for d in _pkgfonts()])
+    t = _latin_triple()
     if t is None:                                # keep building without Greek
         print('라틴 유니코드 폰트를 못 찾아 Helvetica 로 간다 '
               '(그리스 문자가 빠진다)')
@@ -477,8 +497,25 @@ def use_korean():
         raise SystemExit('한국어 폰트를 찾을 수 없다. Malgun Gothic 이 있는 '
                          'PC 에서 돌리거나  pip install koreanize-matplotlib '
                          '로 NanumGothic 을 받아 둘 것.')
-    global LEAD_SCALE
+    global LEAD_SCALE, _ALT
     _register('KR', t)
+    kr_c2g = _C2G
+    # Greek and the maths signs come from a Latin face when the Korean one
+    # lacks them (NanumGothic: no Greek at all; Malgun Gothic has it, so on
+    # a Windows box this registers a face that T() then never uses).
+    lat = _latin_triple()
+    if lat is not None:
+        from reportlab.pdfbase import pdfmetrics
+        from reportlab.pdfbase.ttfonts import TTFont
+        pdfmetrics.registerFont(TTFont('AN', lat[0]))
+        pdfmetrics.registerFont(TTFont('AN-B', lat[1]))
+        pdfmetrics.registerFont(TTFont('AN-I', lat[2]))
+        pdfmetrics.registerFontFamily('AN', normal='AN', bold='AN-B',
+                                      italic='AN-I', boldItalic='AN-B')
+        _ALT = 'AN'
+        print('  한국어 서체에 없는 글자는 %s 로 그린다'
+              % os.path.basename(lat[0]))
+    globals()['_C2G'] = kr_c2g
     bold = {k for k, v in S.items() if v.fontName == FONTB}
     FONT, FONTB, FONTI = 'KR', 'KR-B', 'KR-I'
     # Hangul fills the full em box, so a leading set for Latin leaves a
@@ -550,7 +587,58 @@ def T(t):
     t = t.replace('&thinsp;', '&#8202;')
     for ent, alt in _ENTFIX.items():          # empty unless a face lacks them
         t = t.replace(ent, alt)
+    if _ALT and _C2G:
+        t = _wrap_missing(t)
     return t
+
+
+_KEEP_ENT = {'lt', 'gt', 'amp', 'quot', 'apos', 'nbsp'}
+
+
+def _wrap_missing(t):
+    """wrap every run the body face cannot draw in the Latin fallback face
+
+    Named entities are resolved first so that &lambda; is seen as the
+    character it stands for; markup tags are left alone.
+    """
+    import html.entities as _he
+    c2g = _C2G
+
+    def ent(m):
+        name = m.group(1)
+        if name in _KEEP_ENT or name not in _he.name2codepoint:
+            return m.group(0)
+        cp = _he.name2codepoint[name]
+        return m.group(0) if cp in c2g else chr(cp)
+
+    def num(m):
+        cp = int(m.group(1))
+        return m.group(0) if cp in c2g else chr(cp)
+
+    def miss(ch):
+        return ord(ch) > 127 and ord(ch) not in c2g
+
+    out = []
+    for piece in re.split(r'(<[^>]*>)', t):
+        if piece.startswith('<'):
+            out.append(piece)
+            continue
+        piece = re.sub(r'&([A-Za-z][A-Za-z0-9]*);', ent, piece)
+        piece = re.sub(r'&#(\d+);', num, piece)
+        buf, run = [], []
+        for ch in piece:
+            if miss(ch):
+                run.append(ch)
+            else:
+                if run:
+                    buf.append('<font name="%s">%s</font>'
+                               % (_ALT, ''.join(run)))
+                    run = []
+                buf.append(ch)
+        if run:
+            buf.append('<font name="%s">%s</font>' % (_ALT, ''.join(run)))
+        out.append(''.join(buf))
+    return ''.join(out)
 
 # ============================================================== equations
 EQSIZE = 12.0      # mathtext points on the page; the body is 9.3 pt
@@ -628,12 +716,12 @@ def eq(tex, size=EQSIZE, number=True, key=None, again=False):
         return t
     if again:
         n = REFS['eq'].get(key)
-        lab = 'Equation %s, repeated' % ('?' if n is None else n)
+        lab = EQAGAIN % ('?' if n is None else n)
         _ASKED['eq'].add(key)
     else:
         _EQN[0] += 1
         n = _EQN[0]
-        lab = 'Equation %d' % n
+        lab = '%s %d' % (EQWORD, n)
         if key:
             REFS['eq'][key] = n
             EQTEX[key] = lines if len(lines) > 1 else tex
@@ -775,7 +863,7 @@ def tbl(caption, rows, widths=None, align=None, key=None, split=False):
     """split=True lets a long table run over page breaks (header repeats)"""
     _TBL[0] += 1
     REFS['tbl'][key or caption] = _TBL[0]
-    head = [Paragraph(T(c), S['th']) for c in rows[0]]
+    head = [Paragraph(_boldalt(T(c)), S['th']) for c in rows[0]]
     body = [[Paragraph(T(str(c)), S['tc']) for c in r]
             for r in rows[1:]]
     widths = widths or [CW / len(rows[0])] * len(rows[0])
@@ -825,10 +913,17 @@ class H2(Paragraph):
 _SEC = [0, 0]
 
 
+def _boldalt(t):
+    """a heading is set in the bold face, so its fallback runs are too"""
+    return t.replace('<font name="%s">' % _ALT, '<font name="%s-B">' % _ALT) \
+        if _ALT else t
+
+
 def h1(text):
     _SEC[0] += 1
     _SEC[1] = 0
-    p = H1(T('%d&nbsp;&nbsp;&nbsp;&nbsp;%s' % (_SEC[0], text)), S['h1'])
+    p = H1(_boldalt(T('%d&nbsp;&nbsp;&nbsp;&nbsp;%s' % (_SEC[0], text))),
+           S['h1'])
     p._toc = (0, T('%d  %s' % (_SEC[0], text)))
     REFS['sec'][text] = '%d' % _SEC[0]
     return p
@@ -837,7 +932,7 @@ def h1(text):
 def h2(text):
     _SEC[1] += 1
     lab = '%d.%d' % (_SEC[0], _SEC[1])
-    p = H2(T('%s&nbsp;&nbsp;&nbsp;%s' % (lab, text)), S['h2'])
+    p = H2(_boldalt(T('%s&nbsp;&nbsp;&nbsp;%s' % (lab, text))), S['h2'])
     p._toc = (1, T('%s  %s' % (lab, text)))
     REFS['sec'][text] = lab
     return p
@@ -958,7 +1053,14 @@ def legal():
                     'margins defined. Worked values moved out of the design '
                     'procedure and into the design example, where each one '
                     'names the equation it comes from and shows the numbers '
-                    'put into it.', S['tc'])]],
+                    'put into it.', S['tc'])],
+         [Paragraph('V1.3', S['tc']), Paragraph('September 2026', S['tc']),
+          Paragraph('Design example on one transformer (ETD 49/25/16DG) with '
+                    'the winding and pin assignment drawn. Compensator chapter '
+                    'rewritten with the loop equations, the op-amp equivalent '
+                    'of the TL431 network and a worked loop design. Full '
+                    'read-through; Korean edition brought to the same '
+                    'content.', S['tc'])]],
         colWidths=[70, 90, CW - 160],
         style=TableStyle([('BACKGROUND', (0, 0), (-1, 0), NAVY),
                           ('LINEBELOW', (0, 0), (-1, -1), 0.4, LT),
