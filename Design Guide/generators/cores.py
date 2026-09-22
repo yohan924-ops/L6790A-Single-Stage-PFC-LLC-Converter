@@ -40,6 +40,23 @@ CORES = {
         le=113.0, Ae=332.0, Amin=314.0, Ve=37630.0, mass=190.0,
         AN=340.0, lN=100.5,
         AL_ungapped=None, material='N95'),
+    #  ETD 49/25/16DG - B66367 core (distributed gap, gapped only: A_L 100
+    #  / 250 nH stock), B66368 coil former, 20 pins.  October 2022,
+    #  received 2026-09-22 from the user.
+    'ETD 49/25/16DG': dict(
+        core='B66367', former='B66368',
+        le=114.0, Ae=211.0, Amin=209.0, Ve=24100.0, mass=124.0,
+        AN=269.4, lN=86.0,
+        AL_ungapped=None, material='N95'),
+    #  ETD 54/28/19 - B66395 core (ungapped N87 4450 nH; gapped examples
+    #  g 1.0 / 1.5 / 2.0 mm -> 393 / 287 / 229 nH, K1 393 K2 -0.779 for
+    #  A_L(s) between 0.10 and 3.50 mm), B66396 coil former, 22 pins.
+    #  October 2022, received 2026-09-22 from the user.  No N95 listed.
+    'ETD 54/28/19': dict(
+        core='B66395', former='B66396',
+        le=127.0, Ae=280.0, Amin=280.0, Ve=35600.0, mass=180.0,
+        AN=315.6, lN=96.0,
+        AL_ungapped=4450.0, material='N87'),
 }
 
 #  Assumptions, stated here so that they are in one place and can be
@@ -135,6 +152,28 @@ MECH = {
         tube_od=23.2, bore=20.8, wind_w=30.4, flange_h=35.2,
         former_w=45.72, former_d=51.0, flange_w=34.4, former_h=51.0,
         pitch_a=7.62, pitch_b=12.7, pins=12),
+    #  ETD 49/25/16DG, datasheet page 2 (core) and 3 (coil former).  The
+    #  outer legs' inner faces are the labelled "36.1 +1.8" of the plan
+    #  view; the window height is 2 x 17.7; the tube is "19.3 max", so
+    #  the radial room is a minimum: 18.05 - 9.65 = 8.40 mm.
+    'ETD 49/25/16DG': dict(
+        core='B66367', former='B66368',
+        W=48.5, H=49.8, d_centre=16.7, win_h=35.4,
+        r_win_out=18.05,
+        plan_w=48.5, plan_d=16.7,
+        tube_od=19.3, bore=17.0, wind_w=32.7, flange_h=35.4,
+        former_w=54.5, former_d=56.2, flange_w=35.9, former_h=40.9,
+        pitch_a=5.08, pitch_b=None, pins=20, rows=40.64),
+    #  ETD 54/28/19, datasheet page 2 and 4.  Legs' inner faces "40.1
+    #  +2.2", window height 2 x 19.8, tube "22 max": 20.05 - 11.0 = 9.05.
+    'ETD 54/28/19': dict(
+        core='B66395', former='B66396',
+        W=54.5, H=55.6, d_centre=19.3, win_h=39.6,
+        r_win_out=20.05,
+        plan_w=54.5, plan_d=19.3,
+        tube_od=22.0, bore=19.8, wind_w=36.8, flange_h=39.4,
+        former_w=61.6, former_d=61.4, flange_w=39.5, former_h=46.0,
+        pitch_a=5.08, pitch_b=None, pins=22, rows=45.72),
 }
 
 # ===================================================================
@@ -196,6 +235,7 @@ T_FOIL = 0.20       # mm, copper foil thickness - the nearest standard gauge
 T_FOIL_INS = 0.05   # mm, interlayer insulation on each foil turn
 MARGIN = 2.0        # mm of margin tape at each flange
 D_STRAND = 0.10     # mm, Litz strand diameter
+W_FOIL_MAX = 12.0   # mm, widest single foil strip before it is split in parallel
 
 
 def litz(area_mm2):
@@ -224,25 +264,37 @@ def winding(V, name='PQ 40/40'):
     dp, nstr = litz(ap)
     wf = asec / T_FOIL                       # foil width for one turn
     usable = M['wind_w'] - 2 * MARGIN
-    #  fewest primary layers that leave room for the foil and a gap
-    lay = 1
+    r_tube = M['tube_od'] / 2.0
+    r_free = M['r_win_out'] - r_tube         # radial room at the narrow section
+    #  A foil wider than W_FOIL_MAX is split into parallel strips: one
+    #  secondary winding of a single-core build wants 6 mm2, which as one
+    #  0.20 mm foil would be 31 mm wide - wider than any bobbin here.
+    n_foil = max(1, -(-int(wf / W_FOIL_MAX + 0.999999) // 1))
+    n_foil = max(1, int(-(-wf // W_FOIL_MAX)))
+    wf = wf / n_foil
+    #  fewest primary layers that leave room for the foil and a gap AND
+    #  stay inside the radial room; if none does, the deepest that fits
+    #  radially is reported so the shortfall is visible
+    lay, chosen = 1, None
     while lay <= V['Np']:
         per = -(-V['Np'] // lay)             # ceil
+        if lay * dp > r_free:
+            break
         if per * dp + wf < usable:
+            chosen = lay
             break
         lay += 1
+    lay = chosen if chosen else max(1, int(r_free // dp))
     per = -(-V['Np'] // lay)
     rows_p = [min(per, V['Np'] - i * per) for i in range(lay)]
     wp = per * dp
     gap_ax = usable - wp - wf
     build_p = lay * dp
-    build_s = 2 * V['Ns'] * (T_FOIL + T_FOIL_INS)
-    r_tube = M['tube_od'] / 2.0
-    r_free = M['r_win_out'] - r_tube         # radial room at the narrow section
+    build_s = 2 * V['Ns'] * n_foil * (T_FOIL + T_FOIL_INS)
     return dict(
         name=name, M=M, Np=V['Np'], Ns=V['Ns'],
         ap=ap, asec=asec, d_litz=dp, n_strand=nstr,
-        t_foil=T_FOIL, w_foil=wf, margin=MARGIN, usable=usable,
+        t_foil=T_FOIL, w_foil=wf, n_foil=n_foil, margin=MARGIN, usable=usable,
         layers=lay, per_layer=per, rows_p=rows_p, w_pri=wp, gap=gap_ax,
         build_p=build_p, build_s=build_s, r_tube=r_tube, r_free=r_free,
         fits=(gap_ax > 0 and build_p <= r_free and build_s <= r_free))
@@ -263,8 +315,9 @@ def report(V, name='PQ 40/40'):
                          w['d_litz']),
         '           %d layer(s) %s -> %6.2f mm axial, %.2f mm build'
         % (w['layers'], w['rows_p'], w['w_pri'], w['build_p']),
-        '  secondary %d + %d turns of %.2f mm2 -> foil %.2f x %.2f mm'
-        % (w['Ns'], w['Ns'], w['asec'], w['t_foil'], w['w_foil']),
+        '  secondary %d + %d turns of %.2f mm2 -> foil %.2f x %.2f mm%s'
+        % (w['Ns'], w['Ns'], w['asec'], w['t_foil'], w['w_foil'],
+           '' if w['n_foil'] == 1 else ' x %d in parallel' % w['n_foil']),
         '           %d turns -> %6.2f mm axial, %.2f mm build'
         % (2 * w['Ns'], w['w_foil'], w['build_s']),
         '  LEFT FOR THE SEPARATION    %5.2f mm   %s'
