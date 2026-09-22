@@ -568,8 +568,10 @@ S = {
                textColor=NAVY),
     # tight enough that the contents fit two pages - a third page carrying
     # one entry is worse than a slightly denser list
-    'toc0': st('toc0', fontName=FONTB, fontSize=9.3, leading=14.4),
-    'toc1': st('toc1', fontSize=9.0, leading=12.8, leftIndent=22),
+    # the contents ran 9 lines over three pages, leaving a fourth page
+    # almost empty; a slightly tighter leading keeps it on three (2026-09-22)
+    'toc0': st('toc0', fontName=FONTB, fontSize=9.3, leading=13.6),
+    'toc1': st('toc1', fontSize=9.0, leading=12.0, leftIndent=22),
 }
 
 
@@ -1058,9 +1060,8 @@ def legal():
           Paragraph('Design example on one transformer (ETD 49/25/16DG) with '
                     'the winding and pin assignment drawn. Compensator chapter '
                     'rewritten with the loop equations, the op-amp equivalent '
-                    'of the TL431 network and a worked loop design. Full '
-                    'read-through; Korean edition brought to the same '
-                    'content.', S['tc'])]],
+                    'of the TL431 network and a worked loop design. Text '
+                    'shortened throughout. Korean edition to follow.', S['tc'])]],
         colWidths=[70, 90, CW - 160],
         style=TableStyle([('BACKGROUND', (0, 0), (-1, 0), NAVY),
                           ('LINEBELOW', (0, 0), (-1, -1), 0.4, LT),
@@ -1073,35 +1074,29 @@ def legal():
     s.append(Paragraph('Conventions', S['h2']))
     s.extend(bullets([
         'Frequencies are switching frequencies unless written '
-        'f<sub>l</sub>, which is the line frequency.',
-        '<b>f<sub>n</sub></b> = f<sub>sw</sub>/f<sub>r</sub> is the '
-        'switching frequency normalised to the series resonance. Gain curves '
-        'are always drawn against it, so that one curve serves every tank. '
-        'Figures reproduced from other documents may write f<sub>s</sub> for '
-        'f<sub>sw</sub>; that is the same quantity.',
-        '<b>M</b> is the voltage gain of the resonant network: the output '
-        'voltage referred to the primary, divided by the fundamental of the '
-        'square wave driving it. <b>M = 1 at the series resonance</b>, '
-        'whatever the load.',
-        '<b>Z<sub>0</sub></b> = &radic;(L<sub>r</sub>/C<sub>r</sub>) is the '
-        'characteristic impedance of the tank, and <b>Q = '
-        'Z<sub>0</sub>/R<sub>ac</sub></b> is its quality factor &mdash; how '
-        'heavily the tank is loaded. Q = 0 is no load; larger Q is more '
-        'power and a flatter, lower gain curve.',
+        'f<sub>l</sub>, the line frequency.',
+        '<b>f<sub>n</sub></b> = f<sub>sw</sub>/f<sub>r</sub>, the switching '
+        'frequency normalised to the series resonance; gain curves are drawn '
+        'against it. Other documents may write f<sub>s</sub> for '
+        'f<sub>sw</sub>.',
+        '<b>M</b> is the gain of the resonant network: the output referred '
+        'to the primary over the fundamental of the drive. <b>M = 1 at the '
+        'series resonance</b> at any load.',
+        '<b>Z<sub>0</sub></b> = &radic;(L<sub>r</sub>/C<sub>r</sub>) and '
+        '<b>Q = Z<sub>0</sub>/R<sub>ac</sub></b>: Q = 0 is no load; larger Q '
+        'is more power and a flatter curve.',
         '<b>V<sub>o,eff</sub></b> = V<sub>out</sub> + '
-        'N<sub>rect</sub>V<sub>f</sub> is the output voltage the primary '
-        'actually sees, with the rectifier drop added. '
-        '<b>N<sub>rect</sub></b> is the number of rectifier drops in the '
-        'conduction path: 1 for a centre tap, 2 for a full bridge.',
-        '<b>n</b> is the equivalent-model turns ratio used in the gain '
-        'equation; <b>n<sub>T</sub></b> is the physical turns ratio of a '
-        'transformer whose leakage is integrated into L<sub>r</sub>.',
-        '&lambda;&nbsp;=&nbsp;L<sub>r</sub>/L<sub>m</sub>, and '
-        'm&nbsp;=&nbsp;1&nbsp;+&nbsp;1/&lambda; is the ratio of total primary '
-        'to resonant inductance used in older literature.',
-        '&theta; is the line phase angle, zero at the mains zero crossing.',
-        '&ldquo;Equivalent input&rdquo; is what the resonant tank sees after '
-        'topology morphing, which is not the mains voltage.',
+        'N<sub>rect</sub>V<sub>f</sub>, with <b>N<sub>rect</sub></b> the '
+        'rectifier drops in the conduction path: 1 for a centre tap, 2 for a '
+        'full bridge.',
+        '<b>n</b> is the model turns ratio in the gain equation; '
+        '<b>n<sub>T</sub></b> the wound ratio with the leakage in '
+        'L<sub>r</sub>.',
+        '&lambda;&nbsp;=&nbsp;L<sub>r</sub>/L<sub>m</sub>; older literature '
+        'uses m&nbsp;=&nbsp;1&nbsp;+&nbsp;1/&lambda;.',
+        '&theta; is the line phase angle, zero at the mains zero crossing. '
+        '&ldquo;Equivalent input&rdquo; is what the tank sees after '
+        'topology morphing, not the mains voltage.',
     ]))
     return s
 
