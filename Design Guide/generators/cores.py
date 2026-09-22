@@ -116,6 +116,58 @@ MECH = {
         pitch_a=5.08, pitch_b=15.24, pins=12),
 }
 
+# ===================================================================
+#  Coil-former terminals: where each winding of one unit comes out
+# ===================================================================
+#  Geometry is the B65884E drawing (page 3, plan view FPK0430): twelve
+#  terminals, six per side, each side in two groups of three, pitch 5.08
+#  within a group, 15.24 between the inner pins of the two groups, and
+#  the two rows 38.1 apart.  The drawing carries a "pin 1 marking" at the
+#  bottom-left corner of the plan view and NO other pin number.
+#
+#  NUMBERING IS THEREFORE AN ASSUMPTION: 1 at the marking, 1-6 up the
+#  marked side, 7-12 down the other, so that 12 is opposite 1.  That is
+#  the usual coil-former convention, but the datasheet does not say so,
+#  and the direction has to be confirmed against the vendor's bobbin
+#  drawing before the specification goes out.  The ASSIGNMENT below does
+#  not depend on it - which group carries which winding is fixed by the
+#  drawing - only the printed numbers do.
+#
+#  Assignment, one unit (three identical units per set):
+#      marked side   group 1-3   NP1  primary,   start 1, finish 3
+#                    group 4-6   NAUX auxiliary, start 4, finish 6
+#      other side    group 7-9   NS2  secondary, start 7, finish 9
+#                    group 10-12 NS3  secondary, start 10, finish 12
+#  The primary-referenced windings (NP1 and the ZCD auxiliary) share one
+#  side and the two secondaries the other, so the isolation distance is
+#  the whole bobbin width.  The centre tap is pins 9 and 10, adjacent
+#  across the 15.24 gap, and is made ON THE PCB, not inside the part.
+#  "start" is the end the polarity dot marks; NS2 and NS3 are wound in
+#  the same sense, so joining NS2's finish to NS3's start makes the tap.
+#  The middle pin of each group is left free: a Litz bundle and a foil
+#  end each take one pin, and the spare keeps the two terminations of a
+#  winding apart.
+PIN_XY = {}
+for _i, _y in enumerate((-17.78, -12.70, -7.62, 7.62, 12.70, 17.78)):
+    PIN_XY[1 + _i] = (-19.05, _y)            # marked side, upwards
+    PIN_XY[12 - _i] = (19.05, _y)            # other side, downwards
+PINMAP = {                                  # winding -> (start, finish)
+    'NP1': (1, 3), 'NAUX': (4, 6), 'NS2': (7, 9), 'NS3': (10, 12)}
+PIN_SIDE = {'NP1': 'marked', 'NAUX': 'marked', 'NS2': 'other', 'NS3': 'other'}
+CENTRE_TAP = (PINMAP['NS2'][1], PINMAP['NS3'][0])
+PIN_NOTE = ('The datasheet marks pin 1 only; the numbers run counter-'
+            'clockwise from it in the plan view, which is the usual '
+            'convention. Confirm the direction against the bobbin drawing '
+            'before the specification is released; the assignment does not '
+            'depend on it, only the printed numbers do.')
+
+
+def pins(w, dash='\u2013'):
+    """'1 - 3' style terminal text for the spec and the tables."""
+    a, b = PINMAP[w]
+    return '%d %s %d' % (a, dash, b)
+
+
 #  Three more assumptions, kept beside J_CU and K_U for the same reason.
 K_LITZ = 0.55       # copper fill of a served Litz bundle, insulation included
 T_FOIL = 0.20       # mm, copper foil thickness - the nearest standard gauge

@@ -24,7 +24,7 @@ Everything numeric comes from l6790.py.  Nothing in this file is a number
 typed in from a picture.
 """
 import numpy as np
-from matplotlib.patches import Circle, FancyArrowPatch, Rectangle
+from matplotlib.patches import Circle, FancyArrowPatch, Polygon, Rectangle
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as pe
 
@@ -2195,6 +2195,179 @@ def an_xfmr_read(save, foot):
     save(fig, 'an_xfmr_read')
 
 
+
+# ------------------------------------ 17  one unit: symbol, windings and bobbin pins
+def an_xfmr_pins(save, foot):
+    """Which winding comes out on which pin of the PQ 40/40 coil former.
+
+    Left: the schematic symbol of ONE unit with every terminal carrying
+    its pin number - primary NP1, the ZCD auxiliary NAUX, and the two
+    secondary windings NS2 / NS3 that make the centre tap.  Right: the
+    B65884E coil former in the plan view of the TDK drawing, twelve pins
+    at their drawn positions (5.08 pitch, 15.24 between the groups, rows
+    38.1 apart), each ringed in the colour of the winding it carries.
+
+    The numbers, positions and the assignment all come from cores.PIN_XY
+    and cores.PINMAP - the same source the vendor specification and the
+    tables in the note are written from - so the three cannot disagree.
+    The datasheet marks pin 1 only; the numbering direction is the
+    assumption recorded in cores.py and repeated in the caption.
+    """
+    import an_pdf as _A
+    import cores as C
+    V = _A.V
+    COL = {'NP1': MAG, 'NAUX': PUR, 'NS2': GRN, 'NS3': CYA}
+    fig = plt.figure(figsize=(9.35, 5.55))
+
+    # ---------------------------------------------------------- symbol
+    ax = fig.add_axes([0.010, 0.060, 0.455, 0.860])
+    S.frame(ax, -0.6, 15.6, -0.3, 10.9)
+    S.label(ax, 7.2, 10.45, 'ONE UNIT, SCHEMATIC', size=11.5, color=NAVY,
+            weight='bold')
+    XP, XS, XC = 5.2, 7.2, 6.2          # winding columns and the core
+    for xx in (XC - 0.2, XC + 0.2):
+        ax.plot([xx, xx], [1.1, 9.1], color=GREY, lw=2.4, zorder=3)
+    mark = len(getattr(ax, '_syms', []))
+    #  one turn radius (0.40) for all four windings: span / (2 n)
+    X.coil(ax, XP, 5.4, 8.6, n=4, side=1, color=COL['NP1'])
+    X.coil(ax, XP, 1.6, 3.2, n=2, side=1, color=COL['NAUX'])
+    X.coil(ax, XS, 5.9, 8.3, n=3, side=-1, color=COL['NS2'])
+    X.coil(ax, XS, 1.9, 4.3, n=3, side=-1, color=COL['NS3'])
+    syms = getattr(ax, '_syms', [])
+    for i in range(mark, len(syms)):
+        if syms[i][0] == 'turn':
+            syms[i] = ('winding',) + syms[i][1:]
+
+    def pin(x, y, n, w):
+        """a terminal: the pin as a marker (a port), its number beside it"""
+        c = COL[w]
+        ax.plot([x], [y], 'o', ms=3.4, color=c, zorder=6)
+        ax.add_patch(Circle((x, y), 0.30, fc='white', ec=c, lw=1.3,
+                            zorder=5))
+        S.label(ax, x + (-0.75 if x < XC else 0.75), y, str(n), size=9.8,
+                color=c, weight='bold', ha='right' if x < XC else 'left', z=7)
+
+    XL, XR = 2.3, 10.1                  # terminal columns
+    # primary: start (dot) at the top
+    a, b = C.PINMAP['NP1']
+    S.wire(ax, [(XP, 8.6), (XP, 9.2), (XL, 9.2)], color=COL['NP1'])
+    S.wire(ax, [(XP, 5.4), (XP, 4.9), (XL, 4.9)], color=COL['NP1'])
+    pin(XL, 9.2, a, 'NP1')
+    pin(XL, 4.9, b, 'NP1')
+    S.dot(ax, XP - 0.42, 8.20, color=COL['NP1'], ms=4.8)
+    S.label(ax, 3.55, 7.05, 'NP1\n%d T' % V['Np'], size=10.5,
+            color=COL['NP1'], weight='bold')
+    # auxiliary
+    a, b = C.PINMAP['NAUX']
+    S.wire(ax, [(XP, 3.2), (XP, 3.7), (XL, 3.7)], color=COL['NAUX'])
+    S.wire(ax, [(XP, 1.6), (XP, 1.0), (XL, 1.0)], color=COL['NAUX'])
+    pin(XL, 3.7, a, 'NAUX')
+    pin(XL, 1.0, b, 'NAUX')
+    S.dot(ax, XP - 0.42, 2.80, color=COL['NAUX'], ms=4.8)
+    S.label(ax, 3.55, 2.30, 'NAUX\n1 T', size=10.5, color=COL['NAUX'],
+            weight='bold')
+    # secondaries and the tap
+    a2, b2 = C.PINMAP['NS2']
+    a3, b3 = C.PINMAP['NS3']
+    S.wire(ax, [(XS, 8.3), (XS, 9.2), (XR, 9.2)], color=COL['NS2'])
+    pin(XR, 9.2, a2, 'NS2')
+    S.dot(ax, XS + 0.42, 7.90, color=COL['NS2'], ms=4.8)
+    YT = 5.1
+    S.wire(ax, [(XS, 5.9), (XS, YT)], color=COL['NS2'])
+    S.wire(ax, [(XS, 4.3), (XS, YT)], color=COL['NS3'])
+    S.wire(ax, [(XS, YT), (9.1, YT)], color=NAVY)
+    S.dot(ax, XS, YT)
+    S.dot(ax, 9.1, YT)
+    S.wire(ax, [(9.1, YT), (9.1, 5.65), (XR, 5.65)], color=COL['NS2'])
+    S.wire(ax, [(9.1, YT), (9.1, 4.55), (XR, 4.55)], color=COL['NS3'])
+    pin(XR, 5.65, b2, 'NS2')
+    pin(XR, 4.55, a3, 'NS3')
+    S.dot(ax, XS + 0.42, 3.90, color=COL['NS3'], ms=4.8)
+    S.wire(ax, [(XS, 1.9), (XS, 1.0), (XR, 1.0)], color=COL['NS3'])
+    pin(XR, 1.0, b3, 'NS3')
+    S.label(ax, 8.75, 7.55, 'NS2\n%d T' % V['Ns'], size=10.5,
+            color=COL['NS2'], weight='bold')
+    S.label(ax, 8.75, 2.75, 'NS3\n%d T' % V['Ns'], size=10.5,
+            color=COL['NS3'], weight='bold')
+    S.label(ax, 12.0, YT, 'centre tap:\njoined on the PCB', size=9.6,
+            color=NAVY, ha='left')
+    S.label(ax, 0.45, 9.2, 'start', size=9.4, color=GREY, ha='right')
+    S.label(ax, 0.45, 4.9, 'finish', size=9.4, color=GREY, ha='right')
+    S.label(ax, 12.0, 9.2, 'start', size=9.4, color=GREY, ha='left')
+    S.label(ax, 12.0, 1.0, 'finish', size=9.4, color=GREY, ha='left')
+    S.label(ax, 7.2, 0.05, u'●  start of the winding (the dot end) '
+            '= the first pin of the pair', size=9.6, color=GREY)
+
+    # ---------------------------------------------------- coil former
+    bx = fig.add_axes([0.485, 0.060, 0.505, 0.860])
+    S.frame(bx, -38.0, 36.0, -30.8, 32.4)
+    S.label(bx, 0.0, 31.0, 'B65884E COIL FORMER, PLAN VIEW OF THE TDK '
+            'DRAWING', size=11.5, color=NAVY, weight='bold')
+    bx.add_patch(Rectangle((-21.0, -20.0), 42.0, 40.0, fc='#f3f4f6',
+                           ec=GREY, lw=1.2, zorder=1))
+    bx.add_patch(Circle((0, 0), 8.75, fc='white', ec=GREY, lw=1.0,
+                        zorder=1.5))
+    bx.add_patch(Circle((0, 0), 7.75, fc='none', ec=GREY, lw=0.8,
+                        ls=(0, (3, 2)), zorder=1.5))
+    S.label(bx, 0, 0, 'centre\nleg', size=9.4, color=GREY)
+    #  the pin-1 marking is a notch at that corner on the drawing
+    bx.add_patch(Polygon([(-21.0, -20.0), (-23.6, -20.0), (-21.0, -17.4)],
+                         closed=True, fc=GREY, ec=GREY, zorder=2))
+    bx.annotate('pin 1 marking', xy=(-22.6, -19.3), xytext=(-35.0, -23.6),
+                fontsize=9.6, color=GREY, ha='left',
+                arrowprops=dict(arrowstyle='-|>', color=GREY, lw=1.0),
+                zorder=9)
+    by_pin = {}
+    for w, (a, b) in C.PINMAP.items():
+        by_pin[a] = by_pin[b] = w
+    for n, (x, y) in C.PIN_XY.items():
+        w = by_pin.get(n)
+        c = COL[w] if w else '#9aa0a8'
+        bx.add_patch(Circle((x, y), 2.05, fc='white', ec=c, lw=1.6,
+                            zorder=3))
+        bx.add_patch(Circle((x, y), 0.5, fc=c if w else GREY, ec='none',
+                            zorder=4))
+        S.label(bx, x + (3.0 if x < 0 else -3.0), y, str(n), size=9.6,
+                color=c, weight='bold', ha='left' if x < 0 else 'right')
+    #  winding name at each group of three, outside the pin row
+    def grp(w, ha):
+        a, b = C.PINMAP[w]
+        ys = [C.PIN_XY[a][1], C.PIN_XY[b][1]]
+        x = C.PIN_XY[a][0]
+        S.label(bx, x + (-3.4 if x < 0 else 3.4), sum(ys) / 2.0,
+                '%s\n%s' % (w, C.pins(w)), size=10.0, color=COL[w],
+                weight='bold', ha=ha)
+    grp('NP1', 'right')
+    grp('NAUX', 'right')
+    grp('NS2', 'left')
+    grp('NS3', 'left')
+    S.label(bx, -19.05, 22.8, 'primary side', size=9.8, color=NAVY)
+    S.label(bx, 19.05, 22.8, 'secondary side', size=9.8, color=NAVY)
+    #  three datasheet dimensions, so the drawing can be checked against it
+    def dim(x0, y0, x1, y1, t, tx, ty, rot=0):
+        bx.annotate('', xy=(x1, y1), xytext=(x0, y0), zorder=1,
+                    arrowprops=dict(arrowstyle='<->', color=GREY, lw=0.8,
+                                    shrinkA=0, shrinkB=0))
+        bx.text(tx, ty, t, fontsize=9.4, color=GREY, ha='center',
+                va='center', rotation=rot, zorder=1)
+    #  the vertical dimensions stand outside the winding names, and their
+    #  text is turned so it does not reach back over them
+    dim(-19.05, 26.2, 19.05, 26.2, '38.1', 0, 27.9)
+    dim(-33.6, 12.70, -33.6, 17.78, '5.08', -35.6, 15.24, 90)
+    dim(-33.6, -7.62, -33.6, 7.62, '15.24', -35.6, 0.0, 90)
+    for yy in (-7.62, 7.62):
+        bx.plot([-33.6, -25.5], [yy, yy], color=GREY, lw=0.6, zorder=1)
+    S.label(bx, 0.0, -28.6, 'ring = winding on that pin;  the middle pin of '
+            'each group is left free', size=9.6, color=GREY)
+
+    foot(fig, 'One transformer unit: the schematic symbol with its pin numbers, '
+              'and the same pins on the PQ 40/40 coil former. Primary and '
+              'auxiliary share the marked side, the two secondaries the '
+              'other; the centre tap is pins %d and %d, joined on the board.'
+              % C.CENTRE_TAP)
+    save(fig, 'an_xfmr_pins')
+
+
 FIGS = {'an_rac': an_rac, 'an_integrated': an_integrated,
         'an_pfc_cap': an_pfc_cap, 'an_pfc_boost': an_pfc_boost,
         'an_pfc_ccm': an_pfc_ccm, 'an_two_stage': an_two_stage,
@@ -2203,4 +2376,4 @@ FIGS = {'an_rac': an_rac, 'an_integrated': an_integrated,
         'an_peakgain': an_peakgain, 'an_recovery': an_recovery,
         'an_core_section': an_core_section,
         'an_flyback_llc': an_flyback_llc, 'an_mmf': an_mmf,
-        'an_xfmr_read': an_xfmr_read}
+        'an_xfmr_read': an_xfmr_read, 'an_xfmr_pins': an_xfmr_pins}

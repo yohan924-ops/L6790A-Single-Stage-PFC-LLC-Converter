@@ -2471,7 +2471,69 @@ def build(A):
               'open-circuit inductance per unit / N<sub>p</sub>&sup2;']],
             widths=[CW * 0.22, CW * 0.24, CW * 0.16, CW * 0.38],
             key='trafo-built'))
-    add(p('Three more numbers are computed from those, in this order.'))
+    _w = _CORE.winding(V)
+    add(p('<b>Which winding is on which pin.</b> Each unit is wound on a '
+          'PQ 40/40 coil former (Section&nbsp;%s) with twelve terminals, six '
+          'on each side of the base flange in two groups of three. The '
+          'primary-referenced windings, NP1 and the ZCD auxiliary, take one '
+          'side and the two secondaries the other, so the isolation distance '
+          'between them is the whole width of the bobbin. The centre tap is '
+          'not made inside the part: the finish of NS2 and the start of NS3 '
+          'come out on two adjacent pins and are joined on the board, which '
+          'keeps the two windings measurable one at a time.'
+          % SR('Choosing the core, and building the winding on it')))
+    add(fig('an_xfmr_pins',
+            'One unit: the schematic symbol with its pin numbers, and the '
+            'same pins on the B65884E coil former in the plan view of the '
+            'TDK drawing (pitch 5.08&nbsp;mm, 15.24&nbsp;mm between the '
+            'groups, rows 38.1&nbsp;mm apart). A ring in the colour of a '
+            'winding marks the pins it uses; the middle pin of each group '
+            'is left free. The dot end of every winding is the first pin of '
+            'its pair. The datasheet marks pin 1 only, so the numbering '
+            'direction shown (counter-clockwise from the mark) is the usual '
+            'convention and has to be confirmed against the bobbin drawing '
+            'before the specification is released; the assignment itself '
+            'does not depend on it.'))
+    _PM = _CORE.PINMAP
+    add(tbl('Winding-to-pin assignment of one unit.',
+            [['Winding', 'Pins (start &ndash; finish)', 'Turns', 'Conductor',
+              'Side of the bobbin'],
+             ['NP1 primary', _CORE.pins('NP1', '&ndash;'), '%d T' % V['Np'],
+              'Litz %d &times; &oslash;%.2f mm' % (_w['n_strand'], _CORE.D_STRAND),
+              'marked side (pin 1)'],
+             ['NAUX auxiliary (ZCD)', _CORE.pins('NAUX', '&ndash;'), '1 T',
+              'any wire, sense only', 'marked side'],
+             ['NS2 secondary', _CORE.pins('NS2', '&ndash;'), '%d T' % V['Ns'],
+              'foil %.2f &times; %.1f mm' % (_w['t_foil'], _w['w_foil']),
+              'other side'],
+             ['NS3 secondary', _CORE.pins('NS3', '&ndash;'), '%d T' % V['Ns'],
+              'the same foil, on top of NS2', 'other side'],
+             ['Centre tap', '%d and %d, joined on the PCB' % _CORE.CENTRE_TAP,
+              '&mdash;', '&mdash;', 'other side, across the 15.24 mm gap'],
+             ['Free', '%d, %d, %d, %d' % (_PM['NP1'][0] + 1, _PM['NAUX'][0] + 1,
+                                          _PM['NS2'][0] + 1, _PM['NS3'][0] + 1),
+              '&mdash;', 'not connected', 'the middle pin of each group']],
+            widths=[CW * 0.20, CW * 0.24, CW * 0.09, CW * 0.24, CW * 0.23],
+            key='pins'))
+    add(p('<b>The %(nser)d units on the board.</b> With the units called A, B '
+          'and C: the primaries are in series, pin %(pf)d of A to pin %(ps)d '
+          'of B and pin %(pf)d of B to pin %(ps)d of C, so that the tank '
+          'current enters at pin %(ps)d of A and leaves at pin %(pf)d of C; '
+          'the auxiliaries are in series the same way, pin %(af)d to pin '
+          '%(aux_s)d, dot to non-dot, so their %(nser)d turns add for the ZCD '
+          'pin; and the secondaries are in parallel, pin %(s2s)d of every '
+          'unit to one rectifier leg, pin %(s3f)d of every unit to the other, '
+          'and pins %(ct0)d and %(ct1)d of every unit together as the '
+          'centre-tap node. Series windings must all be connected dot to '
+          'non-dot and parallel windings dot to dot; a unit turned round '
+          'shorts the others through its own secondary the moment the '
+          'converter starts.'
+          % dict(nser=V['nser'], ps=_PM['NP1'][0], pf=_PM['NP1'][1],
+                 aux_s=_PM['NAUX'][0], af=_PM['NAUX'][1], s2s=_PM['NS2'][0],
+                 s3f=_PM['NS3'][1], ct0=_CORE.CENTRE_TAP[0],
+                 ct1=_CORE.CENTRE_TAP[1])))
+    add(p('Three more numbers are computed from Table&nbsp;%s, in this order.'
+          % TR('trafo-built')))
     add(p('<b>Peak flux density.</b> At f<sub>r</sub>, because that is the '
           'worst case anywhere on the line cycle, and without N<sub>p</sub>, '
           'which is the whole point of the equation:'))
@@ -2581,15 +2643,15 @@ def build(A):
     _R = _CORE.CORES['PQ 40/40']
     add(tbl('Legend of the figure: the windings of one unit.',
             [['Mark', 'Item', 'Value', 'Note'],
-             ['1', 'Primary NP1, pins 1&ndash;2', '%d T' % V['Np'],
+             ['1', 'Primary NP1, pins %s' % _CORE.pins('NP1', '&ndash;'), '%d T' % V['Np'],
               'Litz %d &times; &oslash;%.2f mm, bundle &oslash;%.2f mm, '
               '%d layers (%s); conducts every half period'
               % (_w['n_strand'], _CORE.D_STRAND, _w['d_litz'], _w['layers'],
                  ' + '.join(str(n) for n in _w['rows_p']))],
-             ['2', 'Secondary NS2, pins 3&ndash;5', '%d T' % V['Ns'],
+             ['2', 'Secondary NS2, pins %s' % _CORE.pins('NS2', '&ndash;'), '%d T' % V['Ns'],
               'foil %.2f &times; %.1f mm; conducts in the first half period'
               % (_w['t_foil'], _w['w_foil'])],
-             ['2', 'Secondary NS3, pins 4&ndash;6', '%d T' % V['Ns'],
+             ['2', 'Secondary NS3, pins %s' % _CORE.pins('NS3', '&ndash;'), '%d T' % V['Ns'],
               'the same foil, wound on top of NS2; conducts in the second '
               'half period'],
              ['3', 'Separation', '%.2f mm' % _w['gap'],
@@ -2604,7 +2666,7 @@ def build(A):
               'fringing' % V['AL']],
              ['6', 'Window A<sub>N</sub>', '%.0f mm&sup2;' % _R['AN'],
               '%.1f mm&sup2; of bare copper in it' % _CORE.window(V)],
-             ['&mdash;', 'Auxiliary NAUX, pins a&ndash;b', '1 T',
+             ['&mdash;', 'Auxiliary NAUX, pins %s' % _CORE.pins('NAUX', '&ndash;'), '1 T',
               'any wire; ZCD sense only, no load']],
             widths=[CW * 0.07, CW * 0.30, CW * 0.14, CW * 0.49],
             key='legend42'))

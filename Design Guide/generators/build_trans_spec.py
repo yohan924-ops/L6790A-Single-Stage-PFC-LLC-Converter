@@ -48,6 +48,7 @@ V = VARIANTS[VAR]
 
 # ---------------------------------------------------- 시트에서 읽어 온다
 import check_trans_spec as CTS
+import cores as CORES          # 핀 배정의 유일한 출처 - AN 의 그림·표와 같은 곳
 
 _sm = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                    '..', '..', 'Smath', 'variants', 'L6790A_%s.sm' % VAR)
@@ -170,18 +171,21 @@ section(10, '2.    WINDING')
 head(11, [('B', 'No'), ('C', 'Winding'), ('D', 'Terminal'), ('E', 'Turns'),
           ('F', 'Winding current           rms   /   peak')])
 WIND = [
-    ('1', 'NP1     Primary', '1 – 2', '%d Ts' % V['Np'], V['Ipri']),
-    ('2', 'NS2     Secondary A', '3 – 5', '%d T' % V['Ns'], V['Isec']),
-    ('3', 'NS3     Secondary B', '4 – 6', '%d T' % V['Ns'], V['Isec']),
-    ('4', 'NAUX   Auxiliary (ZCD)', 'a – b', '%d T' % V['Naux'], 'sense only'),
+    ('1', 'NP1     Primary', CORES.pins('NP1'), '%d Ts' % V['Np'], V['Ipri']),
+    ('2', 'NS2     Secondary A', CORES.pins('NS2'), '%d T' % V['Ns'], V['Isec']),
+    ('3', 'NS3     Secondary B', CORES.pins('NS3'), '%d T' % V['Ns'], V['Isec']),
+    ('4', 'NAUX   Auxiliary (ZCD)', CORES.pins('NAUX'), '%d T' % V['Naux'], 'sense only'),
 ]
 for i, (n, des, term, turns, cur) in enumerate(WIND):
     line(12 + i, [('B', n, 'center'), ('C', des, 'left'), ('D', term, 'center'),
                   ('E', turns, 'center'), ('F', cur, 'center')])
     ws['E%d' % (12 + i)].font = Font(name='Calibri', size=10, bold=True)
 
-note(17, 'Centre tap is made on the PCB by joining pins 4 and 5 — do NOT join '
-         'them inside the transformer.')
+note(17, 'Centre tap is made on the PCB by joining pins %d and %d — do NOT join '
+         'them inside the transformer.' % CORES.CENTRE_TAP)
+note(18, 'Coil former TDK B65884E (PQ 40/40), 12 pins.   Pin numbers count '
+         'from the pin-1 marking of the TDK drawing — confirm the direction '
+         'on the bobbin drawing before winding.')
 
 # ------------------------------------------------- 3. 전기 요구사양
 section(19, '3.    ELECTRICAL  REQUIREMENTS',
@@ -189,12 +193,12 @@ section(19, '3.    ELECTRICAL  REQUIREMENTS',
 head(21, [('B', 'No'), ('C', 'Item'), ('D', 'Terminal'), ('E', 'Requirement'),
           ('F', 'Condition')])
 REQ = [
-    ('1', 'INDUCTANCE', '1 – 2', '%.2f µH    %s' % (V['Lopen'], V['tol_open']),
+    ('1', 'INDUCTANCE', CORES.pins('NP1'), '%.2f µH    %s' % (V['Lopen'], V['tol_open']),
      'All other windings OPEN.   L.mag + L.leak, not L.mag alone.', 18),
-    ('2', 'LEAKAGE INDUCTANCE', '1 – 2', '%.2f µH    %s' % (V['Lshort'], V['tol_short']),
+    ('2', 'LEAKAGE INDUCTANCE', CORES.pins('NP1'), '%.2f µH    %s' % (V['Lshort'], V['tol_short']),
      'SECONDARY ALL SHORT (NS2 + NS3).   NAUX open.   '
      'Resonant inductor — a target, not a maximum.', 22),
-    ('3', 'D.C OVERLAP', '1 – 2', '≥ 90 % of initial inductance',
+    ('3', 'D.C OVERLAP', CORES.pins('NP1'), '≥ 90 % of initial inductance',
      'Test current %d A, normal temperature' % V['Isat'], 18),
 ]
 for i, (n, item, term, req, cond, h) in enumerate(REQ):
@@ -205,7 +209,7 @@ for i, (n, item, term, req, cond, h) in enumerate(REQ):
     ws['C%d' % row].alignment = Alignment(horizontal='left', vertical='center',
                                           wrap_text=True)
 
-note(25, 'Both measured at 1 – 2 of ONE transformer.   '
+note(25, 'Both measured at %s of ONE transformer.   ' % CORES.pins('NP1') +
          '%s in series give a total ratio of %s.' % (COUNT, V['label']))
 note(26, 'Item 2 follows the existing production part 26OP-LM83W clause 4-2, '
          '"SECONDARY ALL SHORT" — same vendor, same centre-tapped construction.   '
