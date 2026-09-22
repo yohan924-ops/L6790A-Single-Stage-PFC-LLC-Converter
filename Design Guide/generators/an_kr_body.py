@@ -1766,22 +1766,30 @@ def build(A):
     add(p('LED 가 출력이 아니라 V<sub>Z</sub> 에서 공급되므로 출력 리플은 '
           'TL431 을 거쳐서만 LED 에 닿는다. 두 번째 경로(TND381 이 말하는 '
           '&ldquo;fast lane&rdquo;)가 없고, 보상기는 TL431 회로망 하나다.'))
-    add(p('<b>같은 회로망을 OP 앰프로.</b> 그림&nbsp;%(f)s 가 다시 그린 '
-          '것이다. TL431 은 비반전 입력이 부품 안에서 V<sub>R</sub> 에 묶여 '
-          '있고 출력이 캐소드인 OP 앰프다. R<sub>I</sub> 는 반전 증폭기의 '
+    add(p('<b>같은 회로망을 OP 앰프로.</b> 그림&nbsp;%(f)s 가 모든 부품을 '
+          '회로 기호로 다시 그린 것이다. TL431 은 비반전 입력이 내부 기준 '
+          '전압 V<sub>R</sub> = 2.495&nbsp;V(전압원으로 그렸다)에 묶여 있고, '
+          '출력이 캐소드이며, 애노드가 접지인 OP 앰프다. R<sub>I</sub> 는 반전 증폭기의 '
           '입력 저항이고, R<sub>F</sub> + C<sub>F</sub> 와 병렬인 '
           'C<sub>Fo</sub> 가 그 궤환 임피던스 Z<sub>f</sub> 이므로 캐소드는 '
           '출력 변화의 &minus;Z<sub>f</sub>/R<sub>I</sub> 배만큼 움직인다. '
-          '캐소드 전류는 R<sub>B</sub> 를 지나므로 곧 LED 전류다. '
-          '옵토커플러가 그것을 CTR 배의 컬렉터 전류로 바꾸고, 그 전류가 풀업 '
+          'R<sub>O</sub> 는 DC 동작점만 정한다 &mdash; 반전 입력이 '
+          'V<sub>R</sub> 에 붙들려 있어 신호 전류가 흐르지 않는다. '
+          '캐소드 전류는 LED 를 지나고(R<sub>B</sub> 가 V<sub>Z</sub> 레일에서 '
+          '먹이며 R<sub>P</sub> 가 LED 에 병렬), 그래서 곧 LED 전류다. '
+          '포토트랜지스터가 그것을 CTR 배의 컬렉터 전류로 바꾸고, 그 전류가 풀업 '
           'R<sub>FB</sub> 양단에 FB 전압을 만들며 C<sub>opto</sub> + '
           'C<sub>fx</sub> 의 극점이 붙는다. 세 블록을 곱하면 아래 '
           '전달함수이고, 부호는 음수 &mdash; 루프에 필요한 부궤환이다.'
           % dict(f=FR('an_comp_opamp'))))
     add(fig('an_comp_opamp',
-            'TL431 보상기를 OP 앰프 회로로 그린 것: Z<sub>f</sub>/R<sub>I</sub> '
-            '의 반전 증폭기, 옵토커플러의 전류 게인 CTR/R<sub>B</sub>, 그리고 '
-            'FB 핀 극점. 세 인수의 곱이 G<sub>EA</sub>(s) 다.'))
+            'TL431 보상기를 OP 앰프 회로로 그린 것. TL431 안: 비반전 입력이 '
+            '내부 기준 2.495&nbsp;V 인 V<sub>R</sub> 에 붙은 OP 앰프, 출력은 '
+            '캐소드, 애노드는 접지. 그 둘레: R<sub>I</sub> 와 Z<sub>f</sub> 가 '
+            '반전 증폭기를 만들고, R<sub>B</sub>·R<sub>P</sub>·LED 가 캐소드 '
+            '전압을 전류로 바꾸고, 포토트랜지스터가 그 CTR 배를 내고, '
+            'R<sub>FB</sub> 와 C<sub>opto</sub> + C<sub>fx</sub> 가 그것을 '
+            'v<sub>FB</sub> 로 바꾼다. 세 인수의 곱이 G<sub>EA</sub>(s) 다.'))
     add(p('출력에서 FB 핀까지의 <b>전달함수</b>는 극점이 하나 더 있는 '
           'Type&nbsp;II 회로망이다.'))
     add(eq(r'G_{EA}(s)=\frac{EA_{o}}{s}\cdot'

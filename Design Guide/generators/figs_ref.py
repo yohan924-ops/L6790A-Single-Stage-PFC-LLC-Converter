@@ -1583,83 +1583,155 @@ def an_loop_blocks(save, foot):
 def an_comp_opamp(save, foot):
     """The TL431 network of the ST drawing redrawn as an op-amp circuit.
 
-    The TL431 is an op-amp whose non-inverting input is tied to V_R inside
-    the part and whose output is the cathode; R_I is the input resistor of
-    an inverting amplifier and C_Fo || (R_F + C_F) its feedback impedance.
-    The cathode current through R_B is the LED current, the optocoupler
-    scales it by CTR and R_FB turns it into the FB voltage, with the pole
-    of C_opto + C_fx.  Three blocks in a row; their product is G_EA(s).
+    Every element is a circuit symbol, so the reader can put a finger on
+    each part of the ST drawing and find it here.  The TL431 is an op-amp
+    whose non-inverting input is tied to an internal 2.495 V reference
+    (drawn as a voltage source) and whose output is the cathode; the anode
+    is ground.  R_I is the input resistor of an inverting amplifier and
+    C_Fo || (R_F + C_F) its feedback impedance; R_O only sets the dc point,
+    because the inverting input is held at V_R.  The cathode current is
+    the LED current of the optocoupler (R_B from the V_Z rail, R_P across
+    the LED), the phototransistor gives CTR times as much collector
+    current, and the pull-up R_FB inside the FB pin turns it into v_FB
+    with the pole of C_opto + C_fx.
     """
-    from matplotlib.patches import Polygon
-    fig = plt.figure(figsize=(9.3, 4.6))
-    ax = _ax(fig, [0.02, 0.03, 0.96, 0.94], -0.6, 14.6, -0.4, 8.6)
-    YI, YO, YP = 5.0, 4.5, 4.0            # - input, output, + input
-    XA, XO = 3.6, 6.4                     # - input node, output node
-    #  op-amp: a triangle at symbol zorder, leads drawn as wires
-    ax.add_patch(Polygon([(4.2, 5.6), (4.2, 3.4), (6.4, 4.5)], closed=True,
+    from matplotlib.patches import Polygon, Circle, Rectangle
+    fig = plt.figure(figsize=(9.6, 5.4))
+    ax = _ax(fig, [0.02, 0.03, 0.96, 0.94], -0.6, 15.4, -0.2, 9.8)
+    k = X.scale(ax)
+    YM, YP = 6.0, 5.0                     # - input, + input
+    YO = 5.5                              # op-amp output = cathode
+    XA, XO = 3.0, 6.4                     # - input node, output node
+    GND = 2.4
+    # ---------------------------------------------------------- TL431
+    ax.add_patch(Polygon([(4.2, 6.6), (4.2, 4.4), (XO, YO)], closed=True,
                          fc='white', ec=NAVY, lw=1.8, zorder=4))
-    S.label(ax, 4.55, YI, '$-$', size=12)
+    S.label(ax, 4.55, YM, '$-$', size=12)
     S.label(ax, 4.55, YP, '+', size=12)
-    S.label(ax, 5.15, 4.5, 'TL431', size=8.6, color=GREY)
-    #  input: v_out -> R_I -> node A
-    S.dot(ax, 0.5, YI)
-    S.label(ax, 0.5, YI + 0.5, 'v$_{out}$', size=11)
-    ra, rb = S.res(ax, 1.7, YI, 'R$_I$', tdy=0.55)
-    S.wire(ax, [(0.5, YI), ra])
-    S.wire(ax, [rb, (XA, YI), (4.2, YI)])
-    S.dot(ax, XA, YI)
-    #  + input: V_R
-    ba, bb = S.box(ax, 2.6, YP, 1.1, 0.62, 'V$_R$', size=9.5)
-    S.wire(ax, [(4.2, YP), bb])
-    S.wire(ax, [ba, (1.5, YP), (1.5, 3.1)])
-    S.gnd(ax, 1.5, 3.1)
-    #  feedback: two branches between node A (up) and node O (up)
-    S.wire(ax, [(XA, YI), (XA, 7.4)])
-    S.wire(ax, [(XO, YO), (XO, 7.4)])
-    S.dot(ax, XA, 6.4)
-    S.dot(ax, XO, 6.4)
-    fa, fb = S.res(ax, 4.5, 6.4, 'R$_F$', tdy=0.50)
-    ca, cb = S.cap(ax, 5.6, 6.4, 'C$_F$', tdy=0.50)
-    S.wire(ax, [(XA, 6.4), fa])
-    S.wire(ax, [fb, ca])
-    S.wire(ax, [cb, (XO, 6.4)])
-    oa, ob = S.cap(ax, 5.0, 7.4, 'C$_{Fo}$', tdy=0.42)
-    S.wire(ax, [(XA, 7.4), oa])
-    S.wire(ax, [ob, (XO, 7.4)])
-    S.label(ax, 2.0, 7.4, 'Z$_f$ = C$_{Fo}$ $\\parallel$ (R$_F$ + C$_F$)',
-            size=9.5, color=GREY)
-    S.label(ax, XO + 0.15, YO - 0.80, 'v$_K$  (cathode)', size=9.5,
+    #  the internal reference as a voltage source on the + input
+    XR = 3.9
+    S.wire(ax, [(4.2, YP), (XR, YP), (XR, 3.7)])
+    r = 0.34 * k / 0.6
+    ax.add_patch(Circle((XR, 3.7 - r), r, fc='white', ec=NAVY, lw=1.8,
+                        zorder=4))
+    S.label(ax, XR, 3.7 - r + 0.42 * r, '+', size=9, z=7)
+    S.label(ax, XR, 3.7 - r - 0.45 * r, '$-$', size=9, z=7)
+    S.wire(ax, [(XR, 3.7 - 2 * r), (XR, GND)])
+    S.gnd(ax, XR, GND)
+    S.label(ax, XR + 0.55, 3.7 - r, 'V$_R$ = 2.495 V', size=9.5, ha='left')
+    S.label(ax, XR + 0.55, 3.7 - r - 0.42, '(internal reference)', size=8.8,
             ha='left', color=GREY)
-    #  the optocoupler as a current gain, then the FB pin
-    ka, kb = S.box(ax, 8.6, YO, 2.3, 0.95,
-                   'i$_{LED}$ = $-$v$_K$ / R$_B$\ni$_C$ = CTR $\\cdot$ i$_{LED}$',
-                   size=9.0)
-    S.wire(ax, [(XO, YO), ka])
-    S.label(ax, 8.6, YO - 1.15, 'optocoupler', size=9.0, color=GREY)
-    XF = 11.4
-    S.wire(ax, [kb, (XF, YO), (13.4, YO)])
-    S.dot(ax, XF, YO)
-    S.dot(ax, 13.4, YO)
-    S.label(ax, 13.4, YO + 0.5, 'v$_{FB}$', size=11)
-    #  R_FB up to the pull-up, C_opto + C_fx down to ground
-    pa, pb = S.res(ax, XF, YO + 1.35, 'R$_{FB}$', horiz=False)
-    S.wire(ax, [(XF, YO), pa])
-    S.wire(ax, [pb, (XF, 7.0)])
-    S.dot(ax, XF, 7.0)
-    S.label(ax, XF, 7.45, 'pull-up inside the FB pin', size=9.0, color=GREY)
-    qa, qb = S.cap(ax, XF, YO - 1.35, 'C$_{opto}$ + C$_{fx}$', horiz=False)
-    S.wire(ax, [(XF, YO), qb])
-    S.wire(ax, [qa, (XF, 2.5)])
-    S.gnd(ax, XF, 2.5)
-    #  the three factors, under the drawing
-    for x, t in ((3.9, 'v$_K$ / v$_{out}$ = $-$Z$_f$ / R$_I$'),
-                 (8.6, 'v$_{FB}$ = $-$i$_C$ $\\cdot$ R$_{FB}$ $\\parallel$ (C$_{opto}$ + C$_{fx}$)'),
-                 ):
-        S.label(ax, x, 1.5, t, size=9.5, color=NAVY)
-    S.label(ax, 7.0, 0.55,
-            'G$_{EA}$(s) = v$_{FB}$ / v$_{out}$ = (Z$_f$ / R$_I$) $\\cdot$ (CTR R$_{FB}$ / R$_B$) '
+    #  TL431 outline: op-amp + reference; anode is ground
+    ax.add_patch(Rectangle((2.45, 1.75), 4.55, 5.35, fc='none', ec=GREY,
+                           lw=1.0, ls=(0, (4, 3)), zorder=1))
+    S.label(ax, 6.85, 1.75 + 0.30, 'TL431', size=9.5, ha='right', color=GREY)
+    S.label(ax, 2.6, 1.75 + 0.30, 'anode = ground', size=8.4, ha='left',
+            color=GREY)
+    # ------------------------------------------- divider R_I, R_O, node A
+    S.dot(ax, 0.5, YM)
+    S.label(ax, 0.5, YM + 0.5, 'v$_{out}$', size=11)
+    ra, rb = S.res(ax, 1.55, YM, 'R$_I$', tdy=0.55)
+    S.wire(ax, [(0.5, YM), ra])
+    S.wire(ax, [rb, (XA, YM), (4.2, YM)])
+    S.dot(ax, XA, YM)
+    oa, ob = S.res(ax, XA, 4.2, 'R$_O$', horiz=False)
+    S.wire(ax, [(XA, YM), ob])
+    S.wire(ax, [oa, (XA, GND)])
+    S.gnd(ax, XA, GND)
+    # ----------------------------------- feedback Z_f between A and O
+    S.wire(ax, [(XA, YM), (XA, 8.6)])
+    S.wire(ax, [(XO, YO), (XO, 8.6)])
+    S.dot(ax, XA, 7.6)
+    S.dot(ax, XO, 7.6)
+    fa, fb = S.res(ax, 4.4, 7.6, 'R$_F$', tdy=0.50)
+    ca, cb = S.cap(ax, 5.5, 7.6, 'C$_F$', tdy=0.50)
+    S.wire(ax, [(XA, 7.6), fa])
+    S.wire(ax, [fb, ca])
+    S.wire(ax, [cb, (XO, 7.6)])
+    oa2, ob2 = S.cap(ax, 4.7, 8.6, 'C$_{Fo}$', tdy=0.42)
+    S.wire(ax, [(XA, 8.6), oa2])
+    S.wire(ax, [ob2, (XO, 8.6)])
+    S.label(ax, 4.7, 9.45, 'Z$_f$ = C$_{Fo}$ $\\parallel$ (R$_F$ + C$_F$)',
+            size=9.5, color=GREY)
+    # ------------------------------------------ cathode node, LED, R_B, R_P
+    XK = 8.0
+    XT = 11.0                                            # phototransistor
+    S.wire(ax, [(XO, YO), (XK, YO)])
+    S.dot(ax, XK, YO)
+    S.label(ax, XO + 0.8, YO - 0.42, 'v$_K$ (cathode)', size=9.5,
+            ha='left', color=GREY)
+    YA = 7.2                                              # LED anode node
+    da, db = S.diode(ax, XK, (YA + YO) / 2, horiz=False, flip=True)
+    S.wire(ax, [(XK, YA), da])
+    S.wire(ax, [db, (XK, YO)])
+    S.dot(ax, XK, YA)
+    #  light: two small arrows leaving the LED towards the transistor
+    for dy in (0.22, -0.10):
+        ax.annotate('', (XT - 0.55, (YA + YO) / 2 + dy - 0.08),
+                    (XT - 1.15, (YA + YO) / 2 + dy + 0.12),
+                    arrowprops=dict(arrowstyle='-|>', color=NAVY, lw=1.3,
+                                    mutation_scale=9), zorder=4)
+    S.label(ax, XK - 0.55, (YA + YO) / 2, 'LED', size=9.0, color=GREY)
+    #  R_P across the LED
+    XP = 9.1
+    S.wire(ax, [(XK, YA), (XP, YA)])
+    pa, pb = S.res(ax, XP, (YA + YO) / 2, 'R$_P$', horiz=False)
+    S.wire(ax, [(XP, YA), pb])
+    S.wire(ax, [pa, (XP, YO), (XK, YO)])
+    #  R_B up to the V_Z rail
+    ba, bb = S.res(ax, XK, 8.2, 'R$_B$', horiz=False)
+    S.wire(ax, [(XK, YA), ba])
+    S.wire(ax, [bb, (XK, 9.2)])
+    S.dot(ax, XK, 9.2)
+    S.label(ax, XK, 9.55, 'V$_Z$ (regulated rail)', size=9.5)
+    # ------------------------------------------------- phototransistor
+    XT = 11.0
+    YB = (YA + YO) / 2                                    # base height
+    bx = XT - 0.32
+    ax.plot([bx, bx], [YB - 0.42, YB + 0.42], color=NAVY, lw=2.4, zorder=4)
+    ax.plot([bx, XT], [YB + 0.22, YB + 0.62], color=NAVY, lw=1.8, zorder=4)
+    ax.plot([bx, XT], [YB - 0.22, YB - 0.62], color=NAVY, lw=1.8, zorder=4)
+    ax.annotate('', (XT, YB - 0.62), (bx + 0.30, YB - 0.42),
+                arrowprops=dict(arrowstyle='-|>', color=NAVY, lw=1.6,
+                                mutation_scale=10), zorder=4)
+    S.wire(ax, [(XT, YB + 0.62), (XT, YA)])
+    S.wire(ax, [(XT, YB - 0.62), (XT, GND + 1.2)])
+    S.gnd(ax, XT, GND + 1.2)
+    #  optocoupler outline
+    ax.add_patch(Rectangle((XK - 0.85, YO - 0.85), XT - XK + 1.45, YA - YO + 1.3,
+                           fc='none', ec=GREY, lw=1.0, ls=(0, (4, 3)),
+                           zorder=1))
+    S.label(ax, XT + 0.6, YA + 0.45 + 0.28, 'optocoupler, CTR', size=9.0,
+            ha='right', color=GREY)
+    # ------------------------------------------------- FB pin network
+    XF, XC, XE = 12.6, 13.6, 14.6
+    S.wire(ax, [(XT, YA), (XE, YA)])
+    S.dot(ax, XF, YA)
+    S.dot(ax, XC, YA)
+    S.dot(ax, XE, YA)
+    S.label(ax, XE, YA + 0.5, 'v$_{FB}$', size=11)
+    S.label(ax, XE, YA - 0.45, 'FB pin', size=9.0, color=GREY)
+    pa2, pb2 = S.res(ax, XF, 8.2, 'R$_{FB}$', horiz=False)
+    S.wire(ax, [(XF, YA), pa2])
+    S.wire(ax, [pb2, (XF, 9.2)])
+    S.dot(ax, XF, 9.2)
+    S.label(ax, XF, 9.55, 'pull-up inside the IC', size=9.5)
+    qa, qb = S.cap(ax, XC, YB, 'C$_{opto}$ + C$_{fx}$', horiz=False)
+    S.wire(ax, [(XC, YA), qb])
+    S.wire(ax, [qa, (XC, GND + 1.2)])
+    S.gnd(ax, XC, GND + 1.2)
+    # ------------------------------------------ the three factors
+    S.label(ax, 7.4, 1.35, 'v$_K$ / v$_{out}$ = $-$Z$_f$ / R$_I$   '
+            '(R$_O$ carries no signal: the $-$ input is held at V$_R$)',
+            size=9.3, color=NAVY)
+    S.label(ax, 7.4, 0.8, 'i$_{LED}$ = $-$v$_K$ / R$_B$,   '
+            'i$_C$ = CTR $\\cdot$ i$_{LED}$,   '
+            'v$_{FB}$ = $-$i$_C$ $\\cdot$ R$_{FB}$ '
+            '$\\parallel$ (C$_{opto}$ + C$_{fx}$)', size=9.3, color=NAVY)
+    S.label(ax, 7.4, 0.25,
+            'G$_{EA}$(s) = (Z$_f$ / R$_I$) $\\cdot$ (CTR R$_{FB}$ / R$_B$) '
             '$\\cdot$ 1 / (1 + s R$_{FB}$(C$_{opto}$ + C$_{fx}$))',
-            size=9.5, color=NAVY)
+            size=9.3, color=NAVY)
     foot(fig, 'The TL431 compensator as an op-amp circuit: an inverting '
               'amplifier, a current gain, and one RC pole.')
     save(fig, 'an_comp_opamp')
