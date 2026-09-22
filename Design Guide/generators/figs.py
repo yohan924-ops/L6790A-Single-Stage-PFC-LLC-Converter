@@ -373,7 +373,7 @@ def f04_three_regions():
          'LLC operating region.'),
         (CYA, '(1)   f > f$_r$   gain < 1',
          'Still inductive, still ZVS, but\nthe tank can no longer boost.\n'
-         'Used at high line and light\nload.'),
+         'Used at high input voltage\nand light load.'),
     ]
     for i, (c, head, body) in enumerate(cards):
         a = fig.add_subplot(gs[1, i])

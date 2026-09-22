@@ -373,7 +373,7 @@ def an_gain_design(save, foot, R, sweep):
                u'M$_{\\infty}$ = %.3f' % minf))
     fig.legend([h for h, _n in hs], [n for _h, n in hs], loc='upper center',
                ncol=3, fontsize=12, frameon=False, bbox_to_anchor=(0.5, 0.99))
-    foot(fig, 'The gain chart of this design at the six line conditions, '
+    foot(fig, 'The gain chart of this design at the six input voltages, '
               'low to high. The curves never change; only the required-gain '
               'lines move, up at low input and down at high input. Each '
               'curve is read against the dashed line of its own colour.')

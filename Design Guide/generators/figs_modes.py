@@ -66,7 +66,7 @@ def an_above_below(save, foot, R, sweep, FR):
               title='equivalent input, and the share of the\n'
                     'half cycle it spends above f$_r$',
               title_fontsize=9.2)
-    foot(fig, 'At low line the converter never leaves the boosting region. '
+    foot(fig, 'At the lowest input voltage the converter never leaves the boosting region. '
               'At the high morphing edge it crosses into the bucking region '
               'around the line peak and comes back. A single-stage converter '
               'therefore has to be designed for BOTH sides.')

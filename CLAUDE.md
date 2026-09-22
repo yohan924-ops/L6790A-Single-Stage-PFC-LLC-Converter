@@ -46,7 +46,7 @@ ST **L6790A** 로 **단일단(Single-Stage) PF LLC** 를 설계한다. 90–264 
 | `Calculation Excel Sheet/L6790_spreadsheet_r1_0_corrected_rev0_6.xlsx` | ST 툴 수정본. `CHANGELOG_rev0_6` 에 변경 이력 | rev 0.6 |
 | `Calculation Excel Sheet/Uncryped_04092026_LGE_670W_L6790A_spread sheet.xlsx` | ST 원본(디크립트본, openpyxl 로 열림). 원본 `sheetN` ↔ 우리 `sheetN+1` | 읽기 전용 |
 | `Calculation Excel Sheet/variants/` | 워크북 3종(`9to1,7p5to1,6to1`) · 벤더 사양서 5종(`+7p5to1_x1,8to1`) | 8:1 · `_x1` 은 워크북 없음 |
-| `Design Guide/AN_L6790A_SingleStage_PFC_LLC_ApplicationNote_v1.3.pdf` · `…_KR_v1.3.pdf` | **배포용 AN** 영문 92쪽 · 한국어 92쪽. `an_pdf.py`+`an_body.py` / `an_kr_pdf.py`+`an_kr_body.py`, 수치 전부 `l6790.py`·시트 | v1.3 · **한국어판이 29·30·35·36차만큼 뒤처짐** |
+| `Design Guide/AN_L6790A_SingleStage_PFC_LLC_ApplicationNote_v1.3.pdf` · `…_KR_v1.3.pdf` | **배포용 AN** 영문 92쪽 · 한국어 92쪽. `an_pdf.py`+`an_body.py` / `an_kr_pdf.py`+`an_kr_body.py`, 수치 전부 `l6790.py`·시트 | v1.3 · **한국어판이 29·30·35·36·37차만큼 뒤처짐** |
 | `Design Guide/AN_L6790A_Design_Guide_rev2_0.md` · `AN_L6790A_Design_Guide_rev2_1.md` | 한국어 본체 문서 — rev 2.0 은 9:1, rev 2.1 은 7.5:1. **둘 다 살아 있는 설계점, 지우지 말 것** | rev 2.0/2.1 |
 | `Design Guide/L6790A_Transformer_Design_KR_v1.0.pdf` | 트랜스포머 설계 정리 9쪽(`tx_pdf.py`+`tx_body.py`) | v1.0 |
 | `Design Guide/generators/` | 도구 체인 전부 — README 참조 | |
@@ -57,7 +57,7 @@ ST **L6790A** 로 **단일단(Single-Stage) PF LLC** 를 설계한다. 90–264 
 
 | 남은 일 | 무엇을 | 상태 |
 | :-- | :--- | :--- |
-| **한국어판 AN** | 영문 v1.3 의 29·30차(PF 설명 · 게인 비교 절 · 기호표 130행)를 `an_kr_body.py` 에 이식. 한글 글꼴(NanumGothic · WQY)은 이 컨테이너에 있다 | **다음 차례** |
+| **한국어판 AN** | 영문 v1.3 의 29·30·35·36·37차(PF 설명 · 게인 비교 절 · 기호표 130행 · 전문 간결화 · 입력 전압 6종 · 판별 규칙, 그림 23 삭제)를 `an_kr_body.py` 에 이식. 한글 글꼴(NanumGothic · WQY)은 이 컨테이너에 있다 | **다음 차례** |
 | **권선비 결정** | 9:1(정본) 대 7.5:1(AN) | 사용자 대기 |
 | 스프레드시트 rev 0.7 | 정리만 남았다 — `CHANGELOG_rev0_7` 시트 분리, 그때 **CHANGELOG 에 없는 설계 셀 48개**를 채운다 | 대기 |
 | 교육자료 한국어판 | 영문 61장 끝, 한국어판 | 대기 |

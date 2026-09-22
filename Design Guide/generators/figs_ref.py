@@ -25,6 +25,7 @@ typed in from a picture.
 """
 import numpy as np
 from matplotlib.patches import Circle, FancyArrowPatch, Polygon, Rectangle
+from matplotlib.lines import Line2D
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as pe
 
@@ -2383,9 +2384,10 @@ def an_xfmr_read(save, foot):
 
     Three traces of one switching period at the worst cycle (line peak,
     minimum equivalent input, full load) from the same eight-interval
-    model as the mode sheets; under them the line-cycle envelope of the
-    two rms currents from the design sweep, and the bench condition of
-    the DC-overlap test.  The circled numbers are the rows of the table
+    model as the mode sheets; under them the two winding rms currents over
+    the input half cycle at all six input voltages (the HB edge draws the
+    most, which is why the table is read there), and the bench condition
+    of the DC-overlap test.  The circled numbers are the rows of the table
     that follows the figure in the note - the figure says WHERE, the
     table says what it sets.
 
@@ -2400,15 +2402,15 @@ def an_xfmr_read(save, foot):
     t, e, ilm, ilr, io, _ = _cycle(ratio, V['lam'], V['Icomp'], V['ILm'])
     t1 = e[1]
 
-    fig = plt.figure(figsize=(9.35, 8.9))
+    fig = plt.figure(figsize=(9.35, 9.9))
     X0, W = 0.115, 0.845
     _pu = '\none unit' if V['nser'] > 1 else ''
-    rows = [('i$_p$' + _pu, 0.235), ('i$_{NS2}$, i$_{NS3}$' + _pu, 0.165),
-            ('v$_{NS}$', 0.150)]
+    rows = [('i$_p$' + _pu, 0.211), ('i$_{NS2}$, i$_{NS3}$' + _pu, 0.148),
+            ('v$_{NS}$', 0.135)]
     y = 0.965
     axs = []
     for nm, h in rows:
-        y -= h + 0.024
+        y -= h + 0.022
         axs.append(_wave_ax(fig, [X0, y, W, h], 0, 1, -1.25, 1.25, nm))
 
     #  interval names once, above the first trace
@@ -2522,65 +2524,78 @@ def an_xfmr_read(save, foot):
     a.text(t1 / 2, 1.42, 'T$_r$/2', ha='center', va='top', fontsize=9.4,
            color=GOLD, path_effects=HALO, zorder=9)
 
-    #  ---------------- lower left: the same two rms currents over the line
-    rws, _s = _L.sweep(R, R['Vin_min'], 1.0)
-    rws = [r for r in rws if r]
-    th = np.array([r['th'] for r in rws])
-    thd = np.degrees(np.concatenate([th, np.pi - th[::-1]]))
-    pri = np.array([r['Ipri'] for r in rws])
-    sec = np.array([r['Isec_w'] for r in rws]) / V['nser']
-    ilmt = np.array([r['ILm'] for r in rws])
-    mir = lambda q: np.concatenate([q, q[::-1]])
-    #  TWO axes, because these are two windings and their currents are not
-    #  the same size.  On one axis scaled to the primary the secondary
-    #  trace ran off the top for two thirds of the half cycle, and the
-    #  legend entry for its line-cycle rms named a line that was not on
-    #  the picture at all.  The legend itself sat on the secondary trace
-    #  (2026-09-22, user), so every trace is now named ON itself.
-    b = fig.add_axes([X0, 0.060, 0.520, 0.235])
-    bs = b.twinx()
-    b.set_zorder(bs.get_zorder() + 1)
-    b.patch.set_visible(False)
-    bs.plot(thd, mir(sec), color=MAG, lw=2.0)
-    bs.axhline(V['Isecx'], color=MAG, lw=1.1, ls=(0, (1, 2)))
-    b.plot(thd, mir(pri), color=NAVY, lw=2.0)
-    b.plot(thd, mir(ilmt), color=PUR, lw=1.5, ls=(0, (4, 2.4)))
-    b.axhline(V['Iprilc'], color=NAVY, lw=1.1, ls=(0, (1, 2)))
-    b.set_xlim(0, 180)
-    b.set_ylim(0, 1.55 * max(pri.max(), ilmt.max()))
-    bs.set_ylim(0, 1.30 * max(sec.max(), V['Isecx']))
-    b.set_xticks([0, 45, 90, 135, 180])
-    b.set_xlabel(u'line phase \u03b8  [deg]', fontsize=9.4)
-    b.set_ylabel('primary side  [A]', fontsize=9.4, color=NAVY)
-    bs.set_ylabel('secondary winding  [A]', fontsize=9.4, color=MAG)
-    b.tick_params(labelsize=9.2, colors=NAVY)
-    bs.tick_params(labelsize=9.2, colors=MAG)
-    b.set_title('over the line half cycle, at %.0f Vac equivalent'
-                % V['Veqlo'], fontsize=9.6, color=NAVY)
-    b.text(135, float(np.interp(135, thd, mir(pri))) - 0.5,
-           'i$_p$ rms, each cycle', ha='center', va='top', fontsize=9.2,
-           color=NAVY, path_effects=HALO, zorder=9)
-    b.text(176, V['ILm'] + 0.4, 'i$_{Lm,pk}$: does not move', ha='right',
-           va='bottom', fontsize=9.2, color=PUR, path_effects=HALO, zorder=9)
-    b.text(3, V['Iprilc'] + 0.30,
-           u'line-cycle rms %.1f A \u2192 primary Cu' % V['Iprilc'],
-           ha='left', va='bottom', fontsize=9.2, color=NAVY,
-           path_effects=HALO, zorder=9)
-    bs.text(90, sec.max() + 2.4,
-            ('i$_{NS}$ rms per unit, each cycle' if V['nser'] > 1
-             else 'i$_{NS}$ rms, each winding, each cycle'), ha='center',
-            va='bottom', fontsize=9.2, color=MAG, path_effects=HALO, zorder=9)
-    bs.text(3, V['Isecx'] - 1.0,
-            u'line-cycle rms %.2f A \u2192 foil' % V['Isecx'], ha='left',
-            va='top', fontsize=9.2, color=MAG, path_effects=HALO, zorder=9)
-    ring(b, 2, 90, pri.max(), NAVY, dx=0, dy=1.4)
-    ring(bs, 5, 152, float(np.interp(152, thd, mir(sec))), MAG, dx=-10, dy=2.8)
+    #  ---------------- lower left and centre: the two rms currents over the
+    #  input half cycle, at all six input voltages.  Drawn at the HB edge
+    #  alone the reader asked why (2026-09-22): the answer is that the HB
+    #  edge draws the most current in both windings, so the table is read
+    #  there - and the other five are on the picture to show it.  Two
+    #  panels, because the two windings' currents are not the same size;
+    #  every trace is named in the legend, not on the curves, so nothing
+    #  sits on a line.
+    COLS = [MAG, '#D97706', CYA, GRN, NAVY, PUR]
+    conds = _L.line_conditions(R)
+    curves = []
+    for (nm, veq, _m), col in zip(conds, COLS):
+        rws, _s = _L.sweep(R, veq, 1.0)
+        rws = [r for r in rws if r]
+        th = np.array([r['th'] for r in rws])
+        thd = np.degrees(np.concatenate([th, np.pi - th[::-1]]))
+        mir = lambda q: np.concatenate([q, q[::-1]])
+        pri = mir(np.array([r['Ipri'] for r in rws]))
+        sec = mir(np.array([r['Isec_w'] for r in rws])) / V['nser']
+        curves.append((nm, col, thd, pri, sec))
+    Y0, H = 0.125, 0.215
+    b = fig.add_axes([X0, Y0, 0.245, H])
+    b2 = fig.add_axes([0.430, Y0, 0.245, H])
+    for ax in (b, b2):
+        ax.grid(color='#C4C8CF', lw=0.6, zorder=0)
+        ax.set_axisbelow(True)
+        ax.set_xlim(0, 180)
+        ax.set_xticks([0, 45, 90, 135, 180])
+        ax.set_xlabel(u'line phase \u03b8  [deg]', fontsize=9.4)
+        ax.set_ylabel('[A]', fontsize=9.4)
+        ax.tick_params(labelsize=9.2)
+    hs = []
+    for nm, col, thd, pri, sec in curves:
+        b.plot(thd, pri, color=col, lw=1.7, zorder=3)
+        b2.plot(thd, sec, color=col, lw=1.7, zorder=3)
+        hs.append((Line2D([], [], color=col, lw=1.7), nm))
+    b.axhline(V['Iprilc'], color=NAVY, lw=1.1, ls=(0, (1, 2)), zorder=2)
+    b2.axhline(V['Isecx'], color=MAG, lw=1.1, ls=(0, (1, 2)), zorder=2)
+    hs.append((Line2D([], [], color=NAVY, lw=1.1, ls=(0, (1, 2))),
+               u'line-cycle rms at the HB edge: %.1f A \u2192 primary Cu'
+               % V['Iprilc']))
+    hs.append((Line2D([], [], color=MAG, lw=1.1, ls=(0, (1, 2))),
+               u'line-cycle rms at the HB edge: %.1f A \u2192 foil'
+               % V['Isecx']))
+    pmax = max(c[3].max() for c in curves)
+    smax = max(c[4].max() for c in curves)
+    b.set_ylim(0, 1.32 * pmax)
+    b2.set_ylim(0, 1.30 * max(smax, V['Isecx']))
+    b.set_title('i$_p$ rms per switching cycle', fontsize=9.6, color=NAVY)
+    b2.set_title(('i$_{NS}$ rms per unit, per switching cycle'
+                  if V['nser'] > 1 else
+                  'i$_{NS}$ rms per switching cycle, each winding'),
+                 fontsize=9.6, color=MAG)
+    nm0, col0, thd0, pri0, sec0 = curves[0]      # the HB edge: the worst
+    ring(b, 2, 90, pri0.max(), NAVY, dx=0, dy=0.12 * pmax)
+    ring(b2, 5, 152, float(np.interp(152, thd0, sec0)), MAG, dx=-12,
+         dy=0.10 * smax)
+    fig.legend([h for h, _n in hs], [n for _h, n in hs], loc='lower center',
+               ncol=3, fontsize=8.8, frameon=False,
+               bbox_to_anchor=(0.5, 0.002),
+               title='over the input half cycle at full load, at the six '
+                     'input voltages; the HB edge draws the most',
+               title_fontsize=9.0)
 
     #  ---------------- lower right: the bench, and the one current it wants
-    c = fig.add_axes([0.700, 0.060, 0.275, 0.235])
+    c = fig.add_axes([0.750, Y0, 0.225, H])
     Is = V['Isatspec']
     c.set_xlim(0, 1.45 * max(Is, V['Icomp']))
     c.set_ylim(0, 1.34)
+    c.set_xticks([0, 10, 20])
+    c.grid(color='#C4C8CF', lw=0.6, zorder=0)
+    c.set_axisbelow(True)
     c.set_yticks([0.9, 1.0])
     c.set_yticklabels(['90 %', '100 %'], fontsize=8.5)
     c.set_xlabel('dc current in the primary  [A]', fontsize=9.4)
@@ -2609,16 +2624,17 @@ def an_xfmr_read(save, foot):
     ring(c, 3, V['ILm'], 0.9, PUR, dx=-1.7, dy=0.20)
     c.plot([V['Icomp']], [0.9], 'x', color=NAVY, ms=7, mew=1.8, zorder=5)
     c.annotate('not %.1f A' % V['Icomp'],
-               xy=(V['Icomp'], 0.88), xytext=(V['Icomp'] + 0.5, 0.60),
-               ha='left', va='top', fontsize=9.4, color=NAVY,
+               xy=(V['Icomp'], 0.88), xytext=(V['Icomp'] - 0.3, 0.58),
+               ha='right', va='top', fontsize=9.4, color=NAVY,
                arrowprops=dict(arrowstyle='-|>', color=NAVY, lw=1.1),
                path_effects=HALO, zorder=9)
 
     foot(fig, 'Worst switching cycle of the design: line peak at the %.0f '
               'Vac equivalent input, full load, f_sw/f_r = %.2f. The traces '
               'are the eight-interval model of the mode figures, labelled '
-              'with the sheet values; the lower-left envelope is the design '
-              'sweep over the line half cycle. Circled numbers are the rows '
+              'with the sheet values; the lower panels are the design sweep '
+              'over the input half cycle at the six input voltages. Circled '
+              'numbers are the rows '
               'of the reading table in the text.' % (V['Veqlo'], ratio))
     save(fig, 'an_xfmr_read')
 

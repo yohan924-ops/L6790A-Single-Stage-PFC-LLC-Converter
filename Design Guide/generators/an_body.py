@@ -203,7 +203,7 @@ def build(A):
             'at f<sub>sw</sub>/f<sub>r</sub> = 0.70 with the dead time '
             'widened so that steps 3, 4, 7 and 8 are visible; the current '
             'amplitudes are this design&rsquo;s I<sub>Lr,pk</sub> and '
-            'I<sub>Lm,pk</sub> at the low-line corner.', width=CW))
+            'I<sub>Lm,pk</sub> at the lowest input voltage.', width=CW))
     add(note('<b>Steps 1 and 2 are the two resonances, and both are in one '
              'half cycle with the same switches on. ZVS happens in neither.</b> '
              'It happens in the dead time, steps 3&ndash;4 and 7&ndash;8.'))
@@ -264,6 +264,27 @@ def build(A):
     add(fig('f04_three_regions',
             'The three regions, shaded for the full-load curve. Only the '
             'inductive ones are usable. Framing after ROHM TechWeb.'))
+    add(p('<b>Which side the converter is on can be read from the chart '
+          'without a waveform.</b> Draw the required gain as a horizontal '
+          'line and find where it crosses the curve for the present load. '
+          'Every curve passes through M&nbsp;=&nbsp;1 at f<sub>n</sub>&nbsp;=&nbsp;1, '
+          'so the rule is:'))
+    ext(bullets([
+        '<b>Required gain above 1</b>: the crossing lies left of '
+        'f<sub>n</sub>&nbsp;=&nbsp;1. The converter is below resonance and '
+        'boosts; the waveforms are the first row of Figure&nbsp;%s.'
+        % FR('an_three_cases'),
+        '<b>Required gain equal to 1</b>: the crossing is at f<sub>r</sub>, '
+        'at any load.',
+        '<b>Required gain below 1</b>: the crossing lies right of '
+        'f<sub>n</sub>&nbsp;=&nbsp;1. The converter is above resonance and '
+        'bucks; the resonant half sine is cut off.']))
+    add(p('So the input voltage decides the side, not the load: the required '
+          'gain is the reflected output voltage over the input the tank '
+          'sees, and the load only picks which curve the line meets. A '
+          'higher input lowers the line and moves the crossing right. The '
+          'load matters for the other question, whether the crossing is '
+          'still on the inductive side of the peak.'))
 
     add(h2('Capacitive and inductive, and why those words'))
     add(p('The names describe <b>what the bridge sees</b>: the phase of the '
@@ -565,9 +586,10 @@ def build(A):
           'current. The load wants constant power, so the difference must be '
           'stored and returned a few milliseconds later, whatever the '
           'topology.'))
-    add(fig('f11_power_balance',
-            'The 2f<sub>l</sub> energy imbalance. The two shaded areas are '
-            'equal; a capacitor somewhere must absorb and return them.'))
+    add(p('Panel&nbsp;2 of Figure&nbsp;%s draws it: the two shaded areas '
+          'between the sin&sup2; curve and the flat load are equal, and a '
+          'capacitor somewhere must absorb and return them.'
+          % FR('an_pf_chain')))
 
     add(h2('Moving the buffer from 400 V to the output'))
     add(p('In the two-stage converter the buffer is the 400&nbsp;V bus '
@@ -760,7 +782,7 @@ def build(A):
         % dict(b=SR('The two boundaries are not the same boundary')),
         '<b>M<sub>&infin;</sub> = 1/(1+&lambda;) is on the chart.</b> An '
         'ordinary LLC never needs a gain that small; a single-stage '
-        'converter at high line does. Below this line there is <b>no '
+        'converter at high input voltage does. Below this line there is <b>no '
         'solution at any frequency</b> and burst mode takes over '
         '(Section&nbsp;%(l)s).'
         % dict(l=SR('The other bound on &lambda;, and where it has no '
@@ -769,7 +791,7 @@ def build(A):
              'curve against the lowest line. There is no such operating '
              'point. &theta; sets the curve <i>and</i> the line together, so '
              'only the same-coloured pairs mean anything. That is also why '
-             'this note draws no overview with several line voltages on one '
+             'this note draws no overview with several input voltages on one '
              'family: at the line peak every condition looks comfortable.'))
     add(p('At the lowest equivalent input the chart answers &ldquo;can the '
           'tank make the gain and stay inductive?&rdquo; At the highest it '
@@ -862,7 +884,7 @@ def build(A):
           'sits above or below the asymptote is a matter of a per cent, and '
           'no full-load check shows it; Section&nbsp;%s reports it for this '
           'design.' % SR('Following the numbers through')))
-    add(note('Losing the solution is not a failure: no load at high line '
+    add(note('Losing the solution is not a failure: no load at high input voltage '
              'belongs to <b>burst mode</b>. But it decides which candidate '
              'turns ratios can still regulate by frequency alone at no load, '
              'and no full-load number shows it.'))
@@ -1393,7 +1415,7 @@ def build(A):
           'distorts the line current, so it is a THD term:'))
     add(eq(r'C_{in}\;=\;3\,\frac{\mathrm{nF}}{\mathrm{W}}\times P_{in}', key='Cin'))
     add(p('That is a <b>lower</b> bound; round up to the next standard value '
-          'and rate it for the full line voltage.'))
+          'and rate it for the full input voltage.'))
 
     add(h2('The output capacitor bank'))
     add(p('Two conditions apply, and the larger wins. The ripple condition '
@@ -2100,7 +2122,7 @@ def build(A):
               '%(zk).2f against t<sub>D</sub>&nbsp;=&nbsp;'
               '%(tD).0f&nbsp;ns. That is the number this design is held '
               'to.' % _z))
-        add(note('<b>Why light load at high line can be the ZVS corner.</b> '
+        add(note('<b>Why light load at high input voltage can be the ZVS corner.</b> '
                  'The charge that swings the bridge node is carried by the '
                  'magnetising current, and its peak goes as '
                  'V<sub>in</sub>/(4f<sub>sw</sub>L<sub>m</sub>). Shed load '
@@ -2112,15 +2134,15 @@ def build(A):
     add(h2('The gain chart of this design'))
     add(p('Figure&nbsp;%(f)s is the chart of Section&nbsp;%(s)s on this '
           'tank (&lambda;<sub>act</sub>&nbsp;=&nbsp;%(lam).3f, '
-          'Q<sub>pk</sub>&nbsp;=&nbsp;%(Qpk).3f), one panel per line '
-          'condition: the two morphing edges and the four mains voltages a '
+          'Q<sub>pk</sub>&nbsp;=&nbsp;%(Qpk).3f), one panel per input '
+          'voltage: the two morphing edges and the four mains voltages a '
           'supply meets. The curves are the same in every panel; only the '
           'required-gain lines move. The marked crossings are the operating '
           'points the sweep is built from.'
           % dict(V, s=SR('Reading the gain chart of a single-stage '
                          'converter'), f=FR('an_gain_design'))))
     add(fig('an_gain_design',
-            'The gain chart of this design at the six line conditions, low '
+            'The gain chart of this design at the six input voltages, low '
             'to high. Top left, the HB edge (%(lo).0f&nbsp;Vac eq.): highest '
             'required gain, crossings below f<sub>r</sub>. Bottom right, the '
             'FB edge (%(hi).0f&nbsp;Vac eq.): lowest required gain, '
@@ -2137,8 +2159,8 @@ def build(A):
             for _nm, veq, _m in _L.line_conditions(A.R)]
     _lo = [g for g in _gp if abs(g[0] - A.R['Vin_min']) < 1e-6]
     _hi = [g for g in _gp if abs(g[0] - A.R['Vin_FBmax']) < 1e-6]
-    ext(tbl('The marked crossings of Figure&nbsp;%(s)s, at every line '
-            'condition. Q&nbsp;=&nbsp;Q<sub>pk</sub>&thinsp;sin&sup2;&thinsp;'
+    ext(tbl('The marked crossings of Figure&nbsp;%(s)s, at every input '
+            'voltage. Q&nbsp;=&nbsp;Q<sub>pk</sub>&thinsp;sin&sup2;&thinsp;'
             '&theta; and M<sub>req</sub>&nbsp;=&nbsp;M<sub>pk</sub>/sin&thinsp;'
             '&theta;; M<sub>pk</sub> scales as 1/V<sub>eq</sub>, from '
             '%(a).3f at the HB edge to %(b).3f at the FB edge.'
@@ -2184,7 +2206,7 @@ def build(A):
         '<b>The FB edge also judges &lambda;.</b> The line-peak '
         'requirement there is %(mm).3f and the no-load floor '
         'M<sub>&infin;</sub>&nbsp;=&nbsp;%(mi).3f. The requirement is '
-        '<b>below</b> the floor, so at no load and high line there is no '
+        '<b>below</b> the floor, so at no load and high input voltage there is no '
         'frequency that satisfies it, and burst mode carries the converter '
         '(Section&nbsp;%(l)s).'
         % dict(mm=V['MFBmax'], mi=V['Minf'],
@@ -2197,23 +2219,23 @@ def build(A):
              'M<sub>req</sub>.</b>'))
 
     add(h2('Which side of resonance this design runs on'))
-    add(p('With n<sub>T</sub> = %(nT).2f, at all but the lowest line '
-          'conditions the tank spends part of every line cycle above '
+    add(p('With n<sub>T</sub> = %(nT).2f, at all but the lowest input '
+          'voltages the tank spends part of every line cycle above '
           'f<sub>r</sub>, where the secondary loses zero-current turn-off, so '
           'the rectifier body diode and the SR dead time need checking.' % V))
     add(fig('an_above_below',
             'Which side of f<sub>r</sub> the converter is on over a line '
-            'half cycle, at the six line conditions. Every curve converges '
+            'half cycle, at the six input voltages. Every curve converges '
             'on f<sub>o</sub> at the zero crossing. The percentage in each '
             'legend entry is the fraction of the half cycle spent above '
             'f<sub>r</sub>, without zero-current turn-off.', width=CW))
     ext(tbl('Peak f<sub>sw</sub> over the half cycle against f<sub>r</sub> = '
-            '%(fr).1f kHz. %(nAbove)d of the %(nc)d line conditions cross into '
+            '%(fr).1f kHz. %(nAbove)d of the %(nc)d input voltages cross into '
             'above-resonance operation for part of the cycle.'
             % dict(V, nc=len(V['fswPk'])),
-            [['Line condition', 'V<sub>eq</sub>', 'peak f<sub>sw</sub>',
-              'side of f<sub>r</sub>']]
-            + [[nm, '%.0f V' % veq, '%.1f kHz' % pk,
+            [['Input voltage (bridge mode)', 'V<sub>eq</sub> (Vac rms)',
+              'peak f<sub>sw</sub>', 'side of f<sub>r</sub>']]
+            + [[nm, '%.0f Vac' % veq, '%.1f kHz' % pk,
                 '<b>above</b>' if ab else 'below']
                for nm, veq, pk, ab in V['fswPk']],
             widths=[CW * 0.36, CW * 0.16, CW * 0.20, CW * 0.28], split=True))
@@ -2282,11 +2304,14 @@ def build(A):
     add(fig('an_xfmr_read',
             'Where each number is read. Top: primary current, the two '
             'secondary winding currents and the secondary winding voltage '
-            'over one switching period at the worst cycle (line peak, '
-            '%(Veqlo).0f&nbsp;Vac equivalent, full load). Lower left: the '
-            'rms of the two winding currents over the line half cycle. Lower '
-            'right: the DC-overlap bench test. The circled marks are the '
-            'rows of Table&nbsp;%(t)s.' % dict(V, t=TR('xfmr-read'))))
+            'over one switching period at the worst cycle: line peak at '
+            'the HB edge (%(Veqlo).0f&nbsp;Vac equivalent), full load. '
+            'Lower left and centre: the rms of the two winding currents '
+            'over the input half cycle at the six input voltages; the HB '
+            'edge draws the most in both windings, which is why the table '
+            'is read there. Lower right: the DC-overlap bench test. The '
+            'circled marks are the rows of Table&nbsp;%(t)s.'
+            % dict(V, t=TR('xfmr-read'))))
     ext(tbl('The transformer as wound and specified.',
             [['Quantity', 'Value', 'Note'],
              ['Turns', 'N<sub>p</sub> %(Np)d T; NS2 %(Ns)d T, NS3 %(Ns)d T; '
@@ -3094,7 +3119,7 @@ def build(A):
              r'=%(V).2f\;\mathrm{V_{rms}}'
              % dict(R=V['RCFG'], V=V['VBO'])))
     add(p('against a %(Vacmin).0f&nbsp;Vac minimum, margin %(k).3f. Rounding '
-          'up would stop the converter starting at low line.'
+          'up would stop the converter starting at the lowest input voltage.'
           % dict(V, k=A.SH['k.BO'])))
     ext(tbl('What R<sub>CFG</sub> and LOUT2 select together. The 235 and '
             '245 V thresholds are fixed inside the IC and cannot be moved.',
@@ -3242,7 +3267,7 @@ def build(A):
         '<b>Design the tank at the equivalent range</b>, %(Veqlo).1f to '
         '%(Veqhi).1f&nbsp;Vac, not at the mains range.' % V,
         '<b>Expect &lambda; near 0.5.</b> A two-stage inductance ratio will '
-        'not start at low line.',
+        'not start at the lowest input voltage.',
         '<b>Keep f<sub>Min</sub> above f<sub>o</sub></b>; the anti-capacitive '
         'protection is the last line, not the first.',
         '<b>Size the output bank from ripple and hold-up</b>, take the '
@@ -3410,7 +3435,7 @@ def build(A):
         ('f<sub>Min</sub>, f<sub>Max</sub>, f<sub>SU</sub>', 'oscillator floor, ceiling and start-up frequency set by R<sub>T</sub>, C<sub>T</sub> and T<sub>idle</sub>'),
         ('T<sub>idle</sub>', 'oscillator idle time'),
         ('R<sub>BM</sub>, r<sub>BM</sub>, V<sub>BM,eq</sub>, P<sub>in,BM</sub>', 'burst-mode resistor, the fraction of rated power burst starts at, the equivalent FB threshold, and the input power that corresponds to'),
-        ('R<sub>CFG</sub>, R<sub>CFG,max</sub>', 'configuration resistor, and the largest value the minimum line allows'),
+        ('R<sub>CFG</sub>, R<sub>CFG,max</sub>', 'configuration resistor, and the largest value the lowest input voltage allows'),
         ('V<sub>BO</sub>, V<sub>BO,pk</sub>, V<sub>BO,rms</sub>', 'brown-out threshold, as a mains peak and as an rms voltage'),
         ('R<sub>ZCD,H</sub>, R<sub>ZCD,L</sub>, I<sub>bias</sub>', 'the ZCD divider, and the current it is designed to draw'),
         ('V<sub>OVP1</sub>, V<sub>OVP2</sub>, V<sub>OVP1,out</sub>', 'the two over-voltage thresholds, and the output voltage OVP1 is aimed at'),
