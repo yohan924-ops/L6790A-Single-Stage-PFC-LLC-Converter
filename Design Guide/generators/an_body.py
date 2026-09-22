@@ -774,8 +774,12 @@ def build(A):
     add(h2('Power factor, and why it is not the same as distortion'))
     add(p('<b>Power factor</b> is the ratio of real power to apparent power:'))
     add(eq(r'PF=\frac{P}{V_{rms}I_{rms}}\;=\;\cos\varphi_{1}\;\times\;\frac{I_{1,rms}}{I_{rms}}'))
-    add(p('It has two independent factors, and they fail for different '
-          'reasons. <b>Displacement</b> is the phase between the voltage and '
+    add(p('with P the average power the converter takes, V<sub>rms</sub> and '
+          'I<sub>rms</sub> the rms mains voltage and current, '
+          'I<sub>1,rms</sub> the rms of the current&rsquo;s fundamental '
+          'alone, and &phi;<sub>1</sub> the phase between that fundamental '
+          'and the voltage. It has two independent factors, and they fail '
+          'for different reasons. <b>Displacement</b> is the phase between the voltage and '
           'the fundamental of the current; it is what a motor gets wrong. '
           '<b>Distortion</b> is how much of the rms current is at the '
           'fundamental at all; it is what a rectifier gets wrong. The '
@@ -877,7 +881,9 @@ def build(A):
           'swings between zero and twice the average, at twice the line '
           'frequency:'))
     add(eq(r'p_{in}(t)=V_{ac}I_{ac}\,\left[\,1-\cos(2\omega_l t)\,\right]'))
-    add(p('The load wants constant power. The difference has to be stored and '
+    add(p('with V<sub>ac</sub> and I<sub>ac</sub> the rms mains voltage and '
+          'current and &omega;<sub>l</sub> = 2&pi;f<sub>l</sub>. The load '
+          'wants constant power. The difference has to be stored and '
           'returned a few milliseconds later. This requirement does not '
           'depend on topology; it follows from asking for unity power factor '
           'at all. Figure&nbsp;%s shows the imbalance that must be '
@@ -941,7 +947,10 @@ def build(A):
           'instantaneous gain is therefore forced:'))
     add(eq(r'M(\theta)=\frac{n\,V_{o,eff}}{V_{drive}(\theta)}'
            r'=\frac{n\,V_{o,eff}}{\sqrt{2}\,V_{ac,eq}\,\sin\theta}', key='Mreq'))
-    add(p('with &theta; the line phase angle. In a two-stage converter the '
+    add(p('with &theta; the line phase angle and V<sub>drive</sub> the '
+          'amplitude the bridge applies to the tank &mdash; the rectified '
+          'mains in full bridge, half of it in half bridge. In a two-stage '
+          'converter the '
           'output voltage is free to move &mdash; the loop moves it &mdash; '
           'so commanding a gain is the same as commanding an output. Here '
           'both voltages are pinned from outside, so their ratio is fixed '
@@ -1194,7 +1203,11 @@ def build(A):
     add(eq(r'V_{FB}\;=\;V_{os}+\frac{2K_{HV}}{K_{M}K_{FF}}\,R_{CS}\,P_{in}'
            r'\;=\;0.5\,\mathrm{V}+0.167\,'
            r'\frac{\mathrm{V}}{\Omega\cdot\mathrm{W}}\,R_{CS}\,P_{in}', key='VFB'))
-    add(p('Substituting the 2.8&nbsp;V feedback span gives '
+    add(p('V<sub>os</sub> is the 0.5&nbsp;V the FB pin sits at with no power '
+          'commanded, and K<sub>HV</sub>, K<sub>M</sub> and K<sub>FF</sub> '
+          'are the three internal gains the datasheet block diagram quotes '
+          '&mdash; the input-voltage sense, the multiplier and the '
+          'feed-forward. Substituting the 2.8&nbsp;V feedback span gives '
           '2.8/0.167 = 16.8&nbsp;&Omega;&middot;W, which is exactly the '
           'maximum-power rule in the datasheet. <b>Maximum power limiting, '
           'burst entry and overload detection therefore all sit on one '
@@ -1249,8 +1262,9 @@ def build(A):
            r'\qquad\qquad'
            r'\lambda_{TD}=\frac{\lambda_{1}}'
            r'{1-\frac{\pi^{2}}{8}\left(\frac{f_r}{f_{sw,max}}\right)^{2}}', key='lam'))
-    add(p('&lambda;<sub>1</sub> is the plain minimum-gain condition. The other '
-          'two are the same condition with the frequency ceiling folded in: '
+    add(p('&lambda;<sub>1</sub> is the plain minimum-gain condition. '
+          '&lambda;<sub>2</sub> and &lambda;<sub>TD</sub> are the same '
+          'condition with the frequency ceiling folded in: '
           'the tank has to reach the lowest required gain <i>before</i> it '
           'runs out of frequency. With the usual f<sub>sw,max</sub> = '
           '1.5&nbsp;f<sub>r</sub> the squared ratio is 0.44, both '
@@ -1809,7 +1823,9 @@ def build(A):
           'current and the current density the design can cool:'))
     add(eq(r'A_{cu}=\frac{I_{rms}}{J}\qquad\qquad '
            r'\sum_{w} N_{w}A_{cu,w}\;\leq\;k_{u}A_{N}', key='window'))
-    add(p('J is an assumption, not a constant: 4 to 5&nbsp;A/mm&sup2; is '
+    add(p('with the sum running over the windings w, so N<sub>w</sub> is the '
+          'turns of one winding and A<sub>cu,w</sub> its copper area. J is '
+          'an assumption, not a constant: 4 to 5&nbsp;A/mm&sup2; is '
           'usual for a transformer of this size in free air, less if it is '
           'enclosed. k<sub>u</sub> is the window utilisation, and it is '
           'small &mdash; round wire in a round bundle, insulation, the '
@@ -2329,7 +2345,10 @@ def build(A):
             r'f_{p}=\frac{1}{2\pi R_{F}C_{ser}},\quad C_{ser}=\frac{C_{F}C_{Fo}}{C_{F}+C_{Fo}},'
             r'\qquad f_{px}=\frac{1}{2\pi R_{FB}\,(C_{opto}+C_{fx})}'],
            key='fzp'))
-    add(p('Each part has one job. C<sub>F</sub> and C<sub>Fo</sub> together '
+    add(p('The &omega; are the same zero and poles as the f, in radians per '
+          'second: &omega;<sub>z</sub> = 2&pi;f<sub>z</sub> and so on. '
+          'C<sub>ser</sub> is C<sub>F</sub> and C<sub>Fo</sub> in series. '
+          'Each part has one job. C<sub>F</sub> and C<sub>Fo</sub> together '
           'make the pole at the origin: the gain keeps rising toward dc, so '
           'the static error is zero. R<sub>F</sub> with C<sub>F</sub> makes '
           'the zero f<sub>z</sub>: above it the phase comes back up, and '

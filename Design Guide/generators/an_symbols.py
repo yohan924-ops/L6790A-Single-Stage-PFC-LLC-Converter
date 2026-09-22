@@ -52,7 +52,7 @@ arctan arcsin arccos circ lim leftarrow Leftarrow
 #  A unit or a word only counts as noise when it stands ALONE.  Filtering
 #  on the base letter instead threw away V_out, A_e and every other real
 #  symbol whose initial happens to be a unit.
-WORDS = set("""
+WORDS = set(r"""
 mm cm m kHz Hz W V A F H s ns us ms uH nF pF uF mF kohm ohm mohm T
 per unit across the assembly started at ripple decides rounded down
 strands parallel device in out max min pk rms dt
@@ -109,11 +109,17 @@ _GREEK = re.compile(r'&(lambda|theta|delta|eta|mu|rho|pi|alpha|beta|gamma|'
 #  a bare symbol the table lists is one the prose is then searched for.
 #  Otherwise the check says a symbol is never written when the sentence
 #  under its own equation writes it.
+#  Seeding it from the whole table was tried and is wrong in the other
+#  direction: a single capital is a unit as often as a symbol, and
+#  "100 &deg;C" then counts as a sighting of C.  So the prose scan looks
+#  for names of two letters or more, plus the handful of single letters
+#  this note really does write on their own.
 BARE = {'CTR', 'GM', 'THD', 'ESR', 'PF', 'Q', 'J', 'M', 'd', 'k', 'm', 'n'}
 _BARE = [re.compile(r'(?<![A-Za-z])(CTR|GM|THD|ESR|Q|J|M|d|k|m|n)(?![A-Za-z<])')]
 
 
 def set_bare(names):
+    """look for exactly these bare names in the prose from now on"""
     names = sorted({n for n in names if re.fullmatch(r'[A-Za-z]{1,4}', n)},
                    key=len, reverse=True)
     _BARE[0] = re.compile(r'(?<![A-Za-z])(%s)(?![A-Za-z<])'
@@ -136,7 +142,7 @@ def prose_symbols(text):
 
 
 #  the two alphabets write the same symbol differently
-ALIAS = {'\\lambda': '\\lambda', '\\theta': '\\theta', '\\delta': '\\delta',
+ALIAS = {'\\varphi': '\\phi', '\\theta': '\\theta', '\\delta': '\\delta',
          '\\mu': '\\mu', '\\eta': '\\eta', '\\rho': '\\rho',
          '\\Phi': '\\Phi', '\\Gamma': '\\Gamma', '\\alpha': '\\alpha',
          '\\Delta': '\\Delta', '\\infty': '\\infty'}
@@ -198,10 +204,14 @@ class Rec(object):
         self._add('text', caption)
 
     def tbl(self, caption, rows, **kw):
-        self._add('text', caption)
+        #  The symbol table names every symbol by definition, so counting
+        #  it as prose says every symbol is introduced - at the back of
+        #  the note, after every equation that uses it.
+        kind = 'symtab' if caption.startswith('Symbols') else 'table'
+        self._add(kind, caption)
         for r in rows:
             for c in r:
-                self._add('table', str(c))
+                self._add(kind, str(c))
         return []
 
     def eq(self, tex, size=None, number=True, key=None, again=False):
@@ -259,22 +269,30 @@ def table_symbols(A):
         out |= prose_symbols(col)
         #  and the bare names in the same cell - 'E, C, V, V<sub>min</sub>'
         #  lists three symbols that carry no subscript at all, and taking
-        #  only the subscripted one left them looking unlisted
-        for c in _strip(col).split(','):
+        #  only the subscripted one left them looking unlisted.  The
+        #  subscripts themselves are cut out first: splitting the stripped
+        #  cell on commas otherwise turned V<sub>o,eff</sub> into the two
+        #  "symbols" Vo and eff.
+        bare = re.sub(r'(&[A-Za-z]+;|[A-Za-z]+)<sub>.*?</sub>', '', col)
+        for c in bare.replace('&ndash;', ',').split(','):
+            c = re.sub(r'<[^>]+>', '', c)
             c = c.strip().split('(')[0].strip()
             if c and re.fullmatch(r'[A-Za-z&;]{1,4}', c):
-                out.add(c.replace('&ndash;', ''))
+                out.add(c)
     return out
 
 
 def main():
     r, A = replay()
     raw = table_symbols(A)
-    set_bare(BARE | {k for k in raw if '_' not in k})
+    set_bare(BARE | {k for k in raw
+                     if '_' not in k and len(k) > 1 and k not in WORDS})
     table = {norm(k) for k in raw}
 
     first_eq, first_text, where = {}, {}, {}
     for kind, i, payload in r.log:
+        if kind == 'symtab':
+            continue
         if kind.startswith('eq') or kind == 'calc':
             syms = tex_symbols(payload)
             for k in syms:
@@ -300,7 +318,14 @@ def main():
     #  to look.  A symbol the prose writes only AFTER the equation is a
     #  weaker complaint - the sentence under the equation usually does the
     #  job - so it is listed separately rather than mixed in.
-    silent = sorted(k for k in used if k in first_eq and k not in first_text)
+    #  A bare single letter cannot be looked for in English prose without
+    #  guessing: B is a symbol here and a bullet elsewhere, C is a symbol
+    #  and the C of 100 degrees C.  Say so and list them, rather than
+    #  reporting a number that is wrong in one direction or the other.
+    byeye = sorted(k for k in used
+                   if len(k) == 1 and k.isalpha() and k in first_eq)
+    silent = sorted(k for k in used if k in first_eq and k not in first_text
+                    and k not in byeye)
     late = sorted(k for k in used
                   if k in first_eq and k in first_text
                   and first_text[k] > first_eq[k][0])
@@ -321,13 +346,18 @@ def main():
     show('MISSING from the symbol table', missing)
     show('SILENT: used in an equation, never written in the prose at all',
          silent)
+    print('\nSINGLE LETTERS - the prose scan cannot judge these, read them '
+          '(%d)' % len(byeye))
+    for k in byeye:
+        print('  %-4s first in %s' % (k, first_eq[k][1]))
     show('LATE: the prose writes it only after the equation', late)
     print('\nIN THE TABLE BUT NEVER USED  (%d)' % len(unused))
     for k in unused:
         print('  %s' % k)
     print('\n%d symbols used - %d missing from the table, %d never written '
-          'in the prose, %d written only afterwards'
-          % (len(used), len(missing), len(silent), len(late)))
+          'in the prose, %d written only afterwards, %d single letters left '
+          'to the reader'
+          % (len(used), len(missing), len(silent), len(late), len(byeye)))
     if '--all' in sys.argv:
         print('\nEVERY SYMBOL')
         for k in sorted(used):
