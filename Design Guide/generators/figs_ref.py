@@ -1273,23 +1273,25 @@ def _balloon(ax, n, x, y, xt, yt, color=GREY, r=1.35, lead=True):
 def an_core_section(save, foot):
     """The chosen core in section, drawn to scale, and the winding in it.
 
-    THE AXES ARE IN MILLIMETRES with equal aspect, and the scale comes
-    from each panel's own size on the page (_mm_ax), so nothing here can
-    be out of proportion without the core itself coming out the wrong
-    shape.  Two of the three panels are detail views at larger scales and
-    each says by how much, the way a real drawing does: at 1:1 the four
-    foil turns are one millimetre of stack and read as a single bar.
+    THE AXES OF THE FIRST TWO PANELS ARE IN MILLIMETRES with equal aspect,
+    and the scale comes from each panel's own size on the page (_mm_ax),
+    so nothing there can be out of proportion without the core itself
+    coming out the wrong shape.  The third panel is a layer-by-layer
+    diagram of the secondary and says so: at true scale the twelve foil
+    layers are three millimetres and read as a single bar, which is what
+    the first version showed and what could not be read.
 
-    Dimensions are from the TDK dimensional drawings, PQ 40/40 core
-    B65883A page 2 and coil former B65884E page 3, and are listed with
-    their provenance in cores.MECH.
+    Dimensions are from the TDK dimensional drawings of the chosen core
+    and coil former (cores.MECH, with provenance per value).  The winding
+    is not decoration: cores.winding() lays it out from the design
+    current, the chosen current density and the skin depth, and this
+    function draws what comes back - Litz bundles as circles of the
+    computed bundle diameter at their real radius, foil at its computed
+    thickness and width.  If the copper did not fit, it would be seen
+    not to fit.
 
-    The winding is not decoration.  cores.winding() lays it out from the
-    design current, the chosen current density and the skin depth, and
-    cores.report() prints the arithmetic; this function draws what comes
-    back.  The Litz bundles are circles of the computed bundle diameter
-    at their real radius, the foil is its computed thickness and width.
-    If the copper did not fit, it would be seen not to fit.
+    Winding colours are the ones of the pin figure (an_xfmr_pins), so
+    the two figures read together.
     """
     import cores as _C
     import an_pdf as _A
@@ -1298,28 +1300,30 @@ def an_core_section(save, foot):
     R = _C.CORES[NAME]
     w = _C.winding(V, NAME)
     M = w['M']
-    bpk = _C.flux(V, R['Ae'])
     gp = _C.gap(V, R['Ae'])
     d, tp = w['d_litz'], w['t_foil'] + _C.T_FOIL_INS
+    NF = w['n_foil']                     # foils in parallel per turn
+    NL = w['Ns'] * NF                    # foil layers per secondary winding
+    COL = {'NP1': MAG, 'NS2': GRN, 'NS3': CYA}
+    EDG = {'NP1': '#9c0055', 'NS2': '#2d7a4c', 'NS3': '#1f7fa6'}
 
-    #  Panel sizes follow the chosen core: the ETD 49 is 48.5 x 49.8 mm
-    #  in section and its primary is three layers deep, so the figure is
-    #  taller than it was for the PQ 40/40 and the detail scales are set
-    #  from the winding width (S2) and the foil stack (S3).
+    def fcol(k):
+        return 'NS2' if k < NL else 'NS3'
+
     fig = plt.figure(figsize=(9.3, 5.9))
-    S1, S2, S3 = 17.2, 7.7, 2.40            # mm per inch on each panel
+    S1, S2 = 17.2, 7.7                       # mm per inch on the two scaled panels
     ax = _mm_ax(fig, [0.006, 0.033, 0.425, 0.934], 1.5, -3.0, S1)
     ax2 = _mm_ax(fig, [0.440, 0.500, 0.550, 0.470], 17.7, 2.0, S2)
-    ax3 = _mm_ax(fig, [0.440, 0.033, 0.550, 0.420], 2.4, 0.30, S3)
+    ax3 = fig.add_axes([0.440, 0.033, 0.550, 0.420])
+    ax3.set_xlim(0, 10)
+    ax3.set_ylim(0, 5)
+    ax3.axis('off')
 
     #  =================================================== SECTION, 1:1
     HW, HH = M['W'] / 2.0, M['H'] / 2.0
     WH, RC, RW = M['win_h'] / 2.0, M['d_centre'] / 2.0, M['r_win_out']
     ferr = dict(fc=FERR, ec=FERRE, lw=1.0, hatch='////', zorder=3)
-    #  the centre leg is drawn GAPPED, because it is: the design needs
-    #  a definite A_L and the two halves are ground back to get it.  An
-    #  ungapped drawing with a balloon pointing at solid ferrite says
-    #  nothing.
+    #  the centre leg is drawn GAPPED, because it is
     for rc in ((-HW, WH, M['W'], HH - WH), (-HW, -HH, M['W'], HH - WH),
                (-RC, gp / 2.0, 2 * RC, WH - gp / 2.0),
                (-RC, -WH, 2 * RC, WH - gp / 2.0),
@@ -1352,14 +1356,15 @@ def an_core_section(save, foot):
         y0 = yP1 - d * 0.5 - (w['per_layer'] - n) * d * 0.5
         for k in range(n):
             for sgn in (-1, 1):
-                ax.add_patch(Circle((sgn * r, y0 - k * d), d / 2.0, fc=NAVY,
-                                    ec='#12315c', lw=0.7, alpha=0.45,
-                                    zorder=6))
-    for k in range(2 * w['Ns'] * w['n_foil']):
+                ax.add_patch(Circle((sgn * r, y0 - k * d), d / 2.0,
+                                    fc=COL['NP1'], ec=EDG['NP1'], lw=0.7,
+                                    alpha=0.45, zorder=6))
+    for k in range(2 * NL):
+        c = COL[fcol(k)]
         for sgn in (-1, 1):
             x0 = RT + k * tp if sgn > 0 else -(RT + k * tp + w['t_foil'])
             ax.add_patch(Rectangle((x0, yS0), w['t_foil'], w['w_foil'],
-                                   fc=MAG, ec=MAG, lw=0.4, zorder=6))
+                                   fc=c, ec=c, lw=0.4, zorder=6))
     for sgn in (-1, 1):
         x0 = RT if sgn > 0 else -RF
         ax.add_patch(Rectangle((x0, yS1), RF - RT, w['gap'], fc='none',
@@ -1374,19 +1379,23 @@ def an_core_section(save, foot):
             fontsize=10.5, color=NAVY, zorder=8)
     ax.text(0.0, -HH - 14.6, 'all dimensions in mm', ha='center', va='top',
             fontsize=8.5, color=GREY, zorder=8)
-    #  balloons point into the LEFT window, so no leader crosses the part
+    #  balloons point into the LEFT window, so no leader crosses the part.
+    #  Numbers are the rows of the legend table beside the figure.
     BX = -HW - 5.2
-    _balloon(ax, 1, -(RT + d * 0.9), yP1 - d * 0.6, BX, yP1 - 0.8, NAVY)
-    _balloon(ax, 3, -(RT + 2.6), yS1 + w['gap'] * 0.5, BX,
+    hs = NL * tp                               # radial build of one winding
+    _balloon(ax, 1, -(RT + d * 0.9), yP1 - d * 0.6, BX, yP1 - 0.8, EDG['NP1'])
+    _balloon(ax, 2, -(RT + hs * 0.5), yS0 + w['w_foil'] * 0.30, BX,
+             yS0 + w['w_foil'] * 0.30, EDG['NS2'])
+    _balloon(ax, 3, -(RT + hs * 1.5), yS0 + w['w_foil'] * 0.70, BX,
+             yS0 + w['w_foil'] * 0.70, EDG['NS3'])
+    _balloon(ax, 4, -(RT + 2.6), yS1 + w['gap'] * 0.5, BX,
              yS1 + w['gap'] * 0.5, GOLD)
-    _balloon(ax, 2, -(RT + 0.6), yS0 + w['w_foil'] * 0.5, BX,
-             yS0 + w['w_foil'] * 0.5, MAG)
-    _balloon(ax, 4, -(RT + 2.6), -WW + w['margin'] * 0.5, BX,
+    _balloon(ax, 5, -(RT + 2.6), -WW + w['margin'] * 0.5, BX,
              -WW + w['margin'] * 0.5, GREY)
-    _balloon(ax, 6, 10.5, WH - 2.2, 10.5, HH + 4.4, GREY)
-    _balloon(ax, 5, 0.0, gp / 2.0, 0.0, HH + 4.4, GOLD)
+    _balloon(ax, 6, 0.0, gp / 2.0, 0.0, HH + 4.4, GOLD)
+    _balloon(ax, 7, 10.5, WH - 2.2, 10.5, HH + 4.4, GREY)
 
-    #  ============================== DETAIL, unrolled, enlarged S1/S2
+    #  ============================== DETAIL, the winding unrolled
     OX, OY = 2.0, -3.6
     L = M['wind_w']
     fl = (M['flange_h'] - M['wind_w']) / 2.0
@@ -1403,112 +1412,111 @@ def an_core_section(save, foot):
         y = OY + d * (li + 0.5)
         x0 = xP + d * 0.5 + (w['per_layer'] - n) * d * 0.5
         for k in range(n):
-            ax2.add_patch(Circle((x0 + k * d, y), d / 2.0, fc=NAVY,
-                                 ec='#12315c', lw=0.7, alpha=0.45, zorder=6))
+            ax2.add_patch(Circle((x0 + k * d, y), d / 2.0, fc=COL['NP1'],
+                                 ec=EDG['NP1'], lw=0.7, alpha=0.45, zorder=6))
     xG = xP + w['w_pri']
     ax2.add_patch(Rectangle((xG, OY), w['gap'], BH, fc='none', ec=GOLD,
                             lw=1.1, ls=(0, (3.5, 2.5)), zorder=7))
     xS = xG + w['gap']
-    NF = w['n_foil']
-    for k in range(2 * w['Ns'] * NF):
+    for k in range(2 * NL):
+        c = COL[fcol(k)]
         ax2.add_patch(Rectangle((xS, OY + k * tp), w['w_foil'], w['t_foil'],
-                                fc=MAG, ec=MAG, lw=0.4, zorder=6))
+                                fc=c, ec=c, lw=0.4, zorder=6))
     ax2.text(OX + L / 2.0, OY + BH + 5.4,
-             'the winding unrolled along the bobbin  —  enlarged %.1f×'
-             % (S1 / S2), ha='center', va='bottom', fontsize=10.5,
-             color=NAVY, zorder=8)
+             'the winding unrolled along the bobbin', ha='center',
+             va='bottom', fontsize=10.5, color=NAVY, zorder=8)
     _dimh(ax2, OX, OX + L, OY - 3.5, 'winding width  %.1f' % L,
           ext=OY - 1.9, side=-1)
-    for x0, x1, t, c in ((xP, xG, '%.2f' % w['w_pri'], NAVY),
+    for x0, x1, t, c in ((xP, xG, '%.2f' % w['w_pri'], EDG['NP1']),
                          (xG, xS, '%.2f' % w['gap'], GOLD),
-                         (xS, xS + w['w_foil'], '%.2f' % w['w_foil'], MAG)):
+                         (xS, xS + w['w_foil'], '%.2f' % w['w_foil'],
+                          EDG['NS2'])):
         _dimh(ax2, x0, x1, OY + BH + 1.1, t, color=c)
-    for n, x0, x1, c in ((1, xP, xG, NAVY), (3, xG, xS, GOLD),
-                         (2, xS, xS + w['w_foil'], MAG)):
-        _balloon(ax2, n, 0, 0, (x0 + x1) / 2, OY + BH + 3.1, c, r=0.62,
-                 lead=False)
-    _balloon(ax2, 4, OX + w['margin'] * 0.5, OY + BH * 0.62,
+    for n, xb, c in ((1, (xP + xG) / 2, EDG['NP1']),
+                     (4, (xG + xS) / 2, GOLD),
+                     (2, xS + w['w_foil'] * 0.30, EDG['NS2']),
+                     (3, xS + w['w_foil'] * 0.70, EDG['NS3'])):
+        _balloon(ax2, n, 0, 0, xb, OY + BH + 3.1, c, r=0.62, lead=False)
+    _balloon(ax2, 5, OX + w['margin'] * 0.5, OY + BH * 0.62,
              OX - 1.5, OY + BH + 3.1, GREY, r=0.62)
-    #  which bit the bottom panel magnifies
-    ax2.add_patch(Rectangle((xS + w['w_foil'] * 0.30, OY - 0.12),
-                            w['w_foil'] * 0.40, w['Ns'] * NF * tp + 0.24,
-                            fc='none', ec=MAG, lw=0.9, ls=(0, (2.5, 2)),
-                            zorder=8))
-    ax2.annotate('magnified\nbelow', xy=(xS + w['w_foil'] * 0.70,
-                 OY + w['Ns'] * NF * tp + 0.35),
-                 xytext=(xG + w['gap'] * 0.5, OY + BH * 0.62), fontsize=8.0,
-                 color=MAG, ha='center', va='center', zorder=9,
-                 arrowprops=dict(arrowstyle='-|>', color=MAG, lw=0.9))
+    #  which windings the foil layers are, read at the stack itself
+    #  (the labels sit in the empty separation box, left of the stack)
+    for nm, k0 in (('NS2', 0), ('NS3', NL)):
+        yy = OY + (k0 + NL / 2.0) * tp
+        ax2.annotate(nm, xy=(xS, yy), xytext=(xS - 0.9, yy), fontsize=8.0,
+                     color=EDG[nm], ha='right', va='center', zorder=9,
+                     arrowprops=dict(arrowstyle='-', color=EDG[nm], lw=0.6,
+                                     shrinkA=1, shrinkB=1))
 
-    #  ========================= FOIL STACK, magnified again S1/S3
-    #  At 1:1 the whole stack is one millimetre and reads as a single bar,
-    #  which is exactly the complaint this panel answers.  Only a few
-    #  millimetres of the foil's WIDTH are shown - the width is not the
-    #  point, the four layers and the skin depth are.
-    FW = 3.6
-    ax3.text(-2.7, 2.30, 'the secondary foil stack  —  enlarged '
-             '%.0f×' % (S1 / S3), ha='left', va='center',
-             fontsize=10.5, color=NAVY, zorder=8)
-    ax3.add_patch(Rectangle((-0.35, -1.28), FW + 0.7, 0.55, fc=PLAS,
-                            ec='#55606c', lw=0.9, zorder=3))
-    ax3.text(FW / 2.0, -1.00, 'bobbin', ha='center', va='center',
+    #  ===================== SECONDARY, LAYER BY LAYER (not to scale)
+    #  Twelve foil layers on the bobbin, grouped into the four turns:
+    #  NS2 first, NS3 on top of it.  Each turn is NF foils wound
+    #  together and connected in parallel at the pins.
+    X0, X1 = 3.2, 5.3                       # foil, left and right edge
+    HC, HI = 0.20, 0.07                     # copper and insulation, drawn
+    Y0 = 0.70
+    ax3.text(0.0, 4.72, 'the secondary, layer by layer  (not to scale)',
+             ha='left', va='center', fontsize=10.5, color=NAVY, zorder=8)
+    ax3.add_patch(Rectangle((X0 - 0.3, Y0 - 0.40), X1 - X0 + 0.6, 0.30,
+                            fc=PLAS, ec='#55606c', lw=0.9, zorder=3))
+    ax3.text((X0 + X1) / 2, Y0 - 0.25, 'bobbin', ha='center', va='center',
              fontsize=8.0, color='#55606c', zorder=6)
-    #  Only NS2 is drawn: NS3 stacks the same layers on top, and with
-    #  the foil split into parallel strips the full stack no longer fits
-    #  the panel at this magnification.  Each turn's strips are labelled
-    #  once, at the middle strip.
-    NL = w['Ns'] * NF
-    for k in range(NL):
-        y0 = -0.70 + k * tp
-        ax3.add_patch(Rectangle((0, y0), FW, w['t_foil'], fc=MAG, ec=MAG,
-                                lw=0.4, zorder=6))
-        if k < NL - 1:
-            ax3.add_patch(Rectangle((0, y0 + w['t_foil']), FW,
-                                    _C.T_FOIL_INS, fc='#d9dde2',
+    for k in range(2 * NL):
+        c = COL[fcol(k)]
+        y = Y0 + k * (HC + HI)
+        ax3.add_patch(Rectangle((X0, y), X1 - X0, HC, fc=c, ec=c, lw=0.4,
+                                zorder=6))
+        if k < 2 * NL - 1:
+            ax3.add_patch(Rectangle((X0, y + HC), X1 - X0, HI, fc='#d9dde2',
                                     ec='#b6bcc4', lw=0.3, zorder=6))
-    for t in range(w['Ns']):
-        y0 = -0.70 + (t * NF + NF // 2) * tp
-        lbl = ('NS2  turn %d' % (t + 1)) + (
-            ', %d strips' % NF if NF > 1 else '')
-        ax3.annotate(lbl, xy=(FW + 0.05, y0 + w['t_foil'] / 2.0),
-                     xytext=(FW + 1.9, y0 + w['t_foil'] / 2.0),
-                     fontsize=8.0, color=MAG, ha='left', va='center',
-                     zorder=8, arrowprops=dict(arrowstyle='-', color=MAG,
-                                               lw=0.6, shrinkA=2,
-                                               shrinkB=1))
-    ax3.text(FW / 2.0, -0.70 + NL * tp + 0.30, 'NS3 stacks the same on top',
-             ha='center', va='center', fontsize=8.0, color=GREY, zorder=8)
-    #  0.05 mm will not carry a dimension arrow at any magnification that
-    #  still fits on the page, so both thicknesses are leader callouts.
-    ax3.annotate('%.2f mm copper' % w['t_foil'],
-                 xy=(0.35, -0.70 + w['t_foil'] / 2.0), xytext=(-0.55, -1.02),
-                 fontsize=8.0, color=MAG, ha='right', va='center', zorder=9,
-                 arrowprops=dict(arrowstyle='-|>', color=MAG, lw=0.9))
-    ax3.annotate('%.2f mm insulation' % _C.T_FOIL_INS,
-                 xy=(0.35, -0.70 + w['t_foil'] + _C.T_FOIL_INS / 2.0),
-                 xytext=(-0.55, 0.62), fontsize=8.0, color=GREY,
-                 ha='right', va='center', zorder=9,
-                 arrowprops=dict(arrowstyle='-|>', color=GREY, lw=0.9))
-    #  the skin depth drawn beside the copper at the same scale - the whole
-    #  argument for foil is that those two bars are the same height
-    ax3.add_patch(Rectangle((FW + 0.25, -0.70), 0.55, V['delta'], fc=CYA,
-                            ec=CYA, lw=0.4, zorder=6))
-    ax3.annotate('one skin depth\nδ = %.3f mm at f$_r$' % V['delta'],
-                 xy=(FW + 0.52, -0.70 + V['delta']), xytext=(FW + 0.95, 1.75),
-                 fontsize=8.0, color='#0d6b74', ha='left', va='center',
-                 zorder=9,
-                 arrowprops=dict(arrowstyle='-|>', color='#0d6b74', lw=0.9))
-    ax3.text(-2.7, -1.75, 'the copper is one skin depth thick — that is '
-             'why the secondary is foil and not a round wire', ha='left',
-             va='center', fontsize=8.0, color=GREY, zorder=8)
+    YT = Y0 + 2 * NL * (HC + HI) - HI          # top of the stack
+    #  turn ticks, left of the stack
+    for t in range(2 * w['Ns']):
+        ya = Y0 + t * NF * (HC + HI)
+        yb = ya + NF * (HC + HI) - HI
+        nm = 'NS2' if t < w['Ns'] else 'NS3'
+        ax3.plot([X0 - 0.15, X0 - 0.15], [ya, yb], color=EDG[nm], lw=1.0,
+                 zorder=7)
+        ax3.text(X0 - 0.25, (ya + yb) / 2, 'turn %d' % (t % w['Ns'] + 1),
+                 ha='right', va='center', fontsize=8.0, color=EDG[nm],
+                 zorder=8)
+    #  winding brackets with the pins, further left
+    for nm, k0 in (('NS2', 0), ('NS3', NL)):
+        ya = Y0 + k0 * (HC + HI)
+        yb = ya + NL * (HC + HI) - HI
+        ax3.plot([X0 - 1.15, X0 - 1.15], [ya, yb], color=EDG[nm], lw=1.3,
+                 zorder=7)
+        for yy in (ya, yb):
+            ax3.plot([X0 - 1.15, X0 - 1.0], [yy, yy], color=EDG[nm], lw=1.3,
+                     zorder=7)
+        ax3.text(X0 - 1.28, (ya + yb) / 2,
+                 '%s  %d T\npins %s' % (nm, w['Ns'], _C.pins(nm, '–')),
+                 ha='right', va='center', fontsize=8.0, color=EDG[nm],
+                 zorder=8, linespacing=1.3)
+    #  what one turn is, said once at the first turn
+    ym = Y0 + (NF // 2) * (HC + HI) + HC / 2
+    ax3.annotate('one turn = %d foils %.2f × %.1f mm,\nwound together, '
+                 'connected in parallel' % (NF, w['t_foil'], w['w_foil']),
+                 xy=(X1, ym), xytext=(X1 + 0.35, ym + 0.05),
+                 fontsize=8.0, color=EDG['NS2'], ha='left', va='center',
+                 zorder=9, linespacing=1.3,
+                 arrowprops=dict(arrowstyle='-', color=EDG['NS2'], lw=0.6,
+                                 shrinkA=1, shrinkB=1))
+    yi = Y0 + (NL + 1) * (HC + HI) - HI / 2
+    ax3.annotate('%.2f mm insulation between foils' % _C.T_FOIL_INS,
+                 xy=(X1, yi), xytext=(X1 + 0.35, yi + 0.55), fontsize=8.0,
+                 color=GREY, ha='left', va='center', zorder=9,
+                 arrowprops=dict(arrowstyle='-', color=GREY, lw=0.6,
+                                 shrinkA=1, shrinkB=1))
+    ax3.text(X1 + 0.35, YT + 0.02, 'radial build %.1f mm' % w['build_s'],
+             ha='left', va='center', fontsize=8.0, color=GREY, zorder=8)
 
-    foot(fig, 'Drawn to scale from the TDK %s datasheets, core %s '
-              'and coil former %s; the two details are enlarged %.1f and '
-              '%.0f times. The winding is laid out by cores.winding() at '
-              'J = %.1f A/mm2 with a Litz fill of %.2f, %.2f mm foil and '
-              '%.1f mm of margin tape - those four are the assumptions.'
-              % (NAME, M['core'], M['former'], S1 / S2, S1 / S3,
-                 _C.J_CU, _C.K_LITZ, _C.T_FOIL, _C.MARGIN))
+    foot(fig, 'Drawn to scale from the TDK %s datasheets, core %s and coil '
+              'former %s; the third panel is not to scale. The winding is '
+              'laid out by cores.winding() at J = %.1f A/mm2, Litz fill '
+              '%.2f, %.2f mm foil and %.1f mm margin tape.'
+              % (NAME, M['core'], M['former'], _C.J_CU, _C.K_LITZ,
+                 _C.T_FOIL, _C.MARGIN))
     save(fig, 'an_core_section')
 
 

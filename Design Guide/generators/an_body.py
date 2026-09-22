@@ -2438,18 +2438,13 @@ def build(A):
     add(h2('The transformer, as built'))
     add(p('The tank asks for L<sub>r</sub> = %(Lr).0f&nbsp;&micro;H, '
           'L<sub>m</sub> = %(Lm).0f&nbsp;&micro;H and n<sub>T</sub> = '
-          '%(nT).2f, and the transformer is <b>one part</b>: a %(Np)d-turn '
-          'primary and a secondary of two windings of N<sub>s</sub> = %(Ns)d '
-          'turns, NS2 and NS3, joined at the centre tap, one conducting in '
-          'each half period. At %(Iout).1f&nbsp;A out the secondary is a '
-          'few heavy turns and the primary carries the whole tank current, '
-          'so the window of the core, not its cross-section, is what the '
-          'choice of core turns on (Section&nbsp;%(ref)s). Splitting the '
-          'part into several units in series is the alternative when a '
-          'single window will not take the copper (Section&nbsp;%(ref2)s); '
-          'it is not needed here.'
-          % dict(V, ref=SR('Choosing the core, and building the winding on it'),
-                 ref2=SR('If one transformer is not practical'))))
+          '%(nT).2f. The transformer is one part: a %(Np)d-turn primary and '
+          'two secondary windings of N<sub>s</sub> = %(Ns)d turns, NS2 and '
+          'NS3, joined at the centre tap, one conducting in each half '
+          'period. Several units in series are the alternative when one '
+          'window will not take the copper (Section&nbsp;%(ref2)s); that is '
+          'not needed here.'
+          % dict(V, ref2=SR('If one transformer is not practical'))))
     add(fig('an_xfmr_read',
             'Where each number of the table below is read. Top: the primary winding '
             'current, the current in its two secondary windings '
@@ -2477,22 +2472,15 @@ def build(A):
             key='trafo-built'))
     _w = _CORE.winding(V)
     _B = _CORE.BOBBIN
-    add(p('<b>Which winding is on which pin.</b> The part is wound on the '
-          '%(former)s coil former of the chosen core (Section&nbsp;%(ref)s), '
-          'which has %(pins)d pins in two rows of %(half)d. The '
-          'primary-referenced windings, NP1 and the ZCD auxiliary, take one '
-          'row and the two secondaries the other, so the isolation distance '
-          'between them is the whole length of the bobbin. Each secondary '
-          'terminal takes two pins, because one winding carries the whole '
-          'secondary current and a single %(pin)s pin is not rated for it; '
-          'the supplier confirms the pin rating or brings the foil out as a '
-          'lug. The centre tap is not made inside the part: the finish of '
-          'NS2 and the start of NS3 come out on neighbouring pins and are '
-          'joined on the board, which keeps the two windings measurable one '
-          'at a time.'
+    add(p('<b>Pins.</b> The part is wound on the %(former)s coil former of '
+          'the %(chosen)s core, %(pins)d pins in two rows of %(half)d. NP1 '
+          'and the ZCD auxiliary take one row, NS2 and NS3 the other. Each '
+          'secondary terminal uses two pins, because one winding carries '
+          'the whole secondary current. The centre tap is made on the '
+          'board: the finish of NS2 and the start of NS3 come out on '
+          'neighbouring pins.'
           % dict(former=_B['former'], pins=_B['pins'], half=_B['pins'] // 2,
-                 pin=_B['pin'],
-                 ref=SR('Choosing the core, and building the winding on it'))))
+                 chosen=_CORE.CHOSEN)))
     add(fig('an_xfmr_pins',
             'The transformer: the schematic symbol with its pin numbers, and '
             'the same pins on the %(former)s coil former in the '
@@ -2513,10 +2501,8 @@ def build(A):
              ['NAUX auxiliary (ZCD)', _CORE.pins('NAUX', '&ndash;'),
               '%d T' % V['Naux'], 'any wire, sense only', _B['rows'][0]],
              ['NS2 secondary', _CORE.pins('NS2', '&ndash;'), '%d T' % V['Ns'],
-              'foil %.2f &times; %.1f mm%s'
-              % (_w['t_foil'], _w['w_foil'],
-                 ', %d strips in parallel' % _w['n_foil'] if _w['n_foil'] > 1
-                 else ''),
+              'foil %.2f &times; %.1f mm, %d in parallel'
+              % (_w['t_foil'], _w['w_foil'], _w['n_foil']),
               _B['rows'][1]],
              ['NS3 secondary', _CORE.pins('NS3', '&ndash;'), '%d T' % V['Ns'],
               'the same foil, on top of NS2', _B['rows'][1]],
@@ -2526,18 +2512,13 @@ def build(A):
               '&mdash;', 'not connected', 'both rows']],
             widths=[CW * 0.20, CW * 0.26, CW * 0.09, CW * 0.27, CW * 0.18],
             key='pins'))
-    add(p('<b>Polarity.</b> With the dots as drawn, the ZCD pin sees the '
-          'auxiliary voltage positive while the low-side switch of leg 1 is '
-          'on, which is what the controller expects; a reversed auxiliary '
-          'makes the converter hard-switch from the first cycle. NS2 and '
-          'NS3 are wound in the same sense, so the tap joins the finish of '
-          'one to the start of the other and the two ends are of opposite '
-          'polarity about it, one for each rectifier leg.'))
-    add(p('Three more numbers are computed from Table&nbsp;%s, in this order.'
+    add(p('<b>Polarity.</b> With the dots as drawn, the ZCD pin is positive '
+          'while the low-side switch of leg 1 is on, as the controller '
+          'requires. NS2 and NS3 are wound in the same sense; the tap joins '
+          'the finish of NS2 to the start of NS3.'))
+    add(p('Three more numbers follow from Table&nbsp;%s.'
           % TR('trafo-built')))
-    add(p('<b>Peak flux density.</b> At f<sub>r</sub>, because that is the '
-          'worst case anywhere on the line cycle, and without N<sub>p</sub>, '
-          'which is the whole point of the equation:'))
+    add(p('<b>Peak flux density</b>, at f<sub>r</sub>:'))
     add(eqagain('Bpk'))
     add(calc([r'B_{pk}=\frac{%.1f\ \mathrm{V}}{4\times %.2f\ \mathrm{kHz}'
               r'\times %d\times %.1f\ \mathrm{mm^{2}}}=\mathbf{%.0f\ mT}'
@@ -2545,223 +2526,124 @@ def build(A):
               r'A_{e}\geq\frac{%.1f\ \mathrm{V}}{4\times %.2f\ \mathrm{kHz}\times %d'
               r'\times 0.20\ \mathrm{T}}=\mathbf{%.0f\ mm^{2}}'
               % (V['Vout'], V['fr'], V['Ns'], V['Aereq'])]))
-    add(p('<b>The magnetising peak.</b> Over L<sub>&mu;</sub>, '
-          'not L<sub>open</sub>; the answer must equal i<sub>&mu;,pk</sub>, '
-          'because in the open-circuit test they are the same current:'))
+    add(p('<b>Magnetising peak</b>, over L<sub>&mu;</sub> (it equals '
+          'i<sub>&mu;,pk</sub>):'))
     add(eqagain('Isat'))
     add(calc(r'I_{eq}=\frac{%.4f\ \mathrm{T}\times %d\times %.1f\ \mathrm{mm^{2}}}'
              r'{%.2f\ \mu\mathrm{H}}=\mathbf{%.2f\ A}\ =\ i_{\mu,pk}'
              % (V['Bpk'] / 1e3, V['Np'], V['Aemm'], V['Lmu'] / V['nser'],
                 V['Isateq'])))
-    add(p('<b>The saturation test current.</b> The magnetising peak raised '
-          'to the over-voltage ceiling &mdash; and <b>not</b> the '
-          '%(Icomp).1f&nbsp;A tank peak, which would ask the supplier for '
-          '%(over).2f times the flux the core ever sees:'
-          % dict(V, over=V['Icomp'] / V['ILm'])))
+    add(p('<b>Saturation test current</b>, the magnetising peak at the '
+          'OVP2 output voltage:'))
     add(eqagain('Isatspec'))
     add(calc(r'I_{sat}=%.2f\ \mathrm{A}\times\frac{%.2f\ \mathrm{V}}{%.1f\ \mathrm{V}}'
              r'=%.2f\times %.4f=\mathbf{%.1f\ A}'
              % (V['Isateq'], V['OVP2'], V['Vout'], V['Isateq'],
                 V['OVP2'] / V['Vout'], V['Isatspec'])))
     add(fig('an_mmf',
-            'Why the test current is the magnetising peak and not the tank '
-            'peak. In service the secondary cancels most of the primary '
-            'ampere-turns and only the difference magnetises the core; on '
-            'the bench, with the secondary open, the whole test current is '
-            'magnetising current, so the design flux is reached at '
-            '%(ILm).2f&nbsp;A, not at the %(Icomp).2f&nbsp;A the primary '
-            'carries.' % V))
+            'In service the secondary cancels most of the primary '
+            'ampere-turns; with the secondary open, the whole test current '
+            'magnetises the core. The design flux is therefore reached at '
+            '%(ILm).2f&nbsp;A on the bench, not at the %(Icomp).2f&nbsp;A '
+            'tank peak.' % V))
 
     # ------------------------------------------------ the core, chosen
-    add(h2('Choosing the core, and building the winding on it'))
-    add(p('The tank has fixed what the transformer must be: '
-          'L<sub>open</sub>&nbsp;=&nbsp;%(Lopen).1f&nbsp;&micro;H and '
-          'L<sub>short</sub>&nbsp;=&nbsp;%(Lshort).1f&nbsp;&micro;H, '
-          '%(Np)d&nbsp;:&nbsp;%(Ns)d turns, and a leakage that is '
-          '%(lkpc).0f&nbsp;%% of the open-circuit inductance. Four TDK cores '
-          'are tried against those conditions, and the winding of '
-          'Section&nbsp;%(ref)s is laid into each window.'
-          % dict(V, lkpc=100 * V['lam'] / (1 + V['lam']),
-                 ref=SR('The transformer, as built'))))
-    _cw = _CORE.window(V) / _CORE.K_U
-    _CAND = ('PQ 40/40', 'PQ 50/50DG', 'ETD 49/25/16DG', 'ETD 54/28/19')
-    _WD = {k: _CORE.winding(V, k) for k in _CAND}
-
-    def _cell(k, f):
-        try:
-            return f(k)
-        except Exception:                                   # noqa: BLE001
-            return '&mdash;'
-    _rows_c = [
-        ('A<sub>e</sub>', lambda k: '%.0f mm&sup2;' % _CORE.CORES[k]['Ae'],
-         '&ge; %.0f mm&sup2; at 0.20 T' % V['Aereq']),
-        ('B<sub>pk</sub>', lambda k: '%.0f mT' % _CORE.flux(V, _CORE.CORES[k]['Ae']),
-         '&le; 200 mT'),
-        ('window A<sub>N</sub>', lambda k: '%.0f mm&sup2;' % _CORE.CORES[k]['AN'],
-         '&ge; %.0f mm&sup2; for the copper alone' % _cw),
-        ('winding width, less margins', lambda k: '%.1f mm' % _WD[k]['usable'],
-         'primary + foil + separation'),
-        ('radial room', lambda k: '%.2f mm' % _WD[k]['r_free'],
-         'the primary layers'),
-        ('primary layers &rarr; axial, radial',
-         lambda k: '%d &rarr; %.1f, %.2f mm' % (_WD[k]['layers'], _WD[k]['w_pri'],
-                                                _WD[k]['build_p']),
-         '%d turns of &oslash;%.2f mm bundle' % (V['Np'], _WD[_CAND[0]]['d_litz'])),
-        ('left for the separation', lambda k: '%.1f mm' % _WD[k]['gap'],
-         '&gt; 0, and room to set the leakage'),
-        ('mean turn l<sub>N</sub>', lambda k: '%.0f mm' % _CORE.CORES[k]['lN'],
-         'copper length, so copper loss'),
-        ('mass', lambda k: '%.0f g' % _CORE.CORES[k]['mass'], ''),
-        ('verdict', lambda k: '<b>fits</b>' if _WD[k]['fits'] else 'does not fit',
-         ''),
-    ]
-    add(tbl('Four candidate cores against the conditions. Datasheet figures '
-            'and the winding laid into each window; the winding is the same '
-            'in every column.',
-            [['', 'PQ 40/40', 'PQ 50/50DG', 'ETD 49/25/16DG', 'ETD 54/28/19',
-              'what it has to beat']]
-            + [[n] + [_cell(k, f) for k in _CAND] + [w] for n, f, w in _rows_c],
-            widths=[CW * 0.19, CW * 0.13, CW * 0.13, CW * 0.14, CW * 0.14,
-                    CW * 0.27],
-            key='cores'))
+    add(h2('The core and the winding'))
     _w = _CORE.winding(V)
     _R = _CORE.CORES[_CORE.CHOSEN]
-    add(note('<b>The window shape decides, not the flux.</b> Every candidate '
-             'clears the flux condition, the two PQ sets by the widest margin, '
-             'and none is short of window area: at k<sub>u</sub> = '
-             '%(ku).2f the copper takes %(pc0).0f to %(pc1).0f&nbsp;%% of '
-             'A<sub>N</sub> across the four. What the PQ '
-             'windows lack is depth. The %(Np)d-turn primary needs '
-             '%(b2).2f&nbsp;mm radially in two layers or %(b3).2f&nbsp;mm in '
-             'three, and the PQ 40/40 and PQ 50/50DG offer %(r1).2f and '
-             '%(r2).2f&nbsp;mm; laid in two layers the primary alone then '
-             'takes %(a2).1f&nbsp;mm of a %(u1).1f&nbsp;mm winding width and '
-             'the foil and the separation do not fit beside it. The two ETD '
-             'cores are deep enough for three layers, and <b>%(chosen)s is '
-             'taken</b>: A<sub>e</sub> %(k).1f times the requirement, the '
-             'lighter of the two, and its centre leg is ground with a '
-             'distributed gap (two gaps in the leg), which keeps the '
-             'fringing field of the %(gap).1f&nbsp;mm total gap that '
-             'A<sub>L</sub> = %(AL).0f&nbsp;nH needs away from the copper. '
-             'That A<sub>L</sub> lies between the stock 100 and 250&nbsp;nH '
-             'and is ordered as such.'
-             % dict(ku=_CORE.K_U,
-                    pc0=min(100 * _cw / _CORE.CORES[k]['AN'] for k in _CAND),
-                    pc1=max(100 * _cw / _CORE.CORES[k]['AN'] for k in _CAND),
-                    Np=V['Np'],
-                    b2=2 * _w['d_litz'], b3=3 * _w['d_litz'],
-                    r1=_WD['PQ 40/40']['r_free'], r2=_WD['PQ 50/50DG']['r_free'],
-                    a2=8 * _w['d_litz'], u1=_WD['PQ 40/40']['usable'],
-                    chosen=_CORE.CHOSEN, k=_R['Ae'] / V['Aereq'],
-                    gap=_CORE.dg_gap(V), AL=V['AL'])))
-    add(note('<b>The leakage is set by the winding arrangement, and on one '
-             'core it needs setting.</b> L<sub>short</sub> scales with '
-             'N<sub>p</sub>&sup2;, so the %(Np)d-turn primary on one core '
-             'has three times the leakage of three 5-turn units in series '
-             'for the same geometry. The plain side-by-side layout of the '
-             'figure below comes out above the %(Ls).0f&nbsp;&micro;H target '
-             'on a first estimate, a primary split in two halves with the '
-             'secondary between them well below it, and the supplier lands '
-             'between by splitting part of the primary. The specification '
-             'therefore asks for L<sub>short</sub> with a tolerance, not '
-             'for a layout, and Section&nbsp;%(ref)s says why the tolerance '
-             'is what it is.'
-             % dict(Np=V['Np'], Ls=V['Lshort'],
-                    ref=SR('What the transformer specification must say'))))
+    _cw = _CORE.window(V) / _CORE.K_U
+    add(p('The core is TDK <b>%(chosen)s</b>, %(mat)s (core %(core)s, coil '
+          'former %(former)s). The centre leg is ground to '
+          'A<sub>L</sub>&nbsp;=&nbsp;%(AL).0f&nbsp;nH, about %(gap).1f&nbsp;mm '
+          'of gap in total. Figure&nbsp;%(f)s shows the core in section and '
+          'the winding in its window; Table&nbsp;%(t)s names each item and '
+          'Table&nbsp;%(t2)s gives the arithmetic behind the winding.'
+          % dict(chosen=_CORE.CHOSEN, mat=_R['material'], core=_R['core'],
+                 former=_R['former'], AL=V['AL'], gap=_CORE.dg_gap(V),
+                 f=FR('an_core_section'), t=TR('legend42'),
+                 t2=TR('winding'))))
     add(fig('an_core_section',
-            'The chosen core in section, the winding unrolled along the '
-            'bobbin, and the secondary foil stack, to scale from the TDK '
-            'drawings. Primary and secondary sit side by side, and the '
-            '%(g).2f&nbsp;mm left between them is the deliberate separation '
-            'that makes L<sub>short</sub> come out at '
-            '%(Ls).1f&nbsp;&micro;H. The circled numbers are the '
-            'rows of Table&nbsp;%(t)s.'
-            % dict(Ls=V['Lshortx'], g=_w['gap'], t=TR('legend42'))))
-    add(tbl('Legend of the figure: the windings.',
-            [['Mark', 'Item', 'Value', 'Note'],
-             ['1', 'Primary NP1, pins %s' % _CORE.pins('NP1', '&ndash;'), '%d T' % V['Np'],
-              'Litz %d &times; &oslash;%.2f mm, bundle &oslash;%.2f mm, '
-              '%d layers (%s); conducts every half period'
+            'The core in section (left, to scale), the winding unrolled '
+            'along the bobbin (top right, to scale) and the secondary layer '
+            'by layer (bottom right, not to scale). Primary and secondary '
+            'sit side by side with %(g).2f&nbsp;mm between them. The '
+            'circled numbers are the rows of Table&nbsp;%(t)s.'
+            % dict(g=_w['gap'], t=TR('legend42'))))
+    add(tbl('Items of the figure.',
+            [['Mark', 'Item', 'Turns', 'Conductor, placement'],
+             ['1', 'NP1 primary, pins %s' % _CORE.pins('NP1', '&ndash;'),
+              '%d T' % V['Np'],
+              'Litz %d &times; &oslash;%.2f mm (bundle &oslash;%.2f mm), '
+              '%d layers of %s turns'
               % (_w['n_strand'], _CORE.D_STRAND, _w['d_litz'], _w['layers'],
-                 ' + '.join(str(n) for n in _w['rows_p']))],
-             ['2', 'Secondary NS2, pins %s' % _CORE.pins('NS2', '&ndash;'), '%d T' % V['Ns'],
-              'foil %.2f &times; %.1f mm%s; conducts in the first half period'
-              % (_w['t_foil'], _w['w_foil'],
-                 ', %d strips in parallel' % _w['n_foil'] if _w['n_foil'] > 1
-                 else '')],
-             ['2', 'Secondary NS3, pins %s' % _CORE.pins('NS3', '&ndash;'), '%d T' % V['Ns'],
-              'the same foil, wound on top of NS2; conducts in the second '
-              'half period'],
-             ['3', 'Separation', '%.2f mm' % _w['gap'],
-              'the width left over; it is the leakage, '
-              'L<sub>short</sub>/L<sub>open</sub> = %.0f %%'
-              % (100 * V['lam'] / (1 + V['lam']))],
-             ['4', 'Margin tape', '%.1f mm each flange' % _CORE.MARGIN,
-              'creepage to the flange; assumed'],
-             ['5', 'Centre-leg gap', '&asymp; %.1f mm in total'
-              % _CORE.dg_gap(V),
-              'ground to A<sub>L</sub> = %.0f nH as two gaps in the leg (DG); '
-              'read between the datasheet\'s stock A<sub>L</sub> 100 and '
-              '250 nH gap pairs' % V['AL']],
-             ['6', 'Window A<sub>N</sub>', '%.0f mm&sup2;' % _R['AN'],
-              '%.1f mm&sup2; of bare copper in it' % _CORE.window(V)],
-             ['&mdash;', 'Auxiliary NAUX, pins %s' % _CORE.pins('NAUX', '&ndash;'), '%d T' % V['Naux'],
-              'any wire; ZCD sense only, no load']],
-            widths=[CW * 0.07, CW * 0.30, CW * 0.14, CW * 0.49],
+                 '/'.join(str(n) for n in _w['rows_p']))],
+             ['2', 'NS2 secondary, pins %s' % _CORE.pins('NS2', '&ndash;'),
+              '%d T' % V['Ns'],
+              'foil %.2f &times; %.1f mm, %d foils in parallel per turn; '
+              'on the bobbin'
+              % (_w['t_foil'], _w['w_foil'], _w['n_foil'])],
+             ['3', 'NS3 secondary, pins %s' % _CORE.pins('NS3', '&ndash;'),
+              '%d T' % V['Ns'], 'the same foil, on top of NS2'],
+             ['4', 'Separation', '&mdash;',
+              '%.2f mm between primary and secondary; sets L<sub>short</sub>'
+              % _w['gap']],
+             ['5', 'Margin tape', '&mdash;',
+              '%.1f mm at each flange' % _CORE.MARGIN],
+             ['6', 'Centre-leg gap', '&mdash;',
+              'about %.1f mm in total, ground to A<sub>L</sub> = %.0f nH'
+              % (_CORE.dg_gap(V), V['AL'])],
+             ['7', 'Window', '&mdash;',
+              'A<sub>N</sub> = %.0f mm&sup2;, %.0f mm&sup2; of copper in it'
+              % (_R['AN'], _CORE.window(V))],
+             ['&mdash;', 'NAUX auxiliary, pins %s'
+              % _CORE.pins('NAUX', '&ndash;'), '%d T' % V['Naux'],
+              'any wire; ZCD sense only']],
+            widths=[CW * 0.07, CW * 0.30, CW * 0.09, CW * 0.54],
             key='legend42'))
     _rows = _CORE.copper(V)
     _rp, _rs = _rows[0], _rows[1]
-    add(tbl('From current to copper: how the numbers in the figure come '
-            'about. NS3 is identical to NS2.',
+    add(tbl('The winding, from current to copper. NS3 is the same as NS2.',
             [['Step', 'Primary NP1', 'Secondary NS2'],
-             ['Line-cycle rms current (marks 2 and 5)',
-              '%.2f A &mdash; the whole tank current' % _rp[2],
-              '%.2f A &mdash; the whole secondary current, in one winding at '
-              'a time' % _rs[2]],
-             ['Copper at J = %.1f A/mm&sup2;' % _CORE.J_CU,
+             ['Rms current', '%.2f A' % _rp[2], '%.2f A' % _rs[2]],
+             ['Copper area at J = %.1f A/mm&sup2;' % _CORE.J_CU,
               '%.2f / %.1f = <b>%.2f mm&sup2;</b>'
               % (_rp[2], _CORE.J_CU, _rp[3]),
               '%.2f / %.1f = <b>%.2f mm&sup2;</b>'
               % (_rs[2], _CORE.J_CU, _rs[3])],
-             ['Conductor (2&delta; = %.2f mm at f<sub>r</sub>)'
-              % (2 * V['delta']),
-              'Litz: %.2f mm&sup2; / (&pi;&times;%.2f&sup2;/4) = '
-              '<b>%d strands</b> of &oslash;%.2f mm; served bundle '
-              '&oslash;%.2f mm at %.0f %% fill'
-              % (_rp[3], _CORE.D_STRAND, _w['n_strand'], _CORE.D_STRAND,
-                 _w['d_litz'], 100 * _CORE.K_LITZ),
-              'Foil %.2f mm thick (one skin depth, all of it conducts): '
-              '%.2f / %.2f = <b>%.1f mm wide</b>%s'
+             ['Conductor (skin depth %.2f mm at f<sub>r</sub>)' % V['delta'],
+              'Litz, &oslash;%.2f mm strands: %.2f / %.4f = <b>%d strands</b>; '
+              'bundle &oslash;%.2f mm'
+              % (_CORE.D_STRAND, _rp[3],
+                 3.141592653589793 * _CORE.D_STRAND ** 2 / 4, _w['n_strand'],
+                 _w['d_litz']),
+              'foil %.2f mm thick: %.2f / %.2f = %.1f mm wide, made as '
+              '<b>%d foils of %.1f mm</b> in parallel'
               % (_w['t_foil'], _rs[3], _w['t_foil'],
-                 _w['w_foil'] * _w['n_foil'],
-                 ', cut into <b>%d strips of %.1f mm</b> in parallel so the '
-                 'foil fits the bobbin' % (_w['n_foil'], _w['w_foil'])
-                 if _w['n_foil'] > 1 else '')],
+                 _w['w_foil'] * _w['n_foil'], _w['n_foil'], _w['w_foil'])],
              ['Turns', '%d, in %d layers (%s)'
               % (V['Np'], _w['layers'],
-                 ' + '.join(str(n) for n in _w['rows_p'])),
-              '%d (NS3 another %d on top)' % (V['Ns'], V['Ns'])],
-             ['Width taken on the bobbin',
+                 '/'.join(str(n) for n in _w['rows_p'])),
+              '%d' % V['Ns']],
+             ['Width on the bobbin',
               '%d &times; %.2f = <b>%.2f mm</b>'
               % (_w['per_layer'], _w['d_litz'], _w['w_pri']),
-              'the foil width, <b>%.1f mm</b>' % _w['w_foil']],
+              '<b>%.1f mm</b>' % _w['w_foil']],
              ['Radial build',
               '%d &times; %.2f = %.2f mm' % (_w['layers'], _w['d_litz'],
                                              _w['build_p']),
-              'NS2 + NS3: %d &times; (%.2f + %.2f insulation) = %.2f mm'
+              'NS2 + NS3: %d &times; (%.2f + %.2f) = %.1f mm'
               % (2 * V['Ns'] * _w['n_foil'], _w['t_foil'], _CORE.T_FOIL_INS,
                  _w['build_s'])],
-             ['Left for the separation',
-              '%.1f &minus; 2&times;%.1f &minus; %.2f &minus; %.1f = '
-              '<b>%.2f mm</b> (mark 3)'
+             ['Left between the windings',
+              '%.1f &minus; 2 &times; %.1f &minus; %.2f &minus; %.1f = '
+              '<b>%.2f mm</b>'
               % (_w['M']['wind_w'], _CORE.MARGIN, _w['w_pri'], _w['w_foil'],
                  _w['gap']), ''],
-             ['Bare copper in the window',
-              '%d &times; %.2f + %d &times; %.2f = <b>%.1f mm&sup2;</b>; at '
-              'k<sub>u</sub> = %.2f that is %.0f mm&sup2;, %.0f %% of '
-              'A<sub>N</sub>'
+             ['Copper in the window',
+              '%d &times; %.2f + %d &times; %.2f = %.1f mm&sup2;, '
+              '%.0f %% of A<sub>N</sub> at k<sub>u</sub> = %.2f'
               % (V['Np'], _rp[3], 2 * V['Ns'], _rs[3], _CORE.window(V),
-                 _CORE.K_U, _cw, 100 * _cw / _R['AN']),
+                 100 * _cw / _R['AN'], _CORE.K_U),
               '']],
             widths=[CW * 0.26, CW * 0.40, CW * 0.34],
             key='winding'))
