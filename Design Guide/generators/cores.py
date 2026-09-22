@@ -31,6 +31,15 @@ CORES = {
         le=93.0, Ae=189.0, Amin=174.0, Ve=17580.0, mass=90.0,
         AN=309.0, lN=87.0,
         AL_ungapped=5500.0, material='N95'),
+    #  PQ 50/50DG - B65981Q core (distributed gap: G2 + G3 on the centre
+    #  leg, delivered gapped only, A_L 100 / 250 / 400 nH stock, others on
+    #  request), B65982E coil former.  October 2022 datasheet, received
+    #  2026-09-22 from the user (the TDK CDN blocks this container).
+    'PQ 50/50DG': dict(
+        core='B65981Q', former='B65982E',
+        le=113.0, Ae=332.0, Amin=314.0, Ve=37630.0, mass=190.0,
+        AN=340.0, lN=100.5,
+        AL_ungapped=None, material='N95'),
 }
 
 #  Assumptions, stated here so that they are in one place and can be
@@ -114,6 +123,18 @@ MECH = {
         #  coil former, plan and elevation - labelled
         former_w=38.1, former_d=40.0, flange_w=29.5, former_h=45.0,
         pitch_a=5.08, pitch_b=15.24, pins=12),
+    #  PQ 50/50DG, datasheet page 2 (core) and 3 (coil former), all
+    #  labelled.  The outer legs' inner faces are the "31.5 min" of the
+    #  plan view, so r_win_out is a minimum, not a scaled reading.  The
+    #  window is SHALLOWER than PQ 40/40's: 15.75 - 11.6 = 4.15 mm.
+    'PQ 50/50DG': dict(
+        core='B65981Q', former='B65982E',
+        W=50.0, H=44.0, d_centre=20.0, win_h=36.1,
+        r_win_out=15.75,
+        plan_w=44.0, plan_d=32.0,
+        tube_od=23.2, bore=20.8, wind_w=30.4, flange_h=35.2,
+        former_w=45.72, former_d=51.0, flange_w=34.4, former_h=51.0,
+        pitch_a=7.62, pitch_b=12.7, pins=12),
 }
 
 # ===================================================================
