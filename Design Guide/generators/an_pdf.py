@@ -455,14 +455,14 @@ LEAD_SCALE = 1.0
 def st(name, **kw):
     kw.setdefault('fontName', FONT)
     kw.setdefault('fontSize', 9.3)
-    kw.setdefault('leading', 12.2)
+    kw.setdefault('leading', 13.2)
     kw['leading'] = round(kw['leading'] * LEAD_SCALE, 1)
     kw.setdefault('textColor', colors.black)
     return ParagraphStyle(name, **kw)
 
 
 S = {
-    'p': st('p', alignment=TA_JUSTIFY, spaceAfter=6),
+    'p': st('p', alignment=TA_JUSTIFY, spaceAfter=7),
     'h1': st('h1', fontName=FONTB, fontSize=13.5, leading=17,
              spaceBefore=16, spaceAfter=9, textColor=colors.black),
     'h2': st('h2', fontName=FONTB, fontSize=10.8, leading=14,
@@ -472,10 +472,12 @@ S = {
     'cap': st('cap', fontName=FONTB, fontSize=8.6, leading=12.6,
               alignment=TA_CENTER, spaceBefore=5, spaceAfter=11),
     'eqn': st('eqn', fontName=FONTB, fontSize=9, alignment=TA_RIGHT),
-    'tc': st('tc', fontSize=8.4, leading=10.6),
+    'eql': st('eql', fontName=FONTB, fontSize=9.3, leading=12,
+              spaceBefore=5, spaceAfter=0),
+    'tc': st('tc', fontSize=8.4, leading=11.2),
     'th': st('th', fontName=FONTB, fontSize=8.4, leading=10.6,
              textColor=colors.white),
-    'note': st('note', fontSize=8.8, leading=11.6, alignment=TA_JUSTIFY,
+    'note': st('note', fontSize=8.8, leading=12.4, alignment=TA_JUSTIFY,
                textColor=NAVY),
     # tight enough that the contents fit two pages - a third page carrying
     # one entry is worse than a slightly denser list
@@ -501,7 +503,10 @@ def T(t):
     return t
 
 # ============================================================== equations
-def eqpng(tex, size=17.0):
+EQSIZE = 12.0      # mathtext points on the page; the body is 9.3 pt
+
+
+def eqpng(tex, size=EQSIZE):
     if not os.path.isdir(EQD):
         os.makedirs(EQD)
     key = hashlib.md5(('%s|%s' % (tex, size)).encode('utf-8')).hexdigest()[:14]
@@ -517,38 +522,57 @@ def eqpng(tex, size=17.0):
 
 
 _EQN = [0]
+EQTEX = {}                 # key -> tex, so the design example can repeat one
 
 
-def eq(tex, size=17.0, number=True, key=None):
-    """a centred equation with its number at the right margin
+def eq(tex, size=EQSIZE, number=True, key=None, again=False):
+    """a centred equation under an "Equation N" line, as ST's notes set them
 
     key registers the number so that the worked example can say which
     equation a figure was substituted into, instead of the reader having
-    to find it. The number is never typed by hand.
+    to find it. The number is never typed by hand.  again=True repeats an
+    equation already numbered, under the same number, where the design
+    example substitutes into it (AN4932 restates each one before use).
     """
     from PIL import Image as PIm
     p = eqpng(tex, size)
     iw, ih = PIm.open(p).size
     w = iw / 340.0 * 72
     h = ih / 340.0 * 72
-    if w > CW - 60:                       # never let a long one run wide
-        h *= (CW - 60) / w
-        w = CW - 60
-    lab = ''
-    if number:
-        _EQN[0] += 1
-        lab = '(%d)' % _EQN[0]
-        if key:
-            REFS['eq'][key] = _EQN[0]
-    t = Table([[Image(p, w, h), Paragraph(lab, S['eqn'])]],
-              colWidths=[CW - 46, 46], rowHeights=[h + 10])
+    if w > CW - 30:                       # never let a long one run wide
+        h *= (CW - 30) / w
+        w = CW - 30
+    t = Table([[Image(p, w, h)]], colWidths=[CW], rowHeights=[h + 8])
     t.setStyle(TableStyle([('ALIGN', (0, 0), (0, 0), 'CENTER'),
                            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
                            ('LEFTPADDING', (0, 0), (-1, -1), 0),
                            ('RIGHTPADDING', (0, 0), (-1, -1), 0),
-                           ('TOPPADDING', (0, 0), (-1, -1), 2),
-                           ('BOTTOMPADDING', (0, 0), (-1, -1), 2)]))
-    return t
+                           ('TOPPADDING', (0, 0), (-1, -1), 1),
+                           ('BOTTOMPADDING', (0, 0), (-1, -1), 1)]))
+    if not number:
+        return t
+    if again:
+        n = REFS['eq'].get(key)
+        lab = 'Equation %s, repeated' % ('?' if n is None else n)
+        _ASKED['eq'].add(key)
+    else:
+        _EQN[0] += 1
+        n = _EQN[0]
+        lab = 'Equation %d' % n
+        if key:
+            REFS['eq'][key] = n
+            EQTEX[key] = tex
+    return KeepTogether([Paragraph(lab, S['eql']), t])
+
+
+def eqagain(key):
+    """the equation registered under key, shown again under its own number"""
+    return eq(EQTEX[key], key=key, again=True)
+
+
+def calc(tex):
+    """an unnumbered line of arithmetic: the equation with the numbers in"""
+    return eq(tex, number=False)
 
 
 # ================================================================ content
@@ -660,7 +684,8 @@ def fig(name, caption, width=None, sec=None):
 _TBL = [0]
 
 
-def tbl(caption, rows, widths=None, align=None, key=None):
+def tbl(caption, rows, widths=None, align=None, key=None, split=False):
+    """split=True lets a long table run over page breaks (header repeats)"""
     _TBL[0] += 1
     REFS['tbl'][key or caption] = _TBL[0]
     head = [Paragraph(T(c), S['th']) for c in rows[0]]
@@ -683,8 +708,11 @@ def tbl(caption, rows, widths=None, align=None, key=None):
         for col, a in align.items():
             style.append(('ALIGN', (col, 0), (col, -1), a))
     t.setStyle(TableStyle(style))
-    return KeepTogether([t, Paragraph(T('%s %d:  %s' % (TBLWORD, _TBL[0], caption)),
-                                      S['cap'])])
+    t.spaceBefore = 6
+    cap = Paragraph(T('%s %d:  %s' % (TBLWORD, _TBL[0], caption)), S['cap'])
+    if split:
+        return [t, cap]
+    return KeepTogether([t, cap])
 
 
 def note(text):
