@@ -324,7 +324,7 @@ def build(A):
     add(h2('The two boundaries are not the same boundary'))
     add(p('Both pairs of words describe positions on the same frequency '
           'axis, but they are different lines on it.'))
-    add(tbl('Two classifications, two boundaries, two consequences.',
+    ext(tbl('Two classifications, two boundaries, two consequences.',
             [['', 'capacitive / inductive', 'below / above resonance'],
              ['the boundary', 'where <b>arg Z<sub>in</sub> = 0</b>',
               '<b>f<sub>r</sub></b>, the series resonance'],
@@ -335,7 +335,7 @@ def build(A):
               'boost or buck, and ZCS or not, on the <b>secondary</b>'],
              ['which side is allowed', 'inductive only, always',
               'both sides are legitimate']],
-            widths=[CW * 0.19, CW * 0.40, CW * 0.41], key='capind'))
+            widths=[CW * 0.19, CW * 0.40, CW * 0.41], key='capind', split=True))
     add(p('The capacitive boundary sits between f<sub>o</sub> and '
           'f<sub>r</sub> and <b>rises with load</b>: at no load it is '
           'f<sub>o</sub>, at full load it has moved up towards f<sub>r</sub>. '
@@ -655,7 +655,7 @@ def build(A):
           'multiplier against a rectified reference: <b>the frequency '
           'profile f<sub>sw</sub>(&theta;) is the power factor correction.</b>'
           % dict(m=ER('Mreq'), q=ER('Qtheta'))))
-    add(tbl('The half cycle at six instants, normalised as in '
+    ext(tbl('The half cycle at six instants, normalised as in '
             'Figure&nbsp;%s. Trigonometry only; no part value enters.'
             % FR('an_pf_chain'),
             [['At the line phase', 'sin&thinsp;&theta;',
@@ -670,7 +670,7 @@ def build(A):
              ['&theta; = 10&deg;', '0.174', '0.060', '5.759', '0.030'],
              ['&theta; &rarr; 0', '0', '0', '&infin;', '0']],
             widths=[CW * 0.22, CW * 0.13, CW * 0.22, CW * 0.23, CW * 0.20],
-            key='pfwalk'))
+            key='pfwalk', split=True))
     add(p('In the last two rows the gain demand runs away, but so does the '
           'ability to meet it: an unloaded tank has unlimited gain at '
           'f<sub>o</sub>. The frequency walks down towards f<sub>o</sub> and '
@@ -1077,7 +1077,7 @@ def build(A):
           'design&rsquo;s waveforms; Table&nbsp;%(t)s says what each mark '
           'sets.' % dict(f=FR('an_xfmr_read'), t=TR('xfmr-read'))))
     _J = _CORE.J_CU
-    add(tbl('What each mark in the figure sets. Currents are per unit of '
+    ext(tbl('What each mark in the figure sets. Currents are per unit of '
             'the assembly: the primaries are in series and the secondaries '
             'in parallel.',
             [['Mark', 'Item', 'Read from &mdash; and over what',
@@ -1130,7 +1130,7 @@ def build(A):
               'L<sub>m</sub> + L<sub>r</sub> and L<sub>r</sub>: the tank '
               'itself']],
             widths=[CW * 0.07, CW * 0.17, CW * 0.48, CW * 0.28],
-            key='xfmr-read'))
+            key='xfmr-read', split=True))
 
     add(h2('Two ratios, two inductances'))
     add(p('With all leakage referred to the primary the tank sees an ideal '
@@ -1511,7 +1511,7 @@ def build(A):
           '<b>gain margin</b>, how far |T| is below 0&nbsp;dB at '
           'f<sub>180</sub> where arg&nbsp;T = &minus;180&deg;. '
           'Table&nbsp;%(t)s gives the aims.' % dict(t=TR('loop-aims'))))
-    add(tbl('What the loop must achieve.',
+    ext(tbl('What the loop must achieve.',
             [['Quantity', 'Aim', 'If it is too low', 'If it is too high'],
              ['Crossover f<sub>c</sub>',
               '15 to 20 Hz in this converter (Section&nbsp;%s). The general '
@@ -1546,7 +1546,7 @@ def build(A):
               'needs to be.',
               'Third harmonic above budget, burst chatter.']],
             widths=[CW * 0.16, CW * 0.30, CW * 0.27, CW * 0.27],
-            key='loop-aims'))
+            key='loop-aims', split=True))
 
     add(h2('Why the crossover must be low: the 2f<sub>l</sub> ripple'))
     add(p('The output ripple at 2f<sub>l</sub> (Section&nbsp;%(s)s) has the '
@@ -1767,7 +1767,7 @@ def build(A):
     add(p('Each number is <b>given</b> by the load and the mains, '
           '<b>chosen</b> by the designer, or <b>assumed</b> in place of a '
           'measurement not yet made.'))
-    add(tbl('The specification. Everything else in this chapter is computed '
+    ext(tbl('The specification. Everything else in this chapter is computed '
             'from these.',
             [['Item', 'Symbol', 'Value', 'Kind', 'Note'],
              ['Mains input', 'V<sub>ac</sub>, f<sub>l</sub>',
@@ -1819,13 +1819,13 @@ def build(A):
               'sets R<sub>BM</sub>, then checked against the feedback '
               'ripple']],
             widths=[CW * 0.20, CW * 0.12, CW * 0.22, CW * 0.09, CW * 0.37],
-            key='spec-given'))
+            key='spec-given', split=True))
     add(note('<b>Harmonic class.</b> IEC&nbsp;61000-3-2 Class&nbsp;D reaches '
              'only 600&nbsp;W. This design draws %(Pin).0f&nbsp;W at the '
              'input, so the absolute Class&nbsp;A limits apply.' % V))
 
     add(h2('What the design came out as'))
-    add(tbl('Principal values. The rest of the chapter shows where each one '
+    ext(tbl('Principal values. The rest of the chapter shows where each one '
             'comes from.',
             [['Block', 'Values'],
              ['Tank', 'C<sub>r</sub> %(Cr).0f nF, L<sub>r</sub> %(Lr).0f '
@@ -1850,7 +1850,7 @@ def build(A):
              ['Loop', 'f<sub>cross</sub> %(fcross).2f Hz, '
               '&Phi;<sub>M</sub> %(PM).2f&deg;, '
               'third harmonic %(D3).2f %%' % V]],
-            widths=[CW * 0.18, CW * 0.82]))
+            widths=[CW * 0.18, CW * 0.82], split=True))
 
     # ------------------------------------------------ what a margin ratio is
     add(h2('What a verification margin is'))
@@ -1860,7 +1860,7 @@ def build(A):
           'the thinnest part of the design.'))
     _kb = V['kPloss'] * A.SH['P.mos_dc']          # the budget, recovered
     _ks = V['kPSR'] * A.SH['P.SR'] / 2.0
-    add(tbl('The verification margins.',
+    ext(tbl('The verification margins.',
             [['Check', 'k = has / needs', 'Substituted', 'k'],
              ['ZVS at the worst point of the sweep',
               'T<sub>ZC,min</sub> / t<sub>D</sub>',
@@ -1888,7 +1888,7 @@ def build(A):
               '%(b).2f W / %(a).2f W' % dict(b=_kb, a=A.SH['P.mos_dc']),
               '<b>%(kPloss).3f</b>' % V]],
             widths=[CW * 0.34, CW * 0.18, CW * 0.26, CW * 0.10],
-            key='margins'))
+            key='margins', split=True))
     add(note('k<sub>Ploss</sub> = %(kPloss).3f is a result, not a failed '
              'calculation: the standing primary device spends %(a).2f&nbsp;W '
              'against a %(b).0f&nbsp;W budget, and Section&nbsp;%(ref)s says '
@@ -2013,7 +2013,7 @@ def build(A):
              + (r'\ =\ %d:%d' % (V['NpSet'], V['Ns']) if V['nser'] == 1 else
                 r'\ =\ %d:%d\ \mathrm{across\ the\ assembly},\ %d:%d\ \mathrm{per\ unit}'
                 % (V['NpSet'], V['Ns'], V['Np'], V['Ns']))))
-    add(tbl('The design, step by step: the results of the nine steps.',
+    ext(tbl('The design, step by step: the results of the nine steps.',
             [['Step', 'Quantity', 'Eq.', 'Result'],
              ['1', 'P<sub>in</sub>, P<sub>in,LLC</sub>', '&mdash;',
               '%(Pin).1f W, %(PL).1f W' % dict(V, PL=_SH['P.in_LLC'])],
@@ -2037,7 +2037,7 @@ def build(A):
               'n<sub>T</sub>', ER('fr') + ', ' + ER('fo') + ', ' + ER('Qdef'),
               '%(fr).1f kHz, %(fo).1f kHz, %(Qpk).3f, %(nT).3f' % V]],
             widths=[CW * 0.07, CW * 0.36, CW * 0.14, CW * 0.43],
-            key='chain'))
+            key='chain', split=True))
     add(note('<b>Steps 7 and 8 are the judgement calls</b>: C<sub>r</sub> '
              '%(Cr).0f&nbsp;nF against a calculated %(Crc).1f, L<sub>m</sub> '
              '%(Lm).0f&nbsp;&micro;H against %(Lmc).1f. Both lower '
@@ -2122,7 +2122,7 @@ def build(A):
     _gp = _GAIN.gain_points(A.R)
     _lo = [g for g in _gp if abs(g[0] - A.R['Vin_min']) < 1e-6]
     _hi = [g for g in _gp if abs(g[0] - A.R['Vin_FBmax']) < 1e-6]
-    add(tbl('The six marked crossings, read off Figure&nbsp;%(s)s. '
+    ext(tbl('The six marked crossings, read off Figure&nbsp;%(s)s. '
             'Q&nbsp;=&nbsp;Q<sub>pk</sub>&thinsp;sin&sup2;&thinsp;&theta; '
             'and M<sub>req</sub>&nbsp;=&nbsp;M<sub>pk</sub>/sin&thinsp;'
             '&theta;, with M<sub>pk</sub>&nbsp;=&nbsp;%(a).3f at the low '
@@ -2140,7 +2140,7 @@ def build(A):
                for i, (v, th, q, mr, fn, fs) in enumerate(rows)],
             widths=[CW * 0.20, CW * 0.11, CW * 0.14, CW * 0.19, CW * 0.18,
                     CW * 0.18],
-            key='gainpts'))
+            key='gainpts', split=True))
     add(p('Three readings matter:'))
     ext(bullets([
         '<b>The low corner sets the tank.</b> %(lo).0f&nbsp;Vac equivalent '
@@ -2182,7 +2182,7 @@ def build(A):
             'f<sub>o</sub> at the zero crossing. The percentage in each '
             'legend entry is the fraction of the half cycle spent above '
             'f<sub>r</sub>, without zero-current turn-off.', width=CW))
-    add(tbl('Peak f<sub>sw</sub> over the half cycle against f<sub>r</sub> = '
+    ext(tbl('Peak f<sub>sw</sub> over the half cycle against f<sub>r</sub> = '
             '%(fr).1f kHz. %(nAbove)d of the seven line conditions cross into '
             'above-resonance operation for part of the cycle.' % V,
             [['Line condition', 'V<sub>eq</sub>', 'peak f<sub>sw</sub>',
@@ -2190,7 +2190,7 @@ def build(A):
             + [[nm, '%.0f V' % veq, '%.1f kHz' % pk,
                 '<b>above</b>' if ab else 'below']
                for nm, veq, pk, ab in V['fswPk']],
-            widths=[CW * 0.30, CW * 0.18, CW * 0.22, CW * 0.30]))
+            widths=[CW * 0.30, CW * 0.18, CW * 0.22, CW * 0.30], split=True))
     add(fig('f12_two_divergences',
             'Near the zero crossing the required gain diverges and the load '
             'vanishes together, so the operating point converges on '
@@ -2222,7 +2222,7 @@ def build(A):
             'The composite tank current at the low equivalent corner, full '
             'load, and why its peak is not the sum of the two component '
             'peaks: they occur at different instants.'))
-    add(tbl('Currents at the low equivalent corner, full load, '
+    ext(tbl('Currents at the low equivalent corner, full load, '
             '&theta; = 90&deg;.',
             [['Quantity', 'Value', 'Where it is used'],
              ['f<sub>sw</sub>', '%(fswA).1f kHz' % V,
@@ -2243,7 +2243,7 @@ def build(A):
               '%(Idio).2f A' % V, 'secondary conduction loss'],
              ['I<sub>Cout</sub> (line-cycle rms)', '%(ICout).2f A' % V,
               'output bank ripple current']],
-            widths=[CW * 0.36, CW * 0.20, CW * 0.44]))
+            widths=[CW * 0.36, CW * 0.20, CW * 0.44], split=True))
 
     add(h2('The transformer, as built'))
     add(p('The tank asks for L<sub>r</sub> = %(Lr).0f&nbsp;&micro;H, '
@@ -2261,7 +2261,7 @@ def build(A):
             'rms of the two winding currents over the line half cycle. Lower '
             'right: the DC-overlap bench test. The circled marks are the '
             'rows of Table&nbsp;%(t)s.' % dict(V, t=TR('xfmr-read'))))
-    add(tbl('The transformer as wound and specified.',
+    ext(tbl('The transformer as wound and specified.',
             [['Quantity', 'Value', 'Note'],
              ['Turns', 'N<sub>p</sub> %(Np)d T; NS2 %(Ns)d T, NS3 %(Ns)d T; '
               'NAUX %(Naux)d T' % V,
@@ -2275,7 +2275,7 @@ def build(A):
               'open-circuit inductance / N<sub>p</sub>&sup2;; the core is '
               'gapped to it']],
             widths=[CW * 0.24, CW * 0.30, CW * 0.46],
-            key='trafo-built'))
+            key='trafo-built', split=True))
     _w = _CORE.winding(V)
     _B = _CORE.BOBBIN
     add(p('<b>Pins.</b> The %(former)s coil former of the %(chosen)s core '
@@ -2293,7 +2293,7 @@ def build(A):
             % dict(former=_B['former'], pins=_B['pins'], pitch=_B['pitch'],
                    rows=_B['rows_apart'], note=_CORE.PIN_NOTE)))
     _PM = _CORE.PINMAP
-    add(tbl('Winding-to-pin assignment.',
+    ext(tbl('Winding-to-pin assignment.',
             [['Winding', 'Pins (start &ndash; finish)', 'Turns', 'Conductor',
               'Row'],
              ['NP1 primary', _CORE.pins('NP1', '&ndash;'), '%d T' % V['Np'],
@@ -2312,7 +2312,7 @@ def build(A):
              ['Free', ', '.join(str(n) for n in _CORE.free_pins()),
               '&mdash;', 'not connected', 'both rows']],
             widths=[CW * 0.20, CW * 0.26, CW * 0.09, CW * 0.27, CW * 0.18],
-            key='pins'))
+            key='pins', split=True))
     add(p('<b>Polarity.</b> With the dots as drawn, ZCD is positive while '
           'the low-side switch of leg 1 is on, as required. NS2 and NS3 are '
           'wound in the same sense; the tap joins the finish of NS2 to the '
@@ -2369,7 +2369,7 @@ def build(A):
             'sit side by side with %(g).2f&nbsp;mm between them. The '
             'circled numbers are the rows of Table&nbsp;%(t)s.'
             % dict(g=_w['gap'], t=TR('legend42')), shrink=False))
-    add(tbl('Items of the figure.',
+    ext(tbl('Items of the figure.',
             [['Mark', 'Item', 'Turns', 'Conductor, placement'],
              ['1', 'NP1 primary, pins %s' % _CORE.pins('NP1', '&ndash;'),
               '%d T' % V['Np'],
@@ -2399,7 +2399,7 @@ def build(A):
               % _CORE.pins('NAUX', '&ndash;'), '%d T' % V['Naux'],
               'any wire; ZCD sense only']],
             widths=[CW * 0.07, CW * 0.30, CW * 0.09, CW * 0.54],
-            key='legend42'))
+            key='legend42', split=True))
     _rows = _CORE.copper(V)
     _rp, _rs = _rows[0], _rows[1]
     add(p('Three numbers in Table&nbsp;%s are not simple divisions and are '
@@ -2447,7 +2447,7 @@ def build(A):
     add(p('so one turn is <b>%(n)d strips of %(ws).1f&nbsp;mm in '
           'parallel</b>, stacked radially.'
           % dict(n=_w['n_foil'], ws=_w['w_foil'])))
-    add(tbl('The winding, from current to copper. NS3 is the same as NS2.',
+    ext(tbl('The winding, from current to copper. NS3 is the same as NS2.',
 
             [['Step', 'Primary NP1', 'Secondary NS2'],
              ['Rms current', '%.2f A' % _rp[2], '%.2f A' % _rs[2]],
@@ -2495,12 +2495,12 @@ def build(A):
                  100 * _cw / _R['AN'], _CORE.K_U),
               '']],
             widths=[CW * 0.26, CW * 0.40, CW * 0.34],
-            key='winding'))
+            key='winding', split=True))
     add(p('Reduced to what a supplier can measure, this is the '
           'specification sheet. L<sub>&mu;</sub> is deliberately absent '
           '(Section&nbsp;'
           + SR('What the transformer specification must say') + ').'))
-    add(tbl('Transformer specification for the worked design.',
+    ext(tbl('Transformer specification for the worked design.',
             [['Item', 'Value', 'Condition'],
              ['Core', '%s, %s, A<sub>L</sub> %.0f nH' % (
                  _CORE.CHOSEN, _R['material'], V['AL']),
@@ -2525,7 +2525,7 @@ def build(A):
               'holds B<sub>pk</sub> at or below 0.20 T (mark 6)'],
              ['Switching frequency', '%(fswA).0f to %(fswB).0f kHz' % V,
               'at full load']],
-            widths=[CW * 0.28, CW * 0.34, CW * 0.38]))
+            widths=[CW * 0.28, CW * 0.34, CW * 0.38], split=True))
 
     add(h2('The output bank, as sized'))
     add(p('Both conditions of Section&nbsp;%(ref)s; the larger wins. '
@@ -2561,7 +2561,7 @@ def build(A):
             'hold-up energy is a %(Cbulk).0f&nbsp;&micro;F part on a '
             '400&nbsp;V bus and %(Chold).1f&nbsp;mF here, %(Cratio).0f times '
             'more. That ratio is the price of the architecture.' % V))
-    add(tbl('What the selected bank then delivers, and what it has to '
+    ext(tbl('What the selected bank then delivers, and what it has to '
             'survive.',
             [['Quantity', 'Value', 'Against'],
              ['Achieved ripple', '%(dVo).2f V (%(dVopc).2f %%)' % V,
@@ -2582,7 +2582,7 @@ def build(A):
               % dict(V, esr1=A.SH['ESR.single'])],
              ['Ripple and noise', '%(RN).1f mV' % V,
               'with the %(Ccer).0f &micro;F ceramic bypass' % V]],
-            widths=[CW * 0.30, CW * 0.22, CW * 0.48], key='bank-built'))
+            widths=[CW * 0.30, CW * 0.22, CW * 0.48], key='bank-built', split=True))
 
     # ------------------------------------------------ loss budget
     add(h2('Where the power goes'))
@@ -2590,7 +2590,7 @@ def build(A):
           'ways before any component existed. The device losses computed '
           'afterwards need not agree with that split, and here they do not.'
           % dict(V, diff=V['Pin'] - V['Pout'])))
-    add(tbl('The budget as assumed, and the device losses as computed. The '
+    ext(tbl('The budget as assumed, and the device losses as computed. The '
             'second block is not a breakdown of the first.',
             [['Item', 'Value', 'Note'],
              ['<b>Budget</b> &mdash; input bridge', '%(a).2f W'
@@ -2618,7 +2618,7 @@ def build(A):
               % dict(t=A.SH['P.mos_dc'] + A.SH['P.mos_sw'] + A.SH['P.SR']
                      + A.SH['P.RCS'] + A.SH['P.Cout']),
               'and the magnetics are not in it']],
-            widths=[CW * 0.34, CW * 0.14, CW * 0.52], key='loss'))
+            widths=[CW * 0.34, CW * 0.14, CW * 0.52], key='loss', split=True))
     add(p('<b>The standing primary device</b>, the low-side switch of the '
           'idle leg in half-bridge morphing, carries the whole line-cycle '
           'rms continuously, with R<sub>DS(on)</sub> <b>hot</b> at '
@@ -2652,7 +2652,7 @@ def build(A):
     add(h2('What the semiconductors have to be'))
     add(p('Requirements, not part numbers (Section&nbsp;'
           + SR('Semiconductor requirements') + ').'))
-    add(tbl('Semiconductor requirements for the worked design.',
+    ext(tbl('Semiconductor requirements for the worked design.',
             [['Item', 'Requirement'],
              ['Primary drain-source voltage',
               '&ge; %(VDS).0f V, so a 600 V class part' % V],
@@ -2671,7 +2671,7 @@ def build(A):
               '%(Idio).2f A rms per leg, %(Isec).1f A peak' % V],
              ['Secondary package',
               'check the lead and clip rating, not only the die']],
-            widths=[CW * 0.36, CW * 0.64]))
+            widths=[CW * 0.36, CW * 0.64], split=True))
     add(h2('The voltage loop, as built'))
     from math import atan, degrees, sqrt, pi
     _at = lambda w, w0: degrees(atan(w / w0))
@@ -2848,7 +2848,7 @@ def build(A):
             '|T| and 180&deg; + arg&nbsp;T of the loop as built. The second '
             'trace is the phase margin only at the crossover; the gain margin '
             'is read at f<sub>180</sub>.'))
-    add(tbl('The voltage loop, as built.',
+    ext(tbl('The voltage loop, as built.',
             [['Quantity', 'Value', 'Against'],
              ['Divider R<sub>I</sub> / R<sub>O</sub>',
               '%(RI).0f / %(Ro).0f k&Omega;' % V,
@@ -2872,13 +2872,13 @@ def build(A):
              ['Feedback ripple at the burst point',
               '%(dVFBBM).0f mV' % V,
               'R<sub>BM</sub> %(RBMsel).0f &rarr; %(RBMrec).1f k&Omega;' % V]],
-            widths=[CW * 0.34, CW * 0.28, CW * 0.38], key='loop-result'))
+            widths=[CW * 0.34, CW * 0.28, CW * 0.38], key='loop-result', split=True))
 
     # ------------------------------------------------ the controller network
     add(h2('The parts around the controller'))
     add(p('The results; the following sections derive each value in the '
           'order it has to be done.'))
-    add(tbl('Controller network for the worked design.',
+    ext(tbl('Controller network for the worked design.',
             [['Part', 'Value', 'Result'],
              ['C<sub>T</sub> / R<sub>T</sub>',
               '%(CT).0f pF / %(RT).0f k&Omega;' % V,
@@ -2900,7 +2900,7 @@ def build(A):
               % V,
               'f<sub>cross</sub> %(fcross).2f Hz, &Phi;<sub>M</sub> '
               '%(PM).2f&deg;' % V]],
-            widths=[CW * 0.20, CW * 0.34, CW * 0.46]))
+            widths=[CW * 0.20, CW * 0.34, CW * 0.46], split=True))
 
     add(h2('The oscillator: C<sub>T</sub> first, then R<sub>T</sub>'))
     add(p('The VCO charges C<sub>T</sub> from V<sub>ref</sub>/R<sub>T</sub> '
@@ -2958,7 +2958,7 @@ def build(A):
           '&nbsp;k&Omega; + %(Ts).2f&nbsp;&micro;s)] = '
           '<b>%(fMin).2f&nbsp;kHz</b>, which must clear f<sub>o</sub>.'
           % dict(V, Ts=V['Tidle'] / 1e3)))
-    add(tbl('Oscillator: what the two parts produce, and the limits each '
+    ext(tbl('Oscillator: what the two parts produce, and the limits each '
             'result has to clear.',
             [['Quantity', 'Value', 'Limit', 'Margin'],
              ['f<sub>Min</sub>', '%(fMin).1f kHz' % V,
@@ -2980,7 +2980,7 @@ def build(A):
              ['C<sub>T</sub>', '%(CT).0f pF' % V, '270 to 1000 pF',
               '%(a).3f / %(b).3f'
               % dict(a=A.SH['k.CT_lo'], b=A.SH['k.CT_hi'])]],
-            widths=[CW * 0.18, CW * 0.20, CW * 0.44, CW * 0.18]))
+            widths=[CW * 0.18, CW * 0.20, CW * 0.44, CW * 0.18], split=True))
     add(note('<b>T<sub>idle</sub> is the weakest number in this chapter.</b> '
              'The draft datasheet gives 700&nbsp;ns in the text and a table '
              'that back-solves to 250&nbsp;ns; this design uses '
@@ -3017,7 +3017,7 @@ def build(A):
              'uses the composite peak. I<sub>trafo,pk</sub> = %(Itr).2f&nbsp;A '
              'instead of I<sub>Lr,pk</sub> = %(Icomp).2f&nbsp;A would loosen '
              'the over-current protection by about 12&nbsp;%%.' % V))
-    add(tbl('What the selected R<sub>CS</sub> then fixes.',
+    ext(tbl('What the selected R<sub>CS</sub> then fixes.',
             [['Result', 'Value', 'Against'],
              ['Maximum input power', '%(P).1f W'
               % dict(P=A.SH['P.in_max_act']),
@@ -3029,7 +3029,7 @@ def build(A):
              ['Sense dissipation', '%(P).2f W total, %(Pe).3f W each'
               % dict(P=A.SH['P.RCS_pk'], Pe=A.SH['P.RCS_each_pk']),
               '1 W parts, margin %(k).3f' % dict(k=A.SH['k.NRCS'])]],
-            widths=[CW * 0.26, CW * 0.26, CW * 0.48]))
+            widths=[CW * 0.26, CW * 0.26, CW * 0.48], split=True))
 
     add(h2('Burst mode: one resistor, read once at power-up'))
     add(eq(r'R_{BM}=16.7\,\frac{\mathrm{k}\Omega}{\mathrm{V}^{2}}'
@@ -3070,7 +3070,7 @@ def build(A):
     add(p('against a %(Vacmin).0f&nbsp;Vac minimum, margin %(k).3f. Rounding '
           'up would stop the converter starting at low line.'
           % dict(V, k=A.SH['k.BO'])))
-    add(tbl('What R<sub>CFG</sub> and LOUT2 select together. The 235 and '
+    ext(tbl('What R<sub>CFG</sub> and LOUT2 select together. The 235 and '
             '245 V thresholds are fixed inside the IC and cannot be moved.',
             [['R<sub>CFG</sub>', 'LOUT2', 'Configuration'],
              ['15 k&Omega;', 'open',
@@ -3082,7 +3082,7 @@ def build(A):
               'fixed half bridge, split C<sub>r</sub>, fixed brown-out'],
              ['15 to 100 k&Omega;', 'to GND',
               'fixed half bridge, split C<sub>r</sub>, adjustable brown-out']],
-            widths=[CW * 0.20, CW * 0.14, CW * 0.66]))
+            widths=[CW * 0.20, CW * 0.14, CW * 0.66], split=True))
     add(note('For universal input the window is 15&nbsp;k&Omega; to '
              '%(max).1f&nbsp;k&Omega;; the 47&nbsp;k&Omega; morphing limit '
              'never applies. Hang nothing on LOUT2: a pull-down under about '
@@ -3151,7 +3151,7 @@ def build(A):
 
     # =============================================================== 7
     add(h2('Controller pin rules'))
-    add(tbl('Pin rules that must not be broken.',
+    ext(tbl('Pin rules that must not be broken.',
             [['Pin', 'Rule'],
              ['ISEN', 'No filter and no series resistor. The maximum-power '
               'law and the over-current threshold share this pin.'],
@@ -3169,12 +3169,12 @@ def build(A):
               'switches.'],
              ['HOUTx, LOUTx', 'Logic-level outputs, not gate drivers. '
               'External half-bridge drivers are required.']],
-            widths=[CW * 0.16, CW * 0.84]))
+            widths=[CW * 0.16, CW * 0.84], split=True))
 
     add(h2('Protections, and where each threshold is set'))
     add(p('Each threshold is fixed by a resistor already chosen, so a change '
           'made for one reason moves a threshold set for another.'))
-    add(tbl('Protections and the component that sets each one.',
+    ext(tbl('Protections and the component that sets each one.',
             [['Protection', 'Set by', 'This design'],
              ['Brown-out, on the rectified mains',
               'R<sub>CFG</sub>, read at power-up',
@@ -3208,7 +3208,7 @@ def build(A):
               'not a protection &mdash; a design margin',
               'swept, not estimated; Section&nbsp;'
               + SR('ZVS verification')]],
-            widths=[CW * 0.24, CW * 0.30, CW * 0.46]))
+            widths=[CW * 0.24, CW * 0.30, CW * 0.46], split=True))
 
     add(h2('System design rules'))
     add(p('The same material as a checklist.'))
@@ -3456,7 +3456,7 @@ def build(A):
           'it before a production release.'))
 
     add(h2('Datasheet: the draft is not self-consistent'))
-    add(tbl('Points where the draft datasheet contradicts itself or leaves a '
+    ext(tbl('Points where the draft datasheet contradicts itself or leaves a '
             'value open. Every one of them must be re-checked against the '
             'released document.',
             [['Item', 'What the draft says', 'What is used here, and why'],
@@ -3488,12 +3488,12 @@ def build(A):
               'block diagram and the configuration table',
               'The block diagram and the table are taken as correct: LOUT2 is '
               'the pin that is strapped and held high in half bridge']],
-            widths=[CW * 0.22, CW * 0.40, CW * 0.38]))
+            widths=[CW * 0.22, CW * 0.40, CW * 0.38], split=True))
 
     add(h2('Traps in the obvious way of building a design sheet'))
     add(p('Places where the obvious way to set up a design sheet gives a '
           'plausible wrong number that nothing flags.'))
-    add(tbl('Traps that produce a plausible wrong number.',
+    ext(tbl('Traps that produce a plausible wrong number.',
             [['Where', 'The trap', 'Consequence if missed'],
              ['Equivalent input range',
               'taking the maximum from the ac maximum instead of the '
@@ -3537,7 +3537,7 @@ def build(A):
               'carries the selected one',
               'Every downstream margin is reported for a design that was not '
               'built']],
-            widths=[CW * 0.20, CW * 0.38, CW * 0.42]))
+            widths=[CW * 0.20, CW * 0.38, CW * 0.42], split=True))
 
     add(h2('Constants used here without a derivation'))
     ext(bullets([
@@ -3558,7 +3558,7 @@ def build(A):
         'gains themselves are draft values.']))
 
     add(h2('Open items in this design'))
-    add(tbl('What is not settled, and what would settle it.',
+    ext(tbl('What is not settled, and what would settle it.',
             [['Item', 'State', 'What closes it'],
              ['T<sub>idle</sub>', 'two candidate values, 250 and 700 ns',
               'Measure f<sub>sw</sub>(&theta;) on the first board'],
@@ -3591,7 +3591,7 @@ def build(A):
               'Optimistic. Taking 95 % instead moves R<sub>CS</sub> and '
               'R<sub>ac</sub> by about 3 %, so nothing downstream is '
               'sensitive &mdash; but it should be replaced by a measurement']],
-            widths=[CW * 0.22, CW * 0.34, CW * 0.44]))
+            widths=[CW * 0.22, CW * 0.34, CW * 0.44], split=True))
     add(note('<b>Every cross-check here is a consistency check, not a '
              'correctness check.</b> Three implementations agreeing means '
              'they implement the same equations, not that the equations '
