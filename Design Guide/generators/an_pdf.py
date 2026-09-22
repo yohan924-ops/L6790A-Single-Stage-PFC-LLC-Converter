@@ -127,10 +127,7 @@ def _fsw_peaks():
     """
     fr = R['fr'] / 1e3
     out = []
-    for nm, veq in (('minimum line', 2 * 90.0), ('tank minimum', R['Vin_min']),
-                    ('110 Vac', 220.0), ('nominal', 225.0),
-                    ('230 Vac', 230.0), ('maximum line', 264.0),
-                    ('FB threshold', 332.34)):
+    for nm, veq, _mode in l6790.line_conditions(R):
         _q, S = l6790.sweep(R, veq, 1.0)
         pk = S['fsw_max'] / 1e3
         out.append((nm, veq, pk, pk > fr))
@@ -986,28 +983,32 @@ def cover_page(c, doc):
     # A slim accent band sitting on the rule. It was 300 pt tall when it
     # framed a circuit drawing; with the drawing gone that read as a
     # missing image rather than as white space.
+    #  Title, subtitle and the worked-design box sit in the upper half of
+    #  the page, one under the other; they used to be split between the
+    #  middle and the foot of the page (2026-09-22, user).
     c.setFillColor(colors.HexColor('#DCE6F1'))
-    c.rect(0, PH - 420, PW, 56, stroke=0, fill=1)
+    c.rect(0, PH - 236, PW, 56, stroke=0, fill=1)
     c.setFillColor(NAVY)
-    c.rect(0, PH - 424, PW, 4, stroke=0, fill=1)
+    c.rect(0, PH - 240, PW, 4, stroke=0, fill=1)
 
     c.setFillColor(colors.black)
-    c.setFont(FONT, 25)
+    c.setFont(FONT, 27)
     for i, line in enumerate(COVER['title']):
-        c.drawString(LM, PH - 490 - i * 34, line)
-    c.setFont(FONT, 14)
+        c.drawString(LM, PH - 300 - i * 36, line)
+    c.setFont(FONT, 14.5)
     c.setFillColor(BLUE)
-    c.drawString(LM, PH - 556, COVER['sub'])
+    c.drawString(LM, PH - 300 - 36 * len(COVER['title']) - 12, COVER['sub'])
 
     h = 44 + 15 * len(COVER['box'])
+    top = PH - 300 - 36 * len(COVER['title']) - 52
     c.setFillColor(colors.HexColor('#CBD8E6'))
-    c.roundRect(LM, 96, CW, h, 6, stroke=0, fill=1)
+    c.roundRect(LM, top - h, CW * 0.62, h, 6, stroke=0, fill=1)
     c.setFillColor(colors.black)
     c.setFont(FONTB, 9.4)
-    c.drawString(LM + 18, 96 + h - 22, COVER['boxhead'])
+    c.drawString(LM + 18, top - 22, COVER['boxhead'])
     c.setFont(FONT, 9.2)
     for i, line in enumerate(COVER['box']):
-        c.drawString(LM + 18, 96 + h - 44 - i * 15, line)
+        c.drawString(LM + 18, top - 44 - i * 15, line)
     c.restoreState()
 
 

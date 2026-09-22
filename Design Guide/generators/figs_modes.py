@@ -16,10 +16,9 @@ from schem import NAVY, MAG, CYA, GRN, PUR, GREY, LT, YEL
 def an_above_below(save, foot, R, sweep, FR):
     """f_sw(theta)/f_r for each equivalent input, with f_r marked"""
     fig, ax = plt.subplots(figsize=(9.35, 4.25))
-    CASES = [(R['Vin_min'], '173.2 Vac eq.  (HB morphing edge)', MAG),
-             (225.0, '225 Vac eq.', CYA),
-             (264.0, '264 Vac eq.  (mains maximum)', NAVY),
-             (332.34, '332.3 Vac eq.  (FB morphing edge)', PUR)]
+    from l6790 import line_conditions
+    COLS = [MAG, '#D97706', CYA, GRN, NAVY, PUR]
+    CASES = [(veq, nm, c) for (nm, veq, _m), c in zip(line_conditions(R), COLS)]
     fr = R['fr']
     txt = []
     for vin, lab, col in CASES:
@@ -50,6 +49,8 @@ def an_above_below(save, foot, R, sweep, FR):
             bbox=dict(boxstyle='round,pad=0.4', fc='white', ec='#B8860B',
                       lw=1.2))
 
+    ax.grid(True, color='#C4C8CF', lw=0.7)
+    ax.set_axisbelow(True)
     ax.set_xlim(0, 180)
     ax.set_ylim(0.0, 2.45)
     ax.set_xlabel('line phase  $\\theta$  [deg]')
@@ -61,7 +62,7 @@ def an_above_below(save, foot, R, sweep, FR):
     #  goes in that curve's legend entry, under a title that names it once.
     hs = [Line2D([], [], color=c, lw=2.2) for _l, _f, c in txt]
     ax.legend(hs, ['%s  \u2014  %.0f %%' % (l, f) for l, f, _c in txt],
-              loc='upper right', fontsize=9.2, ncol=1,
+              loc='upper right', fontsize=8.8, ncol=1,
               title='equivalent input, and the share of the\n'
                     'half cycle it spends above f$_r$',
               title_fontsize=9.2)

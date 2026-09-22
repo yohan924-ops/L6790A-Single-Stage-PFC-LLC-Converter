@@ -973,7 +973,12 @@ def build(A):
           '%(Veqlo).1f&nbsp;Vac; at the full-bridge edge '
           '(235&nbsp;V<sub>pk</sub>) it sees %(Veqhi).1f&nbsp;Vac. <b>These '
           'edges are the design corners</b>: the low one for gain and ZVS, '
-          'the high one for switching frequency.' % V))
+          'the high one for switching frequency. The mains voltages a supply '
+          'actually meets map onto the same axis: 90 and 110&nbsp;Vac in '
+          'full bridge become 180 and 220&nbsp;Vac equivalent, 230 and '
+          '264&nbsp;Vac in half bridge stay 230 and 264. All four lie inside '
+          'the two edges, and this note reports at all six conditions.'
+          % V))
 
     add(h2('Turns ratio and reflected voltage'))
     add(p('The turns ratio appears only multiplied by the effective output '
@@ -2106,57 +2111,77 @@ def build(A):
 
     add(h2('The gain chart of this design'))
     add(p('Figure&nbsp;%(f)s is the chart of Section&nbsp;%(s)s on this '
-          'tank, at the two equivalent inputs that decide the design '
-          '(&lambda;<sub>act</sub>&nbsp;=&nbsp;%(lam).3f, '
-          'Q<sub>pk</sub>&nbsp;=&nbsp;%(Qpk).3f). The marked crossings are '
-          'the operating points the sweep is built from.'
+          'tank (&lambda;<sub>act</sub>&nbsp;=&nbsp;%(lam).3f, '
+          'Q<sub>pk</sub>&nbsp;=&nbsp;%(Qpk).3f), one panel per line '
+          'condition: the two morphing edges and the four mains voltages a '
+          'supply meets. The curves are the same in every panel; only the '
+          'required-gain lines move. The marked crossings are the operating '
+          'points the sweep is built from.'
           % dict(V, s=SR('Reading the gain chart of a single-stage '
                          'converter'), f=FR('an_gain_design'))))
     add(fig('an_gain_design',
-            'The gain chart of this design. <b>Left:</b> the low corner, '
-            '%(lo).0f&nbsp;Vac eq., highest required gain, crossings below '
-            'f<sub>r</sub>. <b>Right:</b> the FB corner, %(hi).0f&nbsp;Vac '
-            'eq., lowest required gain, crossings above f<sub>r</sub>. Each '
-            'phase is compared with the dashed line of its own colour only.'
-            % dict(lo=V['Veqlo'], hi=V['Veqhi']), width=CW))
+            'The gain chart of this design at the six line conditions, low '
+            'to high. Top left, the HB edge (%(lo).0f&nbsp;Vac eq.): highest '
+            'required gain, crossings below f<sub>r</sub>. Bottom right, the '
+            'FB edge (%(hi).0f&nbsp;Vac eq.): lowest required gain, '
+            'crossings above f<sub>r</sub>. 90&nbsp;Vac in full bridge lands '
+            'close to the HB edge, and 110&nbsp;Vac in full bridge close to '
+            '230&nbsp;Vac in half bridge, so the two mains systems look alike '
+            'to the tank. Each phase is compared with the dashed line of its '
+            'own colour only.' % dict(lo=V['Veqlo'], hi=V['Veqhi']),
+            width=CW))
     _gp = _GAIN.gain_points(A.R)
+    import l6790 as _L
+    _cn = {veq: nm for nm, veq, _m in _L.line_conditions(A.R)}
+    _byv = [[g for g in _gp if abs(g[0] - veq) < 1e-6]
+            for _nm, veq, _m in _L.line_conditions(A.R)]
     _lo = [g for g in _gp if abs(g[0] - A.R['Vin_min']) < 1e-6]
     _hi = [g for g in _gp if abs(g[0] - A.R['Vin_FBmax']) < 1e-6]
-    ext(tbl('The six marked crossings, read off Figure&nbsp;%(s)s. '
-            'Q&nbsp;=&nbsp;Q<sub>pk</sub>&thinsp;sin&sup2;&thinsp;&theta; '
-            'and M<sub>req</sub>&nbsp;=&nbsp;M<sub>pk</sub>/sin&thinsp;'
-            '&theta;, with M<sub>pk</sub>&nbsp;=&nbsp;%(a).3f at the low '
-            'corner and %(b).3f at the FB corner.'
+    ext(tbl('The marked crossings of Figure&nbsp;%(s)s, at every line '
+            'condition. Q&nbsp;=&nbsp;Q<sub>pk</sub>&thinsp;sin&sup2;&thinsp;'
+            '&theta; and M<sub>req</sub>&nbsp;=&nbsp;M<sub>pk</sub>/sin&thinsp;'
+            '&theta;; M<sub>pk</sub> scales as 1/V<sub>eq</sub>, from '
+            '%(a).3f at the HB edge to %(b).3f at the FB edge.'
             % dict(a=V['MVmin'], b=V['MFBmax'], s=FR('an_gain_design')),
-            [['Corner', '&theta;', 'Q(&theta;)',
+            [['Condition', '&theta;', 'Q(&theta;)',
               'M<sub>req</sub>(&theta;)', 'f<sub>sw</sub>/f<sub>r</sub>',
               'f<sub>sw</sub>']]
-            + [['%.0f Vac eq.' % v if i == 0 else '',
+            + [[_cn[v] if i == 0 else '',
                 '%.0f&deg;' % (th * 180.0 / 3.141592653589793),
                 '%.3f' % q, '%.3f' % mr,
                 '&mdash;' if fn is None else '%.3f' % fn,
                 '&mdash;' if fs is None else '%.1f kHz' % fs]
-               for rows in (_lo, _hi)
+               for rows in _byv
                for i, (v, th, q, mr, fn, fs) in enumerate(rows)],
-            widths=[CW * 0.20, CW * 0.11, CW * 0.14, CW * 0.19, CW * 0.18,
-                    CW * 0.18],
+            widths=[CW * 0.26, CW * 0.09, CW * 0.13, CW * 0.18, CW * 0.17,
+                    CW * 0.17],
             key='gainpts', split=True))
     add(p('Three readings matter:'))
     ext(bullets([
-        '<b>The low corner sets the tank.</b> %(lo).0f&nbsp;Vac equivalent '
-        'is the lowest voltage the tank sees, so its line-peak requirement '
+        '<b>The HB edge sets the tank.</b> %(lo).0f&nbsp;Vac equivalent is '
+        'the lowest voltage the tank sees, so its line-peak requirement '
         'M<sub>pk</sub>&nbsp;=&nbsp;%(m).3f is the largest gain ever asked '
         'for. It is met at f<sub>sw</sub>/f<sub>r</sub>&nbsp;=&nbsp;%(fn).3f, '
         'well to the right of M<sub>Z</sub>: inductive.'
         % dict(lo=V['Veqlo'], m=V['MVmin'], fn=_lo[0][4]),
-        '<b>The FB corner sets the frequency.</b> At %(hi).0f&nbsp;Vac '
+        '<b>The FB edge sets the frequency.</b> At %(hi).0f&nbsp;Vac '
         'equivalent the line-peak crossing is %(f).0f&nbsp;kHz, and that, '
         'not the mains maximum, is what the oscillator ceiling must clear '
         '(Section&nbsp;%(o)s).'
         % dict(hi=V['Veqhi'], f=_hi[0][5] or 0.0,
                o=SR('The oscillator: C<sub>T</sub> first, then '
                     'R<sub>T</sub>')),
-        '<b>The right panel also judges &lambda;.</b> The line-peak '
+        '<b>The four mains voltages sit between the edges.</b> 90&nbsp;Vac '
+        'in full bridge (180&nbsp;Vac eq.) is only %(p90).0f&nbsp;%% above '
+        'the HB edge, so a 90&nbsp;Vac system runs close to the gain worst '
+        'case. 110&nbsp;Vac in full bridge (220) and 230&nbsp;Vac in half '
+        'bridge (230) are within %(p23).0f&nbsp;%% of each other: morphing '
+        'makes the two mains systems nearly alike to the tank. 264&nbsp;Vac '
+        '(264) is still %(p264).0f&nbsp;%% below the FB edge.'
+        % dict(p90=100 * (180.0 / V['Veqlo'] - 1),
+               p23=100 * (230.0 / 220.0 - 1),
+               p264=100 * (1 - 264.0 / V['Veqhi'])),
+        '<b>The FB edge also judges &lambda;.</b> The line-peak '
         'requirement there is %(mm).3f and the no-load floor '
         'M<sub>&infin;</sub>&nbsp;=&nbsp;%(mi).3f. The requirement is '
         '<b>below</b> the floor, so at no load and high line there is no '
@@ -2165,8 +2190,8 @@ def build(A):
         % dict(mm=V['MFBmax'], mi=V['Minf'],
                l=SR('The other bound on &lambda;, and where it has no '
                     'solution'))]))
-    add(note('The two panels are the two ends of one line cycle, not two '
-             'designs. The curves do not depend on input voltage: '
+    add(note('The six panels are six places on one axis, not six designs. '
+             'The curves do not depend on input voltage: '
              'M(f<sub>n</sub>,&nbsp;Q) is fixed by &lambda;<sub>act</sub> '
              'and Q<sub>pk</sub>. <b>The input voltage enters only through '
              'M<sub>req</sub>.</b>'))
@@ -2178,19 +2203,20 @@ def build(A):
           'the rectifier body diode and the SR dead time need checking.' % V))
     add(fig('an_above_below',
             'Which side of f<sub>r</sub> the converter is on over a line '
-            'half cycle, at four equivalent inputs. Every curve converges on '
-            'f<sub>o</sub> at the zero crossing. The percentage in each '
+            'half cycle, at the six line conditions. Every curve converges '
+            'on f<sub>o</sub> at the zero crossing. The percentage in each '
             'legend entry is the fraction of the half cycle spent above '
             'f<sub>r</sub>, without zero-current turn-off.', width=CW))
     ext(tbl('Peak f<sub>sw</sub> over the half cycle against f<sub>r</sub> = '
-            '%(fr).1f kHz. %(nAbove)d of the seven line conditions cross into '
-            'above-resonance operation for part of the cycle.' % V,
+            '%(fr).1f kHz. %(nAbove)d of the %(nc)d line conditions cross into '
+            'above-resonance operation for part of the cycle.'
+            % dict(V, nc=len(V['fswPk'])),
             [['Line condition', 'V<sub>eq</sub>', 'peak f<sub>sw</sub>',
               'side of f<sub>r</sub>']]
             + [[nm, '%.0f V' % veq, '%.1f kHz' % pk,
                 '<b>above</b>' if ab else 'below']
                for nm, veq, pk, ab in V['fswPk']],
-            widths=[CW * 0.30, CW * 0.18, CW * 0.22, CW * 0.30], split=True))
+            widths=[CW * 0.36, CW * 0.16, CW * 0.20, CW * 0.28], split=True))
     add(fig('f12_two_divergences',
             'Near the zero crossing the required gain diverges and the load '
             'vanishes together, so the operating point converges on '
@@ -3611,7 +3637,7 @@ def _zvs_grid(A, head=('Load', '%.1f Vac eq.')):
     the numbers are computed here either way, never transcribed.
     """
     import l6790
-    cols = (A.R['Vin_min'], 180., 225., 264., 332.34)
+    cols = tuple(v for _n, v, _m in l6790.line_conditions(A.R))
     rows = [[head[0]] + [head[1] % c for c in cols]]
     worst = None
     for ld in (1.0, 0.75, 0.50, 0.25):

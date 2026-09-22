@@ -130,6 +130,23 @@ def design(Vac_min=90., Vac_max=264., fl=50., fl_min=47.,
     return R
 
 
+def line_conditions(R):
+    """The equivalent inputs the note reports at, low to high.
+
+    Two are the morphing edges, where the tank sees its extremes; the other
+    four are the mains voltages a supply actually meets, mapped through the
+    bridge mode: 90 and 110 Vac run full bridge (2 x), 230 and 264 Vac run
+    half bridge (1 x).  One list, so every figure and table names the same
+    conditions (2026-09-22, user).
+    """
+    return [('HB edge, 173 Vac eq.', R['Vin_min'], 'HB'),
+            ('90 Vac (FB), 180 Vac eq.', 2 * 90.0, 'FB'),
+            ('110 Vac (FB), 220 Vac eq.', 2 * 110.0, 'FB'),
+            ('230 Vac (HB), 230 Vac eq.', 230.0, 'HB'),
+            ('264 Vac (HB), 264 Vac eq.', 264.0, 'HB'),
+            ('FB edge, 332 Vac eq.', R['Vin_FBmax'], 'FB')]
+
+
 def sweep(R, Vac_eq, load=1.0, N=181):
     """[55]-[70a] line-cycle sweep at one equivalent input voltage."""
     n, Vo_eff, lam_a = R['n'], R['Vo_eff'], R['lam_a']

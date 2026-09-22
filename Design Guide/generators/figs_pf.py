@@ -34,7 +34,7 @@ def _tidy(ax, xl, yl):
     ax.set_xlabel(xl, fontsize=10.5, color=NAVY)
     ax.set_ylabel(yl, fontsize=10.5, color=NAVY)
     ax.tick_params(labelsize=9.4, colors=GREY)
-    ax.grid(True, color=LT, lw=0.8)
+    ax.grid(True, color='#C4C8CF', lw=0.7)
     ax.set_axisbelow(True)
     for sp in ('top', 'right'):
         ax.spines[sp].set_visible(False)
@@ -287,9 +287,10 @@ def gain_points(R):
     lam, qpk, fr = R['lam_a'], R['Qpk'], R['fr']
     fn = np.linspace(0.40, 2.0, 4001)
     out = []
-    for vac, mpk in ((R['Vin_min'], R['MVmin']),
-                     (R['Vin_FBmax'], R['MFBmax'])):
-        for ph, _nm, _col in PHASES:
+    from l6790 import line_conditions
+    for _nm, vac, _mode in line_conditions(R):
+        mpk = R['MVmin'] * R['Vin_min'] / vac      # M_pk scales as 1/V_eq
+        for ph, _nm2, _col in PHASES:
             q = qpk * np.sin(ph) ** 2
             g = np.array([M(f, q, lam) for f in fn])
             lev = mpk / np.sin(ph)
@@ -300,72 +301,80 @@ def gain_points(R):
 
 
 def an_gain_design(save, foot, R, sweep):
-    """The worked design's gain chart at the two corners that decide it."""
+    """The worked design's gain chart at all six line conditions.
+
+    One panel per condition, in order of equivalent input.  The curves are
+    the same in every panel - M(f_n, Q) does not depend on the input voltage -
+    only the dashed required-gain lines move.  Six panels rather than six
+    ladders on one chart, so that no curve can be compared with a line that
+    is not its own (2026-09-22, user: the mains voltages a supply meets, not
+    only the morphing edges).
+    """
     from matplotlib.lines import Line2D
+    from l6790 import line_conditions
     lam, qpk, fr = R['lam_a'], R['Qpk'], R['fr']
     fn = np.linspace(0.40, 2.0, 1600)
-    fig, axs = plt.subplots(1, 2, figsize=(11.6, 5.35))
-    fig.subplots_adjust(left=0.062, right=0.988, top=0.885, bottom=0.115,
-                        wspace=0.19)
-    CORNERS = ((R['MVmin'], 'at the low equivalent corner, %.0f Vac eq.'
-                % R['Vin_min']),
-               (R['MFBmax'], 'at the FB morphing corner, %.0f Vac eq.'
-                % R['Vin_FBmax']))
-    #  Only the line-peak crossing is labelled on the chart.  All six are
-    #  in the table in the text, and six labels on two panels sat on the
-    #  dashed lines they belong to.
-    TAG = ((1.02, 1.95), (1.24, 1.55))
-    for a, (mpk, title), tag in zip(axs, CORNERS, TAG):
-        a.set_title(title, fontsize=12, color=NAVY)
-        a.plot(fn, [M(f, 1e-4, lam) for f in fn], color=NAVY, lw=2.0)
-        hs = [(Line2D([], [], color=NAVY, lw=2.0), 'M$_{OL}$: no load')]
-        for ph, nm, col in PHASES:
-            q = qpk * np.sin(ph) ** 2
-            g = np.array([M(f, q, lam) for f in fn])
-            a.plot(fn, g, color=col, lw=2.2)
-            hs.append((Line2D([], [], color=col, lw=2.2),
-                       '%s,  Q = %.3f' % (nm, q)))
+    conds = line_conditions(R)
+    fig, axs = plt.subplots(2, 3, figsize=(11.6, 8.7), sharex=True, sharey=True)
+    fig.subplots_adjust(left=0.06, right=0.99, top=0.86, bottom=0.08,
+                        wspace=0.08, hspace=0.24)
+    curves = {ph: np.array([M(f, qpk * np.sin(ph) ** 2, lam) for f in fn])
+              for ph, _n, _c in PHASES}
+    nl = [M(f, 1e-4, lam) for f in fn]
+    mx, my = _mz(lam, fn)
+    minf = 1.0 / (1 + lam)
+    for a, (nm, vac, mode) in zip(axs.flat, conds):
+        mpk = R['MVmin'] * R['Vin_min'] / vac
+        a.set_title(nm, fontsize=13.5, color=NAVY)
+        a.plot(fn, nl, color=NAVY, lw=1.8)
+        for ph, _n, col in PHASES:
+            a.plot(fn, curves[ph], color=col, lw=2.0)
             lev = mpk / np.sin(ph)
-            a.axhline(lev, color=col, lw=1.5, ls=(0, (6, 3)))
-            x = _cross(fn, g, lev)
+            a.axhline(lev, color=col, lw=1.3, ls=(0, (6, 3)))
+            x = _cross(fn, curves[ph], lev)
             if x:
-                a.plot([x], [lev], 'o', color=col, ms=8, zorder=6)
-                if ph == PHASES[0][0]:
-                    a.annotate(u'f$_{sw}$ = %.0f kHz at the line peak'
-                               % (x * fr / 1e3), xy=(x, lev), xytext=tag,
-                               fontsize=9.8, color=col, ha='left',
-                               arrowprops=dict(arrowstyle='-|>', color=col,
-                                               lw=1.1),
-                               path_effects=HALO, zorder=9)
-        mx, my = _mz(lam, fn)
-        a.plot(mx, my, color=GRN, lw=1.8, ls=(0, (3, 2.4)))
-        a.axhline(1.0 / (1 + lam), color=GREY, lw=1.6, ls=(0, (1, 2)))
-        hs.append((Line2D([], [], color=GREY, lw=1.6, ls=(0, (6, 3))),
-                   u'M$_{req}$ = %.3f / sin\u03b8 (dashed)' % mpk))
-        hs.append((Line2D([], [], color=GRN, lw=1.8, ls=(0, (3, 2.4))),
-                   'M$_Z$: capacitive boundary'))
-        hs.append((Line2D([], [], color=GREY, lw=1.6, ls=(0, (1, 2))),
-                   u'M$_{\\infty}$ = %.3f' % (1.0 / (1 + lam))))
+                a.plot([x], [lev], 'o', color=col, ms=7, zorder=6)
+        a.plot(mx, my, color=GRN, lw=1.6, ls=(0, (3, 2.4)))
+        a.axhline(minf, color=GREY, lw=1.4, ls=(0, (1, 2)))
+        #  the line-peak crossing, in words, in the empty upper part of the
+        #  panel where nothing is drawn
+        x90 = _cross(fn, curves[PHASES[0][0]], mpk)
+        if x90:
+            txt = (u'line peak:  f$_{sw}$ = %.0f kHz\n'
+                   u'f$_{sw}$/f$_r$ = %.2f,  M$_{pk}$ = %.3f'
+                   % (x90 * fr / 1e3, x90, mpk))
+        else:
+            txt = u'M$_{pk}$ = %.3f: no full-load solution' % mpk
+        if mpk < minf:
+            #  the no-load curve never gets this low: burst mode owns it
+            txt += u'\nM$_{pk}$ < M$_{\\infty}$: no no-load solution'
+        a.text(0.97, 0.96, txt, transform=a.transAxes, fontsize=12,
+               color=NAVY, ha='right', va='top', path_effects=HALO,
+               zorder=9)
         a.set_xlim(fn[0], 2.0)
         a.set_ylim(0, 4.6)
-        _tidy(a, 'f$_{sw}$ / f$_r$   (f$_r$ = %.1f kHz)' % (fr / 1e3),
-              'gain  M')
-        a.legend([h for h, _n in hs], [n for _h, n in hs], loc='upper right',
-                 fontsize=9.2, frameon=False, ncol=1)
-    axs[1].annotate(u'the line-peak requirement %.3f is a whisker\n'
-                    u'BELOW the no-load floor %.3f: at no load\n'
-                    u'there is no solution at any frequency,\n'
-                    u'and burst mode takes over'
-                    % (R['MFBmax'], 1.0 / (1 + lam)),
-                    xy=(1.95, 0.5 * (R['MFBmax'] + 1.0 / (1 + lam))),
-                    xytext=(1.10, 2.55), fontsize=9.6, color=GREY, ha='left',
-                    va='top',
-                    arrowprops=dict(arrowstyle='-|>', color=GREY, lw=1.2,
-                                    connectionstyle='arc3,rad=-0.22'),
-                    path_effects=HALO, zorder=9)
-    foot(fig, 'The same chart as the previous figure, on this design. Left '
-              'is the gain and ZVS worst case, right is the frequency worst '
-              'case; every other line condition lies between the two. The '
-              'marked crossings are the operating points the tables are '
-              'built from.')
+        _tidy(a, '', '')
+    for a in axs[1]:
+        a.set_xlabel('f$_{sw}$ / f$_r$   (f$_r$ = %.1f kHz)' % (fr / 1e3),
+                     fontsize=12.5, color=NAVY)
+    for a in axs[:, 0]:
+        a.set_ylabel('gain  M', fontsize=12.5, color=NAVY)
+    for a in axs.flat:
+        a.tick_params(labelsize=11.5)
+    hs = [(Line2D([], [], color=NAVY, lw=1.8), 'M$_{OL}$: no load')]
+    for ph, nm, col in PHASES:
+        hs.append((Line2D([], [], color=col, lw=2.0),
+                   '%s,  Q = %.3f' % (nm, qpk * np.sin(ph) ** 2)))
+    hs.append((Line2D([], [], color=GREY, lw=1.3, ls=(0, (6, 3))),
+               u'M$_{req}$ = M$_{pk}$ / sin\u03b8, in the colour of its phase'))
+    hs.append((Line2D([], [], color=GRN, lw=1.6, ls=(0, (3, 2.4))),
+               'M$_Z$: capacitive boundary'))
+    hs.append((Line2D([], [], color=GREY, lw=1.4, ls=(0, (1, 2))),
+               u'M$_{\\infty}$ = %.3f' % minf))
+    fig.legend([h for h, _n in hs], [n for _h, n in hs], loc='upper center',
+               ncol=3, fontsize=12, frameon=False, bbox_to_anchor=(0.5, 0.99))
+    foot(fig, 'The gain chart of this design at the six line conditions, '
+              'low to high. The curves never change; only the required-gain '
+              'lines move, up at low input and down at high input. Each '
+              'curve is read against the dashed line of its own colour.')
     save(fig, 'an_gain_design')
