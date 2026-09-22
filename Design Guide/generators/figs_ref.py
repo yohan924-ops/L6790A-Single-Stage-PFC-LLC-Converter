@@ -1310,8 +1310,11 @@ def an_core_section(save, foot):
     def fcol(k):
         return 'NS2' if k < NL else 'NS3'
 
-    fig = plt.figure(figsize=(9.3, 5.9))
-    S1, S2 = 17.2, 7.7                       # mm per inch on the two scaled panels
+    #  The figure is drawn 15 % smaller than the page column it fills, so
+    #  everything on it - core, winding and lettering - prints 15 % larger
+    #  (2026-09-22, user: the drawing and its text were too small).
+    fig = plt.figure(figsize=(9.3 / 1.15, 5.9 / 1.15))
+    S1, S2 = 17.2 * 1.15, 7.7 * 1.15         # mm per inch on the two scaled panels
     ax = _mm_ax(fig, [0.006, 0.033, 0.425, 0.934], 1.5, -3.0, S1)
     ax2 = _mm_ax(fig, [0.440, 0.500, 0.550, 0.470], 17.7, 2.0, S2)
     ax3 = fig.add_axes([0.440, 0.033, 0.550, 0.420])
@@ -1452,7 +1455,7 @@ def an_core_section(save, foot):
     #  Twelve foil layers on the bobbin, grouped into the four turns:
     #  NS2 first, NS3 on top of it.  Each turn is NF foils wound
     #  together and connected in parallel at the pins.
-    X0, X1 = 3.2, 5.3                       # foil, left and right edge
+    X0, X1 = 3.6, 5.5                       # foil, left and right edge
     HC, HI = 0.20, 0.07                     # copper and insulation, drawn
     Y0 = 0.70
     ax3.text(0.0, 4.72, 'the secondary, layer by layer  (not to scale)',
@@ -1495,20 +1498,20 @@ def an_core_section(save, foot):
                  zorder=8, linespacing=1.3)
     #  what one turn is, said once at the first turn
     ym = Y0 + (NF // 2) * (HC + HI) + HC / 2
-    ax3.annotate('one turn = %d foils %.2f × %.1f mm,\nwound together, '
+    ax3.annotate('one turn = %d foils\n%.2f × %.1f mm, wound together,\n'
                  'connected in parallel' % (NF, w['t_foil'], w['w_foil']),
-                 xy=(X1, ym), xytext=(X1 + 0.35, ym + 0.05),
+                 xy=(X1, ym), xytext=(X1 + 0.3, ym + 0.05),
                  fontsize=8.0, color=EDG['NS2'], ha='left', va='center',
                  zorder=9, linespacing=1.3,
                  arrowprops=dict(arrowstyle='-', color=EDG['NS2'], lw=0.6,
                                  shrinkA=1, shrinkB=1))
     yi = Y0 + (NL + 1) * (HC + HI) - HI / 2
     ax3.annotate('%.2f mm insulation between foils' % _C.T_FOIL_INS,
-                 xy=(X1, yi), xytext=(X1 + 0.35, yi + 0.55), fontsize=8.0,
+                 xy=(X1, yi), xytext=(X1 + 0.3, yi + 0.55), fontsize=8.0,
                  color=GREY, ha='left', va='center', zorder=9,
                  arrowprops=dict(arrowstyle='-', color=GREY, lw=0.6,
                                  shrinkA=1, shrinkB=1))
-    ax3.text(X1 + 0.35, YT + 0.02, 'radial build %.1f mm' % w['build_s'],
+    ax3.text(X1 + 0.3, YT + 0.02, 'radial build %.1f mm' % w['build_s'],
              ha='left', va='center', fontsize=8.0, color=GREY, zorder=8)
 
     foot(fig, 'Drawn to scale from the TDK %s datasheets, core %s and coil '
@@ -1518,6 +1521,62 @@ def an_core_section(save, foot):
               % (NAME, M['core'], M['former'], _C.J_CU, _C.K_LITZ,
                  _C.T_FOIL, _C.MARGIN))
     save(fig, 'an_core_section')
+
+
+# ------------------------------------------------- the voltage loop as blocks
+def an_loop_blocks(save, foot):
+    """The voltage loop drawn as blocks, so the reader sees what is the
+    compensator and what is the plant before either is written as an
+    equation.  Plain axes (not aspect-equal): there is no wiring here for
+    the topology check to read, only boxes and arrows."""
+    from matplotlib.patches import FancyBboxPatch
+    fig, ax = plt.subplots(figsize=(9.3, 3.1))
+    ax.set_xlim(0, 100)
+    ax.set_ylim(0, 32)
+    ax.axis('off')
+    GRN2 = '#2d7a4c'
+    boxes = [(2,  'output\ndivider\nR$_I$, R$_O$', NAVY),
+             (16, 'TL431 with\nR$_F$, C$_F$, C$_{Fo}$', NAVY),
+             (30, 'optocoupler\nCTR', NAVY),
+             (44, 'FB pin\nR$_{FB}$, C$_{fx}$', NAVY),
+             (60, 'controller\n(power\ncommand)', GRN2),
+             (74, 'converter\nP$_{in}$', GRN2),
+             (88, 'C$_{out}$', GRN2)]
+    W, H, Y = 11.0, 11.0, 10.0
+    for x, t, c in boxes:
+        ax.add_patch(FancyBboxPatch((x, Y), W, H, boxstyle='round,pad=0.4',
+                                    fc='white', ec=c, lw=1.4, zorder=3))
+        ax.text(x + W / 2, Y + H / 2, t, ha='center', va='center',
+                fontsize=8.4, color=c, zorder=4, linespacing=1.25)
+    for (x0, _, _), (x1, _, _) in zip(boxes[:-1], boxes[1:]):
+        ax.annotate('', xy=(x1 - 0.4, Y + H / 2), xytext=(x0 + W + 0.4, Y + H / 2),
+                    arrowprops=dict(arrowstyle='-|>', color=GREY, lw=1.1),
+                    zorder=2)
+    #  what travels on each arrow, written above the gap
+    for (x0, _, _), t in zip(boxes[:-1], ('v$_{out}$', 'I$_{LED}$', 'I$_{FB}$',
+                                          'v$_{FB}$', 'P$_{in}$', 'i$_{out}$')):
+        ax.text(x0 + W + 1.5, Y + H + 0.5, t, ha='center', va='bottom',
+                fontsize=8.2, color=GREY, zorder=4)
+    #  the return path: v_out from C_out back to the divider, drawn as a
+    #  polyline under the row so nothing is clipped
+    xr, xl, yb = 88 + W / 2, 2 + W / 2, 4.0
+    ax.plot([xr, xr, xl], [Y - 0.4, yb, yb], color=GREY, lw=1.1, zorder=2)
+    ax.annotate('', xy=(xl, Y - 0.4), xytext=(xl, yb),
+                arrowprops=dict(arrowstyle='-|>', color=GREY, lw=1.1), zorder=2)
+    ax.text(50, yb + 1.3, 'v$_{out}$  is measured and fed back', ha='center',
+            va='bottom', fontsize=8.6, color=GREY, zorder=4,
+            path_effects=HALO)
+    #  the two brackets
+    for x0, x1, t, c in ((2, 44 + W, 'compensator  G$_{EA}$(s)  =  v$_{FB}$ / v$_{out}$', NAVY),
+                         (60, 88 + W, 'plant  G$_{plant}$(s)  =  v$_{out}$ / v$_{FB}$  =  G$_o$ / s', GRN2)):
+        yk = Y + H + 3.2
+        ax.plot([x0, x0, x1, x1], [yk - 0.9, yk, yk, yk - 0.9], color=c, lw=1.2,
+                zorder=3)
+        ax.text((x0 + x1) / 2, yk + 1.0, t, ha='center', va='bottom',
+                fontsize=9.2, color=c, zorder=4)
+    foot(fig, 'The voltage loop as blocks. The loop gain T(s) is the product '
+              'of the two brackets.')
+    save(fig, 'an_loop_blocks')
 
 
 # ------------------------------------------- 14  flyback against the LLC
@@ -2423,5 +2482,6 @@ FIGS = {'an_rac': an_rac, 'an_integrated': an_integrated,
         'an_cap_ind': an_cap_ind, 'an_loadshift': an_loadshift,
         'an_peakgain': an_peakgain, 'an_recovery': an_recovery,
         'an_core_section': an_core_section,
+        'an_loop_blocks': an_loop_blocks,
         'an_flyback_llc': an_flyback_llc, 'an_mmf': an_mmf,
         'an_xfmr_read': an_xfmr_read, 'an_xfmr_pins': an_xfmr_pins}

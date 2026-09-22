@@ -832,6 +832,7 @@ def _loop_bode(T, name):
     PM = np.degrees(np.arctan(w / wz) - np.arctan(w / wp)
                     - np.arctan(w / wpx))
     fc, pm, fl2 = g('f.cross'), g('\u03a6.act'), 2 * R['fl_min']
+    f180, gm = g('f.180'), g('GM')
 
     fig, (a1, a2) = plt.subplots(2, 1, figsize=(7.6, 5.9), sharex=True,
                                  gridspec_kw={'height_ratios': [1.2, 1]})
@@ -845,7 +846,12 @@ def _loop_bode(T, name):
     for a in (a1, a2):
         a.axvline(fc, color=YEL, lw=2.2, zorder=1)
         a.axvline(fl2, color=GREY, lw=1.1, ls=':')
+        a.axvline(f180, color='#2d7a4c', lw=1.1, ls='-.')
         a.set_xlim(1, 2000)
+    #  the gain margin is read where the phase reaches -180 deg: |T| there,
+    #  below 0 dB, is the margin
+    note(a2, f180 * 1.25, 62, T['gm'] % (f180, gm), color='#2d7a4c',
+         size=9.5)
     a1.set_ylim(-45, 55)
     a2.set_ylim(0, 95)
     note(a1, fc * 1.4, 40, T['fc'] % fc, color=NAVY, size=10.5)
@@ -1003,6 +1009,7 @@ _LOOP_BODE_KO = {
     'fc':     '교차 %.1f Hz',
     'pm':     '$\\Phi_M$ = %.1f°  (0 dB 에서)\n합격선 45°',
     'fl2':    '$2f_l$ = %d Hz\n여기 이득이 3차 고조파를 정한다',
+    'gm':     'arg T = $-$180° at %.0f Hz\n이득 여유 %.0f dB',
     'ask':    '루프는 $2f_l$ 리플을 따라가면 안 된다 — 그래서 %.0f Hz 에서 교차한다',
     'foot':   '선정 보상망의 개루프 이득. 교차를 더 올리면 루프가 출력 리플을 좇아 '
               '입력 전류에 3차 고조파가 실린다. 시트 16.6 과 같은 식.',
@@ -1014,6 +1021,7 @@ _LOOP_BODE_EN = {
     'fc':     'crossover %.1f Hz',
     'pm':     '$\\Phi_M$ = %.1f°  at 0 dB\nlimit 45°',
     'fl2':    '$2f_l$ = %d Hz\nthe gain here sets the 3rd harmonic',
+    'gm':     'arg T = $-$180° at %.0f Hz\ngain margin %.0f dB',
     'ask':    'The loop must NOT follow the $2f_l$ ripple - hence a %.0f Hz crossover',
     'foot':   'Open-loop gain of the selected compensation network. Raising '
               'the crossover makes the loop chase the output ripple and puts '

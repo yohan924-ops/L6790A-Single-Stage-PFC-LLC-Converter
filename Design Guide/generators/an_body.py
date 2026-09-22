@@ -137,7 +137,7 @@ def build(A):
           'efficiency is not a strong point. And the design does not come from '
           'a duty-cycle expression: it comes from the gain curve, which is '
           'what the rest of this section is about.'))
-    add(h2('Why resonance buys anything'))
+    add(h2('What resonance is for'))
     add(p('In a hard-switched converter a switch turns on with the full input '
           'voltage across it, so the energy stored in its output capacitance '
           'is lost in the channel every cycle. That loss grows with '
@@ -410,8 +410,8 @@ def build(A):
           'dominate and the current <i>lags</i>: the bridge is driving '
           'something that behaves like an inductor. The word describes the '
           'load the bridge works into, not a part.'))
-    add(p('That phase is the whole of soft switching, which is why the '
-          'distinction matters more than it sounds:'))
+    add(p('That phase decides whether the switching is soft or hard, which '
+          'is why the distinction matters:'))
     add(fig('an_cap_ind',
             'The same converter on either side of the boundary. Above: where '
             'the boundary sits on the gain curve. Note that it is not at the '
@@ -489,7 +489,7 @@ def build(A):
         'When the diode finally does snap off, the di/dt in the loop '
         'inductance appears across it as overshoot, which is what actually '
         'breaks the part.']))
-    add(note('<b>This is the reason the AN asks for a fast-recovery body '
+    add(note('<b>This is the reason this note asks for a fast-recovery body '
              'diode on the primary</b> (Section&nbsp;%(ref)s). A '
              'superjunction device stores a great deal of charge in a body '
              'diode that was never designed to be commutated, and in a full '
@@ -794,7 +794,7 @@ def build(A):
              'equipment on the same supply, which is why they are regulated. '
              'IEC&nbsp;61000-3-2 sets the limits, and the limit depends on '
              'the class. A mains rectifier of this kind is Class&nbsp;D: '
-             'exempt below 75&nbsp;W, and held to a milliamp-per-watt line '
+             'exempt below 75&nbsp;W, and limited in milliamps per watt '
              'above it. <b>But Class&nbsp;D only reaches 600&nbsp;W</b>; a '
              'supply above that falls under the absolute Class&nbsp;A '
              'limits. Settle the class first.'))
@@ -834,7 +834,7 @@ def build(A):
              'then the <i>only</i> loop, its output is a power command, and '
              'any 2f<sub>l</sub> ripple that gets through it becomes input '
              'current distortion directly. That is '
-             'Section&nbsp;' + SR('Voltage loop and compensation') + '.'))
+             'Section&nbsp;' + SR('Why the crossover must be low: the 2f<sub>l</sub> ripple') + '.'))
     add(p('The corrector delivers what was asked for, and creates a new '
           'problem in doing so. A current that follows the voltage means an '
           'input power that follows sin&sup2;&thinsp;&theta;: zero twice per '
@@ -862,8 +862,8 @@ def build(A):
           'times a second. What that costs, and why it works anyway, is the '
           'rest of this note.'))
     add(h1('Why single stage, and what it costs'))
-    add(note('<b>Two steps of that recipe are the ones this converter '
-             'breaks.</b> Step&nbsp;1 has no nominal point to settle at, '
+    add(note('<b>Two steps of that standard sequence are the ones this '
+             'converter breaks.</b> Step&nbsp;1 has no nominal point to settle at, '
              'because the input sweeps a half sine; and step&nbsp;2 asks for '
              'a gain range that no single tank can cover, which is why the '
              'bridge itself has to change. Sections&nbsp;'
@@ -923,7 +923,7 @@ def build(A):
           'it. The ripple is set by the bank and the load, not by the control '
           'loop, and it cannot be regulated away &mdash; attempting that puts '
           'distortion on the input current instead (Section&nbsp;'
-          + SR('Voltage loop and compensation')
+          + SR('Why the crossover must be low: the 2f<sub>l</sub> ripple')
           + '). <b>How tight the figure has to be is a property of the '
             'load, not of the converter</b>, and it has to come from the '
             'specification rather than from a design rule; the worked '
@@ -1571,7 +1571,7 @@ def build(A):
              'first: the real peak is B<sub>pk</sub>&thinsp;A<sub>e</sub>/'
              'A<sub>min</sub>. Both numbers are in the datasheet, and only '
              'one of them is usually used.'))
-    add(p('In a <b>single-stage PF LLC there is a third condition, and it is '
+    add(p('In a <b>single-stage PFC LLC there is a third condition, and it is '
           'normally the one that decides</b>: the leakage inductance has to '
           'come out at L<sub>r</sub>. Written as a fraction of what a meter '
           'reads at the primary,'))
@@ -1645,7 +1645,7 @@ def build(A):
     add(p('J is an assumption, not a constant: 4 to 5&nbsp;A/mm&sup2; is '
           'usual for a transformer of this size in free air, less if it is '
           'enclosed. k<sub>u</sub> is the window utilisation, and it is '
-          'brutal &mdash; round wire in a round bundle, insulation, the '
+          'small &mdash; round wire in a round bundle, insulation, the '
           'bobbin wall, the margins and the layer-to-layer tape leave '
           '<b>0.3 or less</b> of the window as copper when the wire is '
           'Litz. Sizing on bare copper alone overstates what fits by three '
@@ -1925,81 +1925,302 @@ def build(A):
           'after.' % {}))
 
     add(h2('Voltage loop and compensation'))
+    add(p('The voltage loop holds the output at its set point. It is the '
+          'chain of Figure&nbsp;%(f)s. A divider measures the output. A '
+          'TL431 compares the divided voltage with its reference and drives '
+          'the LED of an optocoupler. The optocoupler transistor pulls the '
+          'FB pin of the controller. The FB voltage is the power command of '
+          'Section&nbsp;%(s)s, the converter delivers that power into the '
+          'output capacitor, and the output voltage closes the loop.'
+          % dict(f=FR('an_loop_blocks'),
+                 s=SR('The feedback pin is a power command'))))
+    add(fig('an_loop_blocks',
+            'The voltage loop as blocks. Everything left of the FB pin is '
+            'the compensator G<sub>EA</sub>(s); everything right of it is '
+            'the plant G<sub>plant</sub>(s). The loop gain is T(s) = '
+            'G<sub>plant</sub>(s)&nbsp;G<sub>EA</sub>(s).'))
+    add(p('<b>The plant.</b> The converter delivers the power the FB pin '
+          'commands, and that power goes into a capacitor. A change of the '
+          'FB voltage changes the power in proportion. The power divided by '
+          'the output voltage is the current into C<sub>out</sub>. A current '
+          'into a capacitor gives a voltage that keeps rising for as long as '
+          'the current flows. So the plant is an <b>integrator</b>:'))
+    add(eq(r'G_{plant}(s)=\frac{v_{out}(s)}{v_{FB}(s)}=\frac{G_{o}}{s},'
+           r'\qquad G_{o}=\frac{P_{out}}{V_{out}\,V_{FB}\,C_{out}}'
+           r'\quad[\mathrm{rad/s}]', key='Gplant'))
+    add(p('V<sub>FB</sub> is the feedback voltage above its 0.5&nbsp;V '
+          'offset at rated power (Equation&nbsp;%(e)s), so '
+          'P<sub>out</sub>/V<sub>FB</sub> is the slope of the power command. '
+          'An integrator has a gain that falls by 20&nbsp;dB per decade and '
+          'a phase of &minus;90&deg; at every frequency. On its own it would '
+          'cross 0&nbsp;dB at f<sub>cto</sub> = G<sub>o</sub>/2&pi;. There '
+          'is no second pole and no right-half-plane zero. That makes this '
+          'loop easy to stabilise. What makes it hard to place is the '
+          'output ripple, in Section&nbsp;%(r)s.'
+          % dict(e=ER('VFB'),
+                 r=SR('Why the crossover must be low: the 2f<sub>l</sub> ripple'))))
+
+    add(h2('What the loop must achieve, and what goes wrong when it does not'))
+    add(p('Three numbers are read from the Bode plot of the loop gain '
+          'T(s): the <b>crossover frequency</b> f<sub>c</sub>, where |T| = 1 '
+          '(0&nbsp;dB); the <b>phase margin</b>, which is 180&deg; + '
+          'arg&nbsp;T at f<sub>c</sub>; and the <b>gain margin</b>, which is '
+          'how far |T| is below 0&nbsp;dB at the frequency f<sub>180</sub> '
+          'where arg&nbsp;T reaches &minus;180&deg;. Table&nbsp;%(t)s says '
+          'what each one should be and what happens when it is not.'
+          % dict(t=TR('loop-aims'))))
+    add(tbl('What the loop must achieve.',
+            [['Quantity', 'Aim', 'If it is too low', 'If it is too high'],
+             ['Crossover f<sub>c</sub>',
+              '15 to 20 Hz in this converter (Section&nbsp;%s). The general '
+              'rules are below f<sub>sw</sub>/5 and below the ripple '
+              'frequency the loop must not follow.'
+              % SR('Why the crossover must be low: the 2f<sub>l</sub> ripple'),
+              'The loop is slow. The output dips further and recovers '
+              'later after a load step or a morphing transition.',
+              'The loop follows the 2f<sub>l</sub> output ripple. The '
+              'power command, and so the input current, is modulated at '
+              '2f<sub>l</sub>: third harmonic on the input current, and '
+              'chatter across the burst threshold.'],
+             ['Phase margin &Phi;<sub>M</sub>',
+              '45&deg; is the floor; 50 to 60&deg; is the target. At 76&deg; '
+              'the step response has no overshoot; at 45&deg; it rings '
+              '(Q &asymp; 1.2) [onsemi TND381].',
+              'Ringing after every disturbance. At 0&deg; the loop '
+              'oscillates at f<sub>c</sub>.',
+              'The response is over-damped and slow. Not a fault, but no '
+              'longer free: the crossover has to drop to get it.'],
+             ['Gain margin GM',
+              '6 dB is the floor; 10 dB is comfortable.',
+              'Part spread moves |T| up. The optocoupler CTR alone spreads '
+              'by 2:1 over bins, current and temperature; a loop with a '
+              'small gain margin oscillates at f<sub>180</sub> on a warm '
+              'board with a high-CTR part.',
+              '&mdash;'],
+             ['G<sub>EA</sub> at 2f<sub>l</sub>',
+              'At or below the value that keeps the third harmonic inside '
+              'its budget (Equation&nbsp;%s).' % ER('GEAreq'),
+              'Nothing wrong with the loop; the crossover is lower than it '
+              'needs to be.',
+              'Third harmonic above budget, burst chatter.']],
+            widths=[CW * 0.16, CW * 0.30, CW * 0.27, CW * 0.27],
+            key='loop-aims'))
+
+    add(h2('Why the crossover must be low: the 2f<sub>l</sub> ripple'))
+    add(p('The output carries a ripple at twice the line frequency, '
+          'because the input power pulses at 2f<sub>l</sub> and the '
+          'capacitor buffers the difference (Section&nbsp;%(s)s). Its '
+          'peak-to-peak value is'
+          % dict(s=SR('The energy a unity power factor cannot deliver'))))
+    add(eq(r'\Delta V_{loop}=\frac{P_{out}}{V_{out}}\,\frac{1}{2\pi f_{l}\,C_{out}}',
+           key='dVloop'))
+    add(p('The compensator passes a fraction G<sub>EA</sub>(2f<sub>l</sub>) '
+          'of that ripple to the FB pin. The FB pin is a power command, so '
+          'a ripple on it makes the input power, and the input current, '
+          'swing at 2f<sub>l</sub> over the line cycle. A sine wave whose '
+          'amplitude is modulated at twice its own frequency gains a '
+          'third harmonic. The ripple amplitude is half the peak-to-peak '
+          'value, and a modulation of the command by a fraction m puts '
+          'm/2 into the third harmonic, so'))
+    add(eq(r'D_{3}=\frac{G_{EA}(2f_{l})\,\Delta V_{loop}}{4\,V_{FB}}',
+           key='D3'))
+    add(p('Turned around, the third-harmonic budget D<sub>3</sub> fixes '
+          'the largest compensator gain the loop may have at '
+          '2f<sub>l</sub>:'))
+    add(eq(r'G_{EA}(2f_{l})\;\leq\;\frac{4\,V_{FB}\,D_{3}}{\Delta V_{loop}}',
+           key='GEAreq'))
+    add(p('The compensator gain falls with frequency, so a small gain at '
+          '2f<sub>l</sub> means a crossover well below 2f<sub>l</sub>. With '
+          '5&nbsp;% of third harmonic allowed this lands at 15 to '
+          '20&nbsp;Hz. A faster loop would give less output ripple and a '
+          'quicker load-step response, and it would put more distortion on '
+          'the input current. The two pull in opposite directions, and the '
+          'distortion limit wins. This is the ripple rejection every '
+          'power-factor corrector needs; onsemi TND381 calls the failure '
+          '&ldquo;tail chasing&rdquo;.'))
+
+    add(h2('The compensator: TL431, optocoupler and the FB pin'))
     add(fig('comp_network_st',
-            'The secondary-side error amplifier and the optocoupler. '
-            'R<sub>I</sub> and R<sub>O</sub> set the regulated output, '
-            'R<sub>f</sub>C<sub>f</sub> and C<sub>fo</sub> shape the '
-            'compensator, and R<sub>P</sub> and R<sub>B</sub> bias the shunt '
-            'regulator and the optocoupler diode.'))
-    add(p('The output is a capacitor fed by a constant-power source, so the '
-          'control-to-output transfer is a <b>pure integrator</b>: '
-          '&minus;90&deg; at every frequency. That makes the loop easy to '
-          'stabilise but hard to place, because the crossover frequency is '
-          'set by a constraint that has nothing to do with stability.'))
-    add(p('Any 2f<sub>l</sub> ripple that survives the loop and reaches the '
-          'feedback pin becomes a power command that varies over the line '
-          'cycle, and therefore input current distortion &mdash; mostly third '
-          'harmonic. Raising the crossover reduces output ripple and '
-          '<b>increases</b> distortion. The two constraints pull in opposite '
-          'directions, and the practical answer is a crossover between 15 and '
-          '20&nbsp;Hz.'))
-    add(p('The compensator is a Type&nbsp;II network placed by the Venable '
-          'K-factor method. With &alpha;<sub>v</sub> the ratio between the '
-          'error-amplifier gain at 2f<sub>l</sub> and the gain the loop needs '
-          'there,'))
+            'The compensator on the secondary side. R<sub>I</sub> and '
+            'R<sub>O</sub> set the regulated output; the TL431 is the error '
+            'amplifier; R<sub>f</sub>, C<sub>f</sub> and C<sub>fo</sub> '
+            'shape its gain; R<sub>B</sub> feeds the optocoupler LED from '
+            'the regulated V<sub>Z</sub> rail; R<sub>P</sub> keeps the TL431 '
+            'above its minimum current; C<sub>fx</sub> sits on the FB pin.'))
+    add(p('<b>How it works.</b> The divider R<sub>I</sub>, R<sub>O</sub> '
+          'brings the output down to the TL431 reference '
+          'V<sub>R</sub>&nbsp;=&nbsp;2.495&nbsp;V:'))
+    add(eq(r'V_{out}=V_{R}\left(1+\frac{R_{I}}{R_{O}}\right)', key='RoVout'))
+    add(p('When the output rises above the set point the TL431 sinks more '
+          'current from its cathode. That current flows through the '
+          'optocoupler LED, which is fed by R<sub>B</sub> from a regulated '
+          'rail V<sub>Z</sub>. The optocoupler transistor then pulls the FB '
+          'pin down against the pull-up R<sub>FB</sub> inside the '
+          'controller, the power command falls, and the output comes back. '
+          'R<sub>P</sub> in parallel with the LED carries the minimum '
+          'cathode current the TL431 needs to work as an amplifier, so it '
+          'has an upper limit:'))
+    add(eq(r'R_{P}\leq\frac{V_{Fo}}{I_{min}}', key='RPmax'))
+    add(p('Because the LED is fed from V<sub>Z</sub> and not from the output, '
+          'the output ripple reaches the LED only through the TL431. There '
+          'is no second path (what TND381 calls the &ldquo;fast '
+          'lane&rdquo;), and the compensator is the TL431 network alone.'))
+    add(p('<b>Its transfer function</b> from the output to the FB pin is a '
+          'Type&nbsp;II network with one more pole:'))
+    add(eq(r'G_{EA}(s)=\frac{EA_{o}}{s}\cdot'
+           r'\frac{1+s/\omega_{z}}{(1+s/\omega_{p})(1+s/\omega_{px})}',
+           key='GEAtf'))
+    add(eq([r'EA_{o}=\frac{CTR\;R_{FB}}{(C_{F}+C_{Fo})\,R_{I}\,R_{B}}\quad[\mathrm{rad/s}],'
+            r'\qquad f_{z}=\frac{1}{2\pi R_{F}C_{F}}',
+            r'f_{p}=\frac{1}{2\pi R_{F}C_{ser}},\quad C_{ser}=\frac{C_{F}C_{Fo}}{C_{F}+C_{Fo}},'
+            r'\qquad f_{px}=\frac{1}{2\pi R_{FB}\,(C_{opto}+C_{fx})}'],
+           key='fzp'))
+    add(p('Each part has one job. C<sub>F</sub> and C<sub>Fo</sub> together '
+          'make the pole at the origin: the gain keeps rising toward dc, so '
+          'the static error is zero. R<sub>F</sub> with C<sub>F</sub> makes '
+          'the zero f<sub>z</sub>: above it the phase comes back up, and '
+          'that is where the phase margin comes from. C<sub>Fo</sub> with '
+          'R<sub>F</sub> makes the pole f<sub>p</sub>: above it the gain '
+          'falls at 40&nbsp;dB per decade again, so the gain at '
+          '2f<sub>l</sub> is small. The optocoupler capacitance '
+          'C<sub>opto</sub> with R<sub>FB</sub> makes a third pole, and '
+          'C<sub>fx</sub> is added to put it at about a kilohertz where it '
+          'removes switching noise from the FB pin. The optocoupler CTR '
+          'multiplies the whole gain, which is why its spread matters.'))
+    add(p('<b>The bias window.</b> The datasheet gives a window for '
+          'R<sub>B</sub>. The LED must be able to drive the FB pin at its '
+          'steady-state current with the lowest CTR (upper bound), and must '
+          'not push the pin past its maximum current with the highest CTR '
+          'when the TL431 is fully on (lower bound):'))
+    add(eq([r'R_{B,max}=\frac{V_{Z}-(V_{R}+V_{Fo})}'
+            r'{V_{Fo}/R_{P}+I_{FB,steady}/CTR_{s}}',
+            r'R_{B,min}=\frac{V_{Z}-(V_{R}+V_{Fo})}'
+            r'{V_{Fo}/R_{P}+I_{FB,max}/CTR_{m}}'], key='RBwin'))
+    add(note('<b>Two currents, two CTR values.</b> The gain EA<sub>o</sub> '
+             'is computed with the CTR at the steady-state LED current, '
+             'CTR<sub>s</sub>. The lower bound of R<sub>B</sub> uses the '
+             'CTR at the maximum LED current, CTR<sub>m</sub>, which is '
+             'higher because CTR rises with current. Take both from the '
+             'optocoupler datasheet for the bin that will be fitted, and '
+             'check the loop again with the CTR at the top of the bin: the '
+             'crossover moves up with the square root of CTR and the phase '
+             'margin comes down.'))
+
+    add(h2('Placing the zero and the pole: the K-factor method'))
+    add(p('The compensator has three things to set: its gain '
+          'EA<sub>o</sub>, its zero and its pole. The Venable K-factor '
+          'method sets them from two targets, the phase margin '
+          '&Phi;<sub>M</sub> and the gain the loop is allowed at '
+          '2f<sub>l</sub>. First a spread factor K<sub>v</sub> is computed '
+          'from the phase margin, with &alpha;<sub>v</sub> a weighting '
+          'constant of the method (1.2 in the ST tool):'))
     add(eq(r'K_{v}=\frac{1}{2\alpha_{v}}\left[(1+\alpha_{v}^{2})\tan\Phi_{M}'
            r'+\sqrt{(1+\alpha_{v}^{2}\tan\Phi_{M})^{2}'
            r'+4\alpha_{v}^{2}}\;\right]', key='Kv'))
-    add(p('K<sub>v</sub> puts the zero and the pole the same factor below '
-          'and above the crossover. That places the phase boost where it '
-          'is needed:'))
+    add(p('The zero goes a factor K<sub>v</sub> below the crossover and the '
+          'pole the same factor above it. Above the pole the compensator '
+          'gain is EA<sub>o</sub>K<sub>v</sub>&sup2;/&omega;, so the gain '
+          'limit at 2f<sub>l</sub> fixes EA<sub>o</sub>:'))
+    add(eq(r'EA_{o}=\frac{2\pi\,(2f_{l})\,G_{EA}(2f_{l})}{K_{v}^{2}}',
+           key='EAotarget'))
+    add(p('The point the zero and pole are placed about follows from the '
+          'plant gain, with &Gamma;<sub>v</sub> = 0.744 '
+          'V<sub>eq,max</sub>/V<sub>eq,min</sub> an input-voltage margin '
+          'factor of the ST tool (its constant is listed in '
+          'Appendix&nbsp;%(a)s as not derived here):'
+          % dict(a=SR('Constants used here without a derivation'))))
     add(eq(r'f_{MB}=\frac{1}{2\pi}\sqrt{\frac{G_{o}K_{v}EA_{o}}{\Gamma_{v}}},'
            r'\qquad f_{p}=K_{v}f_{MB},\qquad f_{z}=\frac{f_{MB}}{K_{v}}', key='fMB'))
-    add(p('f<sub>MB</sub> is the point they sit around: the zero goes below '
-          'it and the pole above it, by the same factor. A third pole '
-          'f<sub>px</sub> is added near a kilohertz to roll off switching '
-          'noise.'))
+    add(p('The parts then follow from Equation&nbsp;%(e)s, solved for each '
+          'one in turn. The high-frequency pole is placed at a chosen '
+          'f<sub>pHF</sub>, and C<sub>fx</sub> is what is left after the '
+          'optocoupler capacitance:' % dict(e=ER('fzp'))))
+    add(eq([r'C_{Fo}=\frac{f_{z}}{f_{p}}\cdot\frac{CTR_{s}\,R_{FB}}{R_{I}R_{B}\,EA_{o}},'
+            r'\qquad C_{F}=C_{Fo}\left(\frac{f_{p}}{f_{z}}-1\right)',
+            r'R_{F}=\frac{1}{2\pi f_{z}C_{F}},'
+            r'\qquad C_{fx}=\frac{1}{2\pi f_{pHF}\,R_{FB}}-C_{opto}'],
+           key='Ccomp'))
+    add(p('Each value is then rounded to a standard part, and the zero, '
+          'pole and gain the standard parts actually give are computed '
+          'back with Equation&nbsp;%(e)s. The loop is checked on those, '
+          'not on the targets.' % dict(e=ER('fzp'))))
+
+    add(h2('Checking the loop: crossover, phase margin and gain margin'))
+    add(p('With the plant of Equation&nbsp;%(a)s and the compensator of '
+          'Equation&nbsp;%(b)s the loop gain is two integrators, one zero '
+          'and two poles. Its magnitude and phase at any frequency are'
+          % dict(a=ER('Gplant'), b=ER('GEAtf'))))
+    add(eq([r'|T(\omega)|=\frac{G_{o}\,EA_{o}}{\omega^{2}}\cdot'
+            r'\frac{\sqrt{1+(\omega/\omega_{z})^{2}}}'
+            r'{\sqrt{1+(\omega/\omega_{p})^{2}}\;\sqrt{1+(\omega/\omega_{px})^{2}}}',
+            r'\arg T(\omega)=-180^{\circ}+\arctan\frac{\omega}{\omega_{z}}'
+            r'-\arctan\frac{\omega}{\omega_{p}}-\arctan\frac{\omega}{\omega_{px}}'],
+           key='Tloop'))
+    add(p('The &minus;180&deg; is the two integrators. Everything after it '
+          'is the compensator&rsquo;s own phase, so the <b>phase margin is '
+          'simply the compensator phase at the crossover</b>. The crossover '
+          'is where |T| = 1. Writing A(&omega;) for the fraction in '
+          'Equation&nbsp;%(t)s, the condition is '
+          '&omega;<sub>c</sub>&sup2; = G<sub>o</sub>EA<sub>o</sub>A(&omega;<sub>c</sub>). '
+          'A(&omega;) changes slowly, so it is solved by repeating'
+          % dict(t=ER('Tloop'))))
+    add(eq(r'\omega_{c}\leftarrow\sqrt{G_{o}\,EA_{o}\,A(\omega_{c})},'
+           r'\qquad\mathrm{starting\ from}\ \ \omega_{c}=\sqrt{G_{o}\,EA_{o}}',
+           key='wc'))
+    add(p('a few times until it stops moving; no solver is needed. The '
+          'phase margin is then'))
+    add(eq(r'\Phi_{M}=\arctan\frac{\omega_{c}}{\omega_{z}}'
+           r'-\arctan\frac{\omega_{c}}{\omega_{p}}'
+           r'-\arctan\frac{\omega_{c}}{\omega_{px}}', key='PMeq'))
 
     add(h2('Gain margin, and why it needs checking'))
-    add(p('Phase margin alone does not prove stability. Above '
-          'f<sub>px</sub> this network has one zero against two poles, so the '
-          'phase heads for &minus;270&deg; and <b>&minus;180&deg; is crossed '
-          'at a finite frequency</b>. That crossing needs no root search '
-          'either: setting the zero and pole phase contributions equal and '
-          'taking the tangent of both sides leaves one square root,'))
+    add(p('Phase margin alone does not prove the loop is safe. Above '
+          'f<sub>px</sub> this network has one zero against two poles, so '
+          'the phase keeps falling toward &minus;270&deg; and '
+          '<b>&minus;180&deg; is crossed at a finite frequency</b>. That '
+          'frequency needs no search either. Setting the phase '
+          'contributions of the zero and the two poles equal and taking the '
+          'tangent of both sides leaves one square root:'))
     add(eq(r'f_{180}=\sqrt{\,f_{p}f_{px}-f_{z}(f_{p}+f_{px})\,}'
            r'\,,\qquad GM=-20\log_{10}|T(f_{180})|', key='f180'))
     add(p('<b>The value under the root is positive whenever the zero sits '
           'well below both poles</b>, which is what the K-factor placement '
-          'gives. If it ever came out negative the loop would not be extra '
-          'safe: the two poles would pull the phase below &minus;180&deg; '
-          'before the zero could lift it, at every frequency, so the phase '
-          'margin at any crossover would be negative. Judge the gain margin '
-          'against 6&nbsp;dB as a floor and '
-          '10&nbsp;dB as a comfortable target. With a crossover in the tens '
-          'of hertz the margin is usually large in this topology &mdash; '
-          'which is a reason to compute it, not a reason to assume it.'))
+          'gives. If it came out negative the loop would not be extra safe: '
+          'the two poles would pull the phase below &minus;180&deg; before '
+          'the zero could lift it, at every frequency, so the phase margin '
+          'at any crossover would be negative. Judge the gain margin '
+          'against 6&nbsp;dB as a floor and 10&nbsp;dB as a comfortable '
+          'target. With a crossover in the tens of hertz the margin is '
+          'usually large in this topology. That is a reason to compute it, '
+          'not a reason to assume it.'))
+    add(p('The gain the standard parts give at 2f<sub>l</sub> is read from '
+          'the same expression, and the third harmonic it causes follows '
+          'from Equation&nbsp;%(d)s. That closes the check: the loop is '
+          'stable, and it also meets the distortion budget it was slowed '
+          'down for.' % dict(d=ER('D3'))))
 
     add(h2('Feedback ripple against the burst threshold'))
-    add(p('A crossover this low leaves 2f<sub>l</sub> ripple on the feedback '
-          'pin. Because that pin is a power command, the ripple moves the '
-          'commanded power up and down every half line cycle; if it crosses '
-          'the burst-entry threshold the converter chatters in and out of '
-          'burst. The ripple amplitude at the burst point is'))
+    add(p('A crossover this low leaves 2f<sub>l</sub> ripple on the '
+          'feedback pin. Because that pin is a power command, the ripple '
+          'moves the commanded power up and down every half line cycle. If '
+          'it crosses the burst-entry threshold the converter chatters in '
+          'and out of burst. The ripple amplitude at the burst point is'))
     add(eq(r'\Delta V_{FB}\;=\;\frac{P_{in,BM}}{V_{out}}\,'
            r'\frac{1}{2\pi f_{l}\,C_{out}}\;G_{EA}(2f_{l})', key='dVFB'))
-    add(p('Lowering R<sub>BM</sub> by &Delta;R<sub>BM</sub> = '
-          '&Delta;V<sub>FB</sub>/(2&nbsp;&times;&nbsp;0.01&nbsp;V/k&Omega;) '
-          'moves the burst entry point below that ripple. <b>Raising the '
-          'crossover would shrink the ripple but worsen the distortion</b>, '
-          'so trading it against R<sub>BM</sub> is the practical answer '
-          'rather than speeding up the loop.'))
-
-    add(note('<b>A loop this slow cannot recover from a large load step.</b> '
-             'The controller&rsquo;s anti-saturation circuit does that '
-             'instead, which is why the optocoupler bias resistor must sit '
-             'inside its permitted window. Checking the window is not '
-             'optional.'))
+    add(p('Lowering R<sub>BM</sub> moves the burst entry point below that '
+          'ripple. The burst threshold moves by 0.01&nbsp;V per k&Omega;, '
+          'and the ripple has to clear it on both sides:'))
+    add(eq(r'\Delta R_{BM}=\frac{\Delta V_{FB}}{2\times 0.01\ \mathrm{V/k\Omega}}',
+           key='dRBM'))
+    add(p('<b>Raising the crossover would shrink the ripple but worsen the '
+          'distortion</b>, so trading it against R<sub>BM</sub> is the '
+          'practical answer rather than speeding up the loop.'))
+    add(note('<b>A loop this slow cannot recover from a large load step '
+             'by itself.</b> The controller&rsquo;s anti-saturation circuit '
+             'does that, and it needs the FB pin to reach its full current '
+             'range. That is why R<sub>B</sub> must sit inside its window '
+             '(Equation&nbsp;%(e)s). Checking the window is not optional.'
+             % dict(e=ER('RBwin'))))
 
     # =============================================================== 6
     add(h1('Design example'))
@@ -2277,7 +2498,7 @@ def build(A):
     add(calc((r'n_{T}=n\sqrt{1+\lambda_{act}}=%.3f\times %.4f=\mathbf{%.3f}'
               % (V['n'], _rt, V['nT']))
              + (r'\ =\ %d:%d' % (V['NpSet'], V['Ns']) if V['nser'] == 1 else
-                r'\ =\ %d:%d\ \text{across the assembly},\ %d:%d\ \text{per unit}'
+                r'\ =\ %d:%d\ \mathrm{across the assembly},\ %d:%d\ \mathrm{per unit}'
                 % (V['NpSet'], V['Ns'], V['Np'], V['Ns']))))
     add(tbl('The design, step by step: the results of the nine steps.',
             [['Step', 'Quantity', 'Eq.', 'Result'],
@@ -2568,7 +2789,7 @@ def build(A):
             'by layer (bottom right, not to scale). Primary and secondary '
             'sit side by side with %(g).2f&nbsp;mm between them. The '
             'circled numbers are the rows of Table&nbsp;%(t)s.'
-            % dict(g=_w['gap'], t=TR('legend42'))))
+            % dict(g=_w['gap'], t=TR('legend42')), shrink=False))
     add(tbl('Items of the figure.',
             [['Mark', 'Item', 'Turns', 'Conductor, placement'],
              ['1', 'NP1 primary, pins %s' % _CORE.pins('NP1', '&ndash;'),
@@ -2694,7 +2915,7 @@ def build(A):
     add(eqagain('Chold'))
     add(calc(r'C_{out}\geq\frac{2\times %.1f\ \mathrm{W}\times %.3f\ \mathrm{s}}'
              r'{%.2f^{2}-%.0f^{2}}=\mathbf{%.2f\ mF}'
-             r'\qquad(\text{started at }V_{out}:\ %.2f\ \mathrm{mF})'
+             r'\qquad(\mathrm{started at }V_{out}:\ %.2f\ \mathrm{mF})'
              % (V['Pout'], V['Thold'] / 1e3, V['Vout'] - V['dVo'] / 2,
                 V['Vomin'], V['Chold'],
                 2 * V['Pout'] * V['Thold'] / 1e3
@@ -2703,7 +2924,7 @@ def build(A):
           'at k = V<sub>o,min</sub>/V<sub>out</sub> = %(k).3f:'
           % dict(k=V['Vomin'] / V['Vout'])))
     add(eqagain('ripscreen'))
-    add(calc(r'%.3f\ >\ %.3f\quad\Longrightarrow\quad\text{ripple decides}'
+    add(calc(r'%.3f\ >\ %.3f\quad\Longrightarrow\quad\mathrm{ripple decides}'
              % (V['ripLHS'], V['ripRHS'])))
     add(p('The two are only %(ripK).3f apart; relaxed to 10&nbsp;%% ripple '
           'the two sides would swap. The bank fitted is the next assembly '
@@ -2816,59 +3037,223 @@ def build(A):
               'check the lead and clip rating, not only the die']],
             widths=[CW * 0.36, CW * 0.64]))
     add(h2('The voltage loop, as built'))
-    add(p('Section&nbsp;%(ref)s gives the method; these are its numbers on '
-          'this converter, in the order they are found.'
-          % dict(V, ref=SR('Voltage loop and compensation'))))
-    add(tbl('The compensator, from the plant to the parts.',
-            [['#', 'Quantity', 'Value', 'From'],
-             ['1', 'Output divider', 'R<sub>I</sub> %(RI).0f k&Omega; / '
-              'R<sub>o</sub> %(Ro).0f k&Omega;'
-              % dict(RI=A.SH['R.I'], Ro=A.SH['R.o']),
-              'sets the regulated output against the '
-              '%(VR).3f V reference' % dict(VR=A.SH['V.R'])],
-             ['2', 'Plant gain G<sub>o</sub>', '%(Go).2f rad/s' % V,
-              'a pure integrator &mdash; the output is a capacitor fed by a '
-              'power source'],
-             ['3', 'Error-amplifier gain needed at 2f<sub>l</sub>',
-              '%(GEA).4f' % dict(GEA=A.SH['G.EA']),
-              'what the loop needs there, against what the amplifier has'],
-             ['4', 'K factor K<sub>v</sub>', '%(Kv).4f' % V,
-              'places the zero and pole symmetrically'],
-             ['5', 'Geometric mean f<sub>MB</sub>', '%(fMB).3f Hz' % V,
-              'the point they are placed about'],
-             ['6', 'Zero / pole', '%(fz).3f / %(fp).3f Hz' % V,
-              'f<sub>MB</sub>/K<sub>v</sub> and K<sub>v</sub>f<sub>MB</sub>'],
-             ['7', 'High-frequency pole f<sub>px</sub>',
-              '%(fpx).1f Hz' % V, 'added to roll off switching noise'],
-             ['8', 'Components', 'C<sub>Fo</sub> %(CFo).0f nF, '
-              'C<sub>F</sub> %(CF).0f nF, R<sub>F</sub> %(RF).0f k&Omega;, '
-              'C<sub>fx</sub> %(Cfx).2f nF' % V,
-              'the nearest standard values to the pole and zero above'],
-             ['9', 'Optocoupler bias', 'R<sub>P</sub> %(RP).1f k&Omega;, '
-              'R<sub>B</sub> %(RB).1f k&Omega;' % V,
-              'R<sub>B</sub> must land inside %(lo).2f to %(hi).2f k&Omega; '
-              'or the anti-saturation circuit cannot act'
-              % dict(lo=A.SH['R.B_min'], hi=A.SH['R.B_max'])]],
-            widths=[CW * 0.05, CW * 0.25, CW * 0.26, CW * 0.44],
-            key='loop-built'))
+    from math import atan, degrees, sqrt, pi
+    _at = lambda w, w0: degrees(atan(w / w0))
+    _A = lambda w: (sqrt(1 + (w / V['wz']) ** 2)
+                    / (sqrt(1 + (w / V['wp']) ** 2) * sqrt(1 + (w / V['wpx']) ** 2)))
+    add(p('Sections&nbsp;%(a)s to %(b)s give the method. These are its '
+          'numbers on this converter, in the order they are found. Every '
+          'value comes from the design sheet.'
+          % dict(a=SR('Voltage loop and compensation'),
+                 b=SR('Feedback ripple against the burst threshold'))))
+    add(p('<b>Step 1 &mdash; the output divider.</b> R<sub>I</sub> is '
+          'chosen as %(RI).0f&nbsp;k&Omega; and R<sub>O</sub> follows from '
+          'Equation&nbsp;%(e)s solved for it:'
+          % dict(V, e=ER('RoVout'))))
+    add(eqagain('RoVout'))
+    add(calc(r'R_{O}=\frac{V_{R}\,R_{I}}{V_{out}-V_{R}}'
+             r'=\frac{%.3f\ \mathrm{V}\times %.0f\ \mathrm{k\Omega}}'
+             r'{%.1f\ \mathrm{V}-%.3f\ \mathrm{V}}=%.2f\ \mathrm{k\Omega}'
+             r'\;\rightarrow\;\mathbf{%.0f\ k\Omega}'
+             % (V['VR'], V['RI'], V['Vout'], V['VR'], V['Roc'], V['Ro'])))
+    add(calc(r'V_{out}=%.3f\ \mathrm{V}\times\left(1+\frac{%.0f}{%.0f}\right)'
+             r'=\mathbf{%.2f\ V}' % (V['VR'], V['RI'], V['Ro'], V['VoutAct'])))
+    add(p('<b>Step 2 &mdash; the plant.</b> The feedback voltage above its '
+          'offset at rated power is V<sub>FB</sub> = K<sub>pwr</sub> '
+          'R<sub>CS</sub> P<sub>in,LLC</sub> = %(Kpwr).3f &times; '
+          '%(RCS).0f&nbsp;m&Omega; &times; %(PinLLC).1f&nbsp;W = '
+          '%(VFBv).3f&nbsp;V (Equation&nbsp;%(e)s). Then'
+          % dict(V, PinLLC=V['Pout'] / (V['etaHB'] / 100.0), RCSo=V['RCS'] / 1e3,
+                 e=ER('VFB'))))
+    add(eqagain('Gplant'))
+    add(calc(r'G_{o}=\frac{%.1f\ \mathrm{W}}{%.1f\ \mathrm{V}\times %.3f\ \mathrm{V}'
+             r'\times %.1f\ \mathrm{mF}}=\mathbf{%.1f\ rad/s},\qquad'
+             r'f_{cto}=\frac{%.1f}{2\pi}=%.1f\ \mathrm{Hz}'
+             % (V['Pout'], V['Vout'], V['VFBv'], V['Cout'], V['Go'], V['Go'],
+                V['fcto'])))
+    add(p('<b>Step 3 &mdash; the gain the loop may have at '
+          '2f<sub>l</sub>.</b> The output ripple at the lowest line '
+          'frequency, and the compensator gain that keeps the third '
+          'harmonic at %(D3set).0f&nbsp;%%:' % V))
+    add(eqagain('dVloop'))
+    add(calc(r'\Delta V_{loop}=\frac{%.1f\ \mathrm{W}}{%.1f\ \mathrm{V}}\cdot'
+             r'\frac{1}{2\pi\times %.0f\ \mathrm{Hz}\times %.1f\ \mathrm{mF}}'
+             r'=\mathbf{%.3f\ V}' % (V['Pout'], V['Vout'], V['flmin'], V['Cout'],
+                                     V['dVloop'])))
+    add(eqagain('GEAreq'))
+    add(calc(r'G_{EA}(2f_{l})\leq\frac{4\times %.3f\ \mathrm{V}\times %.2f}'
+             r'{%.3f\ \mathrm{V}}=\mathbf{%.4f}'
+             % (V['VFBv'], V['D3set'] / 100.0, V['dVloop'], V['GEAreq'])))
+    add(p('<b>Step 4 &mdash; the K factor</b>, for a target phase margin of '
+          '%(PhiM).0f&deg; (tan&nbsp;%(PhiM).0f&deg; = %(tPM).4f) and '
+          '&alpha;<sub>v</sub> = %(alphav).1f:' % V))
+    add(eqagain('Kv'))
+    add(calc(r'K_{v}=\frac{1}{2\times %.1f}\left[(1+%.1f^{2})\times %.4f'
+             r'+\sqrt{(1+%.1f^{2}\times %.4f)^{2}+4\times %.1f^{2}}\right]'
+             r'=\mathbf{%.4f}'
+             % (V['alphav'], V['alphav'], V['tPM'], V['alphav'], V['tPM'],
+                V['alphav'], V['Kv'])))
+    add(p('<b>Step 5 &mdash; the compensator gain constant:</b>'))
+    add(eqagain('EAotarget'))
+    add(calc(r'EA_{o}=\frac{2\pi\times %.0f\ \mathrm{Hz}\times %.4f}{%.4f^{2}}'
+             r'=\mathbf{%.2f\ rad/s}'
+             % (2 * V['flmin'], V['GEAreq'], V['Kv'], V['EAo'])))
+    add(p('<b>Step 6 &mdash; where the zero and pole go.</b> With '
+          '&Gamma;<sub>v</sub> = 0.744 &times; %(Veqhi).1f / %(Veqlo).2f = '
+          '%(Gammav).4f:' % dict(V, Veqhi=V['Vacmax'])))
+    add(eqagain('fMB'))
+    add(calc([r'f_{MB}=\frac{1}{2\pi}\sqrt{\frac{%.2f\times %.4f\times %.2f}{%.4f}}'
+              r'=\mathbf{%.2f\ Hz}'
+              % (V['Go'], V['Kv'], V['EAo'], V['Gammav'], V['fMB']),
+              r'f_{p}=%.4f\times %.2f=\mathbf{%.2f\ Hz},'
+              r'\qquad f_{z}=\frac{%.2f}{%.4f}=\mathbf{%.3f\ Hz}'
+              % (V['Kv'], V['fMB'], V['fp'], V['fMB'], V['Kv'], V['fz'])]))
+    add(p('<b>Step 7 &mdash; the bias parts.</b> R<sub>P</sub> from '
+          'Equation&nbsp;%(a)s with the TL431 minimum current '
+          '%(Imin).1f&nbsp;mA, and the R<sub>B</sub> window from '
+          'Equation&nbsp;%(b)s with V<sub>Z</sub> = %(VZ).0f&nbsp;V, '
+          'V<sub>Fo</sub> = %(VFo).2f&nbsp;V, I<sub>FB,steady</sub> = '
+          '%(IFBs).0f&nbsp;&micro;A, I<sub>FB,max</sub> = '
+          '%(IFBm).0f&nbsp;&micro;A, CTR<sub>s</sub> = %(CTRs).2f and '
+          'CTR<sub>m</sub> = %(CTRm).2f:'
+          % dict(V, a=ER('RPmax'), b=ER('RBwin'))))
+    add(eqagain('RPmax'))
+    add(calc(r'R_{P}\leq\frac{%.2f\ \mathrm{V}}{%.1f\ \mathrm{mA}}=%.3f\ \mathrm{k\Omega}'
+             r'\;\rightarrow\;\mathbf{%.1f\ k\Omega}\ (\mathrm{rounded\ down})'
+             % (V['VFo'], V['Imin'], V['RPmax'], V['RP'])))
+    add(eqagain('RBwin'))
+    _hd = V['VZ'] - V['VR'] - V['VFo']
+    add(calc(r'R_{B,max}=\frac{%.0f-(%.3f+%.2f)\ \mathrm{V}}'
+             r'{%.2f/%.1f\ \mathrm{mA}+%.0f\,\mu\mathrm{A}/%.2f}'
+             r'=\frac{%.3f\ \mathrm{V}}{%.3f\ \mathrm{mA}+%.3f\ \mathrm{mA}}'
+             r'=\mathbf{%.2f\ k\Omega}'
+             % (V['VZ'], V['VR'], V['VFo'], V['VFo'], V['RP'], V['IFBs'],
+                V['CTRs'], _hd, V['VFo'] / V['RP'], V['IFBs'] / V['CTRs'] / 1e3,
+                V['RBmax'])))
+    add(calc(r'R_{B,min}=\frac{%.3f\ \mathrm{V}}{%.3f\ \mathrm{mA}+'
+             r'%.0f\,\mu\mathrm{A}/%.2f}=\mathbf{%.2f\ k\Omega}'
+             r'\qquad\rightarrow\ R_{B}=\mathbf{%.1f\ k\Omega}'
+             % (_hd, V['VFo'] / V['RP'], V['IFBm'], V['CTRm'], V['RBmin'],
+                V['RB'])))
+    add(p('<b>Step 8 &mdash; the compensation parts</b>, with '
+          'R<sub>FB</sub> = %(RFB).0f&nbsp;k&Omega;, C<sub>opto</sub> = '
+          '%(Copto).0f&nbsp;nF and the high-frequency pole placed at '
+          '%(fpHF).0f&nbsp;Hz:' % V))
+    add(eqagain('Ccomp'))
+    add(calc(r'C_{Fo}=\frac{%.3f}{%.2f}\cdot\frac{%.2f\times %.0f\ \mathrm{k\Omega}}'
+             r'{%.0f\ \mathrm{k\Omega}\times %.1f\ \mathrm{k\Omega}\times %.2f}'
+             r'=%.1f\ \mathrm{nF}\;\rightarrow\;\mathbf{%.0f\ nF}'
+             % (V['fz'], V['fp'], V['CTRs'], V['RFB'], V['RI'], V['RB'],
+                V['EAo'], V['CFoc'], V['CFo'])))
+    add(calc([r'C_{F}=%.0f\ \mathrm{nF}\times\left(\frac{%.2f}{%.3f}-1\right)'
+              r'=%.0f\ \mathrm{nF}\;\rightarrow\;\mathbf{%.0f\ nF}'
+              % (V['CFo'], V['fp'], V['fz'], V['CFc'], V['CF']),
+              r'R_{F}=\frac{1}{2\pi\times %.3f\ \mathrm{Hz}\times %.0f\ \mathrm{nF}}'
+              r'=%.1f\ \mathrm{k\Omega}\;\rightarrow\;\mathbf{%.0f\ k\Omega}'
+              % (V['fz'], V['CF'], V['RFc'], V['RF'])]))
+    add(calc(r'C_{fx}=\frac{1}{2\pi\times %.0f\ \mathrm{Hz}\times %.0f\ \mathrm{k\Omega}}'
+             r'-%.0f\ \mathrm{nF}=%.3f\ \mathrm{nF}\;\rightarrow\;\mathbf{%.2f\ nF}'
+             % (V['fpHF'], V['RFB'], V['Copto'], V['Cfxc'], V['Cfx'])))
+    add(p('<b>Step 9 &mdash; what the standard parts actually give.</b> '
+          'Equation&nbsp;%(e)s with the rounded values:' % dict(e=ER('fzp'))))
+    add(eqagain('fzp'))
+    add(calc([r'EA_{o}=\frac{%.2f\times %.0f\ \mathrm{k\Omega}}'
+              r'{(%.0f+%.0f)\ \mathrm{nF}\times %.0f\ \mathrm{k\Omega}\times %.1f\ \mathrm{k\Omega}}'
+              r'=\mathbf{%.2f\ rad/s}'
+              % (V['CTRs'], V['RFB'], V['CF'], V['CFo'], V['RI'], V['RB'],
+                 V['EAoi']),
+              r'f_{z}=\frac{1}{2\pi\times %.0f\ \mathrm{k\Omega}\times %.0f\ \mathrm{nF}}'
+              r'=\mathbf{%.3f\ Hz}' % (V['RF'], V['CF'], V['fzi'])]))
+    add(calc([r'C_{ser}=\frac{%.0f\times %.0f}{%.0f+%.0f}\ \mathrm{nF}=%.1f\ \mathrm{nF},'
+              r'\qquad f_{p}=\frac{1}{2\pi\times %.0f\ \mathrm{k\Omega}\times %.1f\ \mathrm{nF}}'
+              r'=\mathbf{%.2f\ Hz}'
+              % (V['CF'], V['CFo'], V['CF'], V['CFo'], V['Cser'], V['RF'],
+                 V['Cser'], V['fpi']),
+              r'f_{px}=\frac{1}{2\pi\times %.0f\ \mathrm{k\Omega}\times(%.0f+%.2f)\ \mathrm{nF}}'
+              r'=\mathbf{%.0f\ Hz}' % (V['RFB'], V['Copto'], V['Cfx'], V['fpx'])]))
+    add(p('<b>Step 10 &mdash; the crossover and the phase margin.</b> '
+          'G<sub>o</sub>EA<sub>o</sub> = %(Go).2f &times; %(EAoi).2f = '
+          '%(g0).0f, so the iteration of Equation&nbsp;%(e)s starts at '
+          '&omega;<sub>c</sub> = &radic;%(g0).0f = %(w0).1f&nbsp;rad/s '
+          '(%(f0).1f&nbsp;Hz) and settles after a few steps at'
+          % dict(V, e=ER('wc'), f0=V['w0'] / (2 * pi))))
+    add(eqagain('wc'))
+    add(calc(r'\omega_{c}=\mathbf{%.1f\ rad/s},\qquad f_{c}=\frac{%.1f}{2\pi}'
+             r'=\mathbf{%.2f\ Hz},\qquad |T(\omega_{c})|=%.4f\ \ (\mathrm{check:}\ 1)'
+             % (V['wc'], V['wc'], V['fcross'], V['Tres'])))
+    add(eqagain('PMeq'))
+    add(calc(r'\Phi_{M}=\arctan\frac{%.1f}{%.1f}-\arctan\frac{%.1f}{%.1f}'
+             r'-\arctan\frac{%.1f}{%.0f}=%.1f^{\circ}-%.1f^{\circ}-%.1f^{\circ}'
+             r'=\mathbf{%.1f^{\circ}}'
+             % (V['wc'], V['wz'], V['wc'], V['wp'], V['wc'], V['wpx'],
+                _at(V['wc'], V['wz']), _at(V['wc'], V['wp']),
+                _at(V['wc'], V['wpx']), V['PM'])))
+    add(p('<b>Step 11 &mdash; the gain margin:</b>'))
+    add(eqagain('f180'))
+    add(calc([r'f_{180}=\sqrt{%.2f\times %.0f-%.3f\times(%.2f+%.0f)}\ \mathrm{Hz}'
+              r'=\mathbf{%.0f\ Hz}'
+              % (V['fpi'], V['fpx'], V['fzi'], V['fpi'], V['fpx'], V['f180']),
+              r'|T(f_{180})|=%.4f,\qquad GM=-20\log_{10}%.4f=\mathbf{%.1f\ dB}'
+              % (V['T180'], V['T180'], V['GM'])]))
+    add(p('<b>Step 12 &mdash; the third harmonic the built loop causes.</b> '
+          'The compensator gain at 2f<sub>l</sub> = %(f2).0f&nbsp;Hz '
+          '(&omega; = %(w2fl).1f&nbsp;rad/s), from Equation&nbsp;%(a)s '
+          'without the plant, and Equation&nbsp;%(b)s:'
+          % dict(V, f2=2 * V['flmin'], a=ER('GEAtf'), b=ER('D3'))))
+    add(calc(r'G_{EA}(2f_{l})=\frac{%.2f}{%.1f}\cdot'
+             r'\frac{\sqrt{1+(%.1f/%.1f)^{2}}}'
+             r'{\sqrt{1+(%.1f/%.1f)^{2}}\,\sqrt{1+(%.1f/%.0f)^{2}}}'
+             r'=\mathbf{%.4f}\ \ (\leq %.4f)'
+             % (V['EAoi'], V['w2fl'], V['w2fl'], V['wz'], V['w2fl'], V['wp'],
+                V['w2fl'], V['wpx'], V['GEAact'], V['GEAreq'])))
+    add(eqagain('D3'))
+    add(calc(r'D_{3}=\frac{%.4f\times %.3f\ \mathrm{V}}{4\times %.3f\ \mathrm{V}}'
+             r'=\mathbf{%.2f\ \%%}\ \ (\mathrm{budget}\ %.0f\ \%%)'
+             % (V['GEAact'], V['dVloop'], V['VFBv'], V['D3'], V['D3set'])))
+    add(p('<b>Step 13 &mdash; the feedback ripple at the burst point</b>, '
+          'with burst entry at %(PinBM).0f&nbsp;W:' % V))
+    add(eqagain('dVFB'))
+    add(calc(r'\Delta V_{FB}=\frac{%.0f\ \mathrm{W}}{%.1f\ \mathrm{V}}\cdot'
+             r'\frac{1}{2\pi\times %.0f\ \mathrm{Hz}\times %.1f\ \mathrm{mF}}'
+             r'\times %.4f=\mathbf{%.1f\ mV}'
+             % (V['PinBM'], V['Vout'], V['flmin'], V['Cout'], V['GEAact'],
+                V['dVFBBM'])))
+    add(eqagain('dRBM'))
+    add(calc(r'\Delta R_{BM}=\frac{%.1f\ \mathrm{mV}}{2\times 0.01\ \mathrm{V/k\Omega}}'
+             r'=\mathbf{%.2f\ k\Omega},\qquad R_{BM}=%.0f-%.2f'
+             r'=\mathbf{%.1f\ k\Omega}'
+             % (V['dVFBBM'], V['dRBM'], V['RBMsel'], V['dRBM'], V['RBMrec'])))
     add(fig('an_loop_bode',
-            'Open-loop gain of the selected compensation network, and '
-            '180&deg; + arg&nbsp;T. That distance is the phase margin only '
-            'where |T| crosses 0&nbsp;dB.'))
-    add(tbl('And what that loop then measures as.',
+            'Open-loop gain |T| and 180&deg; + arg&nbsp;T of the loop as '
+            'built (Steps 9 to 11). The distance from &minus;180&deg; is the '
+            'phase margin only at the crossover, where |T| = 0&nbsp;dB. The '
+            'gain margin is read at f<sub>180</sub>, where that distance '
+            'reaches zero.'))
+    add(tbl('The voltage loop, as built.',
             [['Quantity', 'Value', 'Against'],
-             ['Crossover f<sub>cross</sub>', '%(fcross).2f Hz' % V,
+             ['Divider R<sub>I</sub> / R<sub>O</sub>',
+              '%(RI).0f / %(Ro).0f k&Omega;' % V,
+              'regulates to %(VoutAct).2f V' % V],
+             ['Bias R<sub>P</sub>, R<sub>B</sub>',
+              '%(RP).1f k&Omega;, %(RB).1f k&Omega;' % V,
+              'R<sub>P</sub> &le; %(RPmax).2f k&Omega;; R<sub>B</sub> in '
+              '%(RBmin).2f to %(RBmax).2f k&Omega;' % V],
+             ['Compensation C<sub>Fo</sub>, C<sub>F</sub>, R<sub>F</sub>, '
+              'C<sub>fx</sub>',
+              '%(CFo).0f nF, %(CF).0f nF, %(RF).0f k&Omega;, %(Cfx).2f nF' % V,
+              'zero %(fzi).2f Hz, pole %(fpi).1f Hz, pole %(fpx).0f Hz' % V],
+             ['Crossover f<sub>c</sub>', '%(fcross).2f Hz' % V,
               'the 15 to 20 Hz this topology lands in'],
-             ['Phase margin', '%(PM).2f&deg;' % V, '45&deg; as a floor'],
-             ['Gain margin', '%(GM).2f dB at %(f180).0f Hz' % V,
-              '6 dB floor, 10 dB comfortable'],
+             ['Phase margin', '%(PM).1f&deg;' % V,
+              'target %(PhiM).0f&deg;, floor 45&deg;' % V],
+             ['Gain margin', '%(GM).1f dB at %(f180).0f Hz' % V,
+              '6 dB floor, %(GMt).0f dB comfortable' % V],
              ['Third harmonic on the input current', '%(D3).2f %%' % V,
-              'the price of crossing this low'],
+              'budget %(D3set).0f %%' % V],
              ['Feedback ripple at the burst point',
-              '%(dVFB).0f mV' % dict(dVFB=V['dVFBBM']),
-              'move R<sub>BM</sub> down %(dR).2f k&Omega; to clear it'
-              % dict(dR=V['dRBM'])]],
-            widths=[CW * 0.36, CW * 0.24, CW * 0.40], key='loop-result'))
+              '%(dVFBBM).0f mV' % V,
+              'R<sub>BM</sub> %(RBMsel).0f &rarr; %(RBMrec).1f k&Omega;' % V]],
+            widths=[CW * 0.34, CW * 0.28, CW * 0.38], key='loop-result'))
 
     # ------------------------------------------------ the controller network
     add(h2('The parts around the controller'))
@@ -3315,6 +3700,10 @@ def build(A):
         ('C<sub>out</sub>, C<sub>in</sub>', 'output capacitor bank, input film capacitor'),
         ('C<sub>o(tr)</sub>', 'time-related output capacitance of a MOSFET (charge equivalent)'),
         ('C<sub>T</sub>, R<sub>T</sub>', 'oscillator timing capacitor and resistor'),
+        ('C<sub>Fo</sub>, C<sub>F</sub>, R<sub>F</sub>, C<sub>fx</sub>', 'compensator parts: the two capacitors and the resistor of the TL431 network, and the FB-pin capacitor'),
+        ('CTR<sub>s</sub>, CTR<sub>m</sub>', 'optocoupler current transfer ratio at the steady-state and at the maximum LED current'),
+        ('D<sub>3</sub>', 'third harmonic on the input current, as a fraction of the fundamental'),
+        ('EA<sub>o</sub>', 'gain constant of the compensator, in rad/s'),
         ('d', 'conduction ratio f<sub>sw</sub>/f<sub>r</sub> of the secondary, 1 above resonance'),
         ('f<sub>l</sub>', 'line frequency; f<sub>l,min</sub> its lowest value'),
         ('f<sub>r</sub>, f<sub>o</sub>', 'series resonance, and the lower resonance with L<sub>m</sub> included'),
@@ -3322,6 +3711,9 @@ def build(A):
         ('f<sub>sw,max</sub>', 'the specified maximum switching frequency, an input to &lambda;'),
         ('f<sub>Min</sub>, f<sub>Max</sub>', 'oscillator floor and ceiling set by R<sub>T</sub>, C<sub>T</sub> and T<sub>idle</sub>'),
         ('f<sub>cross</sub>, &Phi;<sub>M</sub>, GM', 'loop crossover frequency, phase margin, gain margin'),
+        ('f<sub>z</sub>, f<sub>p</sub>, f<sub>px</sub>, f<sub>180</sub>', 'compensator zero, pole and high-frequency pole; the frequency where arg T = &minus;180&deg;'),
+        ('G<sub>o</sub>', 'gain of the plant integrator, in rad/s'),
+        ('&Gamma;<sub>v</sub>, &alpha;<sub>v</sub>', 'input-voltage margin factor and weighting constant of the K-factor method'),
         ('I<sub>Lr,pk</sub>', 'composite tank current peak: reflected load plus magnetising'),
         ('I<sub>trafo,pk</sub>', 'peak of the reflected load current alone'),
         ('i<sub>Lm</sub>, i<sub>&mu;</sub>', 'magnetising current of the tank model, and of the physical transformer'),
@@ -3345,6 +3737,8 @@ def build(A):
         ('Q, Q<sub>pk</sub>, Q<sub>ZVS</sub>', 'quality factor Z<sub>0</sub>/R<sub>ac</sub>; its value at the line peak; the cap the ZVS condition puts on it'),
         ('R<sub>ac</sub>', 'the rectifier and load as one resistance at the fundamental'),
         ('R<sub>BM</sub>, R<sub>CFG</sub>, R<sub>CS</sub>', 'burst-mode, configuration and current-sense resistors'),
+        ('R<sub>I</sub>, R<sub>O</sub>', 'output divider of the compensator'),
+        ('R<sub>B</sub>, R<sub>P</sub>, R<sub>FB</sub>', 'optocoupler LED resistor, TL431 bias resistor, and the pull-up inside the FB pin'),
         ('R<sub>ZCD,H</sub>, R<sub>ZCD,L</sub>', 'the ZCD divider'),
         ('t<sub>D</sub>, T<sub>ZC</sub>', 'bridge dead time, and the time the tank current takes to reach zero after the transition'),
         ('T<sub>hold</sub>, V<sub>o,min</sub>', 'hold-up time, and the lowest output allowed at its end'),
@@ -3358,6 +3752,9 @@ def build(A):
         ('&Delta;v, &Delta;v<sub>pp</sub>', 'allowed and achieved 2f<sub>l</sub> output ripple'),
         ('Z<sub>0</sub>', 'characteristic impedance &radic;(L<sub>r</sub>/C<sub>r</sub>)'),
         ('&delta;', 'skin depth in copper at f<sub>r</sub>'),
+        ('V<sub>FB</sub>', 'feedback voltage above its 0.5 V offset at rated power'),
+        ('V<sub>R</sub>, V<sub>Z</sub>, V<sub>Fo</sub>', 'TL431 reference, the regulated rail that feeds the LED, and the LED forward drop'),
+        ('&Delta;V<sub>loop</sub>, &Delta;V<sub>FB</sub>', '2f<sub>l</sub> output ripple seen by the loop, and the ripple it leaves on the FB pin'),
         ('&eta;<sub>HB</sub>', 'assumed efficiency of the LLC stage'),
     ]
     s.extend(tbl('Symbols.', [['Symbol', 'Meaning']] + [list(r) for r in _SYM],
@@ -3380,7 +3777,9 @@ def build(A):
         'ROHM Semiconductor, TechWeb, <i>LLC operating regions</i> '
         '(region framing of Figure&nbsp;' + FR('f04_three_regions') + ').',
         'W. Wenbo et al., <i>A single-stage 1.65 kW ac-dc LLC converter</i>, '
-        'IEEE ECCE.']))
+        'IEEE ECCE.',
+        'onsemi, <i>The TL431 in the control of switching power supplies</i>, '
+        'TND381-D (compensator design with a TL431 and an optocoupler).']))
 
     # =============================================================== 9
     add(h1('Errata and open items'))

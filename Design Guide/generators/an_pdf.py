@@ -273,6 +273,51 @@ V['TzcCF'], V['TzcCFact'] = _zvs_closed_form()
 # signed error of the shortcut against the sweep at the SAME corner
 V['TzcCFpc'] = 100 * (V['TzcCF'] / V['Tzc'] - 1)
 
+
+def _builder_const(name):
+    """a [DS]/[PICK] constant, read from the sheet builder's S.const line
+
+    The snapshot carries only rows with a printed result.  The constants
+    the loop chapter quotes (V.Fo, R.FB, the CTR spread, the target phase
+    margin ...) are typed once in build_l6790_smath.py and are read from
+    there, never retyped here.
+    """
+    import re
+    src = open(os.path.join(HERE, 'build_l6790_smath.py'),
+               encoding='utf-8').read()
+    m = re.search(r"S\.const\([^\n]*?,\s*'%s',\s*['\"]([^'\"]+)['\"]"
+                  % re.escape(name), src)
+    if not m:
+        raise KeyError('no S.const for %s in the sheet builder' % name)
+    return float(re.match(r'[-+0-9.eE]+', m.group(1)).group(0))
+
+
+#  the voltage loop, every number the design example substitutes
+V.update(
+    VFo=_builder_const('V.Fo'), RFB=_builder_const('R.FB'),
+    IFBs=_builder_const('I.FB_steady'), IFBm=_builder_const('I.FB_max'),
+    CTRs=_builder_const('CTR.s'), CTRm=_builder_const('CTR.m'),
+    Copto=_builder_const('C.opto'), fpHF=_builder_const('f.pHF'),
+    PhiM=_builder_const('Φ.M'), alphav=_builder_const('α.v'),
+    D3set=_builder_const('D.3rd'), Imin=_builder_const('I.min'),
+    GMt=_builder_const('GM.t'), KHV=_builder_const('K.HV'),
+    KM=_builder_const('K.M'), KFF=_builder_const('K.FF'),
+    VR=SH['V.R'], VZ=SH['V.Z'], RI=SH['R.I'], Ro=SH['R.o'],
+    Roc=SH['R.o_calc'], VoutAct=SH['V.out_act'],
+    RPmax=SH['R.P_max'], RBmax=SH['R.B_max'], RBmin=SH['R.B_min'],
+    Kpwr=SH['K.pwr'], VFBv=SH['V.FB'], VFBset=SH['V.FB_set'],
+    fcto=SH['f.cto'], dVloop=SH['ΔV.loop'], GEAreq=SH['G.EA'],
+    tPM=SH['t.PM'], Gammav=SH['Γ.v'],
+    CFoc=SH['C.Fo_calc'], CFc=SH['C.F_calc'], RFc=SH['R.F_calc'],
+    Cfxc=SH['C.fx_calc'],
+    EAoi=SH['EA.oi'], fzi=SH['f.zi'], fpi=SH['f.pi'], Cser=SH['C.ser'],
+    Tres=SH['T.res'], GEAact=SH['G.EA_act'], RBMrec=SH['R.BM_rec'],
+    RBMsel=SH['R.BM_sel'],
+    g0=SH['g.0'], w0=SH['w.0'], wc=SH['w.8'], wz=SH['ω.z'], wp=SH['ω.p'],
+    wpx=SH['ω.px'], w180=SH['ω.180'], w2fl=SH['ω.2fl'],
+    T180=SH.get('T.180', 10 ** (-SH['GM'] / 20.0)),
+)
+
 # Two oscillator inputs the sheet does not echo as results, recovered from
 # rows that it does, so that the design example can quote them without a
 # typed constant.
@@ -689,8 +734,13 @@ class FigBlock(Flowable):
                             self.ch + 5, self.w, self.h, mask='auto')
 
 
-def fig(name, caption, width=None, sec=None):
-    """a centred figure with a numbered caption"""
+def fig(name, caption, width=None, sec=None, shrink=True):
+    """a centred figure with a numbered caption
+
+    shrink=False keeps the figure at its full width: it moves whole to the
+    next page instead of giving up height to fit the one it is on.  For
+    the drawings whose lettering is already at the small end.
+    """
     from PIL import Image as PIm
     p = os.path.join(FIGS, name + '.png')
     if not os.path.exists(p):
@@ -711,8 +761,11 @@ def fig(name, caption, width=None, sec=None):
         h = 560
     n = _FIG.setdefault(name, len(_FIG) + 1)
     REFS['fig'][name] = n
-    return FigBlock(p, w, h,
-                    Paragraph(T('%s %d:  %s' % (FIGWORD, n, caption)), S['cap']))
+    fb = FigBlock(p, w, h,
+                  Paragraph(T('%s %d:  %s' % (FIGWORD, n, caption)), S['cap']))
+    if not shrink:
+        fb.MINFIT = 1.0
+    return fb
 
 
 _TBL = [0]
@@ -879,8 +932,8 @@ def legal():
         'goes to production.',
         'The worked design has not been built. Only the numbers marked as '
         'measured are measured; the rest are calculated.',
-        'Some of the LLC theory figures are taken from the application notes '
-        'in the reference list. Each one names its source in the caption.',
+        'All figures were drawn for this note. Where a figure follows the '
+        'argument of a published application note, the caption says so.',
     ):
         s.append(Paragraph(T(t), S['p']))
         s.append(Spacer(1, 3))
