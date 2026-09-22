@@ -49,6 +49,8 @@ ABSENT_OK = {
     'Calculation Excel Sheet/04092026_LGE_670W_L6790A_spread sheet.xlsx',
     'L6790_Trans_20260901.xlsx',
     'LGE_670W_L6790A_Transformer_Spec_rev1.xlsx',
+    # CLAUDE.md 9.1b names this file while saying it is not installed here
+    '.claude/settings.json',
 }
 
 problems = []

@@ -13,7 +13,11 @@ import subprocess
 import sys
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-ROOT = r'c:\Users\KKH\OneDrive - gc.gachon.ac.kr\L6790'
+#  Relative to this script, like every other tool here.  It was an
+#  absolute Windows path, so the one check that guards CLAUDE.md's
+#  self-sufficiency did not run anywhere else (2026-09-22).
+ROOT = os.path.normpath(os.path.join(os.path.dirname(
+    os.path.abspath(__file__)), '..', '..'))
 GEN = os.path.join(ROOT, 'Design Guide', 'generators')
 c = io.open(os.path.join(ROOT, 'CLAUDE.md'), encoding='utf-8').read()
 h = io.open(os.path.join(ROOT, 'HISTORY.md'), encoding='utf-8').read()
