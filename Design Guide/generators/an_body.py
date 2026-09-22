@@ -2947,6 +2947,31 @@ def build(A):
           'composite tank peak: it is what the primary devices and '
           'R<sub>CS</sub> see, and it is neither the sum of the two component '
           'peaks nor the larger of them.'))
+    add(p('<b>Where each kind of number comes from.</b> The peaks are read '
+          'off one switching cycle at the worst operating point &mdash; the '
+          'low equivalent corner at the line peak, which is the row marked '
+          '&theta;&nbsp;=&nbsp;90&deg; in Table&nbsp;%(t)s &mdash; using the '
+          'closed forms of Section&nbsp;%(c)s. The composite peak is not '
+          'read off either component: the two peak at different instants, so '
+          'it is the peak of their sum,'
+          % dict(t=TR('gainpts'), c=SR('Currents over the line cycle'))))
+    add(calc(r'I_{Lr,pk}=\max_{t}\left|i_{Lm}(t)+i_{trafo}(t)\right|'
+             r'=%(Icomp).2f\;\mathrm{A}\;<\;'
+             r'%(ILm).2f+%(Itr).2f=%(sum).2f\;\mathrm{A}'
+             % dict(V, sum=V['ILm'] + V['Itr'])))
+    add(p('The rms values are not that cycle&rsquo;s. Each is the rms of one '
+          'switching period, squared, averaged over the line half cycle and '
+          'rooted &mdash; the integral evaluated by the five-point Simpson '
+          'rule of Section&nbsp;%s:' % SR('Currents over the line cycle')))
+    add(calc(r'I_{lc}=\sqrt{\frac{2}{\pi}\int_{0}^{\pi/2}'
+             r'I_{rms}^{2}(\theta)\,d\theta}'
+             r'\;\simeq\;\sqrt{\frac{1}{12}\sum_{k}w_{k}'
+             r'I_{rms}^{2}(\theta_{k})}\,,\qquad '
+             r'w=\{1,4,2,4,1\}'))
+    add(p('That is why the line-cycle primary rms, %(Iprilc).2f&nbsp;A, is '
+          '<i>lower</i> than the worst cycle&rsquo;s %(Iprims).2f&nbsp;A: '
+          'the worst cycle is one instant of a half cycle that spends most '
+          'of its time at less than full power.' % V))
     add(fig('an_tank_current',
             'The composite tank current at the low equivalent corner, full '
             'load, and why its peak is not the sum of the two component '
@@ -3374,6 +3399,29 @@ def build(A):
                      + A.SH['P.RCS'] + A.SH['P.Cout']),
               'and the magnetics are not in it']],
             widths=[CW * 0.34, CW * 0.14, CW * 0.52], key='loss'))
+    add(p('Two rows carry most of that total, and both are one product. '
+          '<b>The standing primary device</b> is the low-side switch of the '
+          'idle leg in half-bridge morphing: it is on continuously and '
+          'carries the whole line-cycle rms, so its loss is I&sup2;R with '
+          'R<sub>DS(on)</sub> taken <b>hot</b>, at '
+          'k<sub>T</sub>&nbsp;=&nbsp;%(kT).1f times the 25&nbsp;&deg;C '
+          'headline of %(R25).0f&nbsp;m&Omega; (Section&nbsp;%(ref)s):'
+          % dict(V, kT=V['Rdpk'], R25=V['Rdp'],
+                 ref=SR('Semiconductor requirements'))))
+    add(calc(r'P_{cond}=I_{pri}^{2}\,k_{T}R_{DS(on),25}'
+             r'=(%(I).2f)^{2}\cdot%(kT).1f\cdot%(R).0f\times10^{-3}'
+             r'=%(P).2f\;\mathrm{W}'
+             % dict(I=V['Iprilc'], kT=V['Rdpk'], R=V['Rdp'],
+                    P=A.SH['P.mos_dc'])))
+    add(p('<b>Each secondary rectifier</b> carries the leg current divided '
+          'by the %(nSR).0f devices in parallel, with its own '
+          'k<sub>T</sub>&nbsp;=&nbsp;%(kTs).1f on %(Rs).1f&nbsp;m&Omega;:'
+          % dict(V, kTs=V['Rdsk'], Rs=V['Rds'])))
+    add(calc(r'P_{SR}=\left(\frac{%(I).2f}{%(n).0f}\right)^{2}'
+             r'\cdot%(kT).1f\cdot%(R).1f\times10^{-3}'
+             r'=%(P).3f\;\mathrm{W\;per\;device}'
+             % dict(I=V['Idio'], n=V['nSR'], kT=V['Rdsk'], R=V['Rds'],
+                    P=A.SH['P.SR_dev'])))
     add(note('<b>The efficiency assumption is optimistic.</b> The itemised '
              'device losses already come to %(t).1f&nbsp;W against the '
              '%(b).1f&nbsp;W that &eta;<sub>HB</sub> = %(etaHB).0f&nbsp;%% '
@@ -3676,17 +3724,37 @@ def build(A):
            r'\left(\frac{1}{2f_{sw,min}}-T_{idle}\right)', key='CT'))
     add(eq(r'R_{T,ceil}=\frac{1}{C_{T}}'
            r'\left(\frac{1}{2f_{sw,min}}-T_{idle}\right)', key='RTceil'))
-    add(p('with f<sub>sw,min</sub> set to f<sub>o</sub> &mdash; the frequency '
-          'floor of the whole design, for the reason in Section&nbsp;'
-          + SR('Two divergences that cancel') + '. Here that window is '
-            '%(CTmin).0f to %(CTmax).0f&nbsp;pF, the datasheet allows 270 to '
-            '1000&nbsp;pF, and the part is taken from the middle of the '
-            'overlap rather than from either edge: <b>C<sub>T</sub> = '
-            '%(CT).0f&nbsp;pF</b>, C0G. Then R<sub>T,ceil</sub> = '
-            '%(RTceil).2f&nbsp;k&Omega; gives <b>R<sub>T</sub> = '
-            '%(RT).0f&nbsp;k&Omega;</b>.'
+    add(p('with f<sub>sw,min</sub> set to f<sub>o</sub>&nbsp;=&nbsp;'
+          '%(fo).1f&nbsp;kHz &mdash; the frequency floor of the whole '
+          'design, for the reason in Section&nbsp;%(ref)s &mdash; and '
+          'f<sub>sw,max</sub>&nbsp;=&nbsp;%(fswspec).0f&nbsp;kHz, '
+          'I<sub>EA,max</sub>&nbsp;=&nbsp;400&nbsp;&micro;A, '
+          'V<sub>ref</sub>&nbsp;=&nbsp;1.5&nbsp;V and '
+          'T<sub>idle</sub>&nbsp;=&nbsp;%(Tidle).0f&nbsp;ns:'
+          % dict(V, ref=SR('Two divergences that cancel'))))
+    add(calc(r'C_{T,max}=\frac{400\times10^{-6}}{2\cdot1.5}\cdot'
+             r'\frac{(1-2\cdot%(t).0f\!\times\!10^{-9}\cdot'
+             r'%(fmx).0f\!\times\!10^{3})'
+             r'(1-2\cdot%(t).0f\!\times\!10^{-9}\cdot'
+             r'%(fmn).1f\!\times\!10^{3})}'
+             r'{(%(fmx).0f-%(fmn).1f)\times10^{3}}'
+             r'=%(CTmax).0f\;\mathrm{pF}'
+             % dict(t=V['Tidle'], fmx=V['fswspec'], fmn=V['fo'],
+                    CTmax=A.SH['C.T_max'])))
+    add(p('and the floor condition, with the 30&nbsp;k&Omega; datasheet '
+          'maximum on R<sub>T</sub>, gives C<sub>T,min</sub>&nbsp;=&nbsp;'
+          '%(CTmin).0f&nbsp;pF. The datasheet allows 270 to 1000&nbsp;pF, so '
+          'the usable window is %(lo).0f to %(CTmax).0f&nbsp;pF and the part '
+          'is taken from the middle of it rather than from either edge: '
+          '<b>C<sub>T</sub> = %(CT).0f&nbsp;pF</b>, C0G. Then'
           % dict(V, CTmin=A.SH['C.T_min'], CTmax=A.SH['C.T_max'],
-                 RTceil=A.SH['R.T_ceil'] / 1e3)))
+                 lo=max(270.0, A.SH['C.T_min']))))
+    add(calc(r'R_{T,ceil}=\frac{1}{%(CT).0f\times10^{-12}}'
+             r'\left(\frac{1}{2\cdot%(fo).1f\times10^{3}}'
+             r'-%(t).0f\times10^{-9}\right)'
+             r'=%(RTceil).2f\;\mathrm{k\Omega}\;\rightarrow\;'
+             r'%(RT).0f\;\mathrm{k\Omega}'
+             % dict(V, t=V['Tidle'], RTceil=A.SH['R.T_ceil'] / 1e3)))
     add(note('<b>R<sub>T,ceil</sub> is a maximum, not a minimum</b>, '
              'whatever the name suggests. f<sub>Min</sub> = '
              '1/[2(C<sub>T</sub>R<sub>T</sub>+T<sub>idle</sub>)] '
@@ -3748,17 +3816,28 @@ def build(A):
            r'R_{CS,max2}=\frac{0.55\,\mathrm{V}}{I_{Lr,pk}}', key='RCS'))
     add(p('The first is the maximum-power law of Section&nbsp;'
           + SR('The feedback pin is a power command')
-          + '; the second is the OCP1 trip point. Opened out, equation&nbsp;'
-          + ER('RCS') + ' is two divisions &mdash; 16.8/P<sub>in</sub> and '
-            '0.55/I<sub>Lr,pk</sub> &mdash; and they give '
-            '%(a).2f and %(b).2f&nbsp;m&Omega;, so the power law is the limiting one. '
-            'Dissipation then fixes how many resistors that has to be split '
-            'over. At the worst switching cycle that is %(P).2f&nbsp;W, so '
-            '<b>%(N).0f in parallel</b>; %(R1).0f&nbsp;m&Omega; each gives '
-            '<b>R<sub>CS</sub> = %(RCS).1f&nbsp;m&Omega;</b>.'
-          % dict(V, a=A.SH['R.CS1'], b=A.SH['R.CS2'],
-                 P=A.SH['P.RCS_pk'], N=A.SH['N.RCS'],
-                 R1=A.SH['R.CS_single'])))
+          + '; the second is the OCP1 trip point. Both are one division:'))
+    add(calc(r'R_{CS,max1}=\frac{16.8}{%(Pin).1f}=%(a1).5f\;\Omega'
+             r'=%(a).2f\;\mathrm{m\Omega}\,,\qquad '
+             r'R_{CS,max2}=\frac{0.55}{%(Ipk).2f}=%(b1).5f\;\Omega'
+             r'=%(b).2f\;\mathrm{m\Omega}'
+             % dict(Pin=V['Pin'], a1=A.SH['R.CS1'] / 1e3, a=A.SH['R.CS1'],
+                    Ipk=V['Icomp'], b1=A.SH['R.CS2'] / 1e3,
+                    b=A.SH['R.CS2'])))
+    add(p('so the power law is the limiting one. Dissipation then fixes how '
+          'many resistors that has to be split over: at the worst switching '
+          'cycle the sense element burns '
+          'I<sub>pri,rms</sub>&sup2;R<sub>CS</sub>, and a 1&nbsp;W part '
+          'cannot take it alone.'))
+    add(calc(r'P_{CS}=I_{pri,rms}^{2}R_{CS}=(%(I).2f)^{2}\cdot%(R).1f'
+             r'\times10^{-3}=%(P).2f\;\mathrm{W}'
+             r'\;\Rightarrow\;N=%(N).0f\;\mathrm{in\;parallel}'
+             % dict(I=V['Iprims'], R=V['RCS'], P=A.SH['P.RCS_pk'],
+                    N=A.SH['N.RCS'])))
+    add(p('%(N).0f resistors of %(R1).0f&nbsp;m&Omega; in parallel give '
+          '<b>R<sub>CS</sub> = %(RCS).1f&nbsp;m&Omega;</b>, which is what '
+          'the rest of this section is read at.'
+          % dict(V, N=A.SH['N.RCS'], R1=A.SH['R.CS_single'])))
     add(note('<b>The denominator of R<sub>CS,max2</sub> is the composite tank '
              'peak, not the reflected load current.</b> R<sub>CS</sub> sits '
              'in the bridge return, so it carries the magnetising component '
@@ -3783,14 +3862,20 @@ def build(A):
     add(eq(r'R_{BM}=16.7\,\frac{\mathrm{k}\Omega}{\mathrm{V}^{2}}'
            r'\,R_{CS}\,P_{in,BM}\,,\qquad '
            r'V_{BM,eq}=\frac{R_{BM}}{100\,\mathrm{k}\Omega}+0.5\,\mathrm{V}', key='RBM'))
-    add(p('Entering burst at %(PinBM).0f&nbsp;W of input power &mdash; about '
-          '%(rBM).0f&nbsp;%% of rated &mdash; asks for %(calc).2f&nbsp;'
-          'k&Omega;, so <b>R<sub>BM</sub> = %(RBM).0f&nbsp;k&Omega;</b> and '
-          'the equivalent threshold on the FB pin is %(V).3f&nbsp;V. The '
-          'valid range is 15 to 140&nbsp;k&Omega;. Tie the pin to ground and '
-          'burst mode is off altogether; deep burst stays active either way.'
-          % dict(V, rBM=100 * A.SH['r.BM'], calc=A.SH['R.BM'],
-                 V=A.SH['V.BM_eq'])))
+    add(p('Burst is asked to start at %(rBM).0f&nbsp;%% of rated input '
+          'power, that is P<sub>in,BM</sub> = %(rBM).0f&nbsp;%% &times; '
+          '%(Pin).1f&nbsp;W = %(PinBM).1f&nbsp;W:'
+          % dict(V, rBM=100 * A.SH['r.BM'],
+                 PinBM=A.SH['r.BM'] * V['Pin'])))
+    add(calc(r'R_{BM}=16.7\cdot%(R).1f\times10^{-3}\cdot%(P).1f'
+             r'=%(RB).1f\;\mathrm{k\Omega}\;\rightarrow\;'
+             r'%(sel).0f\;\mathrm{k\Omega}\,,\qquad '
+             r'V_{BM,eq}=\frac{%(sel).0f}{100}+0.5=%(V).3f\;\mathrm{V}'
+             % dict(R=V['RCS'], P=A.SH['r.BM'] * V['Pin'], RB=A.SH['R.BM'],
+                    sel=A.SH['R.BM_sel'], V=A.SH['V.BM_eq'])))
+    add(p('The valid range is 15 to 140&nbsp;k&Omega;. Tie the pin to ground '
+          'and burst mode is off altogether; deep burst stays active either '
+          'way.'))
     add(note('This threshold and the feedback ripple have to be checked '
              'against each other, or the converter chatters in and out of '
              'burst once per half line cycle &mdash; Section&nbsp;'
@@ -3804,13 +3889,21 @@ def build(A):
     add(p('The brown-out threshold is compared against the <i>peak</i> of the '
           'mains, so it has to be converted before it is compared with an rms '
           'specification &mdash; a &radic;2 that is easy to drop. Asking for '
-          'brown-out just below the minimum line gives R<sub>CFG,max</sub> = '
-          '%(max).2f&nbsp;k&Omega;; <b>this is a maximum, so it rounds '
-          'down</b>, to <b>%(RCFG).0f&nbsp;k&Omega;</b>, and '
-          'V<sub>BO</sub> = %(VBO).2f&nbsp;V<sub>rms</sub> against a '
-          '%(Vacmin).0f&nbsp;Vac minimum &mdash; margin %(k).3f. Rounding up '
-          'instead would stop the converter starting at low line.'
-          % dict(V, max=A.SH['R.CFG_max'] / 1e3, k=A.SH['k.BO'])))
+          'brown-out just below the minimum line inverts Equation&nbsp;%s:'
+          % ER('VBO')))
+    add(calc(r'R_{CFG,max}=\frac{\sqrt{2}\cdot%(Vac).0f}{4}'
+             r'=%(max).2f\;\mathrm{k\Omega}\;\rightarrow\;'
+             r'%(sel).0f\;\mathrm{k\Omega}'
+             % dict(Vac=V['Vacmin'], max=A.SH['R.CFG_max'] / 1e3,
+                    sel=V['RCFG'])))
+    add(p('<b>That is a maximum, so it rounds down</b>, and the threshold '
+          'the selected part actually sets is'))
+    add(calc(r'V_{BO,rms}=\frac{%(R).0f\cdot4}{\sqrt{2}}'
+             r'=%(V).2f\;\mathrm{V_{rms}}'
+             % dict(R=V['RCFG'], V=V['VBO'])))
+    add(p('against a %(Vacmin).0f&nbsp;Vac minimum &mdash; margin '
+          '%(k).3f. Rounding up instead would stop the converter starting at '
+          'low line.' % dict(V, k=A.SH['k.BO'])))
     add(tbl('What R<sub>CFG</sub> and LOUT2 select together. The 235 and '
             '245 V thresholds are fixed inside the IC and cannot be moved.',
             [['R<sub>CFG</sub>', 'LOUT2', 'Configuration'],
@@ -3845,20 +3938,36 @@ def build(A):
     add(eq(r'V_{OVP1}=\frac{2.3\,\mathrm{V}}{n_{aux}/n_{sec}}'
            r'\left(\frac{R_{ZCD,H}}{R_{ZCD,L}}+1\right)\,,\qquad '
            r'V_{OVP2}=\frac{2.5}{2.3}\,V_{OVP1}', key='OVP'))
-    add(p('Aiming OVP1 %(pc).0f&nbsp;%% above the output gives '
-          '%(t).2f&nbsp;V as a target. With '
-          'n<sub>aux</sub>/n<sub>sec</sub> = %(naux).1f the calculated pair '
-          'is %(rl).2f / %(rh).1f&nbsp;k&Omega;. The parts fitted are '
-          '<b>%(RZL).0f&nbsp;k&Omega; and %(RZH).0f&nbsp;k&Omega;</b>. The '
-          'upper one is deliberately the <i>next E24 value above</i> the '
-          'calculation, so OVP1 lands clear of the ripple crest rather than '
-          'on it. The result is OVP1 %(OVP1).2f&nbsp;V and OVP2 '
-          '%(OVP2).2f&nbsp;V, and start-up hands over to the loop at '
-          '%(su).2f&nbsp;V of output.'
+    add(p('Aiming OVP1 %(pc).0f&nbsp;%% above the output makes the target '
+          '%(t).2f&nbsp;V. The lower resistor comes from the bias current '
+          'the pin is to be driven with, %(ib).0f&nbsp;&micro;A, and the '
+          'upper one from the ratio the target asks for, with '
+          'n<sub>aux</sub>/n<sub>sec</sub> = %(naux).1f:'
           % dict(V, pc=100 * (A.SH['V.OVP1_out'] / V['Vout'] - 1),
                  t=A.SH['V.OVP1_out'], naux=A.SH['n.aux'],
-                 rl=A.SH['R.ZCD_L'], rh=A.SH['R.ZCD_H'],
-                 su=A.SH['V.out_SUend'])))
+                 ib=2.3 / A.SH['R.ZCD_L'] * 1e3)))
+    add(calc(r'R_{ZCD,L}=\frac{2.3}{%(ib).0f\times10^{-6}}'
+             r'=%(rl).2f\;\mathrm{k\Omega}\;\rightarrow\;'
+             r'%(RZL).0f\;\mathrm{k\Omega}'
+             % dict(V, ib=2.3 / A.SH['R.ZCD_L'] * 1e3,
+                    rl=A.SH['R.ZCD_L'])))
+    add(calc(r'R_{ZCD,H}=%(RZL).0f\left(\frac{%(naux).1f\cdot%(t).1f}'
+             r'{2.3}-1\right)=%(rh).1f\;\mathrm{k\Omega}'
+             r'\;\rightarrow\;%(RZH).0f\;\mathrm{k\Omega}'
+             % dict(V, naux=A.SH['n.aux'], t=A.SH['V.OVP1_out'],
+                    rh=A.SH['R.ZCD_H'])))
+    add(p('The upper one is deliberately the <i>next E24 value above</i> the '
+          'calculation, so OVP1 lands clear of the ripple crest rather than '
+          'on it. Putting the fitted pair back into Equation&nbsp;%s gives '
+          'what the divider really does:' % ER('OVP')))
+    add(calc(r'V_{OVP1}=\frac{2.3}{%(naux).1f}'
+             r'\left(\frac{%(RZH).0f}{%(RZL).0f}+1\right)'
+             r'=%(OVP1).2f\;\mathrm{V}\,,\qquad '
+             r'V_{OVP2}=\frac{2.5}{2.3}\cdot%(OVP1).2f'
+             r'=%(OVP2).2f\;\mathrm{V}'
+             % dict(V, naux=A.SH['n.aux'])))
+    add(p('Start-up hands over to the loop at %(su).2f&nbsp;V of output.'
+          % dict(V, su=A.SH['V.out_SUend'])))
     add(note('<b>Two ways to get this wrong, and both stop the converter '
              'completely.</b> Swapping the two resistors inverts the ratio and OVP1 '
              'trips at well under a volt of output, so the converter never '

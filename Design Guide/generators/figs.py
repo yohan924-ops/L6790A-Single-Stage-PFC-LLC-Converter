@@ -542,15 +542,15 @@ def f12_two_divergences():
     a1.set_xlim(0, 90)
     a1.set_ylim(0.8, 300)
     a1.set_xticks([0, 15, 30, 45, 60, 75, 90])
-    a1.set_xlabel('line phase  theta  [deg]')
+    a1.set_xlabel('line phase  $\\theta$  [deg]')
     a1.set_ylabel('gain   (log scale)')
     a1.legend(loc='lower left', fontsize=9.5)
-    a1.set_title('1   both blow up - but the ceiling stays ABOVE',
+    a1.set_title('1   both blow up \u2014 but the ceiling stays ABOVE',
                  fontsize=11, color=NAVY)
     note(a1, 47, 40,
-         'The green gap is the margin.\nIt never closes, because the load\n'
-         'vanishes as sin^2(theta) and a vanishing\nload lifts the ceiling to '
-         'infinity at f_o.', color=GRN, size=10)
+         'The green gap is the margin. It never\ncloses, because the load '
+         'vanishes as\nsin$^2\\theta$ and a vanishing load lifts the\n'
+         'ceiling to infinity at f$_o$.', color=GRN, size=10)
 
     rows, _ = sweep(R, Vac, N=361)
     ok = [r for r in rows if r]
@@ -561,18 +561,18 @@ def f12_two_divergences():
     a2.set_xlim(0, 90)
     a2.set_ylim(FO / 1e3 - 8, 138)
     a2.set_xticks([0, 15, 30, 45, 60, 75, 90])
-    a2.set_xlabel('line phase  theta  [deg]')
+    a2.set_xlabel('line phase  $\\theta$  [deg]')
     a2.set_ylabel('switching frequency  [kHz]')
-    a2.set_title('2   so the frequency just walks down to f$_o$', fontsize=11,
-                 color=NAVY)
-    note(a2, 4, 130, 'theta = 90 deg, line peak\nmost power -> highest frequency',
-         color=NAVY, size=10, ha='left')
+    a2.set_title('2   so the frequency just walks down to f$_o$',
+                 fontsize=11, color=NAVY)
+    note(a2, 4, 130, '$\\theta$ = 90\u00b0, the line peak:\nmost power '
+         '\u2192 highest frequency', color=NAVY, size=10, ha='left')
     note(a2, 86, FO / 1e3 + 7,
          'f$_o$ = %.1f kHz\nthe frequency FLOOR' % (FO / 1e3), color=PUR,
          ha='right', size=10)
-    a2.text(45, FO / 1e3 - 4.5, 'capacitive - never go here', color=MAG,
+    a2.text(45, FO / 1e3 - 4.5, 'capacitive \u2014 never go here', color=MAG,
             fontsize=9.5, ha='center', va='center')
-    foot(fig, 'Near theta = 0 the converter delivers almost no power - and it '
+    foot(fig, 'Near theta = 0 the converter delivers almost no power, and it '
               'does not need to: the output capacitor bank is feeding the load '
               'there (previous figure).')
     fig.tight_layout(rect=[0, 0.055, 1, 0.925])
