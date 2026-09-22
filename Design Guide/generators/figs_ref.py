@@ -1624,8 +1624,15 @@ def an_comp_opamp(save, foot):
     # ------------------------------------------------ inside the TL431
     ax.add_patch(Polygon([(XT_, 4.30), (XT_, 6.00), (XB_, YC)], closed=True,
                          fc='white', ec=NAVY, lw=1.8, zorder=4))
-    S.label(ax, XT_ + 0.26, YR, '+', size=22)
-    S.label(ax, XT_ + 0.26, 4.70, '$-$', size=22)
+    #  A '+' or a '-' set with va='center' lands about 1.7 pt above its
+    #  anchor: matplotlib centres the glyph's layout box, and the ink of
+    #  both signs sits above that box's centre.  Measured on this face
+    #  at this size, and pushed back down in points so the mark lands on
+    #  the input pin whatever the figure's scale (2026-09-22, user).
+    for yy, mk, dy in ((YR, '+', -1.6), (4.70, '$-$', -1.8)):
+        ax.annotate(mk, (XT_ + 0.26, yy), textcoords='offset points',
+                    xytext=(0, dy), ha='center', va='center',
+                    fontsize=22, color=NAVY, zorder=6)
     #  the internal reference, returned to the anode
     XR, r = 3.05, 0.30
     S.wire(ax, [(XT_, 4.70), (XR, 4.70), (XR, 4.05)])
