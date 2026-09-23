@@ -938,10 +938,12 @@ def build(A):
     add(p('Combining the burst-mode expression with the multiplier in the '
           'block diagram gives the meaning of the feedback voltage '
           'V<sub>FB</sub>:'))
-    add(eq(r'V_{FB}\;=\;V_{os}+\frac{2K_{HV}}{K_{M}K_{FF}}\,R_{CS}\,P_{in}'
+    add(eq(r'V_{FB}\;=\;V_{os}+\frac{2K_{HV}}{K_{M}K_{FF}}\,R_{CS}\,P_{in,LLC}'
            r'\;=\;0.5\,\mathrm{V}+0.167\,'
-           r'\frac{\mathrm{V}}{\Omega\cdot\mathrm{W}}\,R_{CS}\,P_{in}', key='VFB'))
-    add(p('V<sub>os</sub> is the 0.5&nbsp;V the pin sits at with no power '
+           r'\frac{\mathrm{V}}{\Omega\cdot\mathrm{W}}\,R_{CS}\,P_{in,LLC}', key='VFB'))
+    add(p('P<sub>in,LLC</sub> is the power drawn by the bridge: R<sub>CS</sub> '
+          'sits in the bridge return, so that is the power the controller '
+          'senses. V<sub>os</sub> is the 0.5&nbsp;V the pin sits at with no power '
           'commanded; K<sub>HV</sub>, K<sub>M</sub> and K<sub>FF</sub> are the '
           'input-voltage sense, multiplier and feed-forward gains of the '
           'block diagram. The 2.8&nbsp;V feedback span gives '
@@ -1275,7 +1277,7 @@ def build(A):
              ['<b>3</b>', 'Magnetising peak',
               'The dashed i<sub>Lm</sub> at the switching instant. Below '
               'resonance it depends on neither f<sub>sw</sub> nor load, '
-              'only on V<sub>out</sub>, so it is the same on every cycle.',
+              'only on V<sub>o,eff</sub>, so it is the same on every cycle.',
               'The peak flux; and, scaled to V<sub>OVP2</sub>, the '
               'DC-overlap test current (mark 7)'],
              ['<b>4</b>', 'Secondary peak current',
@@ -1290,13 +1292,13 @@ def build(A):
               'Secondary copper: A<sub>cu</sub> = I<sub>rms</sub>/J, per '
               'winding and per unit'],
              ['<b>6</b>', 'Winding volt-seconds',
-              'The secondary winding voltage is V<sub>out</sub> for the '
+              'The secondary winding voltage is V<sub>o,eff</sub> for the '
               'resonant half period T<sub>r</sub>/2 while the rectifier '
               'conducts. That area is the flux swing 2&thinsp;N<sub>s</sub>'
               'A<sub>e</sub>B<sub>pk</sub>; f<sub>r</sub> is the worst case '
               'because the interval never gets longer than T<sub>r</sub>/2.',
               'Core area and N<sub>s</sub>: A<sub>e</sub> &ge; '
-              'V<sub>out</sub>/(4 f<sub>r</sub> N<sub>s</sub> B<sub>max</sub>)'],
+              'V<sub>o,eff</sub>/(4 f<sub>r</sub> N<sub>s</sub> B<sub>max</sub>)'],
              ['<b>7</b>', 'DC-overlap (saturation) test',
               'Not a waveform. LCR meter across the primary NP1, every other '
               'winding open (secondaries NS2 and NS3, auxiliary NAUX); a dc current overlapped on the primary and the '
@@ -1655,8 +1657,8 @@ def build(A):
            r'-V_{o,min}^{2}}', key='Chold'))
     add(note('<b>Hold-up starts at the worst line phase.</b> If the mains '
              'fails at the ripple trough the bank is already half a ripple '
-             'down, hence the &minus;&frac12;&Delta;v<sub>pp</sub> term; it costs about a '
-             'tenth of the ride-out. &Delta;v<sub>pp</sub> is the ripple the '
+             'down, hence the &minus;&frac12;&Delta;v<sub>pp</sub> term; it shortens '
+             'the ride-out. &Delta;v<sub>pp</sub> is the ripple the '
              'bank produces, not the allowance, so this is checked once the '
              'bank is chosen.'))
     add(p('Both conditions scale as 1/V<sub>out</sub>&sup2;, so which wins '
@@ -1683,7 +1685,7 @@ def build(A):
     add(p('State requirements rather than pick parts. Four rules:'))
     ext(bullets([
         'Rate the primary switches on the <b>composite tank peak</b>; the '
-        'load component alone under-rates them by more than a tenth.',
+        'load component alone under-rates them.',
         'Divide by the number of devices in parallel. Tabulated currents are '
         '<b>per switch position</b> on the primary and <b>per leg</b> on the '
         'secondary; a centre-tapped leg carries the whole secondary '
@@ -3277,7 +3279,8 @@ def build(A):
              ['ZCD divider', '%(RZH).0f k&Omega; / %(RZL).0f k&Omega;' % V,
               'OVP1 %(OVP1).2f V, OVP2 %(OVP2).2f V' % V],
              ['C<sub>in</sub>', '%(Cin).0f nF film' % V,
-              'about 3.2 nF/W &mdash; there is no bulk capacitor'],
+              'about %.1f nF/W &mdash; there is no bulk capacitor'
+              % (V['Cin'] / V['Pin'])],
              ['Compensation',
               '%(CFo).0f nF / %(CF).0f nF / %(RF).0f k&Omega; / %(Cfx).2f nF'
               % V,
@@ -3384,7 +3387,10 @@ def build(A):
            r'R_{CS,max2}=\frac{0.55\,\mathrm{V}}{I_{Lr,pk}}', key='RCS'))
     add(p('The first is the maximum-power law (Section&nbsp;'
           + SR('The feedback pin is a power command')
-          + '), the second the OCP1 trip point:'))
+          + '), the second the OCP1 trip point. The first is written with '
+          'P<sub>in</sub>, as the datasheet writes it, not with the '
+          'P<sub>in,LLC</sub> the pin senses; that is %.0f&nbsp;%% '
+          'conservative:' % (100 * (V['Pin'] / _SH['P.in_LLC'] - 1))))
     add(calc(r'R_{CS,max1}=\frac{16.8}{%(Pin).1f}=%(a1).5f\;\Omega'
              r'=%(a).2f\;\mathrm{m\Omega}\,,\qquad '
              r'R_{CS,max2}=\frac{0.55}{%(Ipk).2f}=%(b1).5f\;\Omega'
@@ -3520,7 +3526,8 @@ def build(A):
     add(note('Swapping the two resistors makes OVP1 trip below a volt of '
              'output, so the converter never starts. Reversed winding '
              'polarity makes the bridge hard switch from the first pulse.'))
-    add(note('The datasheet turns-ratio ceiling applies only when the '
+    add(note('The ceiling that the 25&nbsp;V V<sub>CC</sub> rating puts on the '
+             'turns ratio applies only when the '
              'auxiliary winding supplies V<sub>CC</sub>. Here it senses '
              'only (%(va).1f&nbsp;V nominal, %(vo).1f&nbsp;V at OVP2), so '
              'the only constraint is whole turns.'
@@ -3570,7 +3577,7 @@ def build(A):
               'R<sub>CFG</sub>, read at power-up',
               'V<sub>BO</sub> %(pk).0f V peak = %(VBO).1f Vac rms, clear of the '
               '%(Vacmin).0f Vac minimum by %(kBO).3f' % dict(V, kBO=A.SH['k.BO'], pk=V['VBO'] * 2 ** 0.5)],
-             ['Cycle-by-cycle over-current, OCP1',
+             ['First-level over-current, OCP1: raises the switching frequency',
               'R<sub>CS</sub> &mdash; the same resistor as the '
               'maximum-power law',
               '%(IOCP1).2f A against a composite peak of %(Icomp).2f A, '
@@ -3586,7 +3593,8 @@ def build(A):
               'the same divider',
               '%(OVP2).2f V' % V],
              ['Capacitive-mode protection',
-              'internal; it watches the ZCD edge against the gate',
+              'internal, on the ISEN pin: ACP-soft raises the frequency, ACP-hard '
+              'stops for 50 &micro;s and restarts at the maximum frequency',
               'the last line of defence only &mdash; the frequency floor '
               'f<sub>Min</sub> is the first'],
              ['Burst mode at light load',
@@ -3867,8 +3875,9 @@ def build(A):
             'released document.',
             [['Item', 'What the draft says', 'What is used here, and why'],
              ['Oscillator idle time T<sub>idle</sub>',
-              'Section 5.3.2 says 700 ns; its Table 5 back-solves to about 250 ns '
-              'from the frequency expressions',
+              'Section 5.3.2 implies 700 ns in the frequency expressions and '
+              '350 ns in the C<sub>T,max</sub> expression; Table 2 (recommended '
+              'operating range) back-solves to about 250 ns',
               '<b>%(Tidle).0f ns.</b> The two clamps bracket the operating '
               'range at 250 ns and stop doing so at 700 ns, so this is a '
               'measurement, not a rounding' % V],
@@ -3964,7 +3973,7 @@ def build(A):
     add(h2('Open items in this design'))
     ext(tbl('What is not settled, and what would settle it.',
             [['Item', 'State', 'What closes it'],
-             ['T<sub>idle</sub>', 'two candidate values, 250 and 700 ns',
+             ['T<sub>idle</sub>', 'three values, 250, 350 and 700 ns',
               'Measure f<sub>sw</sub>(&theta;) on the first board'],
              ['Primary conduction loss',
               '%(kPloss).3f against the budget &mdash; <b>not met, and '

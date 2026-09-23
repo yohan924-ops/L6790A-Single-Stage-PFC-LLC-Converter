@@ -105,10 +105,10 @@ def build(A):
 
     # =============================================================== 1
     add(h1('들어가며'))
-    add(p('유니버설 입력 LLC 전원은 보통 두 단이다. 400&nbsp;V 버스를 만드는 '
+    add(p('유니버설 입력 LLC 전원은 보통 two-stage 다. 400&nbsp;V 버스를 만드는 '
           'boost PFC 단과, 그 버스를 내리는 LLC 단. 버스 커패시터는 역률 1 에서 라인 주파수 2배로 변하는 입력 전력의 변동분을 저장하고, LLC 에는 거의 일정한 전압을 공급한다. 그래서 탱크는 좁은 게인 범위만 커버하면 된다.'))
     add(p('<b>single-stage PFC LLC</b> 는 boost 단과 버스 커패시터를 없앤다. '
-          '정류된 상용전원이 공진 탱크로 바로 들어간다. 입력은 100/120&nbsp;Hz 정류 사인파가 되고, 탱크가 내야 하는 게인이 라인 주기 동안 입력을 따라 바뀌며, 버스 커패시터가 하던 일은 출력 커패시터가 맡는다. 2-stage 설계 습관은 '
+          '정류된 상용전원이 공진 탱크로 바로 들어간다. 입력은 100/120&nbsp;Hz 정류 사인파가 되고, 탱크가 내야 하는 게인이 라인 주기 동안 입력을 따라 바뀌며, 버스 커패시터가 하던 일은 출력 커패시터가 맡는다. two-stage 설계 습관은 '
           '대부분 여기에 맞지 않는다.'))
     add(p('이 문서는 이 컨버터가 어떻게 동작하는지, 그리고 STMicroelectronics '
           '<b>L6790A</b> 로 어떻게 설계하는지를 다룬다. 설계 예제 하나를 문서 전체에서 쓴다: <b>90 ~ 264&nbsp;Vac 입력, %(Vout).0f&nbsp;V / '
@@ -585,7 +585,7 @@ def build(A):
     add(p('P 는 평균 전력, I<sub>1,rms</sub> 는 기본파만의 실효값, '
           '&phi;<sub>1</sub> 은 전압에 대한 기본파의 위상이다. <b>변위</b>'
           '(위상)는 모터 부하에서 나빠지고, <b>distortion</b>(실효값 중 고조파의 몫)은 정류기 부하에서 나빠진다. 위의 전류는 위상이 거의 같은데도 역률이 0.6 정도밖에 안 된다.'))
-    add(p('전고조파 왜율 THD 는 기본파에 대한 고조파의 비다.'))
+    add(p('THD(total harmonic distortion)는 기본파에 대한 고조파의 비다.'))
     add(eq(r'THD=\frac{\sqrt{I_{rms}^{2}-I_{1,rms}^{2}}}{I_{1,rms}}'
            r'\,,\qquad \frac{I_{1,rms}}{I_{rms}}=\frac{1}{\sqrt{1+THD^{2}}}'))
     add(note('PF 가 0.99 를 넘어도 IEC&nbsp;61000-3-2 를 통과하지 못할 수 있다. 이 규격은 <i>개별</i> 고조파를 A 단위로 제한한다. Class&nbsp;D 는 '
@@ -611,9 +611,9 @@ def build(A):
           '를 따라간다는 뜻이다: 주기마다 두 번 0, 피크에서 평균의 두 배. '
           '부하는 일정한 전력을 요구하므로 <b>무언가가 그 차이를 저장해야 '
           '한다</b>.'))
-    add(h2('왜 보통 두 단인가'))
+    add(h2('왜 보통 two-stage 인가'))
     add(fig('an_two_stage',
-            '2-stage 구성과 각 노드의 파형. 라인 주파수 2배의 리플을 흡수하는 '
+            'two-stage 구성과 각 노드의 파형. 라인 주파수 2배의 리플을 흡수하는 '
             '버퍼는 두 단 사이 400&nbsp;V 에 있다. DC 노드의 리플은 과장했다.',
             width=CW))
     add(p('버스 커패시터는 두 가지 일을 한다.'))
@@ -642,7 +642,7 @@ def build(A):
           '되돌려 줘야 한다.' % FR('an_pf_chain')))
 
     add(h2('버퍼를 400 V 에서 출력으로 옮기기'))
-    add(p('2-stage 에서는 버퍼가 400&nbsp;V 버스 커패시터다. 여기는 버스가 '
+    add(p('two-stage 에서는 버퍼가 400&nbsp;V 버스 커패시터다. 여기는 버스가 '
           '없으므로 버퍼가 출력으로 간다. <b>저장할 에너지(J)는 같고 전압만 바뀌는데</b>, 커패시터가 내놓을 수 있는 에너지는 시작 전압과 부하가 허용하는 최저 전압 사이의 몫뿐이다.'))
     add(eq(r'E=\frac{1}{2}C\left(V^{2}-V_{min}^{2}\right)'))
     add(p('hold-up 을 계산해 보면 그 대가가 보인다. 두 구조 모두 같은 T<sub>hold</sub> '
@@ -668,7 +668,7 @@ def build(A):
     # =============================================================== 3
     add(h1('동작 원리'))
     add(h2('게인은 제어 변수가 아니라 경계 조건이다'))
-    add(p('2-stage LLC 에서는 컨트롤러가 게인을 지령한다. 여기서는 그럴 수 '
+    add(p('two-stage LLC 에서는 컨트롤러가 게인을 지령한다. 여기서는 그럴 수 '
           '없다. <b>입력과 출력이 모두 전압원</b>이기 때문이다: 출력은 mF 급 '
           '커패시터 뱅크이고 입력은 정류된 상용전원이다. 순시 게인은 외부에서 정해진다.'))
     add(eq(r'M(\theta)=\frac{n\,V_{o,eff}}{V_{drive}(\theta)}'
@@ -803,10 +803,11 @@ def build(A):
 
     add(h2('피드백 핀은 전력 지령이다'))
     add(p('버스트 모드 식과 블록도의 multiplier 를 합치면 피드백 전압 V<sub>FB</sub> 의 의미가 나온다.'))
-    add(eq(r'V_{FB}\;=\;V_{os}+\frac{2K_{HV}}{K_{M}K_{FF}}\,R_{CS}\,P_{in}'
+    add(eq(r'V_{FB}\;=\;V_{os}+\frac{2K_{HV}}{K_{M}K_{FF}}\,R_{CS}\,P_{in,LLC}'
            r'\;=\;0.5\,\mathrm{V}+0.167\,'
-           r'\frac{\mathrm{V}}{\Omega\cdot\mathrm{W}}\,R_{CS}\,P_{in}', key='VFB'))
-    add(p('V<sub>os</sub> 는 전력 지령이 없을 때 핀이 머무는 0.5&nbsp;V 이고, '
+           r'\frac{\mathrm{V}}{\Omega\cdot\mathrm{W}}\,R_{CS}\,P_{in,LLC}', key='VFB'))
+    add(p('P<sub>in,LLC</sub> 는 브리지가 끌어가는 전력이다. R<sub>CS</sub> 가 브리지 귀환 경로에 있으므로 '
+          '컨트롤러가 검출하는 것이 이 전력이다. V<sub>os</sub> 는 전력 지령이 없을 때 핀이 머무는 0.5&nbsp;V 이고, '
           'K<sub>HV</sub>, K<sub>M</sub>, K<sub>FF</sub> 는 블록도의 입력 전압 sensing, multiplier, 피드포워드 게인이다. 피드백 폭 2.8&nbsp;V 에서 '
           '2.8/0.167 = 16.8&nbsp;&Omega;&middot;W, 데이터시트의 최대 전력 '
           '규칙이 나온다. <b>최대 전력, 버스트 진입, Overload 검출이 전부 '
@@ -832,7 +833,7 @@ def build(A):
           '작아질수록 떨어진다. ST 의 평가 보드는 &lambda;&nbsp;=&nbsp;0.500 '
           '으로 동작하고 이 설계도 그 근처로 나온다(%s 절): 이 값은 토폴로지 특성에서 나온다.' % SR('단계별 계산')))
     add(p('대가는 순환 전류다. L<sub>m</sub> 이 작으면 자화 전류가 크고, 그 '
-          '도통 손실은 부하와 무관하다. <b>single-stage PFC LLC 는 2-stage '
+          '도통 손실은 부하와 무관하다. <b>single-stage PFC LLC 는 two-stage '
           'LLC 보다 효율이 낮다. 구조상 그렇다.</b>'))
 
     add(h2('f<sub>sw,max</sub> 는 검사값이 아니라 설계 입력이다'))
@@ -984,10 +985,10 @@ def build(A):
           '같다.'))
     add(eq(r'R_{ac}=\frac{4}{\pi^{2}}\,'
            r'\frac{n^{2}V_{o,eff}^{2}}{P_{in,LLC}}', key='Rac'))
-    add(p('P<sub>in,LLC</sub> 는 공진단으로 들어가는 전력이다. LLC 교과서는 모두 8/&pi;&sup2; 계수와 2-stage 컨버터의 출력 전력을 쓴다. 여기서 입력 전력은 2P&thinsp;sin&sup2;&thinsp;&theta; 이므로 '
+    add(p('P<sub>in,LLC</sub> 는 공진단으로 들어가는 전력이다. LLC 교과서는 모두 8/&pi;&sup2; 계수와 two-stage 컨버터의 출력 전력을 쓴다. 여기서 입력 전력은 2P&thinsp;sin&sup2;&thinsp;&theta; 이므로 '
           'R<sub>ac</sub> 는 p = 2P 인 라인 피크에 고정한다: 8 이 4 가 되고, '
           'Q 는 피크에서의 품질계수이며 다른 곳에서는 Q(&theta;) = '
-          'Q<sub>pk</sub>sin&sup2;&thinsp;&theta; 다. 2-stage 값을 쓰면 부하를 '
+          'Q<sub>pk</sub>sin&sup2;&thinsp;&theta; 다. two-stage 값을 쓰면 부하를 '
           '절반으로 잘못 본다.'))
     add(p('낮은 코너의 게인 요구와 ZVS 요구가 품질계수를 Q<sub>ZVS</sub> 로 '
           '제한한다. R<sub>ac</sub>Q<sub>ZVS</sub> 가 탱크를 정하는 '
@@ -1061,7 +1062,7 @@ def build(A):
               '1차 동선: 유닛당 A<sub>cu</sub> = I<sub>rms</sub>/J'],
              ['<b>3</b>', '자화 피크',
               '스위칭 순간의 점선 i<sub>Lm</sub>. below 에서는 f<sub>sw</sub> '
-              '에도 부하에도 무관하고 V<sub>out</sub> 만으로 정해지므로 어느 '
+              '에도 부하에도 무관하고 V<sub>o,eff</sub> 만으로 정해지므로 어느 '
               '사이클에서나 같다.',
               '피크 자속. 그리고 V<sub>OVP2</sub> 로 환산해 DC overlap 시험 '
               '전류(표시 7)'],
@@ -1075,12 +1076,12 @@ def build(A):
               '2차 동선: A<sub>cu</sub> = I<sub>rms</sub>/J, 권선당·유닛당'],
              ['<b>6</b>', '권선 볼트-초',
               '정류기가 도통하는 공진 반주기 T<sub>r</sub>/2 동안 2차 권선 '
-              '전압은 V<sub>out</sub> 이다. 그 면적이 자속 스윙 '
+              '전압은 V<sub>o,eff</sub> 이다. 그 면적이 자속 스윙 '
               '2&thinsp;N<sub>s</sub>A<sub>e</sub>B<sub>pk</sub> 이고, 구간이 '
               'T<sub>r</sub>/2 보다 길어지는 일은 없으므로 f<sub>r</sub> 이 '
               '최악이다.',
               '코어 면적과 N<sub>s</sub>: A<sub>e</sub> &ge; '
-              'V<sub>out</sub>/(4 f<sub>r</sub> N<sub>s</sub> B<sub>max</sub>)'],
+              'V<sub>o,eff</sub>/(4 f<sub>r</sub> N<sub>s</sub> B<sub>max</sub>)'],
              ['<b>7</b>', 'DC overlap(포화) 시험',
               '파형이 아니다. LCR 미터를 1차 NP1 에 걸고 나머지 권선(2차 NS2·NS3, 보조 NAUX)은 '
               '모두 Open, 1차에 DC 전류를 겹쳐 흘리며 1차 인덕턴스를 전류에 따라 '
@@ -1352,7 +1353,7 @@ def build(A):
            r'-V_{o,min}^{2}}', key='Chold'))
     add(note('<b>hold-up 은 최악의 라인 위상에서 시작한다.</b> 리플 골에서 '
              '정전이 나면 뱅크는 이미 리플의 절반만큼 내려가 있다. 그래서 '
-             '&minus;&frac12;&Delta;v<sub>pp</sub> 항이 있고, 유지 시간이 1/10 정도 줄어든다. &Delta;v<sub>pp</sub> 는 허용값이 아니라 뱅크가 실제로 '
+             '&minus;&frac12;&Delta;v<sub>pp</sub> 항이 있고, 그만큼 유지 시간이 줄어든다. &Delta;v<sub>pp</sub> 는 허용값이 아니라 뱅크가 실제로 '
              '만드는 리플이므로, 뱅크를 정한 뒤에 검사한다.'))
     add(p('두 조건 모두 1/V<sub>out</sub>&sup2; 으로 가므로 어느 조건이 결정하는지는 사양에 달렸다. k&nbsp;=&nbsp;V<sub>o,min</sub>/V<sub>out</sub> 으로 두면 리플 조건이 결정하는 경우는'))
     add(eq(r'\left(1-\frac{\Delta v}{2}\right)^{2}-k^{2}'
@@ -1371,7 +1372,7 @@ def build(A):
     add(p('부품을 고르지 말고 요구조건을 적는다. 규칙 넷.'))
     ext(bullets([
         '1차 스위치 정격은 <b>합성 탱크 피크</b>로 잡는다. 부하 성분만으로 '
-        '잡으면 1/10 넘게 부족하다.',
+        '잡으면 부족하다.',
         '병렬 소자 수로 나눈다. 표의 전류는 1차는 <b>스위치 한 개당</b>, 2차는 '
         '<b>레그당</b>이다. 센터탭 레그는 2차 전류 전부를 흘린다.',
         '손실은 <b>T<sub>j,max</sub></b> 에서의 R<sub>DS(on)</sub> 으로 계산한다. '
@@ -2776,7 +2777,8 @@ def build(A):
              ['ZCD 분압기', '%(RZH).0f k&Omega; / %(RZL).0f k&Omega;' % V,
               'OVP1 %(OVP1).2f V, OVP2 %(OVP2).2f V' % V],
              ['C<sub>in</sub>', '%(Cin).0f nF 필름' % V,
-              '약 3.2 nF/W &mdash; 벌크 커패시터가 없다'],
+              '약 %.1f nF/W &mdash; 벌크 커패시터가 없다'
+              % (V['Cin'] / V['Pin'])],
              ['보상',
               '%(CFo).0f nF / %(CF).0f nF / %(RF).0f k&Omega; / %(Cfx).2f nF'
               % V,
@@ -2875,8 +2877,10 @@ def build(A):
     add(eq(r'R_{CS,max1}=\frac{16.8\,\Omega\!\cdot\!\mathrm{W}}{P_{in}}'
            r'\qquad\qquad '
            r'R_{CS,max2}=\frac{0.55\,\mathrm{V}}{I_{Lr,pk}}', key='RCS'))
-    add(p('첫째는 최대 전력 법칙(%s 절), 둘째는 OCP1 트립점이다.'
-          % SR('피드백 핀은 전력 지령이다')))
+    add(p('첫째는 최대 전력 법칙(%s 절), 둘째는 OCP1 트립점이다. 첫째는 데이터시트처럼 '
+          'P<sub>in</sub> 으로 쓰고, 핀이 실제로 검출하는 P<sub>in,LLC</sub> 로 쓰지 않는다. 그만큼 '
+          '%.0f&nbsp;%% 보수적이다.'
+          % (SR('피드백 핀은 전력 지령이다'), 100 * (V['Pin'] / _SH['P.in_LLC'] - 1))))
     add(calc(r'R_{CS,max1}=\frac{16.8}{%(Pin).1f}=%(a1).5f\;\Omega'
              r'=%(a).2f\;\mathrm{m\Omega}\,,\qquad '
              r'R_{CS,max2}=\frac{0.55}{%(Ipk).2f}=%(b1).5f\;\Omega'
@@ -3003,7 +3007,7 @@ def build(A):
     add(note('두 저항을 바꿔 끼우면 OVP1 이 출력 1 V 아래에서 트립해 컨버터가 '
              '기동하지 못한다. 권선 극성이 뒤집히면 첫 펄스부터 브리지가 하드 '
              '스위칭한다.'))
-    add(note('데이터시트의 권선비 상한은 보조 권선이 V<sub>CC</sub> 를 공급할 '
+    add(note('25&nbsp;V V<sub>CC</sub> 정격이 권선비에 거는 상한은 보조 권선이 V<sub>CC</sub> 를 공급할 '
              '때만 적용된다. 여기서는 sensing 만 하므로(공칭 %(va).1f&nbsp;V, OVP2 '
              '에서 %(vo).1f&nbsp;V) 제약은 정수 턴뿐이다.'
              % dict(va=A.SH['V.aux'],
@@ -3047,7 +3051,7 @@ def build(A):
               'R<sub>CFG</sub>, 전원 인가 시 읽음',
               'V<sub>BO</sub> 피크 %(pk).0f V = %(VBO).1f Vac rms, 최저 %(Vacmin).0f Vac 에 대해 '
               '여유 %(kBO).3f' % dict(V, kBO=A.SH['k.BO'], pk=V['VBO'] * 2 ** 0.5)],
-             ['사이클 단위 과전류, OCP1',
+             ['1단계 과전류, OCP1: 스위칭 주파수를 올린다',
               'R<sub>CS</sub> &mdash; 최대 전력 법칙과 같은 저항',
               '합성 피크 %(Icomp).2f A 에 대해 %(IOCP1).2f A, 여유 %(kOCP).3f'
               % dict(V, IOCP1=A.SH['I.OCP1'])],
@@ -3061,7 +3065,8 @@ def build(A):
               '같은 분압기',
               '%(OVP2).2f V' % V],
              ['capacitive 모드 보호',
-              '내부; 게이트에 대한 ZCD 에지를 감시',
+              '내부, ISEN 핀: ACP-soft 는 주파수를 올리고, ACP-hard 는 '
+              '50&nbsp;&micro;s 멈춘 뒤 최대 주파수로 재시작',
               '최후의 보호일 뿐 &mdash; 첫째는 주파수 하한 f<sub>Min</sub>'],
              ['Light load 버스트 모드',
               'R<sub>BM</sub>, 전원 인가 시 읽음',
@@ -3078,7 +3083,7 @@ def build(A):
     ext(bullets([
         '<b>탱크는 상용전원 범위가 아니라 등가 범위 %(Veqlo).1f ~ '
         '%(Veqhi).1f&nbsp;Vac 에서 설계한다.</b>' % V,
-        '<b>&lambda; 는 0.5 근처를 예상할 것.</b> 2-stage 의 인덕턴스 비로는 '
+        '<b>&lambda; 는 0.5 근처를 예상할 것.</b> two-stage 의 인덕턴스 비로는 '
         '최저 입력 전압에서 필요한 게인이 나오지 않는다.',
         '<b>f<sub>Min</sub> 을 f<sub>o</sub> 위에.</b> anti-capacitive 보호는 '
         '첫째가 아니라 최후의 보호다.',
@@ -3172,7 +3177,7 @@ def build(A):
         ('&phi;<sub>1</sub>, D', '기본파의 변위각, 그리고 distortion 계수 I<sub>1,rms</sub>/I<sub>rms</sub>'),
         ('D<sub>3</sub>', '입력 전류의 3차 고조파, 기본파에 대한 비'),
         ('V<sub>in</sub>, V<sub>pk</sub>', '브리지 레일 전압, 그리고 상용전원 피크'),
-        ('V<sub>bus</sub>', '2단 컨버터의 두 단 사이에 있는 정전압 DC 버스'),
+        ('V<sub>bus</sub>', 'two-stage 컨버터의 두 단 사이에 있는 정전압 DC 버스'),
         ('V<sub>ac,eq</sub>, V<sub>ac,eq,low</sub>, V<sub>ac,eq,high</sub>', '모핑 뒤 탱크가 보는 등가 입력 전압, 그리고 두 모핑 threshold 에서의 값'),
         ('V<sub>eq,min</sub>, V<sub>eq,max</sub>', '최저 등가 입력(HB 경계)과 상용전원 최대, ST 툴의 여유 계수 &Gamma;<sub>v</sub> 에서 쓰는 값'),
 
@@ -3330,8 +3335,8 @@ def build(A):
             '문서로 다시 확인해야 한다.',
             [['항목', '초안이 말하는 것', '여기서 쓴 것, 그리고 이유'],
              ['오실레이터 idle 시간 T<sub>idle</sub>',
-              '5.3.2 절은 700 ns; 그 문서의 표 5 를 주파수 식으로 역산하면 약 '
-              '250 ns',
+              '5.3.2 절의 주파수 식은 700 ns, 같은 절의 C<sub>T,max</sub> 식은 '
+              '350 ns 를 뜻한다. 표 2(권장 동작 범위)를 역산하면 약 250 ns',
               '<b>%(Tidle).0f ns.</b> 250 ns 에서는 두 클램프가 동작 범위를 포함하지만 700 ns 에서는 그렇지 않으므로, 추정이 아니라 측정해야 할 값' % V],
              ['브라운아웃 식',
               'V<sub>BO</sub> = min(60 V, R<sub>CFG</sub>&middot;4 V/k&Omega;) '
@@ -3405,7 +3410,7 @@ def build(A):
     add(h2('이 설계의 미결 항목'))
     ext(tbl('미결 항목과 확정 방법.',
             [['항목', '상태', '확정 방법'],
-             ['T<sub>idle</sub>', '후보 둘, 250 과 700 ns',
+             ['T<sub>idle</sub>', '값 셋, 250 · 350 · 700 ns',
               '첫 보드에서 f<sub>sw</sub>(&theta;) 측정'],
              ['1차 도통 손실',
               'budget 대비 %(kPloss).3f &mdash; <b>미달, 그리고 수용</b>' % V,
