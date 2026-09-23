@@ -28,6 +28,8 @@ paths:
   이 컨테이너에는 NanumGothic · WenQuanYi 가 있다. 한국어 그림은 WQY 로(`KR_FIGS`).
 - **`figedit` 는 그림이 주장하는 바를 바꾸지 않는다.** 유일한 예외가 `fix_freewheel_2nd_half()` 이고 사유가 함수에 있다.
   `_font()` 는 Arial 이 없으면 Liberation Sans, 그것도 없으면 예외 — 비트맵 기본 서체로 떨어지지 않는다.
-- 참조 PDF 에서 잘라 온 그림은 `figtrim.py` 로 원문 캡션 조각을 확인한다. **AN 의 그림은 지금 전부 우리가 그린 것이다.**
+- 참조 PDF 에서 잘라 온 그림은 `figtrim.py` 로 원문 캡션 조각을 확인한다. **AN 의 그림은 ST 설계 스프레드시트에서 가져온
+  도면 세 장(`bom_power_stage` · `bom_pin_config` · `comp_network_st`)을 빼면 전부 우리가 그린 것이다** — 그 세 장은
+  캡션과 앞붙이에 출처를 적었다(50차). 가져온 그림을 더하면 캡션과 앞붙이 문장을 같이 고칠 것.
 - 코어 기하는 `cores.py` 한 곳(`CORES` 전자기 값 · `MECH` 치수 · `PINMAP` 핀 배정 · `winding()`), 그림·표·벤더 사양서가 같이 읽는다.
   `J_CU` · `K_U` · `K_LITZ` · `T_FOIL` · `MARGIN` 다섯이 가정이다. **핀 번호 방향은 가정**이라 도면으로 확인할 것.

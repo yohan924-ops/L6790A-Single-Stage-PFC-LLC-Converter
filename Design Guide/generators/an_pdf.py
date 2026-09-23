@@ -194,6 +194,9 @@ V = dict(
     Aereq=SH['A.e_req_mm'], kAe=SH['k.Ae'],
     Aemm=SH['k.Ae'] * SH['A.e_req_mm'],
     Isateq=SH['I.sat_eq'], Isatspec=SH['I.sat_spec'],
+    #  what the specification line asks for: the computed current rounded
+    #  UP, the same as build_trans_spec.py puts on the vendor sheet
+    IsatTest=float(-(-SH['I.sat_spec'] // 1)),
     Isecx=SH['I.diode_lc'] / SH['N.x'], Isecpkx=SH['I.sec_pk'] / SH['N.x'],
     MFBmax=R['MFBmax'], Minf=1 / (1 + R['lam_a']), MVmin=R['MVmin'],
     # no-load corner: real only when the requirement is ABOVE the asymptote
@@ -510,6 +513,17 @@ def use_korean():
         pdfmetrics.registerFontFamily('AN', normal='AN', bold='AN-B',
                                       italic='AN-I', boldItalic='AN-B')
         _ALT = 'AN'
+        # An entity the Latin face can draw is drawn by it, not replaced:
+        # the fallback turned every minus sign of the Korean edition into
+        # a hyphen, because NanumGothic has no U+2212 (50th round).
+        alt_c2g = pdfmetrics.getFont('AN').face.charToGlyph
+        back = sorted(e for e, (cp, _a) in _FALLBACK.items()
+                      if e in _ENTFIX and cp in alt_c2g)
+        for ent in back:
+            del _ENTFIX[ent]
+        if back:
+            print('  그중 라틴 서체에 있는 것은 바꾸지 않고 그쪽으로 그린다: %s'
+                  % ' '.join(back))
         print('  한국어 서체에 없는 글자는 %s 로 그린다'
               % os.path.basename(lat[0]))
     globals()['_C2G'] = kr_c2g
@@ -544,10 +558,14 @@ def st(name, **kw):
 
 S = {
     'p': st('p', alignment=TA_JUSTIFY, spaceAfter=8),
+    #  keepWithNext: a heading never ends a page on its own.  Without it
+    #  five English and eleven Korean section titles sat at the foot of a
+    #  page with their text on the next one (50th-round read-through).
     'h1': st('h1', fontName=FONTB, fontSize=13.5, leading=17,
-             spaceBefore=16, spaceAfter=9, textColor=colors.black),
+             spaceBefore=16, spaceAfter=9, textColor=colors.black,
+             keepWithNext=1),
     'h2': st('h2', fontName=FONTB, fontSize=10.8, leading=14,
-             spaceBefore=13, spaceAfter=6),
+             spaceBefore=13, spaceAfter=6, keepWithNext=1),
     # leading has to clear a subscript, or an I_Lr in a two-line caption
     # lands on the line below it
     'cap': st('cap', fontName=FONTB, fontSize=8.6, leading=12.6,
@@ -1054,8 +1072,12 @@ def legal():
         'goes to production.',
         'The worked design has not been built. Only the numbers marked as '
         'measured are measured; the rest are calculated.',
-        'All figures were drawn for this note. Where a figure follows the '
-        'argument of a published application note, the caption says so.',
+        'The figures were drawn for this note, except the power-stage, '
+        'controller and compensator drawings of Chapter&nbsp;'
+        + secref('Design procedure') + ', which come '
+        'from the ST L6790A design spreadsheet; their captions say so. '
+        'Where a figure follows the argument of a published application '
+        'note, the caption says so too.',
     ):
         s.append(Paragraph(T(t), S['p']))
         s.append(Spacer(1, 3))
@@ -1086,7 +1108,7 @@ def legal():
                     'the winding and pin assignment drawn. Compensator chapter '
                     'rewritten with the loop equations, the op-amp equivalent '
                     'of the TL431 network and a worked loop design. Text '
-                    'shortened throughout. Korean edition to follow.', S['tc'])]],
+                    'shortened throughout. Korean edition published with it.', S['tc'])]],
         colWidths=[70, 90, CW - 160],
         style=TableStyle([('BACKGROUND', (0, 0), (-1, 0), NAVY),
                           ('LINEBELOW', (0, 0), (-1, -1), 0.4, LT),
@@ -1112,8 +1134,8 @@ def legal():
         'is more power and a flatter curve.',
         '<b>V<sub>o,eff</sub></b> = V<sub>out</sub> + '
         'N<sub>rect</sub>V<sub>f</sub>, with <b>N<sub>rect</sub></b> the '
-        'rectifier drops in the conduction path: 1 for a centre tap, 2 for a '
-        'full bridge.',
+        'number of rectifier drops in the conduction path: 1 for a centre '
+        'tap, 2 for a full bridge.',
         '<b>n</b> is the model turns ratio in the gain equation; '
         '<b>n<sub>T</sub></b> the wound ratio with the leakage in '
         'L<sub>r</sub>.',
