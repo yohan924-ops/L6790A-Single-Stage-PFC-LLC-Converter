@@ -46,6 +46,10 @@ ABSENT_OK = {
     'L6790A_Transformer_Design_KR_v1.0.pdf',
     'tx_pdf.py', 'tx_body.py',
     'Design Guide/generators/tx_pdf.py', 'Design Guide/generators/tx_body.py',
+    # the training deck was dropped 2026-09-23, with the tools that only served it
+    'Training Material/L6790A_SingleStage_PF_LLC_Design_Training.pptx',
+    'L6790A_SingleStage_PF_LLC_Design_Training.pptx',
+    'check_deck.py', 'deckedit.py', 'fix_deck_overflow.py',
     # deleted on purpose 2026-09-08: the vendor spec is superseded by the
     # three in variants/, the KH form was already 폐기 예정, and the encrypted
     # original was replaced by the decrypted copy beside it

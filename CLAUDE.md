@@ -36,7 +36,7 @@ ST **L6790A** 로 **단일단(Single-Stage) PF LLC** 를 설계한다. 90–264 
 ## 산출물과 파일 지도
 
 산출물은 셋 — ① 설계 가이드(배포용 AN) ② SMath 시트(정확한 수학 모델) ③ 수정된 ST 스프레드시트.
-교육자료는 중단했고, 트랜스포머 설계 정리 PDF 는 AN 에 같은 내용이 있어 지웠다(2026-09-23 사용자).
+교육자료(PPT)와 트랜스포머 설계 정리 PDF 는 지웠다 — 교육자료는 중단, 트랜스포머 정리는 AN 에 같은 내용이 있다(2026-09-23 사용자).
 데이터시트 · 회로도 · 논문은 **입력 자료**이고 고치지 않는다.
 
 | 경로 | 무엇 | 상태 |
@@ -51,16 +51,14 @@ ST **L6790A** 로 **단일단(Single-Stage) PF LLC** 를 설계한다. 90–264 
 | `Design Guide/AN_L6790A_SingleStage_PFC_LLC_ApplicationNote_v1.3.pdf` · `…_KR_v1.3.pdf` | **배포용 AN** 영문 94쪽 · 한국어 95쪽 · 목차 링크·북마크. `an_pdf.py`+`an_body.py` / `an_kr_pdf.py`+`an_kr_body.py`, 수치 전부 `l6790.py`·시트 | v1.3 · 최종 전수 검토(50차) |
 | `Design Guide/AN_L6790A_Design_Guide_rev2_1.md` | 한국어 본체 문서(7.5:1). **시트의 식 번호 [n] 의 출처** — `audit_sm` · `audit_guide` 가 읽는다. 9:1 판 rev 2.0 은 2026-09-23 삭제 | rev 2.0/2.1 |
 | `Design Guide/generators/` | 도구 체인 전부 — README 참조 | |
-| `Training Material/…Design_Training.pptx` | 영문 교육자료 61장 | **중단**(2026-09-23 사용자) — 더 만들지 않는다 |
 | `Datasheet/` · `EVB Schematic/` · `LGE Material/` · `Reference/` | 입력 자료. DS 는 **DRAFT**(TBD · 내부 모순 있음). `Reference/Visio-LLC drawing.pdf` 가 본 설계 회로도(벡터) | 원본 |
 
 ## 지금 상태와 다음 할 일
 
 | 남은 일 | 무엇을 | 상태 |
 | :-- | :--- | :--- |
-| 스프레드시트 rev 0.7 | 정리만 남았다 — `CHANGELOG_rev0_7` 시트 분리, 그때 **CHANGELOG 에 없는 설계 셀 48개**를 채운다 | 대기 |
+| 스프레드시트 기록 | **끝** — ST 원본과 전량 대조해 CHANGELOG 에 빠진 17셀(옛 메모의 "48"은 그 뒤 채워진 줄을 세지 않은 수)을 `CHANGELOG_rev0_6` 96행부터 기록(`log_xl_unlogged.py`, 정본·6:1). 남은 것은 `RTC` 격자를 FB 경계 기준으로 바꾸는 설계 변경 하나(`HISTORY.md` "E 는 적용하지 않았다" 단락) — 값에는 영향 없음 | 필요하면 |
 | **`R.T` — 11 kΩ 유지** | 트랜스포머 공차(±10 % 면 11 kΩ 부족)와 영교차 dead zone(10 kΩ 이면 26 %)의 맞교환. **실측 후 결정**(2026-09-23 사용자) — `docs/DESIGN.md` §4.2 5b · §4.3 12 | 시제품 |
-| 열린 설계 항목 | 코어 미선정(자속은 `k.Ae` 1.098 통과, 창 면적 미검사) — `docs/DESIGN.md` §4.2 5d | 대기 |
 | 시제품 실측 | `docs/DESIGN.md` §4.3 의 12항목 | 보드 |
 
 **사람이 PC 에서 해야 할 일** (기계가 대신 못 한다): ① 6:1 워크북을 한 번 열었다 저장(`calcChain` 없음, `f.Min` 캐시가 옛 390 pF 값)
