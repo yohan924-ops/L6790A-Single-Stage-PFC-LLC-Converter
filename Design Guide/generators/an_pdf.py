@@ -1012,11 +1012,35 @@ def cover_page(c, doc):
     c.restoreState()
 
 
+def _plain(t):
+    """heading markup -> the plain text a PDF outline can show"""
+    import html
+    import re as _re
+    t = _re.sub(r'<sub>(.*?)</sub>', r'\1', t)
+    t = _re.sub(r'<[^>]+>', '', t)
+    return html.unescape(t).replace('\xa0', ' ')
+
+
 class Doc(BaseDocTemplate):
+    """Every h1/h2 becomes a PDF destination.  The table of contents links
+    to it (the 4th element of the TOCEntry) and the viewer's bookmark pane
+    lists it as an outline, chapters over sections."""
+
     def afterFlowable(self, flowable):
         if hasattr(flowable, '_toc'):
             lvl, txt = flowable._toc
-            self.notify('TOCEntry', (lvl, txt, self.page))
+            self._nkey = getattr(self, '_nkey', 0) + 1
+            key = 'sec%d' % self._nkey
+            if self._nkey == 1:
+                self.canv.showOutline()      # open with the bookmark pane shown
+            self.canv.bookmarkPage(key)
+            self.canv.addOutlineEntry(_plain(txt), key, level=lvl,
+                                      closed=False)
+            self.notify('TOCEntry', (lvl, txt, self.page, key))
+
+    def handle_documentBegin(self):
+        self._nkey = 0          # multiBuild runs the story more than once
+        super().handle_documentBegin()
 
 
 # ==================================================================== front

@@ -576,7 +576,7 @@ def build(A):
         'supplier for saturation at the tank peak current. That asks for a '
         'core well over twice the size the converter needs, for a flux the '
         'converter can never produce.']))
-    add(p('A DC-overlap test is made with the secondary open, which removes '
+    add(p('A DC-overlap test is made with every other winding open, which removes '
           'the cancellation: all of the test current is magnetising current. '
           'Section&nbsp;'
           + SR('The saturation test is not the peak winding current')
@@ -1254,14 +1254,16 @@ def build(A):
               'Core area and N<sub>s</sub>: A<sub>e</sub> &ge; '
               'V<sub>out</sub>/(4 f<sub>r</sub> N<sub>s</sub> B<sub>max</sub>)'],
              ['<b>7</b>', 'DC-overlap (saturation) test',
-              'Not a waveform. Secondaries open, dc current in the primary, '
-              'inductance at the primary read against current. The test '
+              'Not a waveform. LCR meter across NP1, every other winding open '
+              '(NS2, NS3, NAUX); a dc current overlapped on the primary and the '
+              'primary inductance read against it. The test '
               'current is mark 3 scaled to the highest output the controller '
               'allows, V<sub>OVP2</sub>/V<sub>out</sub>.',
               'Core saturation margin; the number the supplier tests to'],
              ['&mdash;', 'L<sub>open</sub>, L<sub>short</sub>',
-              'LCR meter at the primary with the secondaries open, then '
-              'shorted. Terminal quantities, so a supplier can test them.',
+              'LCR meter across NP1 at %s. L<sub>open</sub>: every other winding '
+              'open. L<sub>short</sub>: NS2 and NS3 both shorted, NAUX open. '
+              'Terminal quantities, so a supplier can test them.' % '100&nbsp;kHz, 1&nbsp;V',
               'L<sub>m</sub> + L<sub>r</sub> and L<sub>r</sub>: the tank '
               'itself']],
             widths=[CW * 0.07, CW * 0.17, CW * 0.48, CW * 0.28],
@@ -1300,8 +1302,9 @@ def build(A):
     add(eq(r'L_{open}=L_{\mu}+L_{L1}=L_{m}+L_{r},\qquad '
            r'L_{short}=L_{L1}+\frac{L_{\mu}\,n_{T}^{2}L_{L2}}'
            r'{L_{\mu}+n_{T}^{2}L_{L2}}=L_{r}', key='Lopen'))
-    add(p('L<sub>open</sub> is read at the primary with the other windings '
-          'open, L<sub>short</sub> with the secondary shorted. <b>Specify '
+    add(p('Both are read across the primary. L<sub>open</sub>: every other '
+          'winding open. L<sub>short</sub>: every secondary shorted (on a '
+          'centre-tapped part both halves), the auxiliary open. <b>Specify '
           'those two and the turns, never L<sub>&mu;</sub></b>: no terminal '
           'pair exposes it. State the turns as numbers, because with one or '
           'two secondary turns the lead-out loop dominates that '
@@ -2048,8 +2051,8 @@ def build(A):
               'L<sub>short</sub> %(Lshort).1f &micro;H, '
               'A<sub>e</sub> &ge; %(Aereq).0f mm&sup2; at '
               'B<sub>pk</sub> 0.20 T' % V],
-             ['Frequency', 'f<sub>sw</sub> %(fswA).1f kHz at the low corner, '
-              '%(fswB).1f kHz at the high corner' % V],
+             ['Frequency', 'f<sub>sw</sub> at the line peak, full load: %(fswA).1f kHz '
+              'at the low corner, %(fswB).1f kHz at the high corner' % V],
              ['Output', '%(Cout1).0f &micro;F &times; %(nC).0f = '
               '%(Cout).1f mF, ripple %(dVo).2f V (%(dVopc).2f %%), '
               'hold-up %(thold).2f ms' % V],
@@ -2079,8 +2082,8 @@ def build(A):
              ['Oscillator floor clears the lower resonance',
               'f<sub>Min</sub> / f<sub>o</sub>',
               '%(fMin).2f kHz / %(fo).2f kHz' % V, '<b>%(kfloor).3f</b>' % V],
-             ['Oscillator ceiling clears the operating maximum',
-              'f<sub>Max</sub> / f<sub>sw,max</sub>',
+             ['Oscillator ceiling clears the highest operating frequency',
+              'f<sub>Max</sub> / f<sub>sw</sub> (FB edge, line peak)',
               '%(fMax).2f kHz / %(fswmaxop).2f kHz' % V, '%(kceil).3f' % V],
              ['Over-current threshold clears the tank peak',
               'I<sub>OCP1</sub> / I<sub>Lr,pk</sub>',
@@ -2089,11 +2092,11 @@ def build(A):
              ['Hold-up achieved against hold-up required',
               't<sub>hold</sub> / T<sub>hold</sub>',
               '%(thold).2f ms / %(Thold).0f ms' % V, '%(khold).3f' % V],
-             ['Secondary loss against its budget',
+             ['Secondary loss per rectifier leg against its budget',
               'P<sub>budget</sub> / P<sub>SR,leg</sub>',
               '%(b).2f W / %(a).2f W' % dict(b=_ks, a=A.SH['P.SR'] / 2.0),
               '%(kPSR).3f' % V],
-             ['Primary loss against its budget',
+             ['Loss of the standing primary device against its budget',
               'P<sub>budget</sub> / P<sub>mos,dc</sub>',
               '%(b).2f W / %(a).2f W' % dict(b=_kb, a=A.SH['P.mos_dc']),
               '<b>%(kPloss).3f</b>' % V]],
@@ -2225,7 +2228,8 @@ def build(A):
              + (r'\ =\ %d:%d' % (V['NpSet'], V['Ns']) if V['nser'] == 1 else
                 r'\ =\ %d:%d\ \mathrm{across\ the\ assembly},\ %d:%d\ \mathrm{per\ unit}'
                 % (V['NpSet'], V['Ns'], V['Np'], V['Ns']))))
-    ext(tbl('The design, step by step: the results of the nine steps.',
+    ext(tbl('The design, step by step: the results of the nine steps. '
+            'In a &rarr; b, a is the calculated value and b the part selected.',
             [['Step', 'Quantity', 'Eq.', 'Result'],
              ['1', 'P<sub>in</sub>, P<sub>in,LLC</sub>', '&mdash;',
               '%(Pin).1f W, %(PL).1f W' % dict(V, PL=_SH['P.in_LLC'])],
@@ -2455,11 +2459,13 @@ def build(A):
             'The composite tank current at the low equivalent corner, full '
             'load, and why its peak is not the sum of the two component '
             'peaks: they occur at different instants.'))
-    ext(tbl('Currents at the low equivalent corner, full load, '
-            '&theta; = 90&deg;.',
+    ext(tbl('Currents at the low equivalent corner (HB edge), full load. '
+            'Peaks and worst-cycle rms are taken in the switching cycle at '
+            'the line peak, &theta; = 90&deg;; line-cycle rms values are over '
+            'the whole line half cycle.',
             [['Quantity', 'Value', 'Where it is used'],
              ['f<sub>sw</sub>', '%(fswA).1f kHz' % V,
-              'oscillator floor check'],
+              'the switching cycle the peaks below are read in'],
              ['I<sub>sec,pk</sub>', '%(Isec).1f A' % V,
               'secondary rectifier peak'],
              ['I<sub>trafo,pk</sub>', '%(Itr).2f A' % V,
@@ -2504,9 +2510,11 @@ def build(A):
               'n<sub>T</sub> = %(Np)d / %(Ns)d = %(nT).1f; the auxiliary is '
               'ZCD sense only' % V],
              ['Open-circuit inductance', '%(Lopen).1f &micro;H' % V,
-              'L<sub>r</sub> + L<sub>m</sub>, every other winding open'],
+              'L<sub>r</sub> + L<sub>m</sub>; across NP1, every other winding '
+              'open'],
              ['Short-circuit inductance', '%(Lshort).1f &micro;H' % V,
-              'this is L<sub>r</sub>: no separate resonant inductor'],
+              'this is L<sub>r</sub>, no separate resonant inductor; across NP1, '
+              'NS2 and NS3 shorted, NAUX open'],
              ['A<sub>L</sub>', '%(AL).0f nH' % V,
               'open-circuit inductance / N<sub>p</sub>&sup2;; the core is '
               'gapped to it']],
@@ -2578,7 +2586,7 @@ def build(A):
                 V['OVP2'] / V['Vout'], V['Isatspec'])))
     add(fig('an_mmf',
             'In service the secondary cancels most of the primary '
-            'ampere-turns; with the secondary open, the whole test current '
+            'ampere-turns; with every other winding open, the whole test current '
             'magnetises the core. The design flux is therefore reached at '
             '%(ILm).2f&nbsp;A on the bench, not at the %(Icomp).2f&nbsp;A '
             'tank peak.' % V))
@@ -2660,7 +2668,7 @@ def build(A):
              ['2', 'NS2 secondary, pins %s' % _CORE.pins('NS2', '&ndash;'),
               '%d T' % V['Ns'],
               'foil %.2f &times; %.1f mm, %d foils in parallel per turn; '
-              'on the bobbin'
+              'wound directly on the bobbin'
               % (_w['t_foil'], _w['w_foil'], _w['n_foil'])],
              ['3', 'NS3 secondary, pins %s' % _CORE.pins('NS3', '&ndash;'),
               '%d T' % V['Ns'], 'the same foil, on top of NS2'],
@@ -2730,7 +2738,7 @@ def build(A):
     ext(tbl('The winding, from current to copper. NS3 is the same as NS2.',
 
             [['Step', 'Primary NP1', 'Secondary NS2'],
-             ['Rms current', '%.2f A' % _rp[2], '%.2f A' % _rs[2]],
+             ['Line-cycle rms current', '%.2f A' % _rp[2], '%.2f A' % _rs[2]],
              ['Copper area at J = %.1f A/mm&sup2;' % _CORE.J_CU,
               '%.2f / %.1f = <b>%.2f mm&sup2;</b>'
               % (_rp[2], _CORE.J_CU, _rp[3]),
@@ -2791,20 +2799,28 @@ def build(A):
              ['Open-circuit inductance',
               '%(Lopen).1f &micro;H, &minus;%(Ldrop).1f %% at worst'
               % V,
-              'primary, all other windings open'],
+              'measured across NP1; every other winding (NS2, NS3, NAUX) open; '
+              'LCR meter 100 kHz, 1 V'],
              ['Leakage inductance', '%(Lshort).1f &micro;H &plusmn;10 %%' % V,
-              'primary, secondary shorted'],
+              'measured across NP1; NS2 and NS3 both shorted, NAUX open; '
+              'LCR meter 100 kHz, 1 V'],
              ['DC overlap', '&ge; 90 %% of initial inductance' % V,
-              'test current %(Isatspec).0f A (mark 7)' % V],
+              'measured across NP1, every other winding open; dc %(Isatspec).0f A '
+              'overlapped on the 100 kHz, 1 V signal; normal temperature '
+              '(mark 7)' % V],
              ['Primary current', '%(Iprilc).1f A rms / %(Icomp).1f A pk' % V,
-              'line-cycle rms (mark 2), composite peak (mark 1)'],
+              'line-cycle rms (mark 2) and composite peak (mark 1), both at the '
+              'HB edge (%(Veqlo).0f Vac eq.), full load' % V],
              ['Secondary current, each winding',
               '%(Idio).1f A rms / %(Isec).0f A pk' % V,
-              'line-cycle rms (mark 5), peak (mark 4)'],
+              'line-cycle rms (mark 5) and peak (mark 4), both at the HB edge, '
+              'full load'],
              ['Core area', 'A<sub>e</sub> &ge; %(Aereq).0f mm&sup2;' % V,
-              'holds B<sub>pk</sub> at or below 0.20 T (mark 6)'],
+              'holds B<sub>pk</sub> at or below 0.20 T at f<sub>r</sub> (mark 6)'],
              ['Switching frequency', '%(fswA).0f to %(fswB).0f kHz' % V,
-              'at full load']],
+              'at the line peak, full load, from the HB edge to the FB edge; '
+              'near the zero crossings it falls towards f<sub>o</sub> = '
+              '%(fo).0f kHz' % V]],
             widths=[CW * 0.28, CW * 0.34, CW * 0.38], key='spec-out', split=True))
 
     add(h2('The output bank, as sized'))
@@ -2847,8 +2863,9 @@ def build(A):
              ['Achieved ripple', '%(dVo).2f V (%(dVopc).2f %%)' % V,
               '%(dv).0f %% allowed' % V],
              ['Achieved hold-up', '%(thold).2f ms' % V,
-              '%(Thold).0f ms required &mdash; %(tholdVo).2f ms if started '
-              'at V<sub>out</sub> instead of at the trough' % V],
+              '%(Thold).0f ms required at 100 Vac, from the ripple trough down to '
+              '%(Vomin).0f V &mdash; %(tholdVo).2f ms if started at V<sub>out</sub> '
+              'instead of at the trough' % V],
              ['Ripple current, switching component',
               '%(ICouthf).1f A rms' % V, '&mdash;'],
              ['Ripple current, 2f<sub>l</sub> component',
@@ -2890,7 +2907,7 @@ def build(A):
               '%(PSR).3f W per device, %(nSR).0f in parallel per leg' % V],
              ['Current-sense resistors', '%(a).2f W'
               % dict(a=A.SH['P.RCS']),
-              '%(b).2f W at the worst switching cycle'
+              'line-cycle average; %(b).2f W at the worst switching cycle'
               % dict(b=A.SH['P.RCS_pk'])],
              ['Output capacitor ESR', '%(a).3f W'
               % dict(a=A.SH['P.Cout']), '&mdash;'],
@@ -3151,7 +3168,8 @@ def build(A):
               'budget %(D3set).0f %%' % V],
              ['Feedback ripple at the burst point',
               '%(dVFBBM).0f mV' % V,
-              'R<sub>BM</sub> %(RBMsel).0f &rarr; %(RBMrec).1f k&Omega;' % V]],
+              'clears the burst threshold if R<sub>BM</sub> moves from the fitted '
+              '%(RBMsel).0f k&Omega; to %(RBMrec).1f k&Omega;' % V]],
             widths=[CW * 0.34, CW * 0.28, CW * 0.38], key='loop-result', split=True))
 
     # ------------------------------------------------ the controller network
@@ -3168,7 +3186,7 @@ def build(A):
               '&times; 5 in parallel)' % V,
               'OCP1 at %(kOCP).3f &times; the composite peak' % V],
              ['R<sub>CFG</sub>', '%(RCFG).0f k&Omega;' % V,
-              'V<sub>BO</sub> %(VBO).1f V, morphing enabled' % V],
+              'V<sub>BO</sub> %(pk).0f V peak (%(VBO).1f Vac rms), morphing enabled' % dict(V, pk=V['VBO'] * 2 ** 0.5)],
              ['R<sub>BM</sub>', '%(RBM).0f k&Omega;' % V,
               'burst-mode entry point'],
              ['ZCD divider', '%(RZH).0f k&Omega; / %(RZL).0f k&Omega;' % V,
@@ -3246,7 +3264,7 @@ def build(A):
               'above f<sub>o</sub> = %(fo).1f kHz' % V,
               '%(kfloor).3f' % V],
              ['f<sub>Max</sub>', '%(fMax).1f kHz' % V,
-              'above f<sub>sw,max</sub> = %(fswmaxop).1f kHz' % V,
+              'above the highest operating f<sub>sw</sub> = %(fswmaxop).1f kHz (FB edge, line peak)' % V,
               '%(kceil).3f' % V],
              ['f<sub>SU</sub>', '%(fSU).1f kHz' % dict(V, fSU=A.SH['f.SU']),
               'below the 675 kHz silicon ceiling', '%(kSU).3f'
@@ -3306,8 +3324,8 @@ def build(A):
              ['OCP1 trip', '%(I).2f A' % dict(I=A.SH['I.OCP1']),
               'composite peak %(Icomp).2f A, margin %(kOCP).3f' % V],
              ['OCP2 trip', '%(I).2f A' % dict(I=A.SH['I.OCP2']),
-              'immediate stop, 50 &micro;s, restart at f<sub>SU</sub>'],
-             ['Sense dissipation', '%(P).2f W total, %(Pe).3f W each'
+              'switching stops at once; restart after 50 &micro;s at f<sub>SU</sub>'],
+             ['Sense dissipation, worst switching cycle', '%(P).2f W total, %(Pe).3f W each'
               % dict(P=A.SH['P.RCS_pk'], Pe=A.SH['P.RCS_each_pk']),
               '1 W parts, margin %(k).3f' % dict(k=A.SH['k.NRCS'])]],
             widths=[CW * 0.26, CW * 0.26, CW * 0.48], split=True))
@@ -3355,7 +3373,7 @@ def build(A):
             '245 V thresholds are fixed inside the IC and cannot be moved.',
             [['R<sub>CFG</sub>', 'LOUT2', 'Configuration'],
              ['15 k&Omega;', 'open',
-              'morphing, fixed brown-out (60 V / 70 V peak)'],
+              'morphing, fixed brown-out: off below 60 V peak, on above 70 V peak'],
              ['15 to 47 k&Omega;', 'open',
               '<b>morphing, adjustable brown-out &mdash; this design</b>'],
              ['47 to 100 k&Omega;', 'open', 'fixed full bridge'],
@@ -3459,8 +3477,8 @@ def build(A):
             [['Protection', 'Set by', 'This design'],
              ['Brown-out, on the rectified mains',
               'R<sub>CFG</sub>, read at power-up',
-              'V<sub>BO</sub> %(VBO).1f V, clear of the %(Vacmin).0f Vac '
-              'minimum by %(kBO).3f' % dict(V, kBO=A.SH['k.BO'])],
+              'V<sub>BO</sub> %(pk).0f V peak = %(VBO).1f Vac rms, clear of the '
+              '%(Vacmin).0f Vac minimum by %(kBO).3f' % dict(V, kBO=A.SH['k.BO'], pk=V['VBO'] * 2 ** 0.5)],
              ['Cycle-by-cycle over-current, OCP1',
               'R<sub>CS</sub> &mdash; the same resistor as the '
               'maximum-power law',
@@ -3632,7 +3650,7 @@ def build(A):
         ('A<sub>L</sub>, g, &mu;<sub>0</sub>', 'inductance factor of the gapped core, the total centre-leg gap, and the permeability of free space'),
         ('N<sub>p</sub>, N<sub>s</sub>, N<sub>x</sub>', 'primary turns, secondary turns per winding, number of units in the assembly'),
         ('N<sub>aux</sub>, n<sub>aux</sub>/n<sub>sec</sub>', 'auxiliary winding turns, and its turns ratio to one secondary'),
-        ('L<sub>open</sub>, L<sub>short</sub>', 'primary inductance with the secondaries open, and shorted'),
+        ('L<sub>open</sub>, L<sub>short</sub>', 'inductance across the primary with every other winding open; and with every secondary shorted and the auxiliary open'),
         ('I<sub>dc</sub>', 'the dc current the DC-overlap test overlaps on the LCR signal'),
         ('I<sub>p,pk</sub>, L<sub>p</sub>', 'in the flyback comparison only: the primary peak current and the primary inductance of a flyback'),
         ('B<sub>s</sub>', 'saturation flux density of the core material, from the material data at temperature'),

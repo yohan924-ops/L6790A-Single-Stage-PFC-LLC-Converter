@@ -1143,8 +1143,8 @@ def an_loadshift(save, foot):
     #  Q is picked so all three peaks fit one frame.  At Q = 0.2 the peak
     #  is off the top of any sensible axis and the curve tells the reader
     #  nothing except that it is tall.
-    qs = [(0.55, 'light load', CYA), (0.85, 'half load', PUR),
-          (1.35, 'overload', MAG)]
+    qs = [(0.55, 'light load, Q = 0.55', CYA), (0.85, 'half load, Q = 0.85', PUR),
+          (1.35, 'overload, Q = 1.35', MAG)]
     edges = []
     for q, nm, col in qs:
         g = np.array([M(f, q, lam) for f in fn])
@@ -2328,7 +2328,7 @@ def an_mmf(save, foot):
     # ---------------------------------------------- on the bench, open
     ax2 = fig.add_axes([0.512, 0.400, 0.470, 0.510])
     core(ax2, False)
-    S.label(ax2, 2.8, 7.95, 'ON THE BENCH, SECONDARY OPEN', size=11.5,
+    S.label(ax2, 2.8, 7.95, 'ON THE BENCH, ALL OTHER WINDINGS OPEN', size=11.5,
             color=NAVY, weight='bold')
     _call(ax2, (-1.6, 4.7), (-3.4, 7.10), 'I$_{dc}$ in', color=MAG,
           size=10.5, ha='left')
@@ -2600,12 +2600,12 @@ def an_xfmr_read(save, foot):
     c.set_yticklabels(['90 %', '100 %'], fontsize=8.5)
     c.set_xlabel('dc current in the primary  [A]', fontsize=9.4)
     c.tick_params(labelsize=9.2)
-    c.set_title('DC-overlap test: secondary open', fontsize=9.6, color=NAVY)
+    c.set_title('DC-overlap test: all other windings open', fontsize=9.6, color=NAVY)
     c.axhline(1.0, color=GREY, lw=1.0)
     c.fill_between([0, Is], 0, 0.9, color='#f3c9c9', lw=0, zorder=1)
     c.plot([0, Is], [0.9, 0.9], color=MAG, lw=1.6, zorder=3)
     c.plot([Is, Is], [0.0, 0.9], color=MAG, lw=1.6, zorder=3)
-    c.text(Is / 2, 0.33, 'L at 1\u20132 must\nstay above', ha='center',
+    c.text(Is / 2, 0.33, 'L at NP1 must\nstay above', ha='center',
            va='center', fontsize=9.4, color=MAG, zorder=4)
     c.text(0.4, 1.02, 'L$_{open}$ initial', ha='left', va='bottom',
            fontsize=9.4, color=GREY)

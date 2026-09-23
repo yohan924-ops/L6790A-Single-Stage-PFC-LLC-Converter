@@ -509,7 +509,7 @@ def build(A):
         '<b>비용이 가장 큰 플라이백 습관</b>은 탱크 피크 전류에서 포화하지 말라고 '
         '벤더에 요구하는 것이다. 컨버터가 만들 수 없는 자속을 위해 필요한 '
         '것의 두 배가 훨씬 넘는 코어를 요구하는 셈이다.']))
-    add(p('DC overlap 시험은 2차를 open 으로 두고 하므로 상쇄가 없다: 시험 전류 전부가 '
+    add(p('DC overlap 시험은 나머지 권선을 모두 open 으로 두고 하므로 상쇄가 없다: 시험 전류 전부가 '
           '자화 전류다. %s 절에서 숫자로 확인한다.'
           % SR('포화 시험은 권선 피크 전류가 아니다')))
 
@@ -1026,13 +1026,15 @@ def build(A):
               '코어 면적과 N<sub>s</sub>: A<sub>e</sub> &ge; '
               'V<sub>out</sub>/(4 f<sub>r</sub> N<sub>s</sub> B<sub>max</sub>)'],
              ['<b>7</b>', 'DC overlap(포화) 시험',
-              '파형이 아니다. 2차 Open, 1차에 DC 전류, 1차 인덕턴스를 전류에 '
-              '대해 읽는다. 시험 전류는 표시 3 을 컨트롤러가 허용하는 최고 '
+              '파형이 아니다. LCR 미터를 NP1 에 걸고 나머지 권선(NS2, NS3, NAUX)은 '
+              '모두 Open, 1차에 DC 전류를 겹쳐 흘리며 1차 인덕턴스를 전류에 따라 '
+              '읽는다. 시험 전류는 표시 3 을 컨트롤러가 허용하는 최고 '
               '출력 V<sub>OVP2</sub>/V<sub>out</sub> 로 환산한 것.',
               '코어 포화 여유. 벤더가 시험하는 값'],
              ['&mdash;', 'L<sub>open</sub>, L<sub>short</sub>',
-              '1차에서 LCR 미터로, 2차 Open 그리고 Short. 단자에서 재는 값이라 '
-              '벤더가 시험할 수 있다.',
+              'LCR 미터(100&nbsp;kHz, 1&nbsp;V)를 NP1 에 걸고 잰다. L<sub>open</sub>: '
+              '나머지 권선 모두 Open. L<sub>short</sub>: NS2·NS3 모두 Short, NAUX '
+              'Open. 단자에서 재는 값이라 벤더가 시험할 수 있다.',
               'L<sub>m</sub> + L<sub>r</sub> 과 L<sub>r</sub>: 탱크 소자 그 자체']],
             widths=[CW * 0.07, CW * 0.17, CW * 0.48, CW * 0.28],
             key='xfmr-read', split=True))
@@ -1066,8 +1068,8 @@ def build(A):
     add(eq(r'L_{open}=L_{\mu}+L_{L1}=L_{m}+L_{r},\qquad '
            r'L_{short}=L_{L1}+\frac{L_{\mu}\,n_{T}^{2}L_{L2}}'
            r'{L_{\mu}+n_{T}^{2}L_{L2}}=L_{r}', key='Lopen'))
-    add(p('L<sub>open</sub> 은 다른 권선을 open 으로 두고 1차에서 읽고, L<sub>short</sub> '
-          '는 2차를 Short 하고 읽는다. <b>이 둘과 턴수를 적고, L<sub>&mu;</sub> '
+    add(p('둘 다 1차 단자에서 읽는다. L<sub>open</sub> 은 나머지 권선을 모두 Open 으로 '
+          '두고, L<sub>short</sub> 는 2차를 모두 Short(센터탭이면 두 권선 모두) 하고 보조 권선은 Open 으로 둔다. <b>이 둘과 턴수를 적고, L<sub>&mu;</sub> '
           '는 적지 말 것</b>: 그것을 잴 수 있는 단자 쌍은 없다. 턴수는 숫자로 '
           '적는다. 2차가 한두 턴이면 리드선 루프가 그 권선의 인덕턴스를 '
           '지배해 &radic;(L<sub>1</sub>/L<sub>2</sub>) 로는 비가 안 나온다.'))
@@ -1657,8 +1659,8 @@ def build(A):
               'L<sub>short</sub> %(Lshort).1f &micro;H, '
               'A<sub>e</sub> &ge; %(Aereq).0f mm&sup2; (B<sub>pk</sub> '
               '0.20 T)' % V],
-             ['주파수', '낮은 코너에서 f<sub>sw</sub> %(fswA).1f kHz, 높은 '
-              '코너에서 %(fswB).1f kHz' % V],
+             ['주파수', '라인 피크, Full load 의 f<sub>sw</sub>: 낮은 코너에서 %(fswA).1f kHz, '
+              '높은 코너에서 %(fswB).1f kHz' % V],
              ['출력', '%(Cout1).0f &micro;F &times; %(nC).0f = '
               '%(Cout).1f mF, 리플 %(dVo).2f V (%(dVopc).2f %%), '
               'hold-up %(thold).2f ms' % V],
@@ -1687,8 +1689,8 @@ def build(A):
              ['오실레이터 하한이 아래쪽 공진을 넘는가',
               'f<sub>Min</sub> / f<sub>o</sub>',
               '%(fMin).2f kHz / %(fo).2f kHz' % V, '<b>%(kfloor).3f</b>' % V],
-             ['오실레이터 상한이 동작 최대를 넘는가',
-              'f<sub>Max</sub> / f<sub>sw,max</sub>',
+             ['오실레이터 상한이 최고 동작 주파수를 넘는가',
+              'f<sub>Max</sub> / f<sub>sw</sub>(FB 경계, 라인 피크)',
               '%(fMax).2f kHz / %(fswmaxop).2f kHz' % V, '%(kceil).3f' % V],
              ['과전류 threshold 가 탱크 피크를 넘는가',
               'I<sub>OCP1</sub> / I<sub>Lr,pk</sub>',
@@ -1697,11 +1699,11 @@ def build(A):
              ['달성 hold-up 대 요구 hold-up',
               't<sub>hold</sub> / T<sub>hold</sub>',
               '%(thold).2f ms / %(Thold).0f ms' % V, '%(khold).3f' % V],
-             ['2차 손실 대 budget',
+             ['정류 레그당 2차 손실 대 budget',
               'P<sub>budget</sub> / P<sub>SR,leg</sub>',
               '%(b).2f W / %(a).2f W' % dict(b=_ks, a=A.SH['P.SR'] / 2.0),
               '%(kPSR).3f' % V],
-             ['1차 손실 대 budget',
+             ['고정 1차 소자의 손실 대 budget',
               'P<sub>budget</sub> / P<sub>mos,dc</sub>',
               '%(b).2f W / %(a).2f W' % dict(b=_kb, a=A.SH['P.mos_dc']),
               '<b>%(kPloss).3f</b>' % V]],
@@ -1820,7 +1822,7 @@ def build(A):
              + (r'\ =\ %d:%d' % (V['NpSet'], V['Ns']) if V['nser'] == 1 else
                 r'\ =\ %d:%d\ \mathrm{across\ the\ assembly},\ %d:%d\ \mathrm{per\ unit}'
                 % (V['NpSet'], V['Ns'], V['Np'], V['Ns']))))
-    ext(tbl('설계, 단계별로: 아홉 단계의 결과.',
+    ext(tbl('단계별 설계 결과. a &rarr; b 에서 a 는 계산값, b 는 선정한 부품값이다.',
             [['단계', '항목', '식', '결과'],
              ['1', 'P<sub>in</sub>, P<sub>in,LLC</sub>', '&mdash;',
               '%(Pin).1f W, %(PL).1f W' % dict(V, PL=_SH['P.in_LLC'])],
@@ -2016,10 +2018,12 @@ def build(A):
     add(fig('an_tank_current',
             '낮은 등가 코너, Full load 의 합성 탱크 전류. 그 피크가 두 성분 피크의 '
             '합이 아닌 이유: 두 피크가 다른 순간에 온다.'))
-    ext(tbl('낮은 등가 코너, Full load, &theta; = 90&deg; 의 전류.',
+    ext(tbl('낮은 등가 코너(HB 경계), Full load 의 전류. 피크와 최악 사이클 실효값은 '
+            '라인 피크(&theta; = 90&deg;)의 스위칭 사이클에서, 라인 사이클 실효값은 '
+            '라인 반주기 전체에서 구했다.',
             [['항목', '값', '쓰이는 곳'],
              ['f<sub>sw</sub>', '%(fswA).1f kHz' % V,
-              '오실레이터 하한 검사'],
+              '아래 피크 값들을 읽은 스위칭 사이클'],
              ['I<sub>sec,pk</sub>', '%(Isec).1f A' % V,
               '2차 정류기 피크'],
              ['I<sub>trafo,pk</sub>', '%(Itr).2f A' % V,
@@ -2058,9 +2062,10 @@ def build(A):
               'n<sub>T</sub> = %(Np)d / %(Ns)d = %(nT).1f; 보조 권선은 ZCD '
               'sensing 전용' % V],
              ['Open 인덕턴스', '%(Lopen).1f &micro;H' % V,
-              'L<sub>r</sub> + L<sub>m</sub>, 다른 권선 전부 Open'],
+              'L<sub>r</sub> + L<sub>m</sub>. NP1 에서 측정, 나머지 권선 모두 Open'],
              ['Short 인덕턴스', '%(Lshort).1f &micro;H' % V,
-              '이것이 L<sub>r</sub> 이다: 별도 공진 인덕터 없음'],
+              '이것이 L<sub>r</sub> 이다(별도 공진 인덕터 없음). NP1 에서 측정, '
+              'NS2·NS3 모두 Short, NAUX Open'],
              ['A<sub>L</sub>', '%(AL).0f nH' % V,
               'Open 인덕턴스 / N<sub>p</sub>&sup2;; 코어 갭을 여기에 맞춘다']],
             widths=[CW * 0.24, CW * 0.30, CW * 0.46],
@@ -2123,7 +2128,7 @@ def build(A):
              % (V['Isateq'], V['OVP2'], V['Vout'], V['Isateq'],
                 V['OVP2'] / V['Vout'], V['Isatspec'])))
     add(fig('an_mmf',
-            '동작 중에는 2차가 1차 암페어턴의 대부분을 상쇄한다. 2차를 open 하면 시험 전류 전부가 코어를 자화시킨다. 그래서 설계 자속은 벤치에서 '
+            '동작 중에는 2차가 1차 암페어턴의 대부분을 상쇄한다. 나머지 권선을 모두 open 하면 시험 전류 전부가 코어를 자화시킨다. 그래서 설계 자속은 벤치에서 '
             '탱크 피크 %(Icomp).2f&nbsp;A 가 아니라 %(ILm).2f&nbsp;A 에서 도달한다.' % V))
     _r1, _r2 = V['OVP1'] / V['Vout'], V['OVP2'] / V['Vout']
     _iocp = float(A.SH['I.OCP1'])
@@ -2254,7 +2259,7 @@ def build(A):
     ext(tbl('권선, 전류에서 동선까지. NS3 는 NS2 와 같다.',
 
             [['단계', '1차 NP1', '2차 NS2'],
-             ['실효 전류', '%.2f A' % _rp[2], '%.2f A' % _rs[2]],
+             ['라인 사이클 실효 전류', '%.2f A' % _rp[2], '%.2f A' % _rs[2]],
              ['J = %.1f A/mm&sup2; 에서의 동선 면적' % _CORE.J_CU,
               '%.2f / %.1f = <b>%.2f mm&sup2;</b>'
               % (_rp[2], _CORE.J_CU, _rp[3]),
@@ -2314,20 +2319,25 @@ def build(A):
              ['Open 인덕턴스',
               '%(Lopen).1f &micro;H, 최악 &minus;%(Ldrop).1f %%'
               % V,
-              '1차, 다른 권선 전부 Open'],
+              'NP1 에서 측정, 나머지 권선(NS2, NS3, NAUX) 모두 Open, LCR 미터 '
+              '100 kHz / 1 V'],
              ['누설 인덕턴스', '%(Lshort).1f &micro;H &plusmn;10 %%' % V,
-              '1차, 2차 Short'],
+              'NP1 에서 측정, NS2·NS3 모두 Short, NAUX Open, LCR 미터 '
+              '100 kHz / 1 V'],
              ['DC overlap', '초기 인덕턴스의 90 %% 이상' % V,
-              '시험 전류 %(Isatspec).0f A (표시 7)' % V],
+              'NP1 에서 측정, 나머지 권선 모두 Open, 100 kHz / 1 V 신호에 DC '
+              '%(Isatspec).0f A 를 겹쳐 인가, 상온 (표시 7)' % V],
              ['1차 전류', '%(Iprilc).1f A rms / %(Icomp).1f A pk' % V,
-              '라인 사이클 실효값(표시 2), 합성 피크(표시 1)'],
+              '라인 사이클 실효값(표시 2)과 합성 피크(표시 1), 둘 다 HB 경계'
+              '(등가 %(Veqlo).0f Vac), Full load' % V],
              ['2차 전류, 권선마다',
               '%(Idio).1f A rms / %(Isec).0f A pk' % V,
-              '라인 사이클 실효값(표시 5), 피크(표시 4)'],
+              '라인 사이클 실효값(표시 5)과 피크(표시 4), 둘 다 HB 경계, Full load'],
              ['코어 면적', 'A<sub>e</sub> &ge; %(Aereq).0f mm&sup2;' % V,
-              'B<sub>pk</sub> 를 0.20 T 이하로(표시 6)'],
+              'f<sub>r</sub> 에서 B<sub>pk</sub> 를 0.20 T 이하로(표시 6)'],
              ['스위칭 주파수', '%(fswA).0f ~ %(fswB).0f kHz' % V,
-              'Full load 에서']],
+              '라인 피크, Full load 에서 HB 경계부터 FB 경계까지. 영교차 근처에서는 '
+              'f<sub>o</sub> = %(fo).0f kHz 쪽으로 내려간다' % V]],
             widths=[CW * 0.28, CW * 0.34, CW * 0.38], key='spec-out', split=True))
 
     add(h2('출력 뱅크 설계 결과'))
@@ -2364,8 +2374,8 @@ def build(A):
              ['달성 리플', '%(dVo).2f V (%(dVopc).2f %%)' % V,
               '허용 %(dv).0f %%' % V],
              ['달성 hold-up', '%(thold).2f ms' % V,
-              '요구 %(Thold).0f ms &mdash; 골이 아니라 V<sub>out</sub> 에서 '
-              '시작하면 %(tholdVo).2f ms' % V],
+              '요구 %(Thold).0f ms(100 Vac, 리플 골에서 %(Vomin).0f V 까지) &mdash; 골이 '
+              '아니라 V<sub>out</sub> 에서 시작하면 %(tholdVo).2f ms' % V],
              ['리플 전류, 스위칭 성분',
               '%(ICouthf).1f A rms' % V, '&mdash;'],
              ['리플 전류, 2f<sub>l</sub> 성분',
@@ -2403,7 +2413,7 @@ def build(A):
               '소자당 %(PSR).3f W, 레그당 %(nSR).0f 개 병렬' % V],
              ['전류 sense 저항', '%(a).2f W'
               % dict(a=A.SH['P.RCS']),
-              '최악 스위칭 사이클에서 %(b).2f W'
+              '라인 사이클 평균; 최악 스위칭 사이클에서는 %(b).2f W'
               % dict(b=A.SH['P.RCS_pk'])],
              ['출력 커패시터 ESR', '%(a).3f W'
               % dict(a=A.SH['P.Cout']), '&mdash;'],
@@ -2652,7 +2662,8 @@ def build(A):
               '허용치 %(D3set).0f %%' % V],
              ['버스트 점의 피드백 리플',
               '%(dVFBBM).0f mV' % V,
-              'R<sub>BM</sub> %(RBMsel).0f &rarr; %(RBMrec).1f k&Omega;' % V]],
+              'R<sub>BM</sub> 을 선정값 %(RBMsel).0f k&Omega; 에서 %(RBMrec).1f k&Omega; 로 '
+              '낮추면 버스트 threshold 를 벗어난다' % V]],
             widths=[CW * 0.34, CW * 0.28, CW * 0.38], key='loop-result', split=True))
 
     # ------------------------------------------------ 컨트롤러 주변 회로
@@ -2668,7 +2679,7 @@ def build(A):
               '&times; 5 병렬)' % V,
               '합성 피크의 %(kOCP).3f 배에서 OCP1' % V],
              ['R<sub>CFG</sub>', '%(RCFG).0f k&Omega;' % V,
-              'V<sub>BO</sub> %(VBO).1f V, 모핑 사용' % V],
+              'V<sub>BO</sub> 피크 %(pk).0f V(%(VBO).1f Vac rms), 모핑 사용' % dict(V, pk=V['VBO'] * 2 ** 0.5)],
              ['R<sub>BM</sub>', '%(RBM).0f k&Omega;' % V,
               '버스트 모드 진입점'],
              ['ZCD 분압기', '%(RZH).0f k&Omega; / %(RZL).0f k&Omega;' % V,
@@ -2742,7 +2753,7 @@ def build(A):
               'f<sub>o</sub> = %(fo).1f kHz 위' % V,
               '%(kfloor).3f' % V],
              ['f<sub>Max</sub>', '%(fMax).1f kHz' % V,
-              'f<sub>sw,max</sub> = %(fswmaxop).1f kHz 위' % V,
+              '최고 동작 f<sub>sw</sub> = %(fswmaxop).1f kHz(FB 경계, 라인 피크) 위' % V,
               '%(kceil).3f' % V],
              ['f<sub>SU</sub>', '%(fSU).1f kHz' % dict(V, fSU=A.SH['f.SU']),
               '실리콘 상한 675 kHz 아래', '%(kSU).3f'
@@ -2800,8 +2811,8 @@ def build(A):
              ['OCP1 트립', '%(I).2f A' % dict(I=A.SH['I.OCP1']),
               '합성 피크 %(Icomp).2f A, 여유 %(kOCP).3f' % V],
              ['OCP2 트립', '%(I).2f A' % dict(I=A.SH['I.OCP2']),
-              '즉시 정지, 50 &micro;s, f<sub>SU</sub> 에서 재기동'],
-             ['sense 저항 손실', '합계 %(P).2f W, 개당 %(Pe).3f W'
+              '즉시 스위칭 정지, 50 &micro;s 뒤 f<sub>SU</sub> 에서 재기동'],
+             ['sense 저항 손실, 최악 스위칭 사이클', '합계 %(P).2f W, 개당 %(Pe).3f W'
               % dict(P=A.SH['P.RCS_pk'], Pe=A.SH['P.RCS_each_pk']),
               '1 W 부품, 여유 %(k).3f' % dict(k=A.SH['k.NRCS'])]],
             widths=[CW * 0.26, CW * 0.26, CW * 0.48], split=True))
@@ -2846,7 +2857,7 @@ def build(A):
             'IC 안에 고정돼 있어 옮길 수 없다.',
             [['R<sub>CFG</sub>', 'LOUT2', '구성'],
              ['15 k&Omega;', 'Open',
-              '모핑, 고정 브라운아웃 (피크 60 V / 70 V)'],
+              '모핑, 고정 브라운아웃: 피크 60 V 아래에서 정지, 70 V 위에서 동작'],
              ['15 ~ 47 k&Omega;', 'Open',
               '<b>모핑, 조절 브라운아웃 &mdash; 이 설계</b>'],
              ['47 ~ 100 k&Omega;', 'Open', '고정 풀브리지'],
@@ -2938,8 +2949,8 @@ def build(A):
             [['보호', '정하는 것', '이 설계'],
              ['브라운아웃, 정류 전압에서',
               'R<sub>CFG</sub>, 전원 인가 시 읽음',
-              'V<sub>BO</sub> %(VBO).1f V, 최저 %(Vacmin).0f Vac 에 대해 '
-              '여유 %(kBO).3f' % dict(V, kBO=A.SH['k.BO'])],
+              'V<sub>BO</sub> 피크 %(pk).0f V = %(VBO).1f Vac rms, 최저 %(Vacmin).0f Vac 에 대해 '
+              '여유 %(kBO).3f' % dict(V, kBO=A.SH['k.BO'], pk=V['VBO'] * 2 ** 0.5)],
              ['사이클 단위 과전류, OCP1',
               'R<sub>CS</sub> &mdash; 최대 전력 법칙과 같은 저항',
               '합성 피크 %(Icomp).2f A 에 대해 %(IOCP1).2f A, 여유 %(kOCP).3f'
@@ -3099,7 +3110,7 @@ def build(A):
         ('A<sub>L</sub>, g, &mu;<sub>0</sub>', '갭을 둔 코어의 인덕턴스 계수, 중앙 다리 총 갭, 진공 투자율'),
         ('N<sub>p</sub>, N<sub>s</sub>, N<sub>x</sub>', '1차 턴수, 권선당 2차 턴수, 유닛 수'),
         ('N<sub>aux</sub>, n<sub>aux</sub>/n<sub>sec</sub>', '보조 권선 턴수, 그리고 2차 하나에 대한 그 권선비'),
-        ('L<sub>open</sub>, L<sub>short</sub>', '2차 Open·Short 시의 1차 인덕턴스'),
+        ('L<sub>open</sub>, L<sub>short</sub>', '1차 단자에서 잰 인덕턴스: 나머지 권선을 모두 Open 한 값, 그리고 2차를 모두 Short 하고 보조 권선은 Open 한 값'),
         ('I<sub>dc</sub>', 'DC overlap 시험에서 LCR 신호에 겹쳐 흘리는 DC 전류'),
         ('I<sub>p,pk</sub>, L<sub>p</sub>', '플라이백 비교에서만: 플라이백의 1차 피크 전류와 1차 인덕턴스'),
         ('B<sub>s</sub>', '코어 재료의 포화 자속 밀도, 온도별 재료 데이터에서'),

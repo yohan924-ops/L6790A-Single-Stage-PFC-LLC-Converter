@@ -247,7 +247,7 @@ def f02_two_resonances():
     for q, c, w, lab in ((0.0001, PUR, 2.4, 'no load   Q → 0'),
                          (0.20, MAG, 1.7, 'Q = 0.2'),
                          (0.40, CYA, 1.7, 'Q = 0.4'),
-                         (QPK, NAVY, 2.6, 'full load'),
+                         (QPK, NAVY, 2.6, 'full load, Q = %.2f' % QPK),
                          (1.50, GRN, 1.7, 'Q = 1.5')):
         ax.plot(fn, [gain_fn(x, q, LAM) for x in fn], color=c, lw=w, label=lab)
     ax.axvline(FN0, color=PUR, ls='--', lw=1.7)
@@ -320,7 +320,7 @@ def f04_three_regions():
     for q in (0.20, 0.45, 1.50):
         ax.plot(fn, [gain_fn(x, q, LAM) for x in fn], color=LT, lw=1.3)
     ax.plot(fn, [gain_fn(x, QPK, LAM) for x in fn], color=NAVY, lw=2.8,
-            zorder=4, label='full load')
+            zorder=4, label='full load, Q = %.2f' % QPK)
     _edge = zvs_edge(QPK, LAM)          # arg Z_in = 0 on the curve drawn
     ax.axvspan(0.45, _edge, color=MAG, alpha=0.16)
     ax.axvspan(_edge, 1.0, color=GRN, alpha=0.16)
@@ -346,9 +346,9 @@ def f04_three_regions():
     ax.annotate('capacitive edge at this load: arg Z$_{in}$ = 0\n'
                 'it moves right as load rises\n'
                 'the gain peak (star) is the usual stand-in;\n'
-                'it sits lower, so it flatters the margin',
+                'it sits lower, so it overstates the margin',
                 (_edge, 1.35), xytext=(1.13, 1.70), va='top',
-                color=MAG, fontsize=9.0,
+                color=MAG, fontsize=9.4,
                 bbox=dict(boxstyle='round,pad=0.25', fc='white', ec=MAG,
                           lw=1.0, alpha=0.95),
                 arrowprops=dict(arrowstyle='-|>', color=MAG, lw=1.4))
@@ -632,9 +632,9 @@ def f13_morphing():
          va='top')
     note(aE, 268, 152, 'HALF bridge\nequivalent = mains', color=NAVY, size=10,
          ha='right')
-    note(aE, 268, 372, '332.3 V  MAXIMUM\nat only 166 Vac mains', color=MAG,
+    note(aE, 268, 372, '332.3 Vac eq.  MAXIMUM\nat only 166 Vac mains', color=MAG,
          size=9.8, ha='right', va='top')
-    note(aE, 120, 152, '173.2 V  minimum', color=PUR, size=9.8, ha='center')
+    note(aE, 120, 152, '173.2 Vac eq.  minimum', color=PUR, size=9.8, ha='center')
     aE.annotate('', xy=(169, 335), xytext=(205, 352),
                 arrowprops=dict(arrowstyle='-|>', color=MAG, lw=1.5))
     aE.annotate('', xy=(176, 172), xytext=(150, 158),
@@ -944,13 +944,13 @@ def _morph_levels(T, name):
     # has not chosen yet. The line's POSITION is this design's; the label is not.
     a1.text(VBO, -0.06, T['vbo'], ha='center', va='top',
             fontsize=9.5, color=GREY)
-    a1.text(BOH - 3, -0.06, '235 $V_{pk}$\n166.2 V', ha='right', va='top',
+    a1.text(BOH - 3, -0.06, '235 $V_{pk}$\n166.2 Vac', ha='right', va='top',
             fontsize=9.5, color='#8a6d00')
-    a1.text(BIH + 3, -0.06, '245 $V_{pk}$\n173.2 V', ha='left', va='top',
+    a1.text(BIH + 3, -0.06, '245 $V_{pk}$\n173.2 Vac', ha='left', va='top',
             fontsize=9.5, color='#8a6d00')
-    for mv, lab in ((100, '100 V'), (120, '120 V'), (230, '230 V')):
+    for mv, lab in ((100, '100 Vac'), (120, '120 Vac'), (230, '230 Vac')):
         a1.plot(mv, 1.0, 'v', color=PUR, ms=9, clip_on=False)
-        a1.text(mv, 1.02, lab, ha='center', va='bottom', color=PUR, fontsize=9)
+        a1.text(mv, 1.02, lab, ha='center', va='bottom', color=PUR, fontsize=9.6)
 
     ask(fig, T['ask'])
     foot(fig, T['foot'])
