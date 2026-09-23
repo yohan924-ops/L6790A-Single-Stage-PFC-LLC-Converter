@@ -58,6 +58,24 @@ def _ax(fig, rect, x0, x1, y0, y1):
     return ax
 
 
+def _ihead(ax, x, y, way, name, col, at, ha='center', size=12):
+    """A current's reference direction: an arrowhead ON its wire, named.
+
+    Every current a waveform row plots has to be findable on the circuit
+    above it, with its positive direction (2026-09-23, user: "which one is
+    i_S1?").  The head sits on the conductor itself, so it cannot be read
+    as belonging to the wire next to it.  `way` is 'r', 'l', 'u' or 'd'.
+    """
+    dx, dy = {'r': (1, 0), 'l': (-1, 0), 'u': (0, 1), 'd': (0, -1)}[way]
+    ax.add_patch(FancyArrowPatch((x - 0.13 * dx, y - 0.13 * dy),
+                                 (x + 0.13 * dx, y + 0.13 * dy),
+                                 arrowstyle='-|>', mutation_scale=16,
+                                 color=col, lw=2.2, zorder=8, shrinkA=0,
+                                 shrinkB=0))
+    ax.text(at[0], at[1], name, ha=ha, va='center', fontsize=size,
+            color=col, zorder=9, path_effects=HALO)
+
+
 def _wave_ax(fig, rect, t0=0.0, t1=1.0, y0=-1.25, y1=1.25, label=None):
     """A bare trace axis: a zero line, no box, a name on the left."""
     ax = fig.add_axes(rect)
@@ -716,7 +734,8 @@ def an_llc_waves(save, foot):
     import figs_modes8 as F
     fig = plt.figure(figsize=(9.35, 6.53))
     lam, fr = 0.55, 1.0
-    t, e, ilm, ilr, io, _ = _cycle(0.70, lam, 18.32, 12.41)
+    ratio = 0.70                       # f_sw / f_r of the drawn period
+    t, e, ilm, ilr, io, _ = _cycle(ratio, lam, 18.32, 12.41)
 
     rows = [('i$_{Lr}$, i$_{Lm}$', 0.0), ('i$_{S1}$', 0.0), ('i$_{D}$', 0.0),
             ('v$_d$', 0.0), ('gates', 0.0)]
@@ -747,8 +766,13 @@ def an_llc_waves(save, foot):
     axs[1].plot(t, s1, color=NAVY, lw=1.9)
     axs[1].fill_between(t, 0, s1, color=NAVY, alpha=0.13, lw=0)
 
-    axs[2].set_ylim(-0.12, 1.25)
+    axs[2].set_ylim(-0.12, 1.62)
     axs[2].plot(t, io / max(io.max(), 1e-9), color=GRN, lw=1.9)
+    #  which rectifier each hump is - D1 while S1 and S4 are on, D2 in the
+    #  other half (Figure 1 marks both)
+    for x0, x1, nm in ((e[0], e[1], 'i$_{D1}$'), (e[4], e[5], 'i$_{D2}$')):
+        axs[2].text((x0 + x1) / 2.0, 0.40, nm, ha='center', va='center',
+                    fontsize=10, color=GRN, path_effects=HALO, zorder=9)
 
     T = t
     v = F._step(T, e, -1.0, 1.0)
@@ -773,6 +797,30 @@ def an_llc_waves(save, foot):
     _call(axs[1], (0.004, s1[2]), (0.13, -0.78),
           'S$_1$ turns on with its own current still negative - that is ZVS',
           size=10)
+
+    #  Where f_r and f_sw are on the time axis (2026-09-23, user: "which
+    #  part is f_r and which is f_sw?").  The secondary conducts for the
+    #  resonant half period T_r/2 - from S1 turn-on (e[0]) to where i_Lr
+    #  rejoins i_Lm (e[1]); the gate pattern repeats every T_sw, S2 taking
+    #  over at T_sw/2 (e[4]).  Below resonance T_r/2 < T_sw/2, and the
+    #  difference is the freewheeling interval plus the dead time.
+    def _dim(ax, x0, x1, y, txt, col, dy):
+        ax.plot([x0, x1], [y, y], color=col, lw=1.3, zorder=6)
+        for xv in (x0, x1):
+            ax.plot([xv, xv], [y - dy, y + dy], color=col, lw=1.3, zorder=6)
+        ax.text((x0 + x1) / 2.0, y + 1.6 * dy, txt, ha='center',
+                va='bottom', fontsize=10, color=col, path_effects=HALO,
+                zorder=9)
+
+    _dim(axs[2], e[0], e[1], 1.13, 'T$_r$/2 = 1/(2f$_r$): the secondary '
+         'conducts', GRN, 0.07)
+    dim = fig.add_axes([0.105, 0.035, 0.855, 0.125])
+    dim.set_xlim(0, 1)
+    dim.set_ylim(0, 1)
+    dim.axis('off')
+    _dim(dim, e[0], e[4], 0.62, 'T$_{sw}$/2 = 1/(2f$_{sw}$)', NAVY, 0.08)
+    _dim(dim, e[0], e[8], 0.12, 'T$_{sw}$ = 1/f$_{sw}$  (one switching '
+         'period;  here f$_{sw}$ = %.1f f$_r$)' % ratio, NAVY, 0.08)
 
     foot(fig, 'Below resonance. i_Lr leaves i_Lm while the secondary '
               'conducts and rejoins it when the rectifier current reaches '
@@ -831,6 +879,13 @@ def an_three_cases(save, foot):
         for base, g in ((0.0, g1), (1.3, g2)):
             axs[0].fill_between(T, base, base + g * 0.9, color=YEL, lw=0)
             axs[0].plot(T, base + g * 0.9, color=NAVY, lw=1.4)
+        #  which pair each gate row is, as in Figure 2
+        axs[0].text(e[2] / 2.0, 0.45, 'S$_1$,S$_4$', ha='center',
+                    va='center', fontsize=9.6, color=NAVY, path_effects=HALO,
+                    zorder=9)
+        axs[0].text((e[4] + e[6]) / 2.0, 1.75, 'S$_2$,S$_3$', ha='center',
+                    va='center', fontsize=9.6, color=NAVY, path_effects=HALO,
+                    zorder=9)
         axs[1].plot(T, F._step(T, e, -1.0, 1.0), color=NAVY, lw=1.9)
         m = max(abs(ilr).max(), 1e-9)
         axs[2].plot(T, ilr / m, color=MAG, lw=1.9)
@@ -1020,15 +1075,18 @@ def an_cap_ind(save, foot):
                                      2.35 * np.exp(-(tt - k) / 0.009), 0.0)
             ids = np.clip(ids, ILOW, IHI)
         y = 0.410
-        rows = (('v$_d$', 0.0735, -1.45, 1.45),
+        #  v_d is the mid-point to 0, which in a half bridge is 0 to V_in -
+        #  it was drawn +-1 about the axis, as if it were the full bridge's
+        #  v_A - v_B.  The switch current is S1's, named as in Figure 2.
+        rows = (('v$_d$', 0.0735, -0.45, 1.45),
                 ('i$_{Lr}$', 0.0735, -1.45, 1.45),
-                ('i$_{DS}$', 0.0931, ILOW, IHI))
+                ('i$_{S1}$', 0.0931, ILOW, IHI))
         for nmx, h, lo, hi in rows:
             y -= h + 0.0245
             a = _wave_ax(fig, [0.095 + c * 0.462, y, 0.376, h], 0, 2,
                          lo, hi, nmx if c == 0 else None)
             if nmx.startswith('v$_d$'):
-                a.plot(tt, vd, color=NAVY, lw=1.9)
+                a.plot(tt, (vd + 1.0) / 2.0, color=NAVY, lw=1.9)
             elif nmx.startswith('i$_{Lr}$'):
                 a.plot(tt, cur, color=col, lw=2.1)
                 for k in (0.0, 1.0):
@@ -1116,6 +1174,8 @@ def commutation(ax, cap, title=True):
     S.wire(ax, [(XL, YM), (XB0, YM)])
     S.wire(ax, [(XB1, YM), (XR, YM), (XR, LO)])
     S.dot(ax, XL, YM)
+    #  the node the v_d row is measured at, against 0
+    X.txt(ax, XL - 0.30, YM, 'v$_d$', size=11, weight='bold', ha='right')
     ax.add_patch(Rectangle((XB0, YM - 0.70), XB1 - XB0, 1.40, fc=LT,
                            ec=GREY, lw=1.3, zorder=4))
     X.txt(ax, (XB0 + XB1) / 2, YM, 'resonant\ntank', size=10.5, z=5)
@@ -2068,8 +2128,16 @@ def an_flyback_llc(save, foot):
     _sec(ax, t1['s_top'], t1['s_bot'], YS, 6.80, 8.60, 10.20,
          t1['s_top'][1], size=FS)
     #  Mid-coil, not at the top: the top turn is where the polarity dot is.
-    S.label(ax, XP_F - 0.42, 2.55, 'i$_p$', size=FS, color=MAG, ha='right')
-    S.label(ax, XS_F + 0.47, 2.55, 'i$_s$', size=FS, color=GRN, ha='left')
+    #  On the wires, with their reference directions.  The flyback's i_s
+    #  is taken INTO its dot (the dot is at the bottom), so the core sees
+    #  N_p i_p + N_s i_s; the LLC's i_s is taken OUT of its dot, so the
+    #  core sees N_p i_p - N_s i_s.  Drawn as bare names beside the
+    #  windings, the two sign conventions could not be told apart.
+    xa = (0.80 + XP_F) / 2.0 + 0.30
+    _ihead(ax, xa, YT, 'r', 'i$_p$', MAG, (xa, YT + 0.62), size=FS)
+    xa = (XS_F + 6.80) / 2.0 - 0.25
+    _ihead(ax, xa, t1['s_top'][1], 'r', 'i$_s$', GRN,
+           (xa, t1['s_top'][1] + 0.62), size=FS)
     ax.text(6.0, -2.62, 'switch and rectifier are never on together',
             ha='center', va='center', fontsize=10.2, color=GREY)
 
@@ -2138,8 +2206,15 @@ def an_flyback_llc(save, foot):
     #  straight into the block at the terminal's own height: routed down
     #  to the return line it ended below the block, in the air
     S.wire(ax2, [t2['s_bot'], (bl[0], t2['s_bot'][1])])
-    S.label(ax2, XP_L - 0.42, 2.95, 'i$_p$', size=FS, color=MAG, ha='right')
-    S.label(ax2, XS_L + 0.47, 2.95, 'i$_s$', size=FS, color=GRN, ha='left')
+    #  i_p is the current BEFORE L_m takes its share - the tank current -
+    #  because the row below reads i_mu = i_p - i_s.  Beside the winding,
+    #  where it used to be, it named the branch that carries i_s.
+    _ihead(ax2, 4.60, YPT, 'r', 'i$_p$', MAG, (4.60, YPT + 0.62), size=FS)
+    _ihead(ax2, 5.10, (YPT + 2.55) / 2.0, 'd', 'i$_\\mu$', CYA,
+           (5.40, (YPT + 2.55) / 2.0), ha='left', size=FS)
+    xa = (XS_L + bl[0]) / 2.0
+    _ihead(ax2, xa, t2['s_top'][1], 'r', 'i$_s$', GRN,
+           (xa, t2['s_top'][1] + 0.62), size=FS)
     ax2.text(5.4, -2.60, 'both windings conduct at once',
              ha='center', va='center', fontsize=10.2, color=GREY)
 
@@ -2456,7 +2531,7 @@ def an_xfmr_read(save, foot):
     fig = plt.figure(figsize=(9.35, 9.9))
     X0, W = 0.115, 0.845
     _pu = '\none unit' if V['nser'] > 1 else ''
-    rows = [('i$_p$' + _pu, 0.211), ('i$_{NS2}$, i$_{NS3}$' + _pu, 0.148),
+    rows = [('i$_p$' + _pu, 0.211), ('i$_{NS3}$, i$_{NS2}$' + _pu, 0.148),
             ('v$_{NS}$', 0.135)]
     y = 0.965
     axs = []
@@ -2521,9 +2596,14 @@ def an_xfmr_read(save, foot):
     a.plot(t, s3, color=GRN, lw=2.0, zorder=3)
     a.fill_between(t, 0, s2, color=MAG, alpha=0.10, lw=0)
     a.fill_between(t, 0, s3, color=GRN, alpha=0.10, lw=0)
-    a.text(t1 / 2, 0.30, 'NS2', ha='center', va='center', fontsize=9.6,
+    #  NS3 first.  i_p > 0 enters the primary dot, and the secondary dot
+    #  that current leaves by is NS3's start - the tap (Figure an_xfmr_pins;
+    #  the design text: the tap joins the finish of NS2 to the start of
+    #  NS3).  So NS3, the lower half, N_s2 of Figure 1, conducts while S1
+    #  and S4 are on.  This row had the two names the other way round.
+    a.text(t1 / 2, 0.30, 'NS3', ha='center', va='center', fontsize=9.6,
            color=MAG, path_effects=HALO, zorder=9)
-    a.text(0.5 + t1 / 2, 0.30, 'NS3', ha='center', va='center', fontsize=9.6,
+    a.text(0.5 + t1 / 2, 0.30, 'NS2', ha='center', va='center', fontsize=9.6,
            color=GRN, path_effects=HALO, zorder=9)
     a.plot([t1 / 2], [1.0], 'o', color=MAG, ms=5, zorder=5)
     ring(a, 4, t1 / 2, 1.0, MAG, dx=-0.055, dy=0.22)
@@ -2915,10 +2995,14 @@ def an_flux_steps(save, foot):
 
     HS, G, Y0 = (0.070, 0.120, 0.120, 0.150), 0.040, 0.945
     rows = ['on', 'i$_p$ , i$_s$', 'N$_p$i$_p$ $-$\nN$_s$i$_s$', 'B']
+    #  The flyback's i_s is taken into its dot (Figure an_flyback_llc), so
+    #  its ampere-turns ADD: this row read N_p i_p - N_s i_s on both sides
+    #  and plotted a positive ramp while only i_s > 0 was flowing.
+    rows_l = rows[:2] + ['N$_p$i$_p$ +\nN$_s$i$_s$'] + rows[3:]
     axl, axr, y = [], [], Y0
-    for nm, h in zip(rows, HS):
+    for nm, nl, h in zip(rows, rows_l, HS):
         y -= h + G
-        axl.append(_wave_ax(fig, [XL, y, WW, h], 0, 1, -1.25, 1.25, nm))
+        axl.append(_wave_ax(fig, [XL, y, WW, h], 0, 1, -1.25, 1.25, nl))
         axr.append(_wave_ax(fig, [XR, y, WW, h], 0, 1, -1.25, 1.25, nm))
 
     def cap_(ax, t):

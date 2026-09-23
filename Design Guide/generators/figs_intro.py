@@ -36,7 +36,7 @@ def an_llc_stage(save, foot):
     fig.subplots_adjust(left=0.01, right=0.99, top=0.99, bottom=0.10)
     rest = dict(S1='plain', S2='plain', S3='plain', S4='plain',
                 D1=True, D2=True)
-    F._skeleton(ax, rest, parts=False)
+    F._skeleton(ax, rest, parts=False, lm_dy=0.42)
 
     #  Group names go ABOVE the rails, in the band the panels leave empty
     #  for their step number and title.  Nothing of the circuit is up there.
@@ -67,25 +67,57 @@ def an_llc_stage(save, foot):
     S.shade(ax, F.XCR - 0.95, F.YB - 0.95, F.XLM + 0.75, F.YT + 1.05,
             None, color=CYA, alpha=0.09)
 
-    #  The callout points at the tank wire itself, from the empty middle
-    #  of the bridge.  Coming up from below it had to cross the return rail
-    #  and pass through S2 to reach the junction.
-    #  Centred in the pocket between the two legs.  Set flush left it ran
-    #  its last word onto the right leg, and the halo that keeps text
-    #  readable then cut a white gap in that wire.
-    #  Measured, not guessed: the pocket between the legs is 3.85 units and
-    #  'the tank is driven with' sets 3.62 wide, so its halo ate into the
-    #  right leg.  'that drives the tank' is 3.19 and clears both.
-    ax.annotate('the square wave\ndriving the tank',
-                xy=(F.XL + 1.15, F.YT), xytext=((F.XL + F.XR) / 2.0 + 0.05,
-                                                F.YMID - 1.35),
-                fontsize=10.5, color=MAG, ha='center', linespacing=1.4,
-                arrowprops=dict(arrowstyle='-|>', color=MAG, lw=1.6,
-                                connectionstyle='arc3,rad=0.20'))
+    #  Every quantity Figure 2 plots, marked where it is (2026-09-23, user:
+    #  "which is v_d, what is i_S1?").  Each arrow is the positive direction
+    #  of that trace in Figure 2 and takes that trace's colour: i_S1 drain to
+    #  source; i_Lr out of A into the tank; i_Lm down through L_m; each
+    #  rectifier current in its forward direction; v_d = v_A - v_B, the
+    #  bridge output, +V_in while S1 and S4 are on.  The callout that used to
+    #  sit in the pocket between the legs said the same thing as v_d in
+    #  words, so v_d replaces it.
+    from matplotlib.patches import FancyArrowPatch
 
-    foot(fig, 'Three reactive elements and a square wave. The switches only '
-              'set the frequency; the tank decides how much power flows and '
-              'the transformer sets the voltage.')
+    def cur(p0, p1, name, col, at, ha):
+        ax.add_patch(FancyArrowPatch(p0, p1, arrowstyle='-|>',
+                                     mutation_scale=13, color=col, lw=1.8,
+                                     zorder=6, shrinkA=0, shrinkB=0))
+        F.txt(ax, at[0], at[1], name, size=11, color=col, ha=ha)
+
+    #  Alongside the device, not on the short lead under it: there the
+    #  arrow was all head.  The switch symbol is drawn left of its leg, so
+    #  the right side is free.
+    cur((F.XL + 0.30, F.SH[0] + 0.62), (F.XL + 0.30, F.SH[0] - 0.62),
+        'i$_{S1}$', NAVY, (F.XL + 0.48, F.SH[0]), 'left')
+    xi = (F.XR + 0.20 + F.XCR - 0.30) / 2.0 + 0.45
+    cur((xi - 0.32, F.YT + 0.30), (xi + 0.32, F.YT + 0.30), 'i$_{Lr}$', MAG,
+        (xi, F.YT + 0.66), 'center')
+    cur((F.XLM - 0.64, F.YMID + 0.02), (F.XLM - 0.64, F.YB + 0.24),
+        'i$_{Lm}$', CYA, (F.XLM - 0.80, F.YMID - 0.40), 'right')
+    #  Beside each diode, on the side its name is not
+    y_d = (F.VN + F.YB) / 2.0
+    for x, nm, sd in ((F.XQ1, 'i$_{D1}$', +1), (F.XQ2, 'i$_{D2}$', -1)):
+        cur((x + sd * 0.62, y_d - 0.45), (x + sd * 0.62, y_d + 0.45), nm,
+            GRN, (x + sd * 0.80, y_d), 'left' if sd > 0 else 'right')
+
+    xv = F.XR + 1.00
+    ax.add_patch(FancyArrowPatch((xv, F.YB + 0.12), (xv, F.YT - 0.12),
+                                 arrowstyle='<|-|>', mutation_scale=12,
+                                 color=GREY, lw=1.4, zorder=4, shrinkA=0,
+                                 shrinkB=0))
+    F.txt(ax, xv - 0.28, F.YT - 0.30, '+', size=12, weight='bold')
+    F.txt(ax, xv - 0.28, F.YB + 0.30, '−', size=13, weight='bold')
+    F.txt(ax, xv + 0.22, F.YMID, 'v$_d$', size=11.5, weight='bold',
+          ha='left')
+    #  the two bridge mid-points v_d is taken between - the names the mode
+    #  panels give them
+    F.txt(ax, F.XL - 0.30, F.YT, 'A', size=11, color=PUR, weight='bold',
+          ha='right')
+    F.txt(ax, F.XR - 0.30, F.YB, 'B', size=11, color=PUR, weight='bold',
+          ha='right')
+
+    foot(fig, 'Three reactive elements and a square wave v_d = v_A - v_B. '
+              'The switches only set the frequency; the tank decides how '
+              'much power flows and the transformer sets the voltage.')
     save(fig, 'an_llc_stage')
 
 
@@ -168,7 +200,7 @@ def an_fha_steps(save, foot):
     series(ax, top, 1.95, 3.1, 4.2)
     XR_ = 5.9
     S.wire(ax, [(4.2, YS_), (XR_, YS_)])
-    S.shunt(ax, XR_, YS_, YR, 'res', 'n$^2$R$_{load}$', tdx=0.30)
+    S.shunt(ax, XR_, YS_, YR, 'res', 'n$^2$R$_o$', tdx=0.30)
     S.wire(ax, [(XR_, YR), (XS_, YR)])
     ax.annotate('the ideal transformer disappears;\n'
                 'the load is scaled by n$^2$',

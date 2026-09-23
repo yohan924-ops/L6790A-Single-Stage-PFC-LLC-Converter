@@ -82,15 +82,18 @@ NP_T_N, NS_T_N = 4, 2               # turns drawn: primary, each half of N_s
 #  Order matters - with the near leg fed from the LOWER end and the far one
 #  from the upper, the only crossing left in the whole secondary is the
 #  tap's riser under the upper end's wire.
-XQ1, XCT, XQ2 = 14.70, 15.80, 16.90
-XCO, XLD = 18.25, 19.65
+#  Spread by about a third (2026-09-23, user: the centre-tap corner read as
+#  cramped): winding labels to D1 1.33 -> 1.73, D1 to tap and tap to D2
+#  1.10 -> 1.40, D2 to C_o and C_o to R_o unchanged.
+XQ1, XCT, XQ2 = 15.10, 16.50, 17.90
+XCO, XLD = 19.25, 20.65
 XEND = XLD
 
 DX_D, DX_C = 0.80, 1.50             # body diode and C_oss, right of the leg
 XGATE = 1.00                        # gate lead reaches this far left
 
 
-def _skeleton(ax, states, parts=True):
+def _skeleton(ax, states, parts=True, lm_dy=0.0):
     """Everything that is the same in every panel.
 
     `parts` draws each switch's body diode and C_oss beside it.  The mode
@@ -99,6 +102,9 @@ def _skeleton(ax, states, parts=True):
     showing them there raises a question chapter 2 has not reached yet - so
     that figure reuses this drawing with parts off rather than keeping a
     second, half-bridge copy of the same converter.
+
+    `lm_dy` lifts the L_m name off the middle of its coil, for a figure
+    that marks i_Lm under it.
     """
     ax.set_xlim(-0.75, XEND + 2.05)
     ax.set_ylim(-1.75, 10.30)
@@ -155,7 +161,7 @@ def _skeleton(ax, states, parts=True):
     wire(ax, [(XLM, YB + 0.24), (XLM, YB)])
     dot(ax, XLM, YT)
     dot(ax, XLM, YB)
-    txt(ax, XLM - 0.50, YMID, 'L$_m$', size=11.5, ha='right')
+    txt(ax, XLM - 0.50, YMID + lm_dy, 'L$_m$', size=11.5, ha='right')
 
     # ---- the transformer, centre-tapped secondary
     #  The core spans the WINDINGS.  At +-0.38 it ran a fifth of its own

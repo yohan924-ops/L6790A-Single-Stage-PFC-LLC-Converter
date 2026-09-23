@@ -115,7 +115,9 @@ def build(A):
           '듀티 제어도, 인덕터 전류 제어도 없다.'))
     add(fig('an_llc_stage',
             'LLC 단. 스위치는 주파수를, 탱크는 전력을, 트랜스포머는 전압을 '
-            '정한다.'))
+            '정한다. 브리지 출력 v<sub>d</sub> = v<sub>A</sub> &minus; '
+            'v<sub>B</sub> 가 탱크를 구동한다. 화살표는 그림&nbsp;%s 에 그린 '
+            '각 전류의 양의 방향이다.' % FR('an_llc_waves')))
     add(p('탱크 소자는 셋이다. 직렬 인덕턴스 L<sub>r</sub>, 트랜스포머의 자화 '
           '인덕턴스 L<sub>m</sub>, 직렬 커패시턴스 C<sub>r</sub>. '
           'L<sub>m</sub> 은 트랜스포머가 원래 갖고 있는 인덕턴스이고 L<sub>r</sub> 도 보통 그 누설 인덕턴스이므로, 반드시 별도 부품이 필요한 것은 C<sub>r</sub> 뿐이다.'))
@@ -143,7 +145,10 @@ def build(A):
     add(fig('an_llc_waves',
             'below 에서의 한 스위칭 주기. i<sub>Lr</sub> 과 i<sub>Lm</sub> 의 '
             '차이가 2차로 넘어간다. 스위치는 자기 전류가 아직 음일 때 켜지고, '
-            '그 전류가 중점을 방전시킨다.'))
+            '그 전류가 중점을 방전시킨다. 2차는 공진 반주기 '
+            'T<sub>r</sub>/2 = 1/(2f<sub>r</sub>) 동안 도통하고, 브리지는 '
+            'T<sub>sw</sub>/2 = 1/(2f<sub>sw</sub>) 마다 바뀐다. below 에서는 '
+            '뒤쪽이 더 길다.'))
     add(note('ZVS 의 조건은 특정 주파수가 아니라 <i>inductive 동작</i>이다. '
              'capacitive 경계 아래에서는 전류가 앞서고, 브리지가 낮은 '
              '임피던스로 하드 스위칭하며, 부품이 뜨거워지는 정도가 아니라 파손된다. '
@@ -301,8 +306,8 @@ def build(A):
             '흐르고 있고, S<sub>1</sub> 이 도통 중인 다이오드 위에서 켜진다. '
             '오른쪽은 음이라 데드타임 동안 중점을 올려놓았고, S<sub>1</sub> 은 '
             '자기 바디 다이오드가 0 V 에서 도통하는 상태에서 켜진다. '
-            '<b>아래:</b> 브리지 전압, 탱크 전류, 켜지는 스위치의 드레인 '
-            '전류. 같은 축척이다.', width=CW))
+            '<b>아래:</b> 중점 전압 v<sub>d</sub>(0 기준), 탱크 전류, 켜지는 '
+            '스위치의 드레인 전류 i<sub>S1</sub>. 같은 축척이다.', width=CW))
     ext(bullets([
         '<b>inductive: 전류가 뒤처진다.</b> 턴오프 때 전류가 아직 브리지 '
         '노드를 반대쪽 레일로 밀고 있다. 데드타임 동안 이 전류가 노드를 옮기므로 다음 '
@@ -415,7 +420,9 @@ def build(A):
             '자화 전류 전부를 흘리고 자속은 그것을 따라 오른다. 오른쪽: 둘이 '
             '동시에 도통하고 i<sub>&mu;</sub> = i<sub>p</sub> &minus; '
             'i<sub>s</sub> 만 코어를 자화시킨다. 2차 전류는 1차로 환산해 '
-            '그렸다. 맨 아래 행: 점선은 각 권선이 혼자 만들 자속, 실선은 그 '
+            '그렸다. 화살표는 기준 방향이다. 플라이백의 i<sub>s</sub> 는 점으로 '
+            '들어가는 방향, LLC 의 i<sub>s</sub> 는 점에서 나오는 방향이라 '
+            '플라이백에서는 기자력이 더해진다. 맨 아래 행: 점선은 각 권선이 혼자 만들 자속, 실선은 그 '
             '합, 색칠한 띠는 2차가 상쇄한 부분.'))
     add(p('그림&nbsp;%s 두 컨버터의 한 주기를 구간별로 따라간다: 어느 '
           '권선이 도통하고, 그 권선에 어떤 전압이 걸리며, 그래서 자속이 어느 '
@@ -1051,7 +1058,7 @@ def build(A):
               '코어 면적과 N<sub>s</sub>: A<sub>e</sub> &ge; '
               'V<sub>out</sub>/(4 f<sub>r</sub> N<sub>s</sub> B<sub>max</sub>)'],
              ['<b>7</b>', 'DC overlap(포화) 시험',
-              '파형이 아니다. LCR 미터를 NP1 에 걸고 나머지 권선(NS2, NS3, NAUX)은 '
+              '파형이 아니다. LCR 미터를 1차 NP1 에 걸고 나머지 권선(2차 NS2·NS3, 보조 NAUX)은 '
               '모두 Open, 1차에 DC 전류를 겹쳐 흘리며 1차 인덕턴스를 전류에 따라 '
               '읽는다. 시험 전류는 표시 3 을 컨트롤러가 허용하는 최고 '
               '출력 V<sub>OVP2</sub>/V<sub>out</sub> 으로 환산한 것.',
@@ -2085,7 +2092,11 @@ def build(A):
     add(p('탱크가 요구하는 것은 L<sub>r</sub> = %(Lr).0f&nbsp;&micro;H, '
           'L<sub>m</sub> = %(Lm).0f&nbsp;&micro;H, n<sub>T</sub> = %(nT).2f '
           '이다. 트랜스포머는 하나다: %(Np)d 턴 1차와, 센터탭으로 연결되는 '
-          '%(Ns)d 턴 2차 둘 NS2·NS3. 여러 유닛을 직렬로 쓰는 방식(%(ref2)s 절)은 필요 없다.' % dict(V, ref2=SR('트랜스포머 한 개로 안 될 때'))))
+          '%(Ns)d 턴 2차 둘 NS2·NS3. NS2 는 그림&nbsp;%(f1)s 의 N<sub>s1</sub>, '
+          'NS3 는 N<sub>s2</sub> 이므로, S1·S4 가 켜진 동안 도통하는 것은 NS3 다. '
+          '여러 유닛을 직렬로 쓰는 방식(%(ref2)s 절)은 필요 없다.'
+          % dict(V, ref2=SR('트랜스포머 한 개로 안 될 때'),
+                 f1=FR('an_llc_stage'))))
     add(fig('an_xfmr_read',
             '각 숫자를 어디서 읽나. 위: 최악 사이클(HB 경계, 등가 '
             '%(Veqlo).0f&nbsp;Vac 의 라인 피크, Full load)의 한 스위칭 주기 동안의 '
@@ -3156,6 +3167,8 @@ def build(A):
         ('I<sub>Cout</sub>, I<sub>out</sub>', '출력 뱅크의 리플 전류, 그리고 부하 전류'),
         ('t<sub>D</sub>, T<sub>ZC</sub>, T<sub>ZC,min</sub>', '브리지 데드타임; 게이트가 꺼진 뒤 탱크 전류가 0 에 닿기까지의 시간, 그리고 운전 영역 전체에서의 최솟값'),
         ('v<sub>d</sub>, V<sub>ds</sub>', '브리지 중점 전압, 그리고 소자의 드레인-소스 전압'),
+        ('v<sub>A</sub>, v<sub>B</sub>', '브리지의 두 중점 A, B 의 0 기준 전압. v<sub>d</sub> = v<sub>A</sub> &minus; v<sub>B</sub>'),
+        ('i<sub>S1</sub>', 'S1 의 드레인 전류, 드레인에서 소스로 흐르는 방향이 양'),
         ('S<sub>1</sub>, S<sub>2</sub>, S<sub>3</sub>, S<sub>4</sub>, D<sub>1</sub>, D<sub>2</sub>', '브리지 스위치 넷, 그리고 2차 정류기 둘'),
 
         ('<b>트랜스포머와 코어</b>', ''),
@@ -3165,6 +3178,7 @@ def build(A):
         ('A<sub>N</sub>', '보빈의 권선창 면적'),
         ('A<sub>L</sub>, g, &mu;<sub>0</sub>', '갭을 둔 코어의 인덕턴스 계수, 중앙 다리 총 갭, 진공 투자율'),
         ('N<sub>p</sub>, N<sub>s</sub>, N<sub>x</sub>', '1차 턴수, 권선당 2차 턴수, 유닛 수'),
+        ('N<sub>s1</sub>, N<sub>s2</sub>', '센터탭 2차의 위쪽 반과 아래쪽 반(설계 예제의 NS2, NS3)'),
         ('N<sub>aux</sub>, n<sub>aux</sub>/n<sub>sec</sub>', '보조 권선 턴수, 그리고 2차 하나에 대한 그 권선비'),
         ('L<sub>open</sub>, L<sub>short</sub>', '1차 단자에서 잰 인덕턴스: 나머지 권선을 모두 Open 한 값, 그리고 2차를 모두 Short 하고 보조 권선은 Open 한 값'),
         ('I<sub>dc</sub>', 'DC overlap 시험에서 LCR 신호에 겹쳐 흘리는 DC 전류'),

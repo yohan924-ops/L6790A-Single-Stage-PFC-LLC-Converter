@@ -431,7 +431,7 @@ def f05_zvs_mechanism():
     a1.set_ylim(-0.22, 1.78)
     a1.set_yticks([0, 1])
     a1.set_yticklabels(['0', 'V$_{in}$'])
-    a1.set_ylabel('bridge midpoint', fontsize=10, color=NAVY)
+    a1.set_ylabel('node A', fontsize=10, color=NAVY)    # Figure 1
     a1.text((e[2] + e[3]) / 2, 1.60, '3', ha='center', va='center',
             fontsize=11, fontweight='bold', color='white',
             bbox=dict(boxstyle='circle,pad=0.24', fc='#B08900', ec='none'))
@@ -610,7 +610,8 @@ def f13_morphing():
         #  the arrow; at 2.62 it overprinted the arrowheads
         aW.text(2.40, (y0 + y1) / 2, lab, color=c, fontsize=12,
                 fontweight='bold', va='center')
-    aW.text(1.0, 0.02, 'same vertical scale',
+    #  what the two traces are: the tank drive v_d of Figures 1 and 27
+    aW.text(1.0, 0.02, 'both traces: v$_d$, same vertical scale',
             color=GREY, fontsize=9.5, ha='center', va='center')
 
     vac = np.linspace(85, 270, 900)
@@ -1089,6 +1090,13 @@ def _bridge(ax, states, path, title, vlabel):
         _sw(ax, x, 2.55, qh, states[qh])
         _sw(ax, x, 0.80, ql, states[ql])
         ax.plot(x, _MID, 'o', color=NAVY, ms=6, zorder=4)
+    #  the two midpoints by the names Figure 1 gives them: the tank drive
+    #  is v_d = v_A - v_B, the same quantity Figures 1 and 2 call v_d
+    #  (this pair of figures used to call it v_tank)
+    ax.text(_L1 - 0.14, _MID + 0.20, 'A', ha='right', va='bottom',
+            fontsize=11, fontweight='bold', color=PUR, zorder=8)
+    ax.text(_L2 + 0.14, _MID + 0.20, 'B', ha='left', va='bottom',
+            fontsize=11, fontweight='bold', color=PUR, zorder=8)
 
     # the tank, drawn as a block between the two midpoints
     ax.plot([_L1, _L2], [_MID, _MID], color=GREY, lw=1.4, zorder=1)
@@ -1126,10 +1134,10 @@ def f15_bridge_fb():
 
     _bridge(aA, dict(S1='on', S2='off', S3='off', S4='on'),
             [(_L1, _HI), (_L1, _MID), (_L2, _MID), (_L2, _LO)],
-            'first half period:  S1 + S4', 'v$_{tank}$ = + V$_{in}$')
+            'first half period:  S1 + S4', 'v$_d$ = + V$_{in}$')
     _bridge(aB, dict(S1='off', S2='on', S3='on', S4='off'),
             [(_L2, _HI), (_L2, _MID), (_L1, _MID), (_L1, _LO)],
-            'second half period:  S2 + S3', 'v$_{tank}$ = - V$_{in}$')
+            'second half period:  S2 + S3', 'v$_d$ = - V$_{in}$')
 
     t = np.linspace(0, 2, 1200)
     sq = np.where((t % 1) < 0.5, 1.0, -1.0)
@@ -1140,7 +1148,7 @@ def f15_bridge_fb():
     aW.set_xticks([])
     aW.set_yticks([-1, 0, 1])
     aW.set_yticklabels(['-V$_{in}$', '0', '+V$_{in}$'])
-    aW.set_title('v$_{tank}$  \u2014  swing 2 \u00d7 V$_{in}$', fontsize=11.5,
+    aW.set_title('v$_d$ = v$_A$ \u2212 v$_B$  \u2014  swing 2 \u00d7 V$_{in}$', fontsize=11.5,
                  color=NAVY, pad=8)
     aW.text(0.5, -0.085, 'fundamental  (4/\u03c0)\u00b7V$_{in}$',
             transform=aW.transAxes, ha='center', va='top',
@@ -1165,10 +1173,10 @@ def f16_bridge_hb():
 
     _bridge(aA, dict(S1='on', S2='off', S3='off', S4='static'),
             [(_L1, _HI), (_L1, _MID), (_L2, _MID), (_L2, _LO)],
-            'first half:  S1 on,  S4 standing', 'v$_{tank}$ = + V$_{in}$')
+            'first half:  S1 on,  S4 standing', 'v$_d$ = + V$_{in}$')
     _bridge(aB, dict(S1='off', S2='on', S3='off', S4='static'),
             [(_L1, _LO), (_L1, _MID), (_L2, _MID), (_L2, _LO)],
-            'second half:  S2 on,  S4 standing', 'v$_{tank}$ = 0')
+            'second half:  S2 on,  S4 standing', 'v$_d$ = 0')
 
     t = np.linspace(0, 2, 1201)[:-1]
     sq = np.where((t % 1) < 0.5, 1.0, 0.0)
@@ -1183,7 +1191,7 @@ def f16_bridge_hb():
     aW.set_yticks([-0.5, 0, 0.5, 1])
     aW.set_yticklabels(['-V$_{in}$/2', '0', '+V$_{in}$/2', 'V$_{in}$'])
     aW.legend(loc='upper right', fontsize=9)
-    aW.set_title('v$_{tank}$  \u2014  swing 1 \u00d7 V$_{in}$', fontsize=11.5,
+    aW.set_title('v$_d$ = v$_A$ \u2212 v$_B$  \u2014  swing 1 \u00d7 V$_{in}$', fontsize=11.5,
                  color=NAVY, pad=8)
     aW.text(0.5, -0.085, 'fundamental  (2/\u03c0)\u00b7V$_{in}$  '
             '\u2014  exactly half',
@@ -1209,6 +1217,7 @@ def f17_morph_gates():
     a = ((t % 1) < 0.47).astype(float)          # leg 1 high side
     b = (((t + 0.5) % 1) < 0.47).astype(float)  # 180 deg out of phase
     rows = ('HOUT1', 'LOUT1', 'HOUT2', 'LOUT2')
+    SW = dict(HOUT1='S1', LOUT1='S2', HOUT2='S3', LOUT2='S4')
 
     for ax, sig, ttl in (
             (aF, (a, b, b, a), 'FULL bridge   (mains peak below 235 V)'),
@@ -1218,8 +1227,10 @@ def f17_morph_gates():
             static = np.ptp(s) == 0
             c = GRN if static and s.max() > 0.5 else (GREY if static else NAVY)
             ax.plot(t, y + 0.62 * s, color=c, lw=2.4)
-            ax.text(-0.06, y + 0.31, nm, ha='right', va='center', fontsize=10.5,
-                    fontweight='bold', color=c)
+            #  and the switch each pin drives, by the names of Figure 1
+            ax.text(-0.06, y + 0.31, '%s\n%s' % (nm, SW[nm]), ha='right',
+                    va='center', fontsize=10.5, fontweight='bold', color=c,
+                    linespacing=1.15)
             if static:
                 #  Beside the line, not on it: a boxed label centred on the
                 #  held level hid the very trace it named (user, 2026-09-21).

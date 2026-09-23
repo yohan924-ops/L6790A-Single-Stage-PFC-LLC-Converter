@@ -72,7 +72,10 @@ def build(A):
           'inductor current.'))
     add(fig('an_llc_stage',
             'An LLC stage. The switches set the frequency; the tank sets the '
-            'power; the transformer sets the voltage.'))
+            'power; the transformer sets the voltage. The bridge output '
+            'v<sub>d</sub> = v<sub>A</sub> &minus; v<sub>B</sub> drives the '
+            'tank. Each arrow is the positive direction of a current plotted '
+            'in Figure&nbsp;%s.' % FR('an_llc_waves')))
     add(p('The three tank elements are the series inductance L<sub>r</sub>, '
           'the magnetising inductance L<sub>m</sub> of the transformer, and '
           'the series capacitance C<sub>r</sub>. L<sub>m</sub> is the '
@@ -108,7 +111,10 @@ def build(A):
             'One switching period below resonance. The difference between '
             'i<sub>Lr</sub> and i<sub>Lm</sub> crosses to the secondary. The '
             'switch turns on while its current is still negative; that is '
-            'what discharges the mid-point.'))
+            'what discharges the mid-point. The secondary conducts for the '
+            'resonant half period T<sub>r</sub>/2 = 1/(2f<sub>r</sub>); the '
+            'bridge changes over every T<sub>sw</sub>/2 = 1/(2f<sub>sw</sub>), '
+            'which below resonance is the longer of the two.'))
     add(note('The condition is <i>inductive operation</i>, not a fixed '
              'frequency. Below the capacitive boundary the current leads, the '
              'bridge hard-switches into a low impedance, and parts are '
@@ -298,8 +304,9 @@ def build(A):
             'S<sub>1</sub> closes onto a conducting diode. Right, it is '
             'negative, has carried the mid-point up during the dead time, and '
             'S<sub>1</sub> finds its own body diode conducting at zero volts. '
-            '<b>Bottom:</b> bridge voltage, tank current and the drain '
-            'current of the closing switch, to one scale.', width=CW))
+            '<b>Bottom:</b> the mid-point voltage v<sub>d</sub> (to 0), the '
+            'tank current and the drain current i<sub>S1</sub> of the closing '
+            'switch, to one scale.', width=CW))
     ext(bullets([
         '<b>Inductive: the current lags.</b> At turn-off it still pushes the '
         'bridge node towards the other rail; the dead time lets it, and the '
@@ -436,7 +443,9 @@ def build(A):
             'the flux ramps with it. Right: both conduct at once and only '
             'i<sub>&mu;</sub> = i<sub>p</sub> &minus; i<sub>s</sub> '
             'magnetises the core. The secondary current is drawn referred '
-            'to the primary. '
+            'to the primary. The arrows are the reference directions: '
+            'i<sub>s</sub> is taken into the dot in the flyback and out of it '
+            'in the LLC, so the flyback&rsquo;s ampere-turns add. '
             'Bottom row: dashed, what each winding would drive alone; solid, '
             'their sum; shaded, what the secondary removed.'))
     add(p('Figure&nbsp;%s follows one period of each converter interval by '
@@ -1252,8 +1261,8 @@ def build(A):
               'Core area and N<sub>s</sub>: A<sub>e</sub> &ge; '
               'V<sub>out</sub>/(4 f<sub>r</sub> N<sub>s</sub> B<sub>max</sub>)'],
              ['<b>7</b>', 'DC-overlap (saturation) test',
-              'Not a waveform. LCR meter across NP1, every other winding open '
-              '(NS2, NS3, NAUX); a dc current overlapped on the primary and the '
+              'Not a waveform. LCR meter across the primary NP1, every other '
+              'winding open (secondaries NS2 and NS3, auxiliary NAUX); a dc current overlapped on the primary and the '
               'primary inductance read against it. The test '
               'current is mark 3 scaled to the highest output the controller '
               'allows, V<sub>OVP2</sub>/V<sub>out</sub>.',
@@ -2495,9 +2504,11 @@ def build(A):
           'L<sub>m</sub> = %(Lm).0f&nbsp;&micro;H and n<sub>T</sub> = '
           '%(nT).2f. The transformer is one part: a %(Np)d-turn primary and '
           'two %(Ns)d-turn secondaries, NS2 and NS3, joined at the centre '
-          'tap. Several units in series (Section&nbsp;%(ref2)s) are not '
+          'tap. NS2 is N<sub>s1</sub> of Figure&nbsp;%(f1)s and NS3 is '
+          'N<sub>s2</sub>, so NS3 conducts while S1 and S4 are on. Several units in series (Section&nbsp;%(ref2)s) are not '
           'needed here.'
-          % dict(V, ref2=SR('If one transformer is not practical'))))
+          % dict(V, ref2=SR('If one transformer is not practical'),
+                 f1=FR('an_llc_stage'))))
     add(fig('an_xfmr_read',
             'Where each number is read. Top: primary current, the two '
             'secondary winding currents and the secondary winding voltage '
@@ -3658,6 +3669,8 @@ def build(A):
         ('I<sub>Cout</sub>, I<sub>out</sub>', 'ripple current in the output bank, and the load current'),
         ('t<sub>D</sub>, T<sub>ZC</sub>, T<sub>ZC,min</sub>', 'bridge dead time; the time the tank current takes to reach zero after the gates turn off, and its smallest value over the operating space'),
         ('v<sub>d</sub>, V<sub>ds</sub>', 'bridge mid-point voltage, and a device&rsquo;s drain-source voltage'),
+        ('v<sub>A</sub>, v<sub>B</sub>', 'the two bridge mid-points A and B against 0; v<sub>d</sub> = v<sub>A</sub> &minus; v<sub>B</sub>'),
+        ('i<sub>S1</sub>', 'drain current of S1, positive drain to source'),
         ('S<sub>1</sub>, S<sub>2</sub>, S<sub>3</sub>, S<sub>4</sub>, D<sub>1</sub>, D<sub>2</sub>', 'the four bridge switches, and the two secondary rectifiers'),
 
         ('<b>The transformer and its core</b>', ''),
@@ -3667,6 +3680,7 @@ def build(A):
         ('A<sub>N</sub>', 'winding window area of the coil former'),
         ('A<sub>L</sub>, g, &mu;<sub>0</sub>', 'inductance factor of the gapped core, the total centre-leg gap, and the permeability of free space'),
         ('N<sub>p</sub>, N<sub>s</sub>, N<sub>x</sub>', 'primary turns, secondary turns per winding, number of units in the assembly'),
+        ('N<sub>s1</sub>, N<sub>s2</sub>', 'the upper and lower halves of the centre-tapped secondary (NS2 and NS3 in the design example)'),
         ('N<sub>aux</sub>, n<sub>aux</sub>/n<sub>sec</sub>', 'auxiliary winding turns, and its turns ratio to one secondary'),
         ('L<sub>open</sub>, L<sub>short</sub>', 'inductance across the primary with every other winding open; and with every secondary shorted and the auxiliary open'),
         ('I<sub>dc</sub>', 'the dc current the DC-overlap test overlaps on the LCR signal'),
