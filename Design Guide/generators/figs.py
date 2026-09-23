@@ -247,7 +247,7 @@ def f02_two_resonances():
     for q, c, w, lab in ((0.0001, PUR, 2.4, 'no load   Q → 0'),
                          (0.20, MAG, 1.7, 'Q = 0.2'),
                          (0.40, CYA, 1.7, 'Q = 0.4'),
-                         (QPK, NAVY, 2.6, 'full load, Q = %.2f' % QPK),
+                         (QPK, NAVY, 2.6, 'full load'),
                          (1.50, GRN, 1.7, 'Q = 1.5')):
         ax.plot(fn, [gain_fn(x, q, LAM) for x in fn], color=c, lw=w, label=lab)
     ax.axvline(FN0, color=PUR, ls='--', lw=1.7)
@@ -262,8 +262,8 @@ def f02_two_resonances():
     #  a design the reader has not met yet, on an axis that does not carry
     #  them - which is exactly what a reader asked about.
     note(ax, FN0 + 0.03, 3.55,
-         'f$_o$ = %.2f f$_r$\nno-load gain goes to infinity here\n'
-         '→ nothing can push the converter below it' % FN0, color=PUR,
+         'f$_o$\nno-load gain goes to infinity here\n'
+         '→ nothing can push the converter below it', color=PUR,
          size=10)
     note(ax, 1.04, 1.45,
          'f$_r$\ngain = 1 at ANY load\n'
@@ -320,7 +320,7 @@ def f04_three_regions():
     for q in (0.20, 0.45, 1.50):
         ax.plot(fn, [gain_fn(x, q, LAM) for x in fn], color=LT, lw=1.3)
     ax.plot(fn, [gain_fn(x, QPK, LAM) for x in fn], color=NAVY, lw=2.8,
-            zorder=4, label='full load, Q = %.2f' % QPK)
+            zorder=4, label='full load')
     _edge = zvs_edge(QPK, LAM)          # arg Z_in = 0 on the curve drawn
     ax.axvspan(0.45, _edge, color=MAG, alpha=0.16)
     ax.axvspan(_edge, 1.0, color=GRN, alpha=0.16)
@@ -352,7 +352,7 @@ def f04_three_regions():
                 bbox=dict(boxstyle='round,pad=0.25', fc='white', ec=MAG,
                           lw=1.0, alpha=0.95),
                 arrowprops=dict(arrowstyle='-|>', color=MAG, lw=1.4))
-    ax.annotate('f$_o$ = %.2f f$_r$\nthe NO-LOAD edge' % FN0, (FN0, 0.30),
+    ax.annotate('f$_o$\nthe NO-LOAD edge', (FN0, 0.30),
                 xytext=(0.47, 0.06), color=PUR, fontsize=9.8,
                 bbox=dict(boxstyle='round,pad=0.25', fc='white', ec=PUR,
                           lw=1.0, alpha=0.95),

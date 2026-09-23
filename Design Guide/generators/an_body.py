@@ -1453,8 +1453,7 @@ def build(A):
           'of depth'))
     add(eq(r'\delta=\sqrt{\frac{\rho}{\pi f\mu_{0}}}', key='skin'))
     add(p('with &rho; the resistivity of copper at the winding temperature '
-          'and f the frequency it carries, here f<sub>r</sub>: about '
-          '<b>0.2&nbsp;mm</b> at 100&nbsp;&deg;C. Copper deeper than '
+          'and f the frequency it carries, here f<sub>r</sub>. Copper deeper than '
           '&delta; below the surface carries little current, so a conductor '
           'thicker than 2&delta; gains little. The field from the other turns '
           'also drives circulating current in each conductor (the proximity '

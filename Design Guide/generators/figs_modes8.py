@@ -646,7 +646,8 @@ def waveforms(axes, lam, fsw_over_fr, ilr_pk, ilm_pk, td_draw=0.045):
     ai.axhline(0, color=GREY, lw=0.9)
     ai.plot(T, ILR, color=MAG, lw=2.5, label='i$_{Lr}$  tank')
     ai.plot(T, ILM, color=CYA, lw=2.3, ls='--', label='i$_{Lm}$  magnetising')
-    ai.set_ylabel('tank current  [A]')
+    ai.set_ylabel('tank current')
+    ai.set_yticks([0])                    # chapter 2: shapes, no design values
     ai.legend(loc='upper right', fontsize=9, ncol=2, framealpha=0.92)
     ai.set_ylim(-1.30 * ilr_pk, 1.78 * ilr_pk)
     ai.annotate('one current from here on:\ni$_{Lr}$ = i$_{Lm}$, nothing left '
@@ -668,7 +669,8 @@ def waveforms(axes, lam, fsw_over_fr, ilr_pk, ilm_pk, td_draw=0.045):
     #  i_Lr - i_Lm is the rectifier current referred to the primary; the
     #  diode itself carries n times it.  'rectifier [A]' read as the diode
     #  current, a factor n low (2026-09-23)
-    ar.set_ylabel('i$_D$ / n  [A]')
+    ar.set_ylabel('i$_D$ / n')
+    ar.set_yticks([0])
     ar.set_xlabel('one switching period')
 
     for ax in axes:

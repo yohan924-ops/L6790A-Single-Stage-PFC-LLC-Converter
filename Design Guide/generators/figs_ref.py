@@ -955,8 +955,8 @@ def an_three_cases(save, foot):
     #  point would sit in a band the shading calls inductive.
     kf = fn >= zvs_edge(qf, lam)
     ax.plot(fn[kf], gf[kf], color=GREY, lw=1.3, ls=(0, (5, 3)),
-            label='full load, Q = %.2f' % qf)
-    ax.plot(fn, gh, color=NAVY, lw=2.3, label='half load, Q = %.2f' % qh)
+            label='full load')
+    ax.plot(fn, gh, color=NAVY, lw=2.3, label='half load')
     ax.set_xlim(fn[0], fn[-1])
     ax.set_ylim(0.55, 2.35)
     pts = [(0.70, 'below: M > 1, boost', (0.80, 2.05), 'left'),
@@ -1056,8 +1056,8 @@ def an_cap_ind(save, foot):
         fig.text(xc, 0.795, nm, ha='center',
                  fontsize=13, color=col, fontweight='bold')
         fig.text(xc, 0.776,
-                 'f$_{sw}$/f$_r$ = %.2f,   arg Z$_{in}$ = %+.0f$\\degree$'
-                 % (fnx, np.degrees(phi)), ha='center', fontsize=10.5,
+                 'arg Z$_{in}$ %s 0' % ('<' if phi < 0 else '>'),
+                 ha='center', fontsize=10.5,
                  color=GREY)
         #  THE CIRCUIT, above its own waveforms.  Read on their own the
         #  three traces do not say why one case recovers a diode and the
@@ -3212,8 +3212,9 @@ def an_dc_overlap(save, foot):
                va='bottom', path_effects=HALO, zorder=9)
     a.set_xlim(0, 1.38 * Iocp)
     a.set_ylim(0, 1.12)
-    a.set_xlabel('dc current in the primary  I$_{dc}$  (A)', fontsize=9.8,
+    a.set_xlabel('dc current in the primary  I$_{dc}$', fontsize=9.8,
                  color=NAVY)
+    a.set_xticks([])                      # chapter 6: where, not how many amps
     a.set_ylabel('L(I$_{dc}$) / L(0)', fontsize=9.6, color=NAVY)
     a.grid(True, axis='y', color='#C4C8CF', lw=0.7)
     a.tick_params(labelsize=9.4, colors=NAVY)

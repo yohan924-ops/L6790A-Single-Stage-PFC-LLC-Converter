@@ -176,6 +176,7 @@ def an_pf_chain(save, foot, R, sweep):
            'frequency', ha='center', va='bottom', fontsize=10.2, color=NAVY,
            path_effects=HALO, zorder=9)
     _tidy(a, u'line phase  θ  [deg]', 'f$_{sw}$ / f$_r$')
+    a.set_yticks([])                      # the profile, not this design's values
     a.set_xlim(0, 180)
     a.set_xticks(range(0, 181, 30))
 
@@ -256,12 +257,10 @@ def an_gain_compare(save, foot, R, sweep):
     hs.append((Line2D([], [], color=GRN, lw=1.8, ls=(0, (3, 2.4))),
                'M$_Z$: the capacitive boundary'))
     hs.append((Line2D([], [], color=GREY, lw=1.6, ls=(0, (1, 2))),
-               u'M$_{\\infty}$ = 1/(1+\u03bb) = %.3f: the no-load floor'
-               % (1.0 / (1 + lam2))))
+               u'M$_{\\infty}$ = 1/(1+\u03bb): the no-load floor'))
     a2.set_xlim(0.36, 2.0)
     a2.set_ylim(0, 4.6)
-    a2.text(0.40, 2.72, u'the family is LINE PHASE\n\u03bb = %.2f  '
-            u'(m = %.1f)' % (lam2, 1 + 1 / lam2), ha='left', va='top',
+    a2.text(0.40, 2.72, u'the family is LINE PHASE', ha='left', va='top',
             fontsize=10.6, color=NAVY, fontweight='bold',
             path_effects=HALO, zorder=9)
     if len(pts) > 1:
