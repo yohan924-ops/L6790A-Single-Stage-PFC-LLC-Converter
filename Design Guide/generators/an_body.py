@@ -2363,7 +2363,7 @@ def build(A):
             widths=[CW * 0.26, CW * 0.09, CW * 0.13, CW * 0.18, CW * 0.17,
                     CW * 0.17],
             key='gainpts', split=True))
-    add(p('Three readings matter:'))
+    add(p('Four readings matter:'))
     ext(bullets([
         '<b>The HB edge sets the tank.</b> %(lo).0f&nbsp;Vac equivalent is '
         'the lowest voltage the tank sees, so its line-peak requirement '
@@ -3567,7 +3567,7 @@ def build(A):
         ('T<sub>sw</sub>, T<sub>r</sub>', 'switching period 1/f<sub>sw</sub>, and the resonant period 1/f<sub>r</sub>'),
         ('&lambda;, m', 'L<sub>r</sub>/L<sub>m</sub>, and (L<sub>r</sub>+L<sub>m</sub>)/L<sub>r</sub> = 1 + 1/&lambda;'),
         ('&lambda;<sub>act</sub>, &lambda;<sub>req</sub>', 'the &lambda; of the selected parts, and the &lambda; the design asked for'),
-        ('&lambda;<sub>1</sub>, &lambda;<sub>2</sub>, &lambda;<sub>TD</sub>, &lambda;<sub>3</sub>', 'the four candidate &lambda;: minimum gain, the same with the frequency ceiling, the dead-time condition, and the practical floor; the smallest wins'),
+        ('&lambda;<sub>1</sub>, &lambda;<sub>2</sub>, &lambda;<sub>TD</sub>, &lambda;<sub>3</sub>', 'the four candidate &lambda;: minimum gain, the same with the frequency ceiling, the dead-time condition, and the practical floor; the largest binds'),
         ('Q, Q<sub>pk</sub>, Q<sub>ZVS</sub>', 'quality factor Z<sub>0</sub>/R<sub>ac</sub>; its value at the line peak; the cap the ZVS condition puts on it'),
         ('R<sub>ac</sub>', 'the rectifier and load as one resistance at the fundamental'),
         ('M', 'tank gain, n V<sub>o,eff</sub> over the drive'),
