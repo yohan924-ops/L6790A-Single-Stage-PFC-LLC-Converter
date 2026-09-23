@@ -4,7 +4,7 @@
 Structure follows Reference/EVLHV101SSR50W Design Guide.sm (HVLED101):
 numbered sections, one labelled row per quantity, every input highlighted and
 editable, every downstream number computed.  Equation tags [n] refer to
-AN_L6790A_Design_Guide_rev2_0.md.
+AN_L6790A_Design_Guide_rev2_1.md.
 
 Target application: 90-264 Vac in, 25 V / 26.3 A out, TV SMPS for an OLED panel.
 

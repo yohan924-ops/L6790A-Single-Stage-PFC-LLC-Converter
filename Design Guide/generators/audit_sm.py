@@ -29,7 +29,7 @@ from collections import defaultdict
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 BUILDER = os.path.join(HERE, 'build_l6790_smath.py')
-GUIDE = os.path.join(ROOT, 'Design Guide', 'AN_L6790A_Design_Guide_rev2_0.md')
+GUIDE = os.path.join(ROOT, 'Design Guide', 'AN_L6790A_Design_Guide_rev2_1.md')
 
 # intermediates of the Cardano / fixed-point machinery: consumed positionally
 MACHINERY = re.compile(r'^(a[0-2]|w|q|r|p|u|x|ang|ph|θ|λ|Q|M|f\.n|f\.ss|f\.sc|f\.sw|'

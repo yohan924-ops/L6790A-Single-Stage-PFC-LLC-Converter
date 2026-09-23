@@ -55,6 +55,8 @@ ABSENT_OK = {
     'Transformer_Spec_9to1.xlsx',
     'Calculation Excel Sheet/variants/L6790_workbook_9to1.xlsx',
     'L6790_workbook_9to1.xlsx',
+    'Design Guide/AN_L6790A_Design_Guide_rev2_0.md',
+    'AN_L6790A_Design_Guide_rev2_0.md',
     # CLAUDE.md 9.1b names this file while saying it is not installed here
     '.claude/settings.json',
 }

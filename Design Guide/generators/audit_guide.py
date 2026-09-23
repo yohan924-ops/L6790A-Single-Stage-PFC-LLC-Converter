@@ -21,7 +21,7 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8',
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 GUIDE = os.path.normpath(os.path.join(HERE, '..',
-                                      'AN_L6790A_Design_Guide_rev2_0.md'))
+                                      'AN_L6790A_Design_Guide_rev2_1.md'))
 SM = os.path.normpath(os.path.join(HERE, 'build_l6790_smath.py'))
 REF = os.path.join(HERE, 'l6790.py')
 
