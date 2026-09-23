@@ -286,6 +286,10 @@ PIN_NOTE = ('The datasheet prints no pin numbers; the numbering shown counts '
             'convention. Confirm it against the bobbin drawing before the '
             'specification is released; the assignment does not depend on '
             'it, only the printed numbers do.')
+PIN_NOTE_KR = ('데이터시트에는 핀 번호가 없다. 여기 적은 번호는 핀 1 에서 한 '
+               '줄을 따라 세고 다른 줄로 돌아오는 관례다. 사양서를 내기 전에 '
+               '보빈 도면으로 확인할 것. 배정은 번호에 달려 있지 않고, 인쇄된 '
+               '숫자만 달라진다.')
 
 
 def _plus(t):
