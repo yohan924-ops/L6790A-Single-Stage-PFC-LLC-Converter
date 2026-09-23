@@ -32,8 +32,8 @@ import zedsheet as ZS                                              # noqa: E402
 #   8턴이 된다.  N.x 가 2 면 N.s=2 에서 감을 수 있는 세트비가 1.0 단위가 된다
 #   (N.x=3 · N.s=2 는 1.5 단위라 8 을 못 잡는다).
 VARIANTS = {
-    '9to1':   dict(nT=9.0, Cr=100, Lr=11.0, Lm=24.0, Nx=3, Np=3, Ns=1,
-                  kaux=3, RzH=680, CT=470, label='9 : 1'),
+    #  9 : 1 (Np 3 · Ns 1 · L.m 24 uH) 은 2026-09-23 에 지웠다 - 정본이 7.5:1 이
+    #  되면서 쓰는 곳이 없어졌다.  근거와 수치는 docs/HISTORY.md.
     '7p5to1': dict(nT=7.5, Cr=100, Lr=11.0, Lm=20.0, Nx=3, Np=5, Ns=2,
                   kaux=1.5, RzH=330, CT=470, label='7.5 : 1'),
     '8to1':   dict(nT=8.0, Cr=100, Lr=11.0, Lm=20.0, Nx=2, Np=8, Ns=2,
@@ -49,7 +49,7 @@ VARIANTS = {
                       kaux=1.5, RzH=330, CT=470, label='7.5 : 1',
                       Ae=211.0),
 }
-VAR = os.environ.get('L6790_VARIANT', '9to1')
+VAR = os.environ.get('L6790_VARIANT', '7p5to1')    # 정본 = 7.5:1, 3 코어 (2026-09-23)
 V = VARIANTS[VAR]
 V['n'] = V['nT'] / (1 + V['Lr'] / V['Lm']) ** 0.5
 

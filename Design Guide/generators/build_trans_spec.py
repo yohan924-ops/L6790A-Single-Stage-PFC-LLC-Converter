@@ -34,7 +34,6 @@ from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 # 시트를 고칠 때마다 조용히 낡는다 - 6:1 사양서가 실제로 그렇게 f.Min 을 90 kHz
 # 로 달고 있었다(참값 110 kHz).  아래에는 시트에서 나오지 않는 것만 둔다.
 VARIANTS = {
-    '9to1':   dict(label='9 : 1'),
     '7p5to1': dict(label='7.5 : 1'),
     '7p5to1_x1': dict(label='7.5 : 1'),        # ONE transformer, ETD 49/25/16DG
     '8to1':   dict(label='8 : 1'),

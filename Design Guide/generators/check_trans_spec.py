@@ -130,13 +130,13 @@ def spec_from_xlsx(path):
 def main():
     import re as _re
     bad = 0
-    for var in ('9to1', '7p5to1', '7p5to1_x1', '8to1', '6to1'):
+    for var in ('7p5to1', '7p5to1_x1', '8to1', '6to1'):
         smp = os.path.join(SMDIR, 'L6790A_%s.sm' % var)
         xlp = os.path.join(HERE, '..', '..', 'Calculation Excel Sheet',
                            'variants', 'Transformer_Spec_%s.xlsx' % var)
         # 없는 파일 판정은 이 변형에만 걸어야 한다.  누적 bad 를 보고 continue
         # 하면 앞 변형이 하나라도 어긋난 순간 뒤 변형을 통째로 건너뛴다 -
-        # 실제로 9to1 하나 때문에 나머지 셋이 검사되지 않고 있었다.
+        # 실제로 (지금은 지운) 9to1 하나 때문에 나머지 셋이 검사되지 않고 있었다.
         missing = [q for q in (smp, xlp) if not os.path.exists(q)]
         for q in missing:
             print('%-8s  없음: %s' % (var, os.path.normpath(q)))

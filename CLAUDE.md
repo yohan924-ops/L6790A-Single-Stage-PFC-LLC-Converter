@@ -2,8 +2,8 @@
 
 ST **L6790A** 로 **단일단(Single-Stage) PF LLC** 를 설계한다. 90–264 Vac → **25 V / 26.3 A = 657.5 W**.
 2단(Boost PFC + LLC)의 400 V 벌크 커패시터와 승압단을 없애고, 그 대가로 출력에 **75 mF 뱅크**가 붙는다.
-설계 수치는 **닫혔다** — 시트 · 워크북 · `l6790.py` 세 곳이 일치하고 판정 지표 40개 중 34개 통과
-(미달 6개의 사유는 `docs/DESIGN.md` §3). 남은 것은 문서 작업과 결정 두 개다(아래 "다음 할 일").
+설계 수치는 **닫혔다** — 시트 · 워크북 · `l6790.py` 세 곳이 일치하고 판정 지표 40개 중 36개 통과
+(미달 4개의 사유는 `docs/DESIGN.md` §3). 남은 것은 문서 작업과 `R.T` 결정 하나다(아래 "다음 할 일").
 
 **응답은 한국어.** 모르는 것은 모른다고 하고, 근거 없는 값을 만들지 않는다. 추측으로 고치지 말고
 진단 수단(프로브 · 검사기)을 먼저 심는다. 요청하지 않은 workflow · agent · deep-research 는 쓰지 않는다.
@@ -29,8 +29,9 @@ ST **L6790A** 로 **단일단(Single-Stage) PF LLC** 를 설계한다. 90–264 
 
 탱크와 1차측은 EVL 보드와 거의 같고(반사 전압 150 vs 154 V), 달라지는 것은 2차측 전부와 출력 뱅크다.
 
-**권선비는 미결정이다** — 정본 시트와 빌더 기본은 **9:1**, 배포용 AN(`an_pdf.AN_VARIANT`)과 벤더 사양서는
-**7.5:1**(단일 트랜스포머 `7p5to1_x1`). **사용자 결정 대기.** 상세와 다른 확정값은 `docs/DESIGN.md` §1.3.
+**권선비는 7.5:1 로 확정**(2026-09-21). 정본 시트 · 정본 워크북 · 빌더 기본은 **코어 3개(유닛 5:2, `7p5to1`)** —
+실제 설계용이고 SMath 에만 해당한다. 배포용 AN(`an_pdf.AN_VARIANT`)은 같은 탱크를 **트랜스포머 1개(15:2, `7p5to1_x1`)**로 설명한다.
+9:1 은 2026-09-23 에 지웠다. 상세와 다른 확정값은 `docs/DESIGN.md` §1.3.
 
 ## 산출물과 파일 지도
 
@@ -40,14 +41,14 @@ ST **L6790A** 로 **단일단(Single-Stage) PF LLC** 를 설계한다. 90–264 
 | 경로 | 무엇 | 상태 |
 | :--- | :--- | :--- |
 | `Smath/L6790A_SingleStage_PF_LLC_Design_Guide.sm` | **정본 시트** — 19절 · 노란 입력 셀 113개 · ZedGraph 판 7장 · A3 가로 44쪽 | rev 1 · F9 확인됨 |
-| `Smath/variants/L6790A_{9to1,7p5to1,7p5to1_x1,8to1,6to1}.sm` | 설계점 5종. `L6790_VARIANT` 로 `build_l6790_smath.py` 가 만든다 | 전부 검사 통과 |
+| `Smath/variants/L6790A_{7p5to1,7p5to1_x1,8to1,6to1}.sm` | 설계점 4종(`7p5to1` 은 정본과 같은 바이트). `L6790_VARIANT` 로 `build_l6790_smath.py` 가 만든다 | 전부 검사 통과 |
 | `Smath/L6790A_probe.sm` · `L6790A_ruler.sm` | 진단 프로브 P1–P29 · 쪽 경계 자 | 큰 시트가 안 열리면 프로브부터 |
 | `Smath/L6790A_gainzed.sm` · `L6790A_gainladder.sm` · `L6790A_gainplot.sm` | 게인 곡선을 SMath 로 그릴 수 있는가 — 확인용 3종 | **아직 아무도 안 열었다** |
-| `Calculation Excel Sheet/L6790_spreadsheet_r1_0_corrected_rev0_6.xlsx` | ST 툴 수정본. `CHANGELOG_rev0_6` 에 변경 이력 | rev 0.6 |
+| `Calculation Excel Sheet/L6790_spreadsheet_r1_0_corrected_rev0_6.xlsx` | ST 툴 수정본, 7.5:1(`variants/…_7p5to1.xlsx` 와 같은 파일). `CHANGELOG_rev0_6` 에 변경 이력 | rev 0.6 |
 | `Calculation Excel Sheet/Uncryped_04092026_LGE_670W_L6790A_spread sheet.xlsx` | ST 원본(디크립트본, openpyxl 로 열림). 원본 `sheetN` ↔ 우리 `sheetN+1` | 읽기 전용 |
-| `Calculation Excel Sheet/variants/` | 워크북 3종(`9to1,7p5to1,6to1`) · 벤더 사양서 5종(`+7p5to1_x1,8to1`) | 8:1 · `_x1` 은 워크북 없음 |
+| `Calculation Excel Sheet/variants/` | 워크북 2종(`7p5to1,6to1`) · 벤더 사양서 4종(`+7p5to1_x1,8to1`) | 8:1 · `_x1` 은 워크북 없음 |
 | `Design Guide/AN_L6790A_SingleStage_PFC_LLC_ApplicationNote_v1.3.pdf` · `…_KR_v1.3.pdf` | **배포용 AN** 영문 94쪽 · 한국어 95쪽 · 목차 링크·북마크. `an_pdf.py`+`an_body.py` / `an_kr_pdf.py`+`an_kr_body.py`, 수치 전부 `l6790.py`·시트 | v1.3 · 영문·한국어 동기(45차) |
-| `Design Guide/AN_L6790A_Design_Guide_rev2_0.md` · `AN_L6790A_Design_Guide_rev2_1.md` | 한국어 본체 문서 — rev 2.0 은 9:1, rev 2.1 은 7.5:1. **둘 다 살아 있는 설계점, 지우지 말 것** | rev 2.0/2.1 |
+| `Design Guide/AN_L6790A_Design_Guide_rev2_0.md` · `AN_L6790A_Design_Guide_rev2_1.md` | 한국어 본체 문서 — rev 2.0 은 9:1(폐기된 설계점, 기록용), rev 2.1 은 7.5:1. 지우지 말 것 | rev 2.0/2.1 |
 | `Design Guide/L6790A_Transformer_Design_KR_v1.0.pdf` | 트랜스포머 설계 정리 9쪽(`tx_pdf.py`+`tx_body.py`) | v1.0 |
 | `Design Guide/generators/` | 도구 체인 전부 — README 참조 | |
 | `Training Material/…Design_Training.pptx` | 영문 교육자료 61장 | 한국어판 남음 |
@@ -57,15 +58,15 @@ ST **L6790A** 로 **단일단(Single-Stage) PF LLC** 를 설계한다. 90–264 
 
 | 남은 일 | 무엇을 | 상태 |
 | :-- | :--- | :--- |
-| **권선비 결정** | 9:1(정본) 대 7.5:1(AN) | 사용자 대기 |
 | 스프레드시트 rev 0.7 | 정리만 남았다 — `CHANGELOG_rev0_7` 시트 분리, 그때 **CHANGELOG 에 없는 설계 셀 48개**를 채운다 | 대기 |
 | 교육자료 한국어판 | 영문 61장 끝, 한국어판 | 대기 |
-| 열린 설계 항목 3 | 코어 미선정(`k.Ae`) · `n.SR` 2→3(`k.PSR`) · `R.T` 11→10 kΩ(7.5:1 채택 시) — `docs/DESIGN.md` §4.2 | 대기 |
+| **`R.T` 11 → 10 kΩ** | 정본이 7.5:1 이 되면서 지금 걸린다 — ±10 % `L.open` 공차에서 `f.o` 가 `f.Min` 위로 올라간다. AN·사양서의 `f.Min` 도 같이 움직인다 — `docs/DESIGN.md` §4.2 5b | 사용자 대기 |
+| 열린 설계 항목 | 코어 미선정(자속은 `k.Ae` 1.098 통과, 창 면적 미검사) — `docs/DESIGN.md` §4.2 5d | 대기 |
 | 시제품 실측 | `docs/DESIGN.md` §4.3 의 11항목 | 보드 |
 
 **사람이 PC 에서 해야 할 일** (기계가 대신 못 한다): ① 6:1 워크북을 한 번 열었다 저장(`calcChain` 없음, `f.Min` 캐시가 옛 390 pF 값)
-② 정본 워크북도 한 번 열었다 저장(신설 셀 9개 값 생성) ③ 프로브 P27·P28·P29 중 어느 것이 세로 2배로 그려지는지 확인
-④ 프로브 P16·P18·P19·P20 이 이 PC 의 SMath 에서 도는지. 근거는 `HISTORY.md` 2026-08-24 · 09-08.
+② 프로브 P27·P28·P29 중 어느 것이 세로 2배로 그려지는지 확인
+③ 프로브 P16·P18·P19·P20 이 이 PC 의 SMath 에서 도는지. 근거는 `HISTORY.md` 2026-08-24 · 09-08.
 
 ## 절대 규칙 — 어기면 파일이 깨지거나 값이 조용히 틀린다
 
