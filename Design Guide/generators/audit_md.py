@@ -41,6 +41,11 @@ ABSENT_OK = {
     'Smath/L6790A_Section3_PowerStage_Tank_rev1_1.sm',
     'ppt/media/image1.png',          # a path inside a .potx, not on disk
     'ST_Template__16-9_.potx',
+    # deleted on purpose 2026-09-23: the AN carries the same material
+    'Design Guide/L6790A_Transformer_Design_KR_v1.0.pdf',
+    'L6790A_Transformer_Design_KR_v1.0.pdf',
+    'tx_pdf.py', 'tx_body.py',
+    'Design Guide/generators/tx_pdf.py', 'Design Guide/generators/tx_body.py',
     # deleted on purpose 2026-09-08: the vendor spec is superseded by the
     # three in variants/, the KH form was already 폐기 예정, and the encrypted
     # original was replaced by the decrypted copy beside it
@@ -128,7 +133,7 @@ def main():
     # ----------------------------------------------------- scripts
     for name, txt in docs.items():
         for s in sorted(set(re.findall(r'`([a-z0-9_]+\.py)`', txt))):
-            if not os.path.exists(os.path.join(HERE, s)):
+            if not os.path.exists(os.path.join(HERE, s)) and s not in ABSENT_OK:
                 bad(name, 'script not in generators/: %s' % s)
 
     # ------------------------------------------- counts vs the tools

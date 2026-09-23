@@ -1,7 +1,6 @@
 ---
 paths:
   - "Design Guide/generators/an_*.py"
-  - "Design Guide/generators/tx_*.py"
   - "Design Guide/*.pdf"
 ---
 # Application Note (PDF) 를 고칠 때
@@ -20,7 +19,7 @@ paths:
   바뀌므로 손으로 적은 조사는 언젠가 틀린다(50차: "그림 24 은"). 단위 뒤는 단위의 읽는 소리를 따른다(kΩ 옴 → 으로, nF 패럿 → 을).
 - 그림은 `figs.py --plain` 이 `figures/an/` 에 쓴 제목 없는 판을 읽는다. `FigBlock` 이 쪽 밑 빈 공간을 그림 하나로 메운다 —
   전역 축소는 답이 아니다. 캡션은 **그림의 출처가 아니라 논지의 출처**를 인용한다.
-- **레이아웃 코드는 한 벌**(`an_pdf.py`) — 한국어판 `an_kr_pdf.py` · 트랜스포머 `tx_pdf.py` 는 `use_korean()` 과
+- **레이아웃 코드는 한 벌**(`an_pdf.py`) — 한국어판 `an_kr_pdf.py` 는 `use_korean()` 과
   `TITLE/COVER/EQWORD/FIGWORD/TBLWORD` 만 바꾼다. 두 판의 본문은 절 단위로 같다(그림·표·수식 호출과 키가 같은 순서).
 - **순서:** 영문판 먼저 → 사용자 확인 → 한국어판 이식. PDF 는 직접 전달(ZIP 아님).
 - **한국어판 용어**(2026-09-17 사용자 지시): 용량성/유도성 → `capacitive`/`inductive` · 공진 아래/위 → `below`/`above` ·

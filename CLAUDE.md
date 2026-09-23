@@ -35,7 +35,8 @@ ST **L6790A** 로 **단일단(Single-Stage) PF LLC** 를 설계한다. 90–264 
 
 ## 산출물과 파일 지도
 
-산출물은 넷 — ① 설계 가이드(배포용) ② SMath 시트(정확한 수학 모델) ③ 교육자료(초보자용) ④ 수정된 ST 스프레드시트.
+산출물은 셋 — ① 설계 가이드(배포용 AN) ② SMath 시트(정확한 수학 모델) ③ 수정된 ST 스프레드시트.
+교육자료는 중단했고, 트랜스포머 설계 정리 PDF 는 AN 에 같은 내용이 있어 지웠다(2026-09-23 사용자).
 데이터시트 · 회로도 · 논문은 **입력 자료**이고 고치지 않는다.
 
 | 경로 | 무엇 | 상태 |
@@ -49,9 +50,8 @@ ST **L6790A** 로 **단일단(Single-Stage) PF LLC** 를 설계한다. 90–264 
 | `Calculation Excel Sheet/variants/` | 워크북 2종(`7p5to1,6to1`) · 벤더 사양서 4종(`+7p5to1_x1,8to1`) | 8:1 · `_x1` 은 워크북 없음 |
 | `Design Guide/AN_L6790A_SingleStage_PFC_LLC_ApplicationNote_v1.3.pdf` · `…_KR_v1.3.pdf` | **배포용 AN** 영문 94쪽 · 한국어 95쪽 · 목차 링크·북마크. `an_pdf.py`+`an_body.py` / `an_kr_pdf.py`+`an_kr_body.py`, 수치 전부 `l6790.py`·시트 | v1.3 · 최종 전수 검토(50차) |
 | `Design Guide/AN_L6790A_Design_Guide_rev2_1.md` | 한국어 본체 문서(7.5:1). **시트의 식 번호 [n] 의 출처** — `audit_sm` · `audit_guide` 가 읽는다. 9:1 판 rev 2.0 은 2026-09-23 삭제 | rev 2.0/2.1 |
-| `Design Guide/L6790A_Transformer_Design_KR_v1.0.pdf` | 트랜스포머 설계 정리 9쪽(`tx_pdf.py`+`tx_body.py`) | v1.0 |
 | `Design Guide/generators/` | 도구 체인 전부 — README 참조 | |
-| `Training Material/…Design_Training.pptx` | 영문 교육자료 61장 | 한국어판 남음 |
+| `Training Material/…Design_Training.pptx` | 영문 교육자료 61장 | **중단**(2026-09-23 사용자) — 더 만들지 않는다 |
 | `Datasheet/` · `EVB Schematic/` · `LGE Material/` · `Reference/` | 입력 자료. DS 는 **DRAFT**(TBD · 내부 모순 있음). `Reference/Visio-LLC drawing.pdf` 가 본 설계 회로도(벡터) | 원본 |
 
 ## 지금 상태와 다음 할 일
@@ -59,7 +59,6 @@ ST **L6790A** 로 **단일단(Single-Stage) PF LLC** 를 설계한다. 90–264 
 | 남은 일 | 무엇을 | 상태 |
 | :-- | :--- | :--- |
 | 스프레드시트 rev 0.7 | 정리만 남았다 — `CHANGELOG_rev0_7` 시트 분리, 그때 **CHANGELOG 에 없는 설계 셀 48개**를 채운다 | 대기 |
-| 교육자료 한국어판 | 영문 61장 끝, 한국어판 | 대기 |
 | **`R.T` — 11 kΩ 유지** | 트랜스포머 공차(±10 % 면 11 kΩ 부족)와 영교차 dead zone(10 kΩ 이면 26 %)의 맞교환. **실측 후 결정**(2026-09-23 사용자) — `docs/DESIGN.md` §4.2 5b · §4.3 12 | 시제품 |
 | 열린 설계 항목 | 코어 미선정(자속은 `k.Ae` 1.098 통과, 창 면적 미검사) — `docs/DESIGN.md` §4.2 5d | 대기 |
 | 시제품 실측 | `docs/DESIGN.md` §4.3 의 12항목 | 보드 |
