@@ -46,7 +46,7 @@ ST **L6790A** 로 **단일단(Single-Stage) PF LLC** 를 설계한다. 90–264 
 | `Calculation Excel Sheet/L6790_spreadsheet_r1_0_corrected_rev0_6.xlsx` | ST 툴 수정본. `CHANGELOG_rev0_6` 에 변경 이력 | rev 0.6 |
 | `Calculation Excel Sheet/Uncryped_04092026_LGE_670W_L6790A_spread sheet.xlsx` | ST 원본(디크립트본, openpyxl 로 열림). 원본 `sheetN` ↔ 우리 `sheetN+1` | 읽기 전용 |
 | `Calculation Excel Sheet/variants/` | 워크북 3종(`9to1,7p5to1,6to1`) · 벤더 사양서 5종(`+7p5to1_x1,8to1`) | 8:1 · `_x1` 은 워크북 없음 |
-| `Design Guide/AN_L6790A_SingleStage_PFC_LLC_ApplicationNote_v1.3.pdf` · `…_KR_v1.3.pdf` | **배포용 AN** 영문 92쪽 · 한국어 93쪽. `an_pdf.py`+`an_body.py` / `an_kr_pdf.py`+`an_kr_body.py`, 수치 전부 `l6790.py`·시트 | v1.3 · 영문·한국어 동기(39차) |
+| `Design Guide/AN_L6790A_SingleStage_PFC_LLC_ApplicationNote_v1.3.pdf` · `…_KR_v1.3.pdf` | **배포용 AN** 영문 92쪽 · 한국어 93쪽. `an_pdf.py`+`an_body.py` / `an_kr_pdf.py`+`an_kr_body.py`, 수치 전부 `l6790.py`·시트 | v1.3 · 영문·한국어 동기(40차) |
 | `Design Guide/AN_L6790A_Design_Guide_rev2_0.md` · `AN_L6790A_Design_Guide_rev2_1.md` | 한국어 본체 문서 — rev 2.0 은 9:1, rev 2.1 은 7.5:1. **둘 다 살아 있는 설계점, 지우지 말 것** | rev 2.0/2.1 |
 | `Design Guide/L6790A_Transformer_Design_KR_v1.0.pdf` | 트랜스포머 설계 정리 9쪽(`tx_pdf.py`+`tx_body.py`) | v1.0 |
 | `Design Guide/generators/` | 도구 체인 전부 — README 참조 | |
