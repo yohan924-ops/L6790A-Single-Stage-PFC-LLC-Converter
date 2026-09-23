@@ -139,12 +139,15 @@ def line_conditions(R):
     half bridge (1 x).  One list, so every figure and table names the same
     conditions (2026-09-22, user).
     """
-    return [('HB edge, 173 Vac eq.', R['Vin_min'], 'HB'),
-            ('90 Vac (FB), 180 Vac eq.', 2 * 90.0, 'FB'),
+    #  the labels are formatted from the same numbers as the levels: typed
+    #  '173' and '332' would outlive a change of turns ratio (2026-09-23)
+    lo, hi = R['Vac_min'], R['Vac_max']
+    return [('HB edge, %.0f Vac eq.' % R['Vin_min'], R['Vin_min'], 'HB'),
+            ('%.0f Vac (FB), %.0f Vac eq.' % (lo, 2 * lo), 2 * lo, 'FB'),
             ('110 Vac (FB), 220 Vac eq.', 2 * 110.0, 'FB'),
             ('230 Vac (HB), 230 Vac eq.', 230.0, 'HB'),
-            ('264 Vac (HB), 264 Vac eq.', 264.0, 'HB'),
-            ('FB edge, 332 Vac eq.', R['Vin_FBmax'], 'FB')]
+            ('%.0f Vac (HB), %.0f Vac eq.' % (hi, hi), hi, 'HB'),
+            ('FB edge, %.0f Vac eq.' % R['Vin_FBmax'], R['Vin_FBmax'], 'FB')]
 
 
 def sweep(R, Vac_eq, load=1.0, N=181):

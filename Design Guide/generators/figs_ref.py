@@ -123,9 +123,7 @@ def _diode_along(ax, a, b, s=None, color=NAVY, lw=2.2, z=4):
     return tip, base
 
 
-def _bridge(ax, xm, ym, w=1.50, h=1.50, names=('D$_1$', 'D$_3$',
-                                               'D$_2$', 'D$_4$'),
-            size=9.5):
+def _bridge(ax, xm, ym, w=1.50, h=1.50, names=None, size=9.5):
     """A diode bridge as a diamond.  -> (ac_left, ac_right, plus, minus)
 
     Drawn as two columns it needs one of the ac leads to cross the other
@@ -136,22 +134,29 @@ def _bridge(ax, xm, ym, w=1.50, h=1.50, names=('D$_1$', 'D$_3$',
     it is the one thing in this drawing a reader will check.  The diamond
     is square, so its arms are true 45-degree wires: at 1.55 by 1.35 they
     were 4 degrees off, which figcheck's grid test reported.
+
+    No designators by default (2026-09-23): D1-D4 here named the input
+    bridge with the names the note gives the two secondary rectifiers, and
+    D_3 is also the third-harmonic ratio.  The text never refers to one
+    bridge diode on its own, so the bridge carries no names.
     """
     L, Rt, P, Mn = (xm - w, ym), (xm + w, ym), (xm, ym + h), (xm, ym - h)
     #  Offsets grew with the figures: once a drawing is narrower the same
     #  point size covers more data units, and 0.48/0.34 put each name back
     #  on its own arm.
-    for a, b, nm, dx, dy in ((L, P, names[0], -0.62, 0.44),
-                             (Rt, P, names[1], 0.62, 0.44),
-                             (Mn, L, names[2], -0.62, -0.44),
+    nms = names or (None,) * 4
+    for a, b, nm, dx, dy in ((L, P, nms[0], -0.62, 0.44),
+                             (Rt, P, nms[1], 0.62, 0.44),
+                             (Mn, L, nms[2], -0.62, -0.44),
                              #  the bottom-right arm has the far ac corner's
                              #  riser just outside it, so this one name goes
                              #  BELOW its arm instead of outboard of it
-                             (Mn, Rt, names[3], 0.22, -0.80)):
+                             (Mn, Rt, nms[3], 0.22, -0.80)):
         S.wire(ax, [a, b])
         _diode_along(ax, a, b)
         mx, my = (a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0
-        S.label(ax, mx + dx, my + dy, nm, size=size, color=GREY)
+        if names:
+            S.label(ax, mx + dx, my + dy, nm, size=size, color=GREY)
     for pt in (L, Rt, P, Mn):
         S.dot(ax, *pt)
     return L, Rt, P, Mn
@@ -207,13 +212,13 @@ def an_rac(save, foot):
     S.wire(ax, [t['s_tap'], (XJ - 0.20, 1.5)])
     S.hop(ax, XJ, 1.5)
     S.wire(ax, [(XJ + 0.20, 1.5), (12.5, 1.5)])
-    S.shunt(ax, 11.1, 1.5, -1.4, 'cap', 'C$_o$', frac=0.34)
+    S.shunt(ax, 11.1, 1.5, -1.4, 'cap', 'C$_{out}$', frac=0.34)
     S.dot(ax, 11.1, 1.5)
     S.dot(ax, 11.1, -1.4)
-    S.shunt(ax, 12.5, 1.5, -1.4, 'res', 'R$_o$', frac=0.52)
+    S.shunt(ax, 12.5, 1.5, -1.4, 'res', 'R$_L$', frac=0.52)
     S.label(ax, 12.98, 1.18, '+', size=12, color=GREY)
     S.label(ax, 12.98, -1.08, '$-$', size=12, color=GREY)
-    S.label(ax, 13.4, 0.30, 'V$_O$', size=11.5, ha='left')
+    S.label(ax, 13.4, 0.30, 'V$_{out}$', size=11.5, ha='left')
     S.label(ax, 13.4, -0.22, 'stiff', size=10, ha='left', color=GREY)
 
     #  What exactly is being replaced.  Without the box the reader has to
@@ -222,7 +227,7 @@ def an_rac(save, foot):
     #  differ by the n^2 in R_ac, which is the whole point of the figure.
     S.shade(ax, 2.95, -1.95, 14.15, 4.02,
             'everything the tank drives - transformer, rectifier, '
-            'C$_o$ and load', color=MAG, alpha=0.07, tdy=0.30)
+            'C$_{out}$ and load', color=MAG, alpha=0.07, tdy=0.30)
 
     ax2 = _ax(fig, [0.655, 0.34, 0.335, 0.56], -6.6, 3.6, -0.6, 4.6)
     #  One resistor, by itself.  The rails the first version ran either
@@ -301,7 +306,7 @@ def an_integrated(save, foot):
     ax = _ax(fig, [0.04, 0.545, 0.92, 0.40], -0.6, 15.0, -0.7, 4.9)
     S.label(ax, 7.2, 4.55, 'as wound:  leakage on both sides', size=11,
             color=GREY)
-    source(ax, S.sqsrc, 'v$_{in}$')
+    source(ax, S.sqsrc, 'v$_d$')        # the bridge output of Figure 1
     #  The shunt of the T model is L_mu, NOT the tank model's L_m.  They
     #  differ by the coupling - L_mu = sqrt(L_m (L_m + L_r)), which on this
     #  design is 24.9 uH against L_m = 20 uH - and the figure said L_m on
@@ -326,7 +331,11 @@ def an_integrated(save, foot):
     S.wire(ax, [t['s_bot'], (bl[0], YB_)])
     S.label(ax, 10.45, YT_ + 0.36, '+', size=12, color=GREY)
     S.label(ax, 10.45, YB_ - 0.36, '$-$', size=12, color=GREY)
-    S.label(ax, 10.45, 1.75, 'v$_{RI}$', size=11)
+    #  v_RI is the rectifier input referred to the primary (Figure an_rac
+    #  draws it across the primary); what the secondary itself carries is
+    #  v_RI / n.  Both panels said v_RI and R_ac on the SECONDARY side of
+    #  an n : 1, one symbol for two values (2026-09-23)
+    S.label(ax, 10.45, 1.75, 'v$_{RI}$/n', size=11)
 
     #  from this drawing to the next: drawn on the figure, in the gap
     #  between the two panels, where neither axes can clip it
@@ -341,7 +350,7 @@ def an_integrated(save, foot):
             'one ideal n : 1', size=11, color=GREY)
     #  a sine, because this is the first-harmonic circuit: the square-wave
     #  symbol the first version used here belongs to the drawing above
-    source(ax2, S.acsrc, 'v$_{in}^F$')
+    source(ax2, S.acsrc, 'v$_d^F$')
     tank(ax2, 4.2, 'L$_r$', 1.05, 'L$_p$ $-$ L$_r$')
     t2 = X.xfmr(ax2, 7.5, 1.75, hp=3.3, hs=3.3, gap=0.52)
     S.wire(ax2, [(5.1, YT_), t2['p_top']])
@@ -353,14 +362,15 @@ def an_integrated(save, foot):
             size=10.5, color=GREY)
     S.wire(ax2, [t2['s_top'], (9.9, YT_)])
     S.wire(ax2, [t2['s_bot'], (9.9, YB_)])
-    S.shunt(ax2, 9.9, YT_, YB_, 'res', 'R$_{ac}$')
+    S.shunt(ax2, 9.9, YT_, YB_, 'res', 'R$_{ac}$/n$^2$')
     xv = 11.3
     ax2.add_patch(FancyArrowPatch((xv, YB_), (xv, YT_), arrowstyle='<|-|>',
                                   mutation_scale=12, color=GREY, lw=1.4,
                                   zorder=4, shrinkA=0, shrinkB=0))
     S.label(ax2, xv, YT_ + 0.36, '+', size=12, color=GREY)
     S.label(ax2, xv, YB_ - 0.36, '$-$', size=12, color=GREY)
-    S.label(ax2, xv + 0.25, 1.75, 'V$_{RO}^F$', size=11, ha='left')
+    #  the fundamental of the v_RI above; 'V_RO' was a name used nowhere
+    S.label(ax2, xv + 0.25, 1.75, 'v$_{RI}^F$/n', size=11, ha='left')
 
     foot(fig, 'Only the lower drawing has the tank model in it. Above, the '
               'shunt is the PHYSICAL magnetising inductance L_mu = '
@@ -597,7 +607,7 @@ def an_two_stage(save, foot):
     S.shade(ax, 16.0, -0.35, 28.8, 2.35, None, color=CYA, alpha=0.07)
     S.label(ax, 22.4, -0.78, 'dc / dc converter', size=10.5, color=GREY)
     S.label(ax, 13.2, -0.78, 'the buffer sits here', size=10.5, color=MAG)
-    S.label(ax, -0.1, YW, 'V$_{in}$', size=12, ha='right', weight='bold')
+    S.label(ax, -0.1, YW, 'v$_{ac}$', size=12, ha='right', weight='bold')
     S.label(ax, 29.85, YW, 'V$_{out}$', size=12, ha='left', weight='bold')
     edges = [0.4]
     for x, hw, *_ in blocks:
@@ -1046,7 +1056,7 @@ def an_cap_ind(save, foot):
         fig.text(xc, 0.795, nm, ha='center',
                  fontsize=13, color=col, fontweight='bold')
         fig.text(xc, 0.776,
-                 'f$_{sw}$/f$_r$ = %.2f,   arg Z$_{in}$ = %+.0f$\degree$'
+                 'f$_{sw}$/f$_r$ = %.2f,   arg Z$_{in}$ = %+.0f$\\degree$'
                  % (fnx, np.degrees(phi)), ha='center', fontsize=10.5,
                  color=GREY)
         #  THE CIRCUIT, above its own waveforms.  Read on their own the
@@ -1308,17 +1318,20 @@ def an_peakgain(save, foot):
     #  Each label is put where its own curve crosses a height reserved for
     #  it, so no two can land in the same place and none can land outside
     #  the frame.  Fixed Q anchors did both.
-    import matplotlib.patheffects as _pe
     targets = np.linspace(2.16, 1.14, len(ms))
     for mm, col, yt in zip(ms, cols, targets):
         lam = 1.0 / (mm - 1.0)                 # m = L_p / L_r = 1 + 1/lambda
         pk = np.array([max(M(f, q, lam) for f in fn) for q in qs])
         ax.plot(qs, pk, color=col, lw=2.0)
         qa = float(np.interp(-yt, -pk, qs))    # pk falls with Q
-        ax.text(qa + 0.022, yt + 0.022, 'm = %g' % mm, fontsize=9.6,
-                color=col, va='bottom', ha='left', clip_on=True,
-                path_effects=[_pe.withStroke(linewidth=3.2,
-                                             foreground='white')])
+        #  ON the curve, centred, the way a contour is labelled: the line
+        #  breaks under its own name.  Set beside the crossing it sat
+        #  between its own curve and the next one and read as either
+        #  (2026-09-23).
+        ax.text(qa, yt, 'm = %g' % mm, fontsize=9.6,
+                color=col, va='center', ha='center', clip_on=True,
+                zorder=5, bbox=dict(boxstyle='square,pad=0.12', fc='white',
+                                    ec='none'))
     ax.set_xlim(0.20, 1.42)
     ax.set_ylim(1.0, 2.3)
     ax.set_xlabel('Q', fontsize=11.5, color=NAVY)
@@ -1361,7 +1374,7 @@ def _mm_ax(fig, rect, cx, cy, mm_per_in):
     return ax
 
 
-def _dimh(ax, x0, x1, y, t, ext=None, color=GREY, size=8.0, side=1):
+def _dimh(ax, x0, x1, y, t, ext=None, color=GREY, size=8.3, side=1):
     if ext is not None:
         for x in (x0, x1):
             ax.plot([x, x], [ext, y + 0.35 * (1 if y > ext else -1)],
@@ -1374,7 +1387,7 @@ def _dimh(ax, x0, x1, y, t, ext=None, color=GREY, size=8.0, side=1):
             zorder=7, path_effects=HALO)
 
 
-def _dimv(ax, y0, y1, x, t, ext=None, color=GREY, size=8.0):
+def _dimv(ax, y0, y1, x, t, ext=None, color=GREY, size=8.3):
     if ext is not None:
         for y in (y0, y1):
             ax.plot([ext, x + 0.35 * (1 if x > ext else -1)], [y, y],
@@ -1399,7 +1412,7 @@ def _balloon(ax, n, x, y, xt, yt, color=GREY, r=1.35, lead=True):
                     arrowprops=dict(arrowstyle='-', color=color, lw=0.8,
                                     shrinkA=r * 2.6, shrinkB=1), zorder=8)
     ax.add_patch(Circle((xt, yt), r, fc='white', ec=color, lw=1.0, zorder=9))
-    ax.text(xt, yt - 0.04, '%d' % n, ha='center', va='center', fontsize=8.0,
+    ax.text(xt, yt - 0.04, '%d' % n, ha='center', va='center', fontsize=8.3,
             color=color, zorder=10)
 
 
@@ -1579,7 +1592,7 @@ def an_core_section(save, foot):
     #  (the labels sit in the empty separation box, left of the stack)
     for nm, k0 in (('NS2', 0), ('NS3', NL)):
         yy = OY + (k0 + NL / 2.0) * tp
-        ax2.annotate(nm, xy=(xS, yy), xytext=(xS - 0.9, yy), fontsize=8.0,
+        ax2.annotate(nm, xy=(xS, yy), xytext=(xS - 0.9, yy), fontsize=8.3,
                      color=EDG[nm], ha='right', va='center', zorder=9,
                      arrowprops=dict(arrowstyle='-', color=EDG[nm], lw=0.6,
                                      shrinkA=1, shrinkB=1))
@@ -1596,7 +1609,7 @@ def an_core_section(save, foot):
     ax3.add_patch(Rectangle((X0 - 0.3, Y0 - 0.40), X1 - X0 + 0.6, 0.30,
                             fc=PLAS, ec='#55606c', lw=0.9, zorder=3))
     ax3.text((X0 + X1) / 2, Y0 - 0.25, 'bobbin', ha='center', va='center',
-             fontsize=8.0, color='#55606c', zorder=6)
+             fontsize=8.3, color='#55606c', zorder=6)
     for k in range(2 * NL):
         c = COL[fcol(k)]
         y = Y0 + k * (HC + HI)
@@ -1614,7 +1627,7 @@ def an_core_section(save, foot):
         ax3.plot([X0 - 0.15, X0 - 0.15], [ya, yb], color=EDG[nm], lw=1.0,
                  zorder=7)
         ax3.text(X0 - 0.25, (ya + yb) / 2, 'turn %d' % (t % w['Ns'] + 1),
-                 ha='right', va='center', fontsize=8.0, color=EDG[nm],
+                 ha='right', va='center', fontsize=8.3, color=EDG[nm],
                  zorder=8)
     #  winding brackets with the pins, further left
     for nm, k0 in (('NS2', 0), ('NS3', NL)):
@@ -1627,25 +1640,25 @@ def an_core_section(save, foot):
                      zorder=7)
         ax3.text(X0 - 1.28, (ya + yb) / 2,
                  '%s  %d T\npins %s' % (nm, w['Ns'], _C.pins(nm, '–')),
-                 ha='right', va='center', fontsize=8.0, color=EDG[nm],
+                 ha='right', va='center', fontsize=8.3, color=EDG[nm],
                  zorder=8, linespacing=1.3)
     #  what one turn is, said once at the first turn
     ym = Y0 + (NF // 2) * (HC + HI) + HC / 2
     ax3.annotate('one turn = %d foils\n%.2f × %.1f mm, wound together,\n'
                  'connected in parallel' % (NF, w['t_foil'], w['w_foil']),
                  xy=(X1, ym), xytext=(X1 + 0.3, ym + 0.05),
-                 fontsize=8.0, color=EDG['NS2'], ha='left', va='center',
+                 fontsize=8.3, color=EDG['NS2'], ha='left', va='center',
                  zorder=9, linespacing=1.3,
                  arrowprops=dict(arrowstyle='-', color=EDG['NS2'], lw=0.6,
                                  shrinkA=1, shrinkB=1))
     yi = Y0 + (NL + 1) * (HC + HI) - HI / 2
     ax3.annotate('%.2f mm insulation between foils' % _C.T_FOIL_INS,
-                 xy=(X1, yi), xytext=(X1 + 0.3, yi + 0.55), fontsize=8.0,
+                 xy=(X1, yi), xytext=(X1 + 0.3, yi + 0.55), fontsize=8.3,
                  color=GREY, ha='left', va='center', zorder=9,
                  arrowprops=dict(arrowstyle='-', color=GREY, lw=0.6,
                                  shrinkA=1, shrinkB=1))
     ax3.text(X1 + 0.3, YT + 0.02, 'radial build %.1f mm' % w['build_s'],
-             ha='left', va='center', fontsize=8.0, color=GREY, zorder=8)
+             ha='left', va='center', fontsize=8.3, color=GREY, zorder=8)
 
     foot(fig, 'Drawn to scale from the TDK %s datasheets, core %s and coil '
               'former %s; the third panel is not to scale. The winding is '
@@ -1680,16 +1693,16 @@ def an_loop_blocks(save, foot):
         ax.add_patch(FancyBboxPatch((x, Y), W, H, boxstyle='round,pad=0.4',
                                     fc='white', ec=c, lw=1.4, zorder=3))
         ax.text(x + W / 2, Y + H / 2, t, ha='center', va='center',
-                fontsize=8.4, color=c, zorder=4, linespacing=1.25)
+                fontsize=9.4, color=c, zorder=4, linespacing=1.2)
     for (x0, _, _), (x1, _, _) in zip(boxes[:-1], boxes[1:]):
         ax.annotate('', xy=(x1 - 0.4, Y + H / 2), xytext=(x0 + W + 0.4, Y + H / 2),
                     arrowprops=dict(arrowstyle='-|>', color=GREY, lw=1.1),
                     zorder=2)
     #  what travels on each arrow, written above the gap
-    for (x0, _, _), t in zip(boxes[:-1], ('v$_{out}$', 'I$_{LED}$', 'I$_{FB}$',
+    for (x0, _, _), t in zip(boxes[:-1], ('v$_{out}$', 'i$_{LED}$', 'i$_{FB}$',
                                           'v$_{FB}$', 'P$_{in}$', 'i$_{out}$')):
         ax.text(x0 + W + 1.5, Y + H + 0.5, t, ha='center', va='bottom',
-                fontsize=8.2, color=GREY, zorder=4)
+                fontsize=9.4, color=GREY, zorder=4)
     #  the return path: v_out from C_out back to the divider, drawn as a
     #  polyline under the row so nothing is clipped
     xr, xl, yb = 88 + W / 2, 2 + W / 2, 4.0
@@ -1697,16 +1710,16 @@ def an_loop_blocks(save, foot):
     ax.annotate('', xy=(xl, Y - 0.4), xytext=(xl, yb),
                 arrowprops=dict(arrowstyle='-|>', color=GREY, lw=1.1), zorder=2)
     ax.text(50, yb + 1.3, 'v$_{out}$  is measured and fed back', ha='center',
-            va='bottom', fontsize=8.6, color=GREY, zorder=4,
+            va='bottom', fontsize=9.4, color=GREY, zorder=4,
             path_effects=HALO)
     #  the two brackets
-    for x0, x1, t, c in ((2, 44 + W, 'compensator  G$_{EA}$(s)  =  v$_{FB}$ / v$_{out}$', NAVY),
+    for x0, x1, t, c in ((2, 44 + W, 'compensator  G$_{EA}$(s)  =  $-$v$_{FB}$ / v$_{out}$', NAVY),
                          (60, 88 + W, 'plant  G$_{plant}$(s)  =  v$_{out}$ / v$_{FB}$  =  G$_o$ / s', GRN2)):
         yk = Y + H + 3.2
         ax.plot([x0, x0, x1, x1], [yk - 0.9, yk, yk, yk - 0.9], color=c, lw=1.2,
                 zorder=3)
         ax.text((x0 + x1) / 2, yk + 1.0, t, ha='center', va='bottom',
-                fontsize=9.2, color=c, zorder=4)
+                fontsize=9.6, color=c, zorder=4)
     foot(fig, 'The voltage loop as blocks. The loop gain T(s) is the product '
               'of the two brackets.')
     save(fig, 'an_loop_blocks')
@@ -1767,16 +1780,16 @@ def an_comp_opamp(save, foot):
                     xytext=(0, dy), ha='center', va='center',
                     fontsize=22, color=NAVY, zorder=6)
     #  the internal reference, returned to the anode
-    XR, r = 3.05, 0.30
+    XR, r = 3.05, 0.36
     S.wire(ax, [(XT_, 4.70), (XR, 4.70), (XR, 4.05)])
     ax.add_patch(Circle((XR, 4.05 - r), r, fc='white', ec=NAVY, lw=1.8,
                         zorder=4))
-    S.label(ax, XR, 4.05 - r + 0.42 * r, '+', size=8, z=7)
-    S.label(ax, XR, 4.05 - r - 0.45 * r, '$-$', size=8, z=7)
+    S.label(ax, XR, 4.05 - r + 0.42 * r, '+', size=9.8, z=7)
+    S.label(ax, XR, 4.05 - r - 0.45 * r, '$-$', size=9.8, z=7)
     S.wire(ax, [(XR, 4.05 - 2 * r), (XR, YA_), (XN, YA_)])
     S.dot(ax, XN, YA_)
     eqn(XR + 0.42, 3.45, r'V_R = 2.495\ \mathrm{V}', size=10.5, ha='left')
-    S.label(ax, XR + 0.42, 3.05, '(internal reference)', size=8.8,
+    S.label(ax, XR + 0.42, 3.05, '(internal reference)', size=9.8,
             ha='left', color=GREY)
     #  the output transistor: base from the amplifier, collector K, emitter A
     XBB = 5.75
@@ -1796,10 +1809,10 @@ def an_comp_opamp(save, foot):
     #  the outline holds only what the part contains
     ax.add_patch(Rectangle((2.75, 2.15), 3.75, 4.05, fc='none', ec=GREY,
                            lw=1.0, ls=(0, (4, 3)), zorder=1))
-    S.label(ax, 2.85, 2.38, 'TL431', size=9.5, ha='left', color=GREY)
-    S.label(ax, 2.85, YR + 0.28, 'REF', size=8.8, ha='left', color=GREY)
-    S.label(ax, 6.60, 6.02, 'K', size=9.0, ha='left', color=GREY)
-    S.label(ax, 6.60, 2.02, 'A', size=9.0, ha='left', color=GREY)
+    S.label(ax, 2.85, 2.38, 'TL431', size=9.8, ha='left', color=GREY)
+    S.label(ax, 2.85, YR + 0.28, 'REF', size=9.8, ha='left', color=GREY)
+    S.label(ax, 6.60, 6.02, 'K', size=9.8, ha='left', color=GREY)
+    S.label(ax, 6.60, 2.02, 'A', size=9.8, ha='left', color=GREY)
     # ------------------------------------------- divider R_I, R_O, REF node
     S.dot(ax, 0.2, YR)
     S.label(ax, 0.2, YR + 0.5, 'v$_{out}$', size=11)
@@ -1841,7 +1854,7 @@ def an_comp_opamp(save, foot):
                 arrowprops=dict(arrowstyle='-|>', color=MAG, lw=1.6,
                                 mutation_scale=11), zorder=6)
     eqn(XK - 0.62, YB + 0.42, r'i_{LED}', size=10.5, color=MAG, ha='right')
-    S.label(ax, XK + 0.32, YB + 0.02, 'LED', size=9.0, ha='left',
+    S.label(ax, XK + 0.32, YB + 0.02, 'LED', size=9.8, ha='left',
             color=GREY)
     XP = 9.2
     S.wire(ax, [(XK, YLA), (XP, YLA)])
@@ -1852,14 +1865,14 @@ def an_comp_opamp(save, foot):
     S.wire(ax, [(XK, YLA), ba])
     S.wire(ax, [bb, (XK, 9.40)])
     S.dot(ax, XK, 9.40)
-    S.label(ax, XK, 9.75, 'V$_Z$ (regulated rail)', size=9.5)
+    S.label(ax, XK, 9.75, 'V$_Z$ (regulated rail)', size=9.8)
     # -------------------------------------------- the isolation barrier
     XI = 9.95
     ax.plot([XI, XI], [1.6, 9.2], color=GREY, lw=1.0, ls=(0, (5, 4)),
             zorder=1)
-    S.label(ax, XI - 0.18, 2.15, 'secondary side', size=9.0, ha='right',
+    S.label(ax, XI - 0.18, 2.15, 'secondary side', size=9.8, ha='right',
             color=GREY)
-    S.label(ax, XI + 0.18, 2.15, 'primary side', size=9.0, ha='left',
+    S.label(ax, XI + 0.18, 2.15, 'primary side', size=9.8, ha='left',
             color=GREY)
     # --------------- the transistor side as a controlled current source
     XT, YD, hs = 10.8, 6.60, 0.55
@@ -1874,7 +1887,7 @@ def an_comp_opamp(save, foot):
     S.wire(ax, [(XT, YD - hs), (XT, 5.20)])
     _pgnd(ax, XT, 5.20)
     eqn(XT + 0.55, YD + 0.12, r'CTR \cdot i_{LED}', size=10.5, ha='left')
-    S.label(ax, XT + 0.55, YD - 0.40, 'optocoupler', size=8.8, ha='left',
+    S.label(ax, XT + 0.55, YD - 0.40, 'optocoupler', size=9.8, ha='left',
             color=GREY)
     # ------------------------------------------------- FB pin network
     XF, XC, XE = 12.4, 13.2, 14.2
@@ -1883,12 +1896,12 @@ def an_comp_opamp(save, foot):
     S.dot(ax, XC, YFB)
     S.dot(ax, XE, YFB)
     S.label(ax, XE, YFB + 0.5, 'v$_{FB}$', size=11)
-    S.label(ax, XE, YFB - 0.45, 'FB pin', size=9.0, color=GREY)
+    S.label(ax, XE, YFB - 0.45, 'FB pin', size=9.8, color=GREY)
     pa2, pb2 = S.res(ax, XF, 8.50, 'R$_{FB}$', horiz=False)
     S.wire(ax, [(XF, YFB), pa2])
     S.wire(ax, [pb2, (XF, 9.40)])
     S.dot(ax, XF, 9.40)
-    S.label(ax, XF, 9.75, 'pull-up inside the IC', size=9.5)
+    S.label(ax, XF, 9.75, 'pull-up inside the IC', size=9.8)
     qa, qb = S.cap(ax, XC, 6.55, 'C$_{opto}$ + C$_{fx}$', horiz=False)
     S.wire(ax, [(XC, YFB), qb])
     S.wire(ax, [qa, (XC, 5.20)])
@@ -1899,8 +1912,11 @@ def an_comp_opamp(save, foot):
                    r'v_{FB} = -\,CTR\, i_{LED}\left(R_{FB} \parallel '
                    r'\dfrac{1}{s\,(C_{opto}+C_{fx})}\right)')
     S.label(ax, 7.4, -0.30, 'R$_O$ carries no signal: the REF input is held '
-            'at V$_R$', size=9.0, color=GREY)
-    eqn(7.4, -1.20, r'G_{EA}(s) = \dfrac{v_{FB}}{v_{out}} = '
+            'at V$_R$', size=9.8, color=GREY)
+    #  the three factors above carry three minus signs; G_EA is the loop's
+    #  compensator WITHOUT the feedback sign, so it is -v_FB/v_out.  It
+    #  read +v_FB/v_out = (a positive product), against its own factors
+    eqn(7.4, -1.20, r'G_{EA}(s) = -\dfrac{v_{FB}}{v_{out}} = '
                     r'\dfrac{Z_f}{R_I}\cdot\dfrac{CTR\,R_{FB}}{R_B}\cdot'
                     r'\dfrac{1}{1 + s\,R_{FB}(C_{opto}+C_{fx})}')
     foot(fig, 'The TL431 compensator as an op-amp circuit: an inverting '
@@ -1988,7 +2004,7 @@ def an_loop_example(save, foot):
                 bbox=dict(boxstyle='round,pad=0.2', fc='white', ec='none'))
     for x, y, t in ((0.04, 45, '$-$40 dB/dec'), (1.0, -12, '$-$20 dB/dec'),
                     (15, -42, '$-$40 dB/dec'), (200, -66, '$-$60 dB/dec')):
-        a1.text(x, y, t, fontsize=8.2, color=GREY, ha='center', va='center',
+        a1.text(x, y, t, fontsize=8.6, color=GREY, ha='center', va='center',
                 rotation=0)
     a2.text(0.02, -190, 'two integrators: $-$180°', fontsize=8.6,
             color=GREY, va='top')
@@ -2032,12 +2048,12 @@ def _sec(ax, top, bot, ys, xd, xc, xr, yt, size=10.5):
     S.wire(ax, [do, (xr, yt)])
     S.wire(ax, [bot, (bot[0], ys), (xr, ys)])
     S.shunt(ax, xc, yt, ys, 'cap', None)
-    S.label(ax, xc - 0.34 * X.scale(ax) - 0.20, (yt + ys) / 2.0, 'C$_o$',
+    S.label(ax, xc - 0.34 * X.scale(ax) - 0.20, (yt + ys) / 2.0, 'C$_{out}$',
             size=size, ha='right')
     S.dot(ax, xc, yt)
     S.dot(ax, xc, ys)
     S.shunt(ax, xr, yt, ys, 'res', None)
-    S.label(ax, xr + 0.30 * X.scale(ax) + 0.22, (yt + ys) / 2.0, 'R$_o$',
+    S.label(ax, xr + 0.30 * X.scale(ax) + 0.22, (yt + ys) / 2.0, 'R$_L$',
             size=size, ha='left')
 
 
@@ -2271,7 +2287,7 @@ def an_flyback_llc(save, foot):
     axl[0].plot(t, g * 0.9, color=NAVY, lw=1.5)
     axl[0].text(0.5 * D, 0.45, 'S', ha='center', va='center',
                 fontsize=9.6, color=NAVY, path_effects=HALO, zorder=9)
-    cap_(axl[0], 'S on for D T, off for the rest of the period')
+    cap_(axl[0], 'S on for part of the period, off for the rest')
 
     axl[1].set_ylim(-0.22, 1.38)
     axl[1].plot(t, ip, color=MAG, lw=2.0)
@@ -2467,7 +2483,7 @@ def an_mmf(save, foot):
     axb = fig.add_axes([0.235, 0.090, 0.700, 0.220])
     vals = [V['Icomp'], V['Isatspec'], V['ILm']]
     cols = [MAG, NAVY, CYA]
-    names = ['i$_{Lr,pk}$   tank peak',
+    names = ['I$_{Lr,pk}$   tank peak',
              'I$_{sat}$   on the specification',
              'i$_{\\mu,pk}$   magnetising peak']
     notes = ['a flyback habit would specify this',
@@ -2564,12 +2580,13 @@ def an_xfmr_read(save, foot):
     ip = int(np.argmax(ilr[:len(t) // 2]))
     a.plot([t[ip]], [ilr[ip] / m], 'o', color=NAVY, ms=5, zorder=5)
     ring(a, 1, t[ip], 1.0, NAVY, dx=-0.06, dy=0.10)
-    a.text(t[ip] + 0.025, 1.06, 'I$_{p,pk}$ = %.1f A' % V['Icomp'], ha='left',
+    #  I_Lr,pk as the text and the tables call it; I_p,pk is the flyback's
+    a.text(t[ip] + 0.025, 1.06, 'I$_{Lr,pk}$ = %.1f A' % V['Icomp'], ha='left',
            va='center', fontsize=9.6, color=NAVY, path_effects=HALO, zorder=9)
     #  the magnetising peak is AT the switching instant, on the dashed trace
     a.plot([0.5], [V['ILm'] / m], 'o', color=PUR, ms=5, zorder=5)
     ring(a, 3, 0.5, V['ILm'] / m, PUR, dx=0.065, dy=0.30)
-    a.text(0.585, V['ILm'] / m + 0.30, 'i$_{Lm,pk}$ = %.1f A  —  the flux '
+    a.text(0.585, V['ILm'] / m + 0.30, 'I$_{Lm,pk}$ = %.1f A  —  the flux '
            'peaks here' % V['ILm'], ha='left', va='center', fontsize=9.6,
            color=PUR, path_effects=HALO, zorder=9)
     a.text(0.30, -0.42, 'i$_p$ = i$_{Lm}$ + reflected load',
@@ -2607,9 +2624,9 @@ def an_xfmr_read(save, foot):
            color=GRN, path_effects=HALO, zorder=9)
     a.plot([t1 / 2], [1.0], 'o', color=MAG, ms=5, zorder=5)
     ring(a, 4, t1 / 2, 1.0, MAG, dx=-0.055, dy=0.22)
-    a.text(t1 / 2 - 0.03, 1.22, ('I$_{s,pk}$ = %.1f A per unit  (%.0f A per '
+    a.text(t1 / 2 - 0.03, 1.22, ('I$_{sec,pk}$ = %.1f A per unit  (%.0f A per '
            'rectifier leg)' % (V['Isecpkx'], V['Isec'])) if V['nser'] > 1
-           else 'I$_{s,pk}$ = %.1f A, each winding in its half period'
+           else 'I$_{sec,pk}$ = %.1f A, each winding in its half period'
            % V['Isec'], ha='left',
            va='center', fontsize=9.6, color=MAG, path_effects=HALO, zorder=9)
     #  each winding conducts once per period; its rms counts the idle half
@@ -2631,12 +2648,12 @@ def an_xfmr_read(save, foot):
                    lw=0, zorder=2)
     a.fill_between(t, 0, np.where((t >= 0.5) & (t <= 0.5 + t1), v, 0.0),
                    color=GOLD, alpha=0.22, lw=0, zorder=2)
-    a.text(-0.012, 1.0, '+V$_{out}$', transform=a.get_yaxis_transform(),
+    a.text(-0.012, 1.0, '+V$_{o,eff}$', transform=a.get_yaxis_transform(),
            ha='right', va='center', fontsize=9.4, color=GREY)
-    a.text(-0.012, -1.0, '−V$_{out}$', transform=a.get_yaxis_transform(),
+    a.text(-0.012, -1.0, '−V$_{o,eff}$', transform=a.get_yaxis_transform(),
            ha='right', va='center', fontsize=9.4, color=GREY)
     ring(a, 6, t1 / 2, 0.5, GOLD)
-    a.text(t1 / 2 + 0.035, 0.5, 'V$_{out}$ × T$_r$/2 = 2 N$_s$ A$_e$ B$_{pk}$'
+    a.text(t1 / 2 + 0.035, 0.5, 'V$_{o,eff}$ × T$_r$/2 = 2 N$_s$ A$_e$ B$_{pk}$'
            '  →  B$_{pk}$ = %.0f mT' % V['Bpk'], ha='left', va='center',
            fontsize=9.6, color=GOLD, path_effects=HALO, zorder=9)
     a.text(0.5 + t1 / 2, -0.5, 'the same area, the other way',
@@ -2685,7 +2702,7 @@ def an_xfmr_read(save, foot):
         ax.set_xticks([0, 45, 90, 135, 180])
         ax.set_xlabel(u'line phase \u03b8  [deg]', fontsize=9.4)
         ax.set_ylabel('[A]', fontsize=9.4)
-        ax.tick_params(labelsize=9.2)
+        ax.tick_params(labelsize=9.4)
     hs = []
     for nm, col, thd, pri, sec in curves:
         b.plot(thd, pri, color=col, lw=1.7, zorder=3)
@@ -2713,11 +2730,11 @@ def an_xfmr_read(save, foot):
     ring(b2, 5, 152, float(np.interp(152, thd0, sec0)), MAG, dx=-12,
          dy=0.10 * smax)
     fig.legend([h for h, _n in hs], [n for _h, n in hs], loc='lower center',
-               ncol=3, fontsize=8.8, frameon=False,
+               ncol=3, fontsize=9.3, frameon=False,
                bbox_to_anchor=(0.5, 0.002),
                title='over the input half cycle at full load, at the six '
                      'input voltages; the HB edge draws the most',
-               title_fontsize=9.0)
+               title_fontsize=9.4)
 
     #  ---------------- lower right: the bench, and the one current it wants
     c = fig.add_axes([0.750, Y0, 0.225, H])
@@ -2728,9 +2745,9 @@ def an_xfmr_read(save, foot):
     c.grid(color='#C4C8CF', lw=0.6, zorder=0)
     c.set_axisbelow(True)
     c.set_yticks([0.9, 1.0])
-    c.set_yticklabels(['90 %', '100 %'], fontsize=8.5)
+    c.set_yticklabels(['90 %', '100 %'], fontsize=9.4)
     c.set_xlabel('dc current in the primary  [A]', fontsize=9.4)
-    c.tick_params(labelsize=9.2)
+    c.tick_params(labelsize=9.4)
     c.set_title('DC-overlap test: all other windings open', fontsize=9.6, color=NAVY)
     c.axhline(1.0, color=GREY, lw=1.0)
     c.fill_between([0, Is], 0, 0.9, color='#f3c9c9', lw=0, zorder=1)
@@ -2912,7 +2929,7 @@ def an_xfmr_pins(save, foot):
         bx.add_patch(Circle((x, y), 0.45, fc=c if w else GREY, ec='none',
                             zorder=4))
         if B['pins'] > 12:                              # rows top/bottom
-            S.label(bx, x, y + (3.4 if y > 0 else -3.4), str(n), size=8.8,
+            S.label(bx, x, y + (3.4 if y > 0 else -3.4), str(n), size=9.4,
                     color=c, weight='bold')
         else:
             S.label(bx, x + (3.0 if x < 0 else -3.0), y, str(n), size=9.6,
@@ -2945,13 +2962,13 @@ def an_xfmr_pins(save, foot):
                     arrowprops=dict(arrowstyle='<->', color=GREY, lw=0.8,
                                     shrinkA=0, shrinkB=0))
         bx.text((C.PIN_XY[1][0] + C.PIN_XY[2][0]) / 2, -hh - 10.6,
-                '%.2f' % B['pitch'], fontsize=9.0, color=GREY, ha='center',
+                '%.2f' % B['pitch'], fontsize=9.4, color=GREY, ha='center',
                 va='center', zorder=1)
         bx.annotate('', xy=(hw + 5.0, 20.32), xytext=(hw + 5.0, -20.32),
                     zorder=1,
                     arrowprops=dict(arrowstyle='<->', color=GREY, lw=0.8,
                                     shrinkA=0, shrinkB=0))
-        bx.text(hw + 7.2, 0.0, '%.2f' % B['rows_apart'], fontsize=9.0,
+        bx.text(hw + 7.2, 0.0, '%.2f' % B['rows_apart'], fontsize=9.4,
                 color=GREY, ha='center', va='center', rotation=90, zorder=1)
     S.label(bx, 0.0, -hh - 14.6, 'ring = winding on that pin;  grey pins are '
             'free', size=9.4, color=GREY)
@@ -3117,13 +3134,13 @@ def an_flux_steps(save, foot):
                     fontsize=9.7, color=GREY, ha='left', va='center',
                     arrowprops=dict(arrowstyle='-|>', color=GREY, lw=1.0),
                     path_effects=HALO, zorder=9)
-    axr[3].annotate('B$_{pk}$ = V$_{out}$T$_r$/(4N$_s$A$_e$):\n'
+    axr[3].annotate('B$_{pk}$ ≈ V$_{out}$T$_r$/(4N$_s$A$_e$):\n'
                     'the rectifier let go; load cannot move it',
                     xy=(tc[k1], ilm[k1] / m), xytext=(0.99, 1.75),
                     fontsize=9.7, color=PUR, ha='right', va='center',
                     arrowprops=dict(arrowstyle='-|>', color=PUR, lw=1.0),
                     path_effects=HALO, zorder=9)
-    cap_(axr[3], 'B follows i$_\\mu$; the peak is where the rectifier turned off')
+    cap_(axr[3], 'B follows i$_\\mu$; nearly flat once the rectifier turns off')
 
     foot(fig, 'Steps. Flyback: 1 switch on, V$_{in}$ on the primary, the '
               'flux ramps up with i$_p$; 2 switch off, the secondary takes '

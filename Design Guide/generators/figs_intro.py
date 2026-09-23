@@ -198,13 +198,18 @@ def an_fha_steps(save, foot):
     S.frame(ax, -0.3, 7.6, -1.3, 3.5, '2   secondary referred to the primary')
     top = drive(ax, 'sq')
     series(ax, top, 1.95, 3.1, 4.2)
-    XR_ = 5.9
-    S.wire(ax, [(4.2, YS_), (XR_, YS_)])
-    S.shunt(ax, XR_, YS_, YR, 'res', 'n$^2$R$_o$', tdx=0.30)
-    S.wire(ax, [(XR_, YR), (XS_, YR)])
+    #  The rectifier stays: only the transformer goes.  A resistor n^2 R_L
+    #  here, still driven by the square wave, said the rectifier and the
+    #  stiff output were a resistor at every harmonic - they look like one
+    #  only at the fundamental, which is step 3 (2026-09-23).
+    xb0, xb1 = 5.25, 7.45
+    bl, _ = S.box(ax, (xb0 + xb1) / 2.0, YMID, xb1 - xb0, 2.3,
+                  'rectifier\n+ n$^2$R$_L$', size=9.5)
+    S.wire(ax, [(4.2, YS_), (bl[0], YS_)])
+    S.wire(ax, [(bl[0], YR), (XS_, YR)])
     ax.annotate('the ideal transformer disappears;\n'
                 'the load is scaled by n$^2$',
-                xy=(XR_ - 0.16, 0.30), xytext=(1.6, 2.75), fontsize=10,
+                xy=(xb0 + 0.55, YMID + 1.15), xytext=(1.6, 2.75), fontsize=10,
                 color=GREY, ha='left',
                 arrowprops=dict(arrowstyle='-|>', color=GREY, lw=1.3))
 
@@ -213,6 +218,7 @@ def an_fha_steps(save, foot):
     S.frame(ax, -0.3, 7.6, -1.3, 3.5, '3   first harmonic only')
     top = drive(ax, 'ac')
     series(ax, top, 1.95, 3.1, 4.2)
+    XR_ = 5.9
     S.wire(ax, [(4.2, YS_), (XR_, YS_)])
     S.shunt(ax, XR_, YS_, YR, 'res', 'R$_{ac}$')
     S.wire(ax, [(XR_, YR), (XS_, YR)])

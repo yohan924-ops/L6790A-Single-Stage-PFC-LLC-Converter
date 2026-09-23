@@ -255,7 +255,7 @@ def f02_two_resonances():
     ax.set_xlim(0.45, 2.2)
     ax.set_ylim(0, 4.2)
     ax.set_xlabel('normalised frequency   f / f$_r$')
-    ax.set_ylabel('gain   M = n·V$_o$ / V$_{in}$')
+    ax.set_ylabel('gain   M')
     ax.legend(loc='upper right', fontsize=9.5)
     #  The axis is f / f_r, so the two lines are named where they sit on
     #  THAT axis.  Written as absolute kilohertz they were two numbers from
@@ -457,10 +457,10 @@ def f05_zvs_mechanism():
     a2.set_yticks([0])
     a2.set_yticklabels(['0'])
     a2.set_ylabel('current', fontsize=10, color=NAVY)
-    a2.set_xlabel('the transition, magnified — the dead time is %.0f %% of '
+    a2.set_xlabel('the transition, magnified — the dead time is %.1f %% of '
                   'the period here' % (100 * TD), fontsize=10, color=NAVY)
     a2.legend(loc='lower left', fontsize=10, ncol=2, framealpha=0.94)
-    a2.annotate('the two currents are EQUAL from the end of interval 1:\n'
+    a2.annotate('the two currents are EQUAL from the end of step 1:\n'
                 'the load component is gone and only i$_{Lm}$ is left',
                 xy=(e[2], float(ILM[np.searchsorted(T, e[2])])),
                 xytext=(x0 + 0.004, 1.06 * agg['comp_pk']), fontsize=10,
@@ -582,7 +582,13 @@ def f13_morphing():
     fig, (aW, aE) = plt.subplots(1, 2, figsize=(9.35, 3.68),
                                  gridspec_kw=dict(width_ratios=[1.0, 1.06],
                                                   wspace=0.20))
-    ask(fig, 'Topology morphing - change the BRIDGE, and a 2.93:1 mains becomes 1.92:1')
+    #  every number from the design (typed in before: 173.24, 332.34,
+    #  166.17, 2.93, 1.92 - 2026-09-23 audit)
+    BOH, BIH = R['V_BOH'] / sqrt(2), R['V_BIH'] / sqrt(2)   # mains, Vrms
+    LOq, HIq = R['Vin_min'], R['Vin_FBmax']                 # tank, Vac eq.
+    rm, rt = R['Vac_max'] / R['Vac_min'], HIq / LOq
+    ask(fig, 'Topology morphing - change the BRIDGE, and a %.2f:1 mains '
+             'becomes %.2f:1' % (rm, rt))
 
     # ONE axes, ONE scale, so twice as tall LOOKS twice as tall
     t = np.linspace(0, 2, 1200)
@@ -615,17 +621,18 @@ def f13_morphing():
             color=GREY, fontsize=9.5, ha='center', va='center')
 
     vac = np.linspace(85, 270, 900)
-    eq = np.where(vac * sqrt(2) <= 235, 2 * vac, vac)
-    aE.axhspan(173.24, 332.34, color=YEL, alpha=0.20)
+    eq = np.where(vac <= BOH, 2 * vac, vac)
+    aE.axhspan(LOq, HIq, color=YEL, alpha=0.20)
     aE.plot(vac, eq, color=NAVY, lw=3.0)
-    aE.plot([166.17, 166.17], [166.17, 332.34], color=GREY, ls=':', lw=1.6)
-    aE.plot(166.17, 332.34, 'o', color=MAG, ms=10, zorder=5)
-    aE.plot(173.24, 173.24, 'o', color=PUR, ms=10, zorder=5)
+    aE.plot([BOH, BOH], [BOH, HIq], color=GREY, ls=':', lw=1.6)
+    aE.plot(BOH, HIq, 'o', color=MAG, ms=10, zorder=5)
+    aE.plot(BIH, LOq, 'o', color=PUR, ms=10, zorder=5)
     aE.set_xlim(85, 272)
     aE.set_ylim(140, 392)
     aE.set_xlabel('mains voltage  [Vac]')
     aE.set_ylabel('what the TANK sees  [Vac equivalent]')
-    aE.set_title('mains 2.93:1  ->  tank 1.92:1', fontsize=11, color=NAVY)
+    aE.set_title('mains %.2f:1  ->  tank %.2f:1' % (rm, rt), fontsize=11,
+                 color=NAVY)
     #  Notes in the corners the curve does not visit.  Placed beside the
     #  two branches they sat ON them, and the reader could not see which
     #  part of the line was full bridge and which half.
@@ -633,9 +640,13 @@ def f13_morphing():
          va='top')
     note(aE, 268, 152, 'HALF bridge\nequivalent = mains', color=NAVY, size=10,
          ha='right')
-    note(aE, 268, 372, '332.3 Vac eq.  MAXIMUM\nat only 166 Vac mains', color=MAG,
-         size=9.8, ha='right', va='top')
-    note(aE, 120, 152, '173.2 Vac eq.  minimum', color=PUR, size=9.8, ha='center')
+    #  'MAXIMUM' and 'minimum' before: true only outside the hysteresis
+    #  band, which widens the range (Figure f18 and the text say so).
+    #  These are the two morphing EDGES, and that is what they are called.
+    note(aE, 268, 372, '%.1f Vac eq.  FB edge\nat only %.0f Vac mains'
+         % (HIq, BOH), color=MAG, size=9.8, ha='right', va='top')
+    note(aE, 120, 152, '%.1f Vac eq.  HB edge' % LOq, color=PUR,
+         size=9.8, ha='center')
     aE.annotate('', xy=(169, 335), xytext=(205, 352),
                 arrowprops=dict(arrowstyle='-|>', color=MAG, lw=1.5))
     aE.annotate('', xy=(176, 172), xytext=(150, 158),
@@ -650,11 +661,16 @@ def f13_morphing():
 def f14_fsw_theta():
     fig, ax = plt.subplots(figsize=(9.35, 4.87))
     ask(fig, 'Where does the switching frequency actually peak?')
-    fam = [(R['Vin_min'], MAG, '173.2 Vac eq.  (HB morphing edge)'),
-           (180.0, CYA, '180 Vac eq.  (90 Vac mains, FB)'),
+    #  levels from R, not typed: the edges moved with the turns ratio and
+    #  the typed 173.2 / 332.3 did not (2026-09-23).  225 V is only a
+    #  curve between the two ends.
+    VL, VH = R['Vac_min'], R['Vac_max']
+    fam = [(R['Vin_min'], MAG, '%.1f Vac eq.  (HB morphing edge)' % R['Vin_min']),
+           (2 * VL, CYA, '%.0f Vac eq.  (%.0f Vac mains, FB)' % (2 * VL, VL)),
            (225.0, GRN, '225 Vac eq.'),
-           (264.0, NAVY, '264 Vac  (mains maximum, HB)'),
-           (R['Vin_FBmax'], PUR, '332.3 Vac eq.  (FB morphing edge)')]
+           (VH, NAVY, '%.0f Vac  (mains maximum, HB)' % VH),
+           (R['Vin_FBmax'], PUR,
+            '%.1f Vac eq.  (FB morphing edge)' % R['Vin_FBmax'])]
     top = 0.0
     for vac, c, lab in fam:
         rows, S = sweep(R, vac, N=361)
@@ -669,15 +685,15 @@ def f14_fsw_theta():
     ax.set_xticks([0, 15, 30, 45, 60, 75, 90])
     ax.set_xlabel('line phase  θ  [deg]')
     ax.set_ylabel('switching frequency  [kHz]')
-    ax.legend(loc='upper left', fontsize=9.2)
+    ax.legend(loc='upper left', fontsize=9.6)
     note(ax, 88, top + 15, '%.1f kHz  ←  the real maximum' % top,
          color='#8a6d00', ha='right', size=10)
     note(ax, 88, FO / 1e3 - 3.8,
          'f$_o$ = %.1f kHz — every curve converges here at θ → 0' % (FO / 1e3),
          color=GREY, ha='right', size=10)
-    foot(fig, 'The highest curve is NOT the maximum mains (264 V) — it is the '
-              'FB morphing edge at 332 V equivalent. Miss morphing and you '
-              'never plot that curve.')
+    foot(fig, 'The highest curve is NOT the maximum mains (%.0f V) — it is the '
+              'FB morphing edge at %.0f V equivalent. Miss morphing and you '
+              'never plot that curve.' % (VH, R['Vin_FBmax']))
     fig.tight_layout(rect=[0, 0.055, 1, 0.945])
     save(fig, 'f14_fsw_theta')
 
@@ -719,10 +735,13 @@ def g_gain_regions():
 def g_fsw_theta():
     """라인 반주기에 걸친 f_sw - 이것이 곧 PFC"""
     fig, ax = plt.subplots(figsize=(7.4, 4.3))
-    for vac, c, lab in ((R['Vin_min'], NAVY, 'HB 코너 173.2 Vac 등가'),
+    top = 0.0
+    for vac, c, lab in ((R['Vin_min'], NAVY, 'HB 코너 %.1f Vac 등가' % R['Vin_min']),
                         (225., CYA, '225 Vac'),
-                        (R['Vin_FBmax'], MAG, 'FB 코너 332.3 Vac 등가')):
-        rows, _ = sweep(R, vac, N=361)
+                        (R['Vin_FBmax'], MAG,
+                         'FB 코너 %.1f Vac 등가' % R['Vin_FBmax'])):
+        rows, S = sweep(R, vac, N=361)
+        top = max(top, S['fsw_max'] / 1e3)
         ok = [r for r in rows if r]
         ax.plot([r['th'] * 180 / pi for r in ok],
                 [r['fsw'] / 1e3 for r in ok], color=c, lw=2.3, label=lab)
@@ -733,8 +752,10 @@ def g_fsw_theta():
     ax.set_ylabel('$f_{sw}$  [kHz]')
     note(ax, 4, FO / 1e3 + 9, '$f_o$ = %.1f kHz\n모든 곡선이 영교차에서\n여기로 수렴한다'
          % (FO / 1e3), color=NAVY, size=10)
-    note(ax, 62, 232, '상한 %.1f kHz\n= FB 코너, 264 Vac 가 아니다'
-         % (R['fr'] * 1.6448 / 1e3), color=MAG, size=10)
+    #  the ceiling read off the FB-edge sweep; it was R['fr'] * 1.6448,
+    #  a ratio typed from one design (2026-09-23)
+    note(ax, 62, top - 17, '상한 %.1f kHz\n= FB 코너, %.0f Vac 가 아니다'
+         % (top, R['Vac_max']), color=MAG, size=10)
     ax.legend(loc='center right', fontsize=10)
     ask(fig, '$f_{sw}(\\theta)$ 변조가 곧 역률 보정이다')
     foot(fig, '주파수가 조절하는 것은 게인이 아니라 $Q$, 즉 전력이다. '
@@ -877,8 +898,9 @@ def _loop_bode(T, name):
 
 def _morph_levels(T, name):
     """where it is FB and where it is HB - T carries every visible string"""
-    VBO = 30.0 * 4 / sqrt(2)            # R_CFG 30 kohm -> 120 Vpk
-    BOH, BIH = 235 / sqrt(2), 245 / sqrt(2)
+    import an_pdf as _A
+    VBO = _A.V['VBO']                   # set by R_CFG, from the sheet
+    BOH, BIH = R['V_BOH'] / sqrt(2), R['V_BIH'] / sqrt(2)
     LO, HI = 60., 285.
     fig, (a1, a2) = plt.subplots(2, 1, figsize=(9.4, 6.8), sharex=True,
                                  gridspec_kw={'height_ratios': [1.0, 1.3]})
@@ -931,7 +953,7 @@ def _morph_levels(T, name):
     a2.legend(loc='upper left', fontsize=10.5)
     note(a2, BIH + 8, 318,
          T['step'], color=MAG, size=10)
-    note(a2, 70, 120, T['range'],
+    note(a2, 70, 120, T['range'] % (BOH, 2 * BIH, 2 * BIH / BOH),
          color=GRN, size=10)
 
     for a in (a1, a2):
@@ -945,9 +967,11 @@ def _morph_levels(T, name):
     # has not chosen yet. The line's POSITION is this design's; the label is not.
     a1.text(VBO, -0.06, T['vbo'], ha='center', va='top',
             fontsize=9.5, color=GREY)
-    a1.text(BOH - 3, -0.06, '235 $V_{pk}$\n166.2 Vac', ha='right', va='top',
+    a1.text(BOH - 3, -0.06, '%.0f $V_{pk}$\n%.1f Vac' % (R['V_BOH'], BOH),
+            ha='right', va='top',
             fontsize=9.5, color='#8a6d00')
-    a1.text(BIH + 3, -0.06, '245 $V_{pk}$\n173.2 Vac', ha='left', va='top',
+    a1.text(BIH + 3, -0.06, '%.0f $V_{pk}$\n%.1f Vac' % (R['V_BIH'], BIH),
+            ha='left', va='top',
             fontsize=9.5, color='#8a6d00')
     for mv, lab in ((100, '100 Vac'), (120, '120 Vac'), (230, '230 Vac')):
         a1.plot(mv, 1.0, 'v', color=PUR, ms=9, clip_on=False)
@@ -980,9 +1004,9 @@ _MORPH_KO = {
     'legHB': 'HB — 탱크는 라인 그대로를 본다',
     'ylab':  '탱크가 보는 등가 입력 [Vac]',
     'xlab':  '상용전원 [Vrms]',
-    'step':  '전환 순간 탱크 구동이 2배로 뛴다 —\n'
-         '$f_{sw}$ 가 123 → 250 kHz 로 따라가야 한다',
-    'range': '설계가 감당해야 하는 범위\n166.2 ~ 346.5 Vac  (2.08 : 1)',
+    'step':  '전환 순간 탱크 구동이 2:1 로 뛴다 —\n'
+         '$f_{sw}$ 가 한 라인 주기 안에 따라가야 한다',
+    'range': '설계가 감당해야 하는 범위\n%.1f ~ %.1f Vac  (%.2f : 1)',
     'vbo':   '$V_{BO}$\n($R_{CFG}$ 가 정함)',
     'ask':   'Morphing — 어디까지가 풀브리지이고 어디부터 하프브리지인가',
     'foot':  '경계 235 / 245 $V_{pk}$ 는 IC 고정 상수라 움직이지 않는다. '
@@ -1004,7 +1028,7 @@ _MORPH_EN = {
     'xlab':  'mains  [Vrms]',
     'step':  'the drive jumps 2:1 at the transition \u2014\n'
          '$f_{sw}$ must follow it within one line cycle',
-    'range': 'the range the design must cover\n166.2 to 346.5 Vac  (2.08 : 1)',
+    'range': 'the range the design must cover\n%.1f to %.1f Vac  (%.2f : 1)',
     'vbo':   '$V_{BO}$\n(set by $R_{CFG}$)',
     'ask':   'Morphing \u2014 where it is a full bridge, and where it is a half bridge',
     'foot':  'The 235 / 245 $V_{pk}$ thresholds are FIXED IC constants. '
@@ -1190,7 +1214,7 @@ def f16_bridge_hb():
     aW.set_xticks([])
     aW.set_yticks([-0.5, 0, 0.5, 1])
     aW.set_yticklabels(['-V$_{in}$/2', '0', '+V$_{in}$/2', 'V$_{in}$'])
-    aW.legend(loc='upper right', fontsize=9)
+    aW.legend(loc='upper right', fontsize=9.4)
     aW.set_title('v$_d$ = v$_A$ \u2212 v$_B$  \u2014  swing 1 \u00d7 V$_{in}$', fontsize=11.5,
                  color=NAVY, pad=8)
     aW.text(0.5, -0.085, 'fundamental  (2/\u03c0)\u00b7V$_{in}$  '
@@ -1220,8 +1244,10 @@ def f17_morph_gates():
     SW = dict(HOUT1='S1', LOUT1='S2', HOUT2='S3', LOUT2='S4')
 
     for ax, sig, ttl in (
-            (aF, (a, b, b, a), 'FULL bridge   (mains peak below 235 V)'),
-            (aH, (a, b, 0 * t, 1 + 0 * t), 'HALF bridge   (above 245 V)')):
+            (aF, (a, b, b, a),
+             'FULL bridge   (mains peak below %.0f V)' % R['V_BOH']),
+            (aH, (a, b, 0 * t, 1 + 0 * t),
+             'HALF bridge   (above %.0f V)' % R['V_BIH'])):
         for i, (nm, s) in enumerate(zip(rows, sig)):
             y = 3 - i
             static = np.ptp(s) == 0
@@ -1270,13 +1296,18 @@ def f19_cout_criterion():
     #  both conditions go as 1/Vout^2 at a fixed Vo,min/Vout and ripple %
     Cr = CRIP * (V['Vout'] / v) ** 2
     Ch = CHLD * (V['Vout'] / v) ** 2
-    RHS = 4 * pi * FL * DV * TH
-    LHS = RHS * V['ripK']                                 # C.ripple / C.hold_req
-    aL.loglog(v, Cr, color=MAG, lw=3.0, label='ripple:  $\\Delta$v = 5 % pk-pk')
+    #  the two sides of the screening rule as the body prints them; the
+    #  ratio of the sheet's two capacitances (V.ripK) is a different
+    #  number - it read 0.376 here against the body's 0.373
+    LHS, RHS = V['ripLHS'], V['ripRHS']
+    VO = V['Vout']
+    aL.loglog(v, Cr, color=MAG, lw=3.0,
+              label='ripple:  $\\Delta$v = %.0f %% pk-pk' % V['dv'])
     aL.loglog(v, Ch, color=NAVY, lw=3.0,
-              label='hold-up:  12 ms down to 76 % of $V_{out}$')
-    aL.axvline(25, color=GREY, lw=1.3, ls='--')
-    aL.plot([25, 25], [CRIP, CHLD], 'o', color=PUR, ms=9, zorder=5)
+              label='hold-up:  %.0f ms down to %.0f %% of $V_{out}$'
+              % (V['Thold'], 100 * V['kv']))
+    aL.axvline(VO, color=GREY, lw=1.3, ls='--')
+    aL.plot([VO, VO], [CRIP, CHLD], 'o', color=PUR, ms=9, zorder=5)
     aL.set_xlim(15, 75)
     aL.set_ylim(8, 260)
     aL.set_xlabel('output voltage  [V]')
@@ -1286,8 +1317,8 @@ def f19_cout_criterion():
     aL.get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
     aL.get_yaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
     aL.legend(loc='upper right', fontsize=10)
-    note(aL, 26, 105, '25 V:  %.1f mF ripple\n           %.1f mF hold-up'
-         % (CRIP, CHLD), color=PUR, size=10)
+    note(aL, VO * 1.04, 105, '%.0f V:  %.1f mF ripple\n           %.1f mF hold-up'
+         % (VO, CRIP, CHLD), color=PUR, size=10)
     aL.set_title('both conditions go as 1 / $V_{out}^2$ - PARALLEL on log-log',
                  fontsize=11, color=NAVY)
     aL.text(0.5, 0.04,
@@ -1309,25 +1340,28 @@ def f19_cout_criterion():
     #  holds more in proportion to its capacitance
     EH = V['Ehold']
     NHOLD = int(-(-CHLD // (V['Cout1'] * 1e-3)))
-    bars = ((EH, 'two stage\n%.0f µF\n400 to 320 V' % V['Cbulk'],
+    VTR = V['Vout'] - V['dVo'] / 2
+    bars = ((EH, 'two stage\n%.0f µF\n%.0f to %.0f V'
+             % (V['Cbulk'], _A._VBUS, _A._VBUS_MIN),
              '1 capacitor', 'one bulk\nelectrolytic', NAVY),
-            (EH, 'single stage\n%.1f mF\n%.0f to %.0f V'
-             % (CHLD, V['Vout'], V['Vomin']),
-             '%d capacitors' % NHOLD, 'hold-up\nminimum', PUR),
-            (EH * V['Cout'] / CHLD, 'as built\n%.1f mF\n%.0f to %.0f V'
-             % (V['Cout'], V['Vout'], V['Vomin']),
-             '%d capacitors' % int(V['nC']), 'ripple\ndecided this', MAG))
+            #  hold-up starts at the ripple trough, as C_hold is sized
+            (EH, 'single stage\n%.1f mF\n%.1f to %.0f V'
+             % (CHLD, VTR, V['Vomin']),
+             '%d\ncapacitors' % NHOLD, 'hold-up\nminimum', PUR),
+            (EH * V['Cout'] / CHLD, 'as built\n%.1f mF\n%.1f to %.0f V'
+             % (V['Cout'], VTR, V['Vomin']),
+             '%d\ncapacitors' % int(V['nC']), 'ripple\ndecided\nthis', MAG))
     en = [b[0] for b in bars]
-    aR.bar(range(3), en, width=0.78,          # wide enough for the in-bar
+    aR.bar(range(3), en, width=0.84,          # wide enough for the in-bar
            color=[b[4] for b in bars])        # labels; 0.56 clipped them
     for x, (e, b) in enumerate(zip(en, bars)):
         aR.text(x, e + 0.35, '%.1f J' % e, ha='center', va='bottom',
                 fontsize=12.5, fontweight='bold', color=NAVY)
-        #  8 pt and one blank line: at the narrower figure the two
-        #  in-bar lines of neighbouring bars ran into each other
-        aR.text(x, e / 2, b[2] + '\n' + b[3], ha='center', va='center',
-                fontsize=7.4, color='white', fontweight='bold',
-                linespacing=1.9)
+        #  one word to a line: at 7.4 pt the labels fitted the bar and
+        #  printed at 5.2 pt (figcheck 'tiny', 2026-09-23)
+        aR.text(x, e / 2, b[2] + '\n\n' + b[3], ha='center', va='center',
+                fontsize=9.4, color='white', fontweight='bold',
+                linespacing=1.15)
     aR.set_xticks(range(3))
     aR.set_xticklabels([b[1] for b in bars], fontsize=9.4)
     aR.set_ylim(0, 13)
@@ -1337,13 +1371,14 @@ def f19_cout_criterion():
     aR.grid(False)         # a vertical grid line through each bar centre
                            # sat under every in-bar label and said nothing
 
-    foot(fig, 'Removing the boost stage removes the 400 V bus, not the energy '
-              'it held. The first two bars are the SAME %.1f J - 12 ms at full '
+    foot(fig, 'Removing the boost stage removes the %.0f V bus, not the energy '
+              'it held. The first two bars are the SAME %.1f J - %.0f ms at full '
               'power - and the capacitance between them differs by '
-              '(400$^2$-320$^2$)/((25-0.6)$^2$-19$^2$) = %.0fx. That single line is '
+              '(%.0f$^2$-%.0f$^2$)/(%.1f$^2$-%.0f$^2$) = %.0fx. That single line is '
               'the cost of the architecture. The bank actually built is '
               'larger again because RIPPLE, not hold-up, set its size.'
-              % (EH, V['Cratio']))
+              % (_A._VBUS, EH, V['Thold'], _A._VBUS, _A._VBUS_MIN, VTR,
+                 V['Vomin'], V['Cratio']))
     fig.tight_layout(rect=[0, 0.10, 1, 0.935])
     save(fig, 'f19_cout_criterion')
 

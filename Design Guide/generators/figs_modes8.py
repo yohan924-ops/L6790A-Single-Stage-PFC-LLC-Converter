@@ -86,8 +86,12 @@ NP_T_N, NS_T_N = 4, 2               # turns drawn: primary, each half of N_s
 #  cramped): winding labels to D1 1.33 -> 1.73, D1 to tap and tap to D2
 #  1.10 -> 1.40, D2 to C_o and C_o to R_o unchanged.
 XQ1, XCT, XQ2 = 15.10, 16.50, 17.90
-XCO, XLD = 19.25, 20.65
-XEND = XLD
+#  C_out and R_L sit 0.35 further right than C_o and R_o did: 'C_out' is
+#  wider, and between D2's riser and the capacitor it touched the riser.
+#  The drawing's right edge stays where it was (XEND), so no symbol on the
+#  sheet changes size.
+XCO, XLD = 19.60, 21.00
+XEND = 20.65
 
 DX_D, DX_C = 0.80, 1.50             # body diode and C_oss, right of the leg
 XGATE = 1.00                        # gate lead reaches this far left
@@ -241,19 +245,22 @@ def _skeleton(ax, states, parts=True, lm_dy=0.0):
     wire(ax, [(XCO, VN), (XCO, YMID - 0.12)])
     wire(ax, [(XCO, YMID + 0.12), (XCO, VP)])
     vcap(ax, XCO, YMID, 0.32)
-    txt(ax, XCO + 0.48, YMID, 'C$_o$', size=11.5, ha='left')
+    txt(ax, XCO - 0.48, YMID, 'C$_{out}$', size=11.5, ha='right')
     dot(ax, XCO, VP)
     dot(ax, XCO, VN)
 
     wire(ax, [(XLD, VN), (XLD, YMID - 0.58)])
     wire(ax, [(XLD, YMID + 0.58), (XLD, VP)])
     resbox(ax, XLD, YMID)
-    txt(ax, XLD + 0.38, YMID, 'R$_o$', size=11.5, ha='left')
-    xv = XLD + 1.30
+    txt(ax, XLD + 0.38, YMID, 'R$_L$', size=11.5, ha='left')
+    xv = XLD + 1.10
     ax.add_patch(FancyArrowPatch((xv, VN), (xv, VP), arrowstyle='<|-|>',
                                  mutation_scale=12, color=GREY, lw=1.4,
                                  zorder=4, shrinkA=0, shrinkB=0))
-    txt(ax, xv + 0.22, YMID, 'V$_o$', size=11.5, weight='bold', ha='left')
+    #  above the arrow: 'V_out' is twice as wide as 'V_o' was and beside
+    #  the arrow it ran off the drawing (2026-09-23, V_o -> V_out to match
+    #  the text; widening the axes instead shrank every symbol by 2 %)
+    txt(ax, xv, VP + 0.45, 'V$_{out}$', size=11.5, weight='bold')
     txt(ax, XLD + 0.34, VP + 0.38, '+', size=13, weight='bold')
     txt(ax, XLD + 0.34, VN - 0.38, '−', size=14, weight='bold')
 
@@ -371,9 +378,9 @@ MODES = [
     dict(n=1, t='POWER DELIVERY', sub='S1, S4 on  ·  D1 conducts  ·  lower half of N$_s$',
          sw=dict(S1=ON, S2=OFF, S3=OFF, S4=ON), d=(1, 0),
          pri=PRI_FWD_XFMR, load=True, lm=True, sec=SEC_LO,
-         note=('L$_m$ is clamped, so i$_{Lm}$ is a straight ramp and i$_{Lr}$ - i$_{Lm}$ is the half sine that crosses.\nWhat is traced is the load component; i$_{Lm}$ flows in L$_m$ too, but it reverses inside this interval.'),
+         note=('L$_m$ is clamped, so i$_{Lm}$ is a straight ramp and i$_{Lr}$ $-$ i$_{Lm}$ is the half sine that crosses.\nWhat is traced is the load component; i$_{Lm}$ flows in L$_m$ too, but it reverses inside this interval.'),
          say='The tank rings at f$_r$. L$_m$ is clamped by the output, so '
-             'i$_{Lm}$ ramps straight and the difference i$_{Lr}$ - i$_{Lm}$ '
+             'i$_{Lm}$ ramps straight and the difference i$_{Lr}$ $-$ i$_{Lm}$ '
              'is the half sine that crosses to the secondary.'),
     dict(n=2, t='FREEWHEELING', sub='S1, S4 STILL on  ·  secondary off',
          sw=dict(S1=ON, S2=OFF, S3=OFF, S4=ON), d=(0, 0),
@@ -658,7 +665,10 @@ def waveforms(axes, lam, fsw_over_fr, ilr_pk, ilm_pk, td_draw=0.045):
         ar.text(lo + e[1] / 2.0, io_pk * 1.13, nm, ha='center', fontsize=10.5,
                 color=col, fontweight='bold')
     ar.set_ylim(-0.10 * io_pk, 1.52 * io_pk)
-    ar.set_ylabel('rectifier  [A]')
+    #  i_Lr - i_Lm is the rectifier current referred to the primary; the
+    #  diode itself carries n times it.  'rectifier [A]' read as the diode
+    #  current, a factor n low (2026-09-23)
+    ar.set_ylabel('i$_D$ / n  [A]')
     ar.set_xlabel('one switching period')
 
     for ax in axes:

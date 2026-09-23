@@ -374,15 +374,37 @@ def tiny(fig, name, floor=6.5):
     went out like that before anyone put a number on it.
 
     What matters is fontsize / figure-width-in-inches: the dpi cancels.
+
+    Every text of the figure is measured - tick labels, axis labels,
+    titles, legend entries and fig.text as well as ax.text.  Until
+    2026-09-23 only ax.texts were, and a figure 11.6 in wide passed with
+    its legend and tick labels printing at 5 and 6 pt.
     """
     fw, fh = fig.get_size_inches()
     w = _placement(name)
+    if _PLACE is not None and name not in _PLACE:
+        #  not in the AN, so there is no printed width to judge it at;
+        #  judging it at a full column reported three orphan figures
+        return []
     h = w * fh / fw
     if h > _HCAP_PT:                 # an_pdf shrinks it again to fit a page
         w *= _HCAP_PT / h
     sc = w / (fw * 72.0)
     small = []
-    for t, ax, b in _boxes(fig):
+    r = fig.canvas.get_renderer()
+    seen = set()
+    every = list(_boxes(fig))
+    for t, _a, _b in every:
+        seen.add(id(t))
+    for t in fig.findobj(Text):
+        if id(t) in seen or not t.get_visible() or not t.get_text().strip():
+            continue
+        seen.add(id(t))
+        try:
+            every.append((t, None, Text.get_window_extent(t, r)))
+        except Exception:                                # noqa: BLE001
+            pass
+    for t, ax, b in every:
         try:
             s = float(t.get_fontsize()) * sc
         except Exception:                                # noqa: BLE001

@@ -88,7 +88,7 @@ python bom_compare.py              # -> items compared: 29   different: 0
 python snapshot.py                 # docs/DESIGN.md §3 갱신 + 지난번 이후 무엇이 움직였는지
 ```
 
-전량 검증 12종과 기대값은 README §9.1. 문서를 고쳤으면 `python audit_md.py`, AN 을 고쳤으면 `an_check.py` + `an_symbols.py`.
+전량 검증 12종과 기대값은 README §9.1. 문서를 고쳤으면 `python audit_md.py`, AN 을 고쳤으면 `an_check.py` + `an_symbols.py`, 그림을 고쳤으면 **`figcheck.py` 를 인자 없이 전량** + `an_figtext.py`(그림 속 기호·손 입력 숫자, 53차).
 **Stop hook(`.claude/settings.json` → `guard.py`)이 추적 파일이 바뀐 턴 끝에 이것들을 돌리고, 실패하면 턴을 막는다.**
 Python 3.12 + `openpyxl` · `Pillow` · `numpy` · `matplotlib` · `reportlab`. 경로는 전부 스크립트 기준 상대경로.
 

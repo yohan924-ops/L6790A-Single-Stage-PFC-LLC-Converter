@@ -114,7 +114,7 @@ R = l6790.design(Vout=25., Pout=657.5, Vo_min=19., Thold=12e-3, dv_out=0.05,
                  Lm_sel=_sheet_early('L.m') * 1e-6,
                  n_sel=_sheet_early('n'), c_HB=800e-12, tD=220e-9)
 _, SA = l6790.sweep(R, R['Vin_min'], 1.0)          # HB corner, full load
-_, SB = l6790.sweep(R, 332.34, 1.0)                # FB corner, full load
+_, SB = l6790.sweep(R, R['Vin_FBmax'], 1.0)      # FB corner, full load
 
 
 def _fsw_peaks():
@@ -161,9 +161,13 @@ V = dict(
     fswA=SA['fsw_max'] / 1e3, fswB=SB['fsw_max'] / 1e3,
     Tzc=SA['Tzc_min'] * 1e9, kZVS=SH['k.ZVS'],
     Isec=SA['Isec_pk'], Itr=SA['Itr_pk'], ILm=SA['ILm_pk'],
-    Icomp=SA['comp_pk'], Iprims=SH['I.pri_rms'], Iprilc=SA['Ipri_lc'],
+    #  line-cycle rms from the sheet's five-point Simpson, like Idio and ICout
+    #  below and as the text says; the sweep's uniform-grid mean differed by
+    #  0.1 % and a calc line mixed the two (2026-09-23)
+    Icomp=SA['comp_pk'], Iprims=SH['I.pri_rms'], Iprilc=SH['I.pri_lc'],
     Idio=SH['I.diode_lc'], ICout=SH['I.Cout_rms'],
-    Cout=SH['C.out'], Cout1=470.0, nC=SH['n.C'], dVo=SH['ΔV.out'],
+    Cout=SH['C.out'], Cout1=SH['C.out'] / SH['n.C'] * 1e3,   # µF, one part
+    nC=SH['n.C'], dVo=SH['ΔV.out'],
     dVopc=SH['ΔV.out_pc'], thold=SH['t.hold_act'], RN=SH['R.Nact'],
     Icout1=SH['I.Cout_each'], Ccer=SH['C.ceramic'],
     Crip=SH['C.ripple'], Chold=SH['C.hold_req'],

@@ -48,7 +48,11 @@ def _cross(fn, g, level):
 
 
 def _mz(lam, fn):
-    """the locus of the gain peaks = the capacitive/inductive boundary
+    """the capacitive/inductive boundary, traced as Q varies
+
+    NOT the locus of the gain peaks: the boundary (arg Z_in = 0) lies a
+    little to the right of each peak.  This docstring said "peaks =
+    boundary" and the figure legend repeated it (fixed 2026-09-23).
 
     Parameterised by Q rather than by f_n: for each Q the boundary sits at
     zvs_edge(Q, lam), which is a closed form, so no peak has to be hunted
@@ -109,7 +113,9 @@ def an_pf_chain(save, foot, R, sweep):
     a.text(90, 2.06, u'p$_{in}$(θ) = 2 P$_{in}$ sin$^2$θ',
            ha='center', va='bottom', fontsize=10.2, color=NAVY,
            path_effects=HALO, zorder=9)
-    a.text(45, 1.06, 'P$_{out}$: what the load takes, at a steady rate',
+    #  the dashed line is the AVERAGE of p_in, i.e. P_in: labelled P_out
+    #  it said the conversion was lossless (2026-09-23)
+    a.text(45, 1.06, 'its average P$_{in}$: drawn by the load side at a steady rate',
            ha='center', va='bottom', fontsize=10.0, color=MAG,
            path_effects=HALO, zorder=9)
     a.text(90, 1.55, 'surplus:\nthe bank charges', ha='center', va='center',
@@ -144,8 +150,9 @@ def an_pf_chain(save, foot, R, sweep):
     a2.text(90, 0.92, u'loading  Q/Q$_{pk}$ = sin$^2$θ   → 0',
             ha='center', va='top', fontsize=10.2, color=CYA,
             path_effects=HALO, zorder=9)
-    a.text(60, 0.88, 'both of them diverge at the zero crossing,\nand they '
-           'cancel: a tank with no load on it\nhas unlimited gain at f$_o$',
+    #  'both diverge' was wrong for the loading, which goes to zero
+    a.text(60, 0.95, u'at the zero crossing: gain demand → ∞, load → 0;\n'
+           'a tank with no load has unlimited gain at f$_o$',
            ha='left', va='top', fontsize=9.8, color=GREY,
            path_effects=HALO, zorder=9)
     _tidy(a, '', 'M$_{req}$ / M$_{pk}$')
@@ -183,8 +190,8 @@ def an_pf_chain(save, foot, R, sweep):
 def an_gain_compare(save, foot, R, sweep):
     """An ordinary LLC's gain chart, and this converter's."""
     from matplotlib.lines import Line2D
-    fig, (a1, a2) = plt.subplots(1, 2, figsize=(11.6, 5.35))
-    fig.subplots_adjust(left=0.062, right=0.988, top=0.905, bottom=0.115,
+    fig, (a1, a2) = plt.subplots(1, 2, figsize=(9.35, 4.75))
+    fig.subplots_adjust(left=0.07, right=0.988, top=0.90, bottom=0.125,
                         wspace=0.19)
     fn = np.linspace(0.36, 2.0, 1600)
 
@@ -221,7 +228,7 @@ def an_gain_compare(save, foot, R, sweep):
     a1.set_ylim(0, 2.6)
     _tidy(a1, 'f$_{sw}$ / f$_r$', 'gain  M')
     a1.legend([h for h, _n in hs], [n for _h, n in hs], loc='lower left',
-              fontsize=9.2, frameon=False, ncol=1)
+              fontsize=9.4, frameon=False, ncol=1)
 
     # ---------------- single stage
     lam2, qpk = R['lam_a'], R['Qpk']
@@ -247,7 +254,7 @@ def an_gain_compare(save, foot, R, sweep):
     hs.append((Line2D([], [], color=GREY, lw=1.6, ls=(0, (6, 3))),
                u'M$_{req}$ of that \u03b8 (dashed, same colour)'))
     hs.append((Line2D([], [], color=GRN, lw=1.8, ls=(0, (3, 2.4))),
-               'M$_Z$: the peaks = capacitive boundary'))
+               'M$_Z$: the capacitive boundary'))
     hs.append((Line2D([], [], color=GREY, lw=1.6, ls=(0, (1, 2))),
                u'M$_{\\infty}$ = 1/(1+\u03bb) = %.3f: the no-load floor'
                % (1.0 / (1 + lam2))))
@@ -270,9 +277,9 @@ def an_gain_compare(save, foot, R, sweep):
                     color=NAVY,
                     arrowprops=dict(arrowstyle='-|>', color=NAVY, lw=1.2),
                     path_effects=HALO, zorder=9)
-    _tidy(a2, 'f$_{sw}$ / f$_r$', 'gain  M / M$_{pk}$ ')
+    _tidy(a2, 'f$_{sw}$ / f$_r$', 'gain  M   (drawn for M$_{pk}$ = 1)')
     a2.legend([h for h, _n in hs], [n for _h, n in hs], loc='upper right',
-              fontsize=9.2, frameon=False, ncol=1)
+              fontsize=9.4, frameon=False, ncol=1)
 
     foot(fig, 'Same axes, same equation, read differently. On the left one '
               'curve is compared with one line. On the right every curve has '
@@ -364,7 +371,7 @@ def an_gain_design(save, foot, R, sweep):
     for a in axs[:, 0]:
         a.set_ylabel('gain  M', fontsize=12.5, color=NAVY)
     for a in axs.flat:
-        a.tick_params(labelsize=11.5)
+        a.tick_params(labelsize=11.8)
     hs = [(Line2D([], [], color=NAVY, lw=1.8), 'M$_{OL}$: no load')]
     for ph, nm, col in PHASES:
         hs.append((Line2D([], [], color=col, lw=2.0),
