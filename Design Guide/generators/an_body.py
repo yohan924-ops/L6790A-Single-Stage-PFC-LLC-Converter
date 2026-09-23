@@ -633,7 +633,7 @@ def build(A):
           'millifarad capacitor and the input is the rectified mains. The '
           'instantaneous gain is forced:'))
     add(eq(r'M(\theta)=\frac{n\,V_{o,eff}}{V_{drive}(\theta)}'
-           r'=\frac{n\,V_{o,eff}}{\sqrt{2}\,V_{ac,eq}\,\sin\theta}', key='Mreq'))
+           r'=\frac{2\,n\,V_{o,eff}}{\sqrt{2}\,V_{ac,eq}\,\sin\theta}', key='Mreq'))
     add(p('with &theta; the line phase and V<sub>drive</sub> the amplitude '
           'the bridge applies to the tank: the rectified mains in full '
           'bridge, half of it in half bridge. Both voltages are pinned from '
@@ -796,8 +796,8 @@ def build(A):
     add(p('At the lowest equivalent input the chart answers &ldquo;can the '
           'tank make the gain and stay inductive?&rdquo; At the highest it '
           'answers &ldquo;how high does the frequency go, and is there a '
-          'solution at light load?&rdquo; Section&nbsp;%s draws it twice for '
-          'that reason.' % SR('The gain chart of this design')))
+          'solution at light load?&rdquo; Section&nbsp;%s draws it at all six '
+          'input voltages for that reason.' % SR('The gain chart of this design')))
 
     add(h2('The feedback pin is a power command'))
     add(p('Combining the burst-mode expression with the multiplier in the '
@@ -825,7 +825,7 @@ def build(A):
           'line cycle. How much time it spends on each side depends on the '
           'mains voltage; Section&nbsp;'
           + SR('Which side of resonance this design runs on')
-          + ' shows the profile at four inputs.'))
+          + ' shows the profile at the six input voltages.'))
     add(note('<b>Both sides must be designed for.</b> The boosting side sets '
              'the gain requirement and the ZVS margin. The bucking side sets '
              'the top frequency and takes the secondary out of ZCS, so the '
@@ -1918,8 +1918,10 @@ def build(A):
             key='margins', split=True))
     add(note('k<sub>Ploss</sub> = %(kPloss).3f is a result, not a failed '
              'calculation: the standing primary device spends %(a).2f&nbsp;W '
-             'against a %(b).0f&nbsp;W budget, and Section&nbsp;%(ref)s says '
-             'why the design goes ahead. k<sub>floor</sub> = %(kfloor).3f '
+             'against a %(b).0f&nbsp;W budget; no single 600&nbsp;V device meets '
+             'that budget in the standing position, so the design goes ahead '
+             'and the heatsink question is settled by measurement '
+             '(Section&nbsp;%(ref)s). k<sub>floor</sub> = %(kfloor).3f '
              'looks safe, but the transformer tolerance and the idle time '
              'both move it and neither is known to 2&nbsp;%% yet.'
              % dict(V, a=A.SH['P.mos_dc'], b=_kb,
@@ -2165,7 +2167,7 @@ def build(A):
             '&theta;; M<sub>pk</sub> scales as 1/V<sub>eq</sub>, from '
             '%(a).3f at the HB edge to %(b).3f at the FB edge.'
             % dict(a=V['MVmin'], b=V['MFBmax'], s=FR('an_gain_design')),
-            [['Condition', '&theta;', 'Q(&theta;)',
+            [['Input voltage', '&theta;', 'Q(&theta;)',
               'M<sub>req</sub>(&theta;)', 'f<sub>sw</sub>/f<sub>r</sub>',
               'f<sub>sw</sub>']]
             + [[_cn[v] if i == 0 else '',
@@ -2985,8 +2987,9 @@ def build(A):
              r'=%(CTmax).0f\;\mathrm{pF}'
              % dict(t=V['Tidle'], fmx=V['fswspec'], fmn=V['fo'],
                     CTmax=A.SH['C.T_max'])))
-    add(p('and the floor condition with R<sub>T</sub> at its 30&nbsp;k&Omega; '
-          'maximum gives C<sub>T,min</sub>&nbsp;=&nbsp;%(CTmin).0f&nbsp;pF. '
+    add(p('and the floor condition, f<sub>Min</sub> brought down to f<sub>o</sub> '
+          'with R<sub>T</sub> at its 30&nbsp;k&Omega; maximum, gives '
+          'C<sub>T,min</sub>&nbsp;=&nbsp;%(CTmin).0f&nbsp;pF. '
           'The datasheet allows 270 to 1000&nbsp;pF, so the window is '
           '%(lo).0f to %(CTmax).0f&nbsp;pF, and the part is taken from its '
           'middle: <b>C<sub>T</sub> = %(CT).0f&nbsp;pF</b>, C0G. Then'
@@ -3107,8 +3110,8 @@ def build(A):
     add(eq(r'V_{BO,pk}=R_{CFG}\times 4\,\frac{\mathrm{V}}{\mathrm{k}\Omega}'
            r'\,,\qquad V_{BO,rms}=\frac{V_{BO,pk}}{\sqrt{2}}', key='VBO'))
     add(p('Brown-out is compared against the <i>peak</i> of the mains, so '
-          'the &radic;2 is easy to drop. Brown-out just below the minimum '
-          'line:'))
+          'the &radic;2 is easy to drop. Brown-out just below the lowest '
+          'input voltage:'))
     add(calc(r'R_{CFG,max}=\frac{\sqrt{2}\cdot%(Vac).0f}{4}'
              r'=%(max).2f\;\mathrm{k\Omega}\;\rightarrow\;'
              r'%(sel).0f\;\mathrm{k\Omega}'
@@ -3366,7 +3369,7 @@ def build(A):
         ('D<sub>3</sub>', 'third harmonic on the input current, as a fraction of the fundamental'),
         ('V<sub>in</sub>, V<sub>pk</sub>', 'the rail the bridge works from, and the peak of the mains'),
         ('V<sub>ac,eq</sub>, V<sub>eq</sub>, V<sub>ac,eq,low</sub>, V<sub>ac,eq,high</sub>', 'equivalent input voltage the tank sees after morphing, and its value at the two morphing thresholds'),
-        ('V<sub>eq,min</sub>, V<sub>eq,max</sub>', 'the two ends of that equivalent range, at the two morphing thresholds'),
+        ('V<sub>eq,min</sub>, V<sub>eq,max</sub>', 'the lowest equivalent input (the HB edge) and the mains maximum, as the ST tool&rsquo;s margin factor &Gamma;<sub>v</sub> uses them'),
 
         ('<b>Power and loss</b>', ''),
         ('P<sub>in</sub>, P<sub>out</sub>', 'input power, output power'),
@@ -3512,7 +3515,7 @@ def build(A):
             'released document.',
             [['Item', 'What the draft says', 'What is used here, and why'],
              ['Oscillator idle time T<sub>idle</sub>',
-              'Section 5.3.2 says 700 ns; Table 5 back-solves to about 250 ns '
+              'Section 5.3.2 says 700 ns; its Table 5 back-solves to about 250 ns '
               'from the frequency expressions',
               '<b>%(Tidle).0f ns.</b> The two clamps bracket the operating '
               'range at 250 ns and stop doing so at 700 ns, so this is a '

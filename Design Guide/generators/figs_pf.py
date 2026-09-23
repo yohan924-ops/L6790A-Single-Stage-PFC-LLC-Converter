@@ -114,9 +114,13 @@ def an_pf_chain(save, foot, R, sweep):
            path_effects=HALO, zorder=9)
     a.text(90, 1.55, 'surplus:\nthe bank charges', ha='center', va='center',
            fontsize=9.8, color=NAVY, path_effects=HALO, zorder=9)
-    a.text(172, 0.55, 'deficit: the bank\nfeeds the load alone', ha='right',
-           va='top', fontsize=9.8, color='#8a6d00', path_effects=HALO,
-           zorder=9)
+    #  named above the curve, where nothing is drawn (on the curve at
+    #  150-180 deg it sat across the trace, 2026-09-23)
+    a.annotate('deficit: the bank\nfeeds the load alone', xy=(160, 0.45),
+               xytext=(178, 1.55), ha='right', va='center', fontsize=9.8,
+               color='#8a6d00', path_effects=HALO, zorder=9,
+               arrowprops=dict(arrowstyle='-|>', color='#8a6d00', lw=1.0,
+                               shrinkB=3))
     _tidy(a, '', 'power / P$_{in}$')
 
     # ---- 3  what that asks of the tank

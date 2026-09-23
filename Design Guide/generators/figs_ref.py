@@ -331,7 +331,7 @@ def an_integrated(save, foot):
     #  The one ideal transformer left after the referral has ratio n : 1,
     #  with n = n_T / M_v.  Written '1 : M_v' it read as a step-up of M_v,
     #  which is neither the wound ratio nor the model one.
-    S.label(ax2, 7.5, -0.48, 'n : 1   ideal,   n = n$_T$ / M$_v$',
+    S.label(ax2, 7.5, -0.48, 'n : 1   ideal,   n = n$_T$ / $\\sqrt{1+\\lambda}$',
             size=10.5, color=GREY)
     S.wire(ax2, [t2['s_top'], (9.9, YT_)])
     S.wire(ax2, [t2['s_bot'], (9.9, YB_)])
@@ -1876,11 +1876,11 @@ def an_loop_example(save, foot):
         a1.text(x, 62, t, ha='center', va='top', fontsize=8.6, color=GREY,
                 bbox=dict(boxstyle='round,pad=0.2', fc='white', ec='none'))
     for x, y, t in ((0.04, 45, '$-$40 dB/dec'), (1.0, -12, '$-$20 dB/dec'),
-                    (15, -42, '$-$40 dB/dec'), (200, -66, '$-$60')):
+                    (15, -42, '$-$40 dB/dec'), (200, -66, '$-$60 dB/dec')):
         a1.text(x, y, t, fontsize=8.2, color=GREY, ha='center', va='center',
                 rotation=0)
-    a2.text(0.02, -172, 'two integrators: $-$180°', fontsize=8.6,
-            color=GREY, va='bottom')
+    a2.text(0.02, -190, 'two integrators: $-$180°', fontsize=8.6,
+            color=GREY, va='top')
     a2.text(0.02, -95, 'the zero lifts the phase,\nthe poles bring it back down',
             fontsize=8.6, color=GREY, va='top')
     a1.text(F2L, 55, '2f$_l$', ha='center', va='top', fontsize=8.6, color=GREY,

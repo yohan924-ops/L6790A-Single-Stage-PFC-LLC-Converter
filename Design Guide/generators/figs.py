@@ -1249,14 +1249,18 @@ def f19_cout_criterion():
     ask(fig, 'Sizing the output bank - and what the architecture really trades')
 
     # ---- left: both conditions fall as 1/Vout^2, so Vout cannot separate them
-    P, FL, DV, TH, K = 657.5, 47.0, 0.05, 0.012, 19.0 / 25.0
+    #  every number from the sheet through an_pdf.V (typed here they
+    #  drifted: 67.7 mF against the sheet's 67.2, 2026-09-23)
+    import an_pdf as _A
+    V = _A.V
+    FL, DV, TH = V['flmin'], V['dv'] / 100.0, V['Thold'] * 1e-3
     v = np.linspace(15, 75, 400)
-    Cr = P / (2 * pi * FL * DV * v ** 2) * 1e3          # mF
-    # hold-up starts at the ripple trough, so the usable window is smaller
-    Ch = 2 * P * TH / (v ** 2 * ((1 - DV / 2) ** 2 - K ** 2)) * 1e3   # mF
-    CRIP = P / (2 * pi * FL * DV * 25.0 ** 2) * 1e3
-    CHLD = 2 * P * TH / (25.0 ** 2 * ((1 - DV / 2) ** 2 - K ** 2)) * 1e3
-    LHS, RHS = (1 - DV / 2) ** 2 - K ** 2, 4 * pi * FL * DV * TH
+    CRIP, CHLD = V['Crip'], V['Chold']                   # mF, at V.out
+    #  both conditions go as 1/Vout^2 at a fixed Vo,min/Vout and ripple %
+    Cr = CRIP * (V['Vout'] / v) ** 2
+    Ch = CHLD * (V['Vout'] / v) ** 2
+    RHS = 4 * pi * FL * DV * TH
+    LHS = RHS * V['ripK']                                 # C.ripple / C.hold_req
     aL.loglog(v, Cr, color=MAG, lw=3.0, label='ripple:  $\\Delta$v = 5 % pk-pk')
     aL.loglog(v, Ch, color=NAVY, lw=3.0,
               label='hold-up:  12 ms down to 76 % of $V_{out}$')
@@ -1289,28 +1293,32 @@ def f19_cout_criterion():
     # USABLE energy, 1/2 C (V^2 - Vmin^2) - not 1/2 C V^2. The bank never
     # gives back the charge below Vmin, so total stored energy compares
     # nothing.
-    def _use(c, v, vmin):
-        return 0.5 * c * (v ** 2 - vmin ** 2)
-    bars = ((274e-6, 400., 320., 'two stage\n274 µF\n400 to 320 V',
+    #  the same hold-up energy (Pout x Thold) in the two-stage bulk part and
+    #  in the single-stage minimum bank by construction; the bank as built
+    #  holds more in proportion to its capacitance
+    EH = V['Ehold']
+    NHOLD = int(-(-CHLD // (V['Cout1'] * 1e-3)))
+    bars = ((EH, 'two stage\n%.0f µF\n400 to 320 V' % V['Cbulk'],
              '1 capacitor', 'one bulk\nelectrolytic', NAVY),
-            (CHLD * 1e-3, 25., 19.,
-             'single stage\n%.1f mF\n25 to 19 V' % CHLD,
-             '%d capacitors' % -(-CHLD // 0.47), 'hold-up\nminimum', PUR),
-            (75.2e-3, 25., 19., 'as built\n75.2 mF\n25 to 19 V',
-             '160 capacitors', 'ripple\ndecided this', MAG))
-    en = [_use(c, v, vm) for c, v, vm, _, _, _, _ in bars]
+            (EH, 'single stage\n%.1f mF\n%.0f to %.0f V'
+             % (CHLD, V['Vout'], V['Vomin']),
+             '%d capacitors' % NHOLD, 'hold-up\nminimum', PUR),
+            (EH * V['Cout'] / CHLD, 'as built\n%.1f mF\n%.0f to %.0f V'
+             % (V['Cout'], V['Vout'], V['Vomin']),
+             '%d capacitors' % int(V['nC']), 'ripple\ndecided this', MAG))
+    en = [b[0] for b in bars]
     aR.bar(range(3), en, width=0.78,          # wide enough for the in-bar
-           color=[b[6] for b in bars])        # labels; 0.56 clipped them
+           color=[b[4] for b in bars])        # labels; 0.56 clipped them
     for x, (e, b) in enumerate(zip(en, bars)):
         aR.text(x, e + 0.35, '%.1f J' % e, ha='center', va='bottom',
                 fontsize=12.5, fontweight='bold', color=NAVY)
         #  8 pt and one blank line: at the narrower figure the two
         #  in-bar lines of neighbouring bars ran into each other
-        aR.text(x, e / 2, b[4] + '\n' + b[5], ha='center', va='center',
-                fontsize=8.0, color='white', fontweight='bold',
+        aR.text(x, e / 2, b[2] + '\n' + b[3], ha='center', va='center',
+                fontsize=7.4, color='white', fontweight='bold',
                 linespacing=1.9)
     aR.set_xticks(range(3))
-    aR.set_xticklabels([b[3] for b in bars], fontsize=9.4)
+    aR.set_xticklabels([b[1] for b in bars], fontsize=9.4)
     aR.set_ylim(0, 13)
     aR.set_ylabel('energy the hold-up can actually use  [J]')
     aR.set_title('the hold-up energy does not go away', fontsize=11,
@@ -1319,11 +1327,12 @@ def f19_cout_criterion():
                            # sat under every in-bar label and said nothing
 
     foot(fig, 'Removing the boost stage removes the 400 V bus, not the energy '
-              'it held. The first two bars are the SAME 7.9 J - 12 ms at full '
+              'it held. The first two bars are the SAME %.1f J - 12 ms at full '
               'power - and the capacitance between them differs by '
-              '(400$^2$-320$^2$)/((25-0.6)$^2$-19$^2$) = 245x. That single line is '
+              '(400$^2$-320$^2$)/((25-0.6)$^2$-19$^2$) = %.0fx. That single line is '
               'the cost of the architecture. The bank actually built is '
-              'larger again because RIPPLE, not hold-up, set its size.')
+              'larger again because RIPPLE, not hold-up, set its size.'
+              % (EH, V['Cratio']))
     fig.tight_layout(rect=[0, 0.10, 1, 0.935])
     save(fig, 'f19_cout_criterion')
 
