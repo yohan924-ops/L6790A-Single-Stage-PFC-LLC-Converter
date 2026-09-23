@@ -2833,6 +2833,250 @@ def an_xfmr_pins(save, foot):
     save(fig, 'an_xfmr_pins')
 
 
+# ---------------------------------- 15b  how the flux is built, step by step
+def an_flux_steps(save, foot):
+    """The flux in each core built in order, one interval at a time.
+
+    Figure an_flyback_llc shows the decomposition; this one shows the
+    SEQUENCE - which winding is conducting, what voltage that winding
+    holds, and therefore which way the flux is moving and what stops it.
+    The point of drawing the two side by side is the two slope labels:
+    the flyback's flux ramps at V_in/(N_p A_e) then V_out/(N_s A_e) and
+    its peak is wherever the switch turns off, i.e. wherever the load put
+    it; the LLC's flux ramps at V_out/(N_s A_e) for exactly T_r/2 and
+    stops when the rectifier lets go, so its peak is a number the load
+    cannot move.
+
+    The LLC row reads the eight-interval model with the design's own
+    currents, like every other current drawing in the document.  The
+    flyback row is a generic DCM cycle: nothing in this document designs
+    a flyback, so its numbers are shapes only.
+    """
+    import an_pdf as _A
+    V = _A.V
+    fig = plt.figure(figsize=(9.35, 8.10))
+    XL, XR, WW = 0.075, 0.560, 0.405
+
+    fig.text(XL + WW / 2, 0.985, 'FLYBACK (DCM)', ha='center', va='top',
+             fontsize=11.0, color=NAVY, fontweight='bold')
+    fig.text(XR + WW / 2, 0.985, 'LLC, below resonance', ha='center',
+             va='top', fontsize=11.0, color=NAVY, fontweight='bold')
+
+    HS, G, Y0 = (0.070, 0.120, 0.120, 0.150), 0.040, 0.945
+    rows = ['on', 'i$_p$ , i$_s$', 'N$_p$i$_p$ $-$\nN$_s$i$_s$', 'B']
+    axl, axr, y = [], [], Y0
+    for nm, h in zip(rows, HS):
+        y -= h + G
+        axl.append(_wave_ax(fig, [XL, y, WW, h], 0, 1, -1.25, 1.25, nm))
+        axr.append(_wave_ax(fig, [XR, y, WW, h], 0, 1, -1.25, 1.25, nm))
+
+    def cap_(ax, t):
+        ax.text(0.5, 1.10, t, transform=ax.transAxes, ha='center',
+                va='bottom', fontsize=9.6, color=GREY)
+
+    def bands(axes, edges, names, ybot=-0.30):
+        """numbered step bands, drawn on the top row and dotted through."""
+        for ax in axes:
+            for e_ in edges[1:-1]:
+                ax.axvline(e_, color=GREY, lw=0.8, ls=(0, (2, 2)), zorder=1)
+        top = axes[0]
+        for k, (a, b) in enumerate(zip(edges[:-1], edges[1:])):
+            top.text(0.5 * (a + b), 1.30, names[k], ha='center',
+                     va='center', fontsize=9.8, color=NAVY,
+                     fontweight='bold', path_effects=HALO, zorder=9)
+
+    # ------------------------------------------------------ flyback, DCM
+    D1, D2 = 0.38, 0.40
+    t = np.linspace(0, 1, 3000)
+    on = t < D1
+    sec = (t >= D1) & (t < D1 + D2)
+    ip = np.where(on, t / D1, 0.0)
+    isr = np.where(sec, 1.0 - (t - D1) / D2, 0.0)
+    imu = ip + isr                               # inverted dots: they add
+    B = imu                                      # single winding: B ~ N i
+
+    axl[0].set_ylim(-0.30, 1.55)
+    g = np.where(on, 1.0, 0.0)
+    axl[0].fill_between(t, 0.0, g * 0.9, color=YEL, lw=0)
+    axl[0].plot(t, g * 0.9, color=NAVY, lw=1.5)
+    axl[0].text(0.5 * D1, 0.45, 'S', ha='center', va='center',
+                fontsize=9.6, color=NAVY, path_effects=HALO, zorder=9)
+    cap_(axl[0], 'the switch; the rectifier conducts only after it opens')
+    bands(axl, [0.0, D1, D1 + D2, 1.0], ['1', '2', '3'])
+
+    axl[1].set_ylim(-0.22, 1.35)
+    axl[1].plot(t, ip, color=MAG, lw=2.0)
+    axl[1].plot(t, isr, color=GRN, lw=2.0, ls=(0, (4, 2.4)))
+    axl[1].text(0.5 * D1, 1.08, 'i$_p$', color=MAG, fontsize=9.6,
+                ha='center', path_effects=HALO)
+    axl[1].text(D1 + 0.5 * D2, 1.08, 'i$_s$ (referred)', color=GRN,
+                fontsize=9.6, ha='center', path_effects=HALO)
+    cap_(axl[1], 'one winding at a time')
+
+    axl[2].set_ylim(-0.22, 1.35)
+    axl[2].plot(t, imu, color=CYA, lw=2.2)
+    cap_(axl[2], 'nothing cancels: the whole current magnetises')
+
+    axl[3].set_ylim(-0.30, 1.80)
+    axl[3].plot(t, B, color=PUR, lw=2.4)
+    axl[3].annotate('slope V$_{in}$/(N$_p$A$_e$)', xy=(0.19, 0.50),
+                    xytext=(0.02, 1.30), fontsize=9.7, color=GREY,
+                    ha='left', va='center',
+                    arrowprops=dict(arrowstyle='-|>', color=GREY, lw=1.0),
+                    path_effects=HALO, zorder=9)
+    axl[3].annotate('slope $-$V$_{out}$/(N$_s$A$_e$)', xy=(0.62, 0.45),
+                    xytext=(0.80, 0.55), fontsize=9.7, color=GREY,
+                    ha='left', va='center',
+                    arrowprops=dict(arrowstyle='-|>', color=GREY, lw=1.0),
+                    path_effects=HALO, zorder=9)
+    axl[3].plot([D1], [1.0], 'o', color=PUR, ms=5)
+    axl[3].annotate('B$_{pk}$ $\\propto$ I$_{p,pk}$: set by the load',
+                    xy=(D1, 1.0), xytext=(0.62, 1.55), fontsize=9.7,
+                    color=PUR, ha='left', va='center',
+                    arrowprops=dict(arrowstyle='-|>', color=PUR, lw=1.0),
+                    path_effects=HALO, zorder=9)
+    cap_(axl[3], 'B follows the current; the peak is where S turned off')
+
+    # ------------------------------------------- LLC, the eight-interval model
+    tc, e, ilm, ilr, io, _ = _cycle(0.70, V['lam'], V['Icomp'], V['ILm'])
+    sg = np.where(tc < 0.5, 1.0, -1.0)
+    IO = io * sg
+    m = max(abs(ilr).max(), 1e-9)
+
+    axr[0].set_ylim(-0.30, 1.55)
+    g1 = np.where(tc < e[2], 1.0, 0.0)
+    g2 = np.where((tc >= e[4]) & (tc < e[6]), 1.0, 0.0)
+    axr[0].fill_between(tc, 0.0, g1 * 0.9, color=YEL, lw=0)
+    axr[0].plot(tc, g1 * 0.9, color=NAVY, lw=1.4)
+    axr[0].fill_between(tc, 0.0, g2 * 0.9, color=YEL, lw=0)
+    axr[0].plot(tc, g2 * 0.9, color=NAVY, lw=1.4)
+    axr[0].text(0.5 * e[1], 0.45, 'S$_1$', ha='center', va='center',
+                fontsize=9.6, color=NAVY, path_effects=HALO, zorder=9)
+    axr[0].text(0.5 + 0.5 * e[1], 0.45, 'S$_2$', ha='center', va='center',
+                fontsize=9.6, color=NAVY, path_effects=HALO, zorder=9)
+    cap_(axr[0], 'the bridge; the rectifier conducts WHILE a switch is on')
+    #  bands: 1 power transfer (+), 2 freewheel, 3 dead time, 4 transfer (-)
+    bands(axr, [0.0, e[1], e[2], e[4], e[5], 1.0], ['1', '2', '3', '4', ''])
+
+    axr[1].set_ylim(-1.38, 1.38)
+    axr[1].axvspan(e[0], e[1], color=GRN, alpha=0.10, lw=0)
+    axr[1].axvspan(e[4], e[5], color=GRN, alpha=0.10, lw=0)
+    axr[1].plot(tc, ilr / m, color=MAG, lw=2.0)
+    axr[1].plot(tc, IO / m, color=GRN, lw=2.0, ls=(0, (4, 2.4)))
+    axr[1].text(0.06, 1.05, 'i$_p$', color=MAG, fontsize=9.6,
+                path_effects=HALO)
+    axr[1].text(0.20, -1.15, 'i$_s$ (referred)', color=GRN, fontsize=9.6,
+                path_effects=HALO)
+    cap_(axr[1], 'shaded: both conduct, the secondary clamped to V$_{out}$')
+
+    axr[2].set_ylim(-1.38, 1.38)
+    axr[2].plot(tc, ilm / m, color=CYA, lw=2.2)
+    cap_(axr[2], 'only the difference magnetises: i$_\\mu$, a ramp')
+
+    axr[3].set_ylim(-1.55, 2.30)
+    axr[3].plot(tc, ilm / m, color=PUR, lw=2.4)
+    k1 = int(np.argmin(abs(tc - e[1])))
+    axr[3].plot([tc[k1]], [ilm[k1] / m], 'o', color=PUR, ms=5)
+    axr[3].annotate('slope V$_{out}$/(N$_s$A$_e$)\nfor T$_r$/2 exactly',
+                    xy=(0.5 * e[1], 0.0), xytext=(0.02, 1.75),
+                    fontsize=9.7, color=GREY, ha='left', va='center',
+                    arrowprops=dict(arrowstyle='-|>', color=GREY, lw=1.0),
+                    path_effects=HALO, zorder=9)
+    axr[3].annotate('B$_{pk}$ = V$_{out}$T$_r$/(4N$_s$A$_e$):\n'
+                    'the rectifier let go; load cannot move it',
+                    xy=(tc[k1], ilm[k1] / m), xytext=(0.99, 1.75),
+                    fontsize=9.7, color=PUR, ha='right', va='center',
+                    arrowprops=dict(arrowstyle='-|>', color=PUR, lw=1.0),
+                    path_effects=HALO, zorder=9)
+    cap_(axr[3], 'B follows i$_\\mu$; the peak is where the rectifier turned off')
+
+    foot(fig, 'Steps. Flyback: 1 switch on, V$_{in}$ on the primary, the '
+              'flux ramps up with i$_p$; 2 switch off, the secondary takes '
+              'the ampere-turns over and V$_{out}$ ramps the flux down; '
+              '3 both off. LLC: 1 a switch closes, the rectifier clamps the '
+              'secondary to V$_{out}$, the load current passes through and '
+              'only i$_\\mu$ ramps the flux; 2 the rectifier turns off at '
+              'the end of the resonant half period and the flux holds; '
+              '3 dead time, i$_\\mu$ swings the node; 4 the mirror image.')
+    save(fig, 'an_flux_steps')
+
+
+# ----------------------------------------- 15c  the dc-overlap test itself
+def an_dc_overlap(save, foot):
+    """What the supplier's bench does, and where the design's numbers sit.
+
+    Left: the setup.  An LCR meter reads the primary inductance with a
+    small ac signal while a bias source overlaps a dc current on the same
+    winding; every other winding is open.  Right: the inductance against
+    that dc current.  The curve is a SHAPE, not a measurement - no part
+    has been built - but the three currents marked on it are the design's
+    own: the operating magnetising peak, the OVP2-scaled test current the
+    specification asks for, and the OCP1 trip that would have to be used
+    instead if the controller had no voltage ceiling.
+    """
+    import an_pdf as _A
+    V = _A.V
+    fig = plt.figure(figsize=(9.35, 4.35))
+
+    # --------------------------------------------------------- the bench
+    ax = _ax(fig, [0.030, 0.10, 0.44, 0.84], -0.6, 12.6, -0.4, 7.6)
+    t1 = X.xfmr(ax, 7.6, 3.8, hp=3.0, hs=3.0, gap=0.52)
+    XP, XS = t1['p_top'][0], t1['s_top'][0]
+    _, bm = S.box(ax, 1.7, 5.4, 2.6, 1.7, 'LCR meter\nsmall ac,\ne.g. 100 kHz', size=9.6)
+    _, bs = S.box(ax, 1.7, 2.2, 2.6, 1.7, 'dc bias\nsource\nI$_{dc}$ 0 $\\to$ I$_{sat}$', size=9.6)
+    S.wire(ax, [t1['p_top'], (XP, 6.4), (3.7, 6.4), (3.7, bm[1]), bm])
+    S.wire(ax, [t1['p_bot'], (XP, 1.2), (3.7, 1.2), (3.7, bs[1]), bs])
+    #  the two instruments share the winding: series, the meter's ac on top
+    #  of the source's dc
+    S.wire(ax, [(1.7, 4.55), (1.7, 3.05)])
+    S.label(ax, 4.6, 7.05, 'primary: N$_p$, all of I$_{dc}$ magnetises', size=9.6,
+            color=MAG, ha='center')
+    #  every other winding open, and said so
+    S.wire(ax, [t1['s_top'], (XS + 1.1, t1['s_top'][1])], color=GRN)
+    S.wire(ax, [t1['s_bot'], (XS + 1.1, t1['s_bot'][1])], color=GRN)
+    S.dot(ax, XS + 1.1, t1['s_top'][1], color=GRN)
+    S.dot(ax, XS + 1.1, t1['s_bot'][1], color=GRN)
+    S.label(ax, XS + 1.3, 3.8, 'open\n(every\nother\nwinding)', size=9.6,
+            color=GRN, ha='left')
+    ax.text(6.0, -0.05, 'read L against I$_{dc}$; pass if L(I$_{sat}$) '
+            '$\\geq$ 0.9 L(0)', ha='center', va='center', fontsize=9.6,
+            color=GREY)
+
+    # ------------------------------------------------------ L against I
+    a = fig.add_axes([0.575, 0.17, 0.405, 0.74])
+    Ieq, Isat = V['Isateq'], V['Isatspec']
+    Iocp = float(_A.SH['I.OCP1'])
+    Ik = 1.55 * Isat                      # knee: a shape, not a measurement
+    I = np.linspace(0, 1.38 * Iocp, 400)
+    L = 1.0 / (1.0 + (I / Ik) ** 6) ** 0.5
+    a.plot(I, L, color=NAVY, lw=2.2)
+    a.axhline(0.9, color=GREY, lw=0.9, ls=(0, (4, 2)))
+    a.text(0.3, 0.875, '90 % of L(0)', fontsize=9.6, color=GREY, va='top')
+    for x, c, t, ha, dx in ((Ieq, CYA, 'I$_{eq}$ = i$_{\\mu,pk}$\nat V$_{out}$', 'right', -0.3),
+                            (Isat, MAG, 'I$_{sat}$\nat V$_{OVP2}$', 'left', 0.3),
+                            (Iocp, PUR, 'I$_{OCP1}$\nif no OVP2', 'left', 0.3)):
+        a.axvline(x, color=c, lw=1.6, ls=(0, (5, 2.5)))
+        a.text(x + dx, 0.12, t, fontsize=9.6, color=c, ha=ha,
+               va='bottom', path_effects=HALO, zorder=9)
+    a.set_xlim(0, 1.38 * Iocp)
+    a.set_ylim(0, 1.12)
+    a.set_xlabel('dc current in the primary  I$_{dc}$  (A)', fontsize=9.8,
+                 color=NAVY)
+    a.set_ylabel('L(I$_{dc}$) / L(0)', fontsize=9.6, color=NAVY)
+    a.grid(True, axis='y', color='#C4C8CF', lw=0.7)
+    a.tick_params(labelsize=9.4, colors=NAVY)
+    for sp in a.spines.values():
+        sp.set_color(GREY)
+
+    foot(fig, 'The dc current alone sets the flux, so the inductance is '
+              'flat until the core approaches saturation and then falls. '
+              'The specification names one current and one criterion: '
+              'inductance still 90 %% of its initial value at '
+              '%.0f A, the magnetising peak scaled from %.1f V to the '
+              'OVP2 output of %.2f V.' % (Isat, V['Vout'], V['OVP2']))
+    save(fig, 'an_dc_overlap')
+
+
 FIGS = {'an_rac': an_rac, 'an_integrated': an_integrated,
         'an_pfc_cap': an_pfc_cap, 'an_pfc_boost': an_pfc_boost,
         'an_pfc_ccm': an_pfc_ccm, 'an_two_stage': an_two_stage,
@@ -2843,4 +3087,5 @@ FIGS = {'an_rac': an_rac, 'an_integrated': an_integrated,
         'an_loop_blocks': an_loop_blocks,
         'an_comp_opamp': an_comp_opamp, 'an_loop_example': an_loop_example,
         'an_flyback_llc': an_flyback_llc, 'an_mmf': an_mmf,
+        'an_flux_steps': an_flux_steps, 'an_dc_overlap': an_dc_overlap,
         'an_xfmr_read': an_xfmr_read, 'an_xfmr_pins': an_xfmr_pins}

@@ -443,6 +443,82 @@ def build(A):
             'magnetises the core. i<sub>s</sub> is referred to the primary. '
             'Bottom row: dashed, what each winding would drive alone; solid, '
             'their sum; shaded, what the secondary removed.'))
+    add(p('<b>Built in order.</b> Figure&nbsp;%s follows one period of '
+          'each converter interval by interval: which winding conducts, '
+          'what voltage that winding holds, and therefore which way the '
+          'flux moves and what stops it.' % FR('an_flux_steps')))
+    add(fig('an_flux_steps',
+            'The flux built step by step. Left, a flyback in discontinuous '
+            'conduction; right, an LLC below resonance, drawn from the '
+            'eight-interval model with this design&rsquo;s currents. The '
+            'last row is the point: in the flyback the flux tracks the '
+            'winding current and peaks wherever the switch turns off; in the '
+            'LLC it ramps at V<sub>out</sub>/(N<sub>s</sub>A<sub>e</sub>) for '
+            'exactly T<sub>r</sub>/2 and stops when the rectifier lets go.'))
+    ext(bullets([
+        '<b>Flyback, 1.</b> The switch closes. V<sub>in</sub> sits on the '
+        'primary, i<sub>p</sub> ramps at V<sub>in</sub>/L<sub>p</sub>, and '
+        'because no other winding conducts every ampere-turn magnetises: B '
+        'rises at V<sub>in</sub>/(N<sub>p</sub>A<sub>e</sub>). The energy '
+        'goes into the gap.',
+        '<b>Flyback, 2.</b> The switch opens. The flux cannot jump, so the '
+        'ampere-turns pass to the secondary at once, '
+        'N<sub>s</sub>i<sub>s</sub> = N<sub>p</sub>I<sub>p,pk</sub>. The '
+        'rectifier conducts, V<sub>out</sub> sits on the secondary, and B '
+        'falls at V<sub>out</sub>/(N<sub>s</sub>A<sub>e</sub>) while the gap '
+        'energy leaves for the output.',
+        '<b>Flyback, 3.</b> The secondary current reaches zero; both '
+        'windings are off and the flux rests near zero until the next '
+        'cycle. The peak flux was fixed at the turn-off instant by '
+        'I<sub>p,pk</sub>, which is whatever the load and the input asked '
+        'for.',
+        '<b>LLC, 1.</b> A bridge switch closes. As soon as the reflected '
+        'voltage exceeds V<sub>out</sub> the rectifier conducts, so the '
+        'secondary is clamped to V<sub>out</sub> and the magnetising branch '
+        'sees n&thinsp;V<sub>out</sub>. The load current flows in both '
+        'windings at once, their ampere-turns cancel, and only '
+        'i<sub>&mu;</sub> ramps: B rises at '
+        'V<sub>out</sub>/(N<sub>s</sub>A<sub>e</sub>).',
+        '<b>LLC, 2.</b> The resonant half period ends: i<sub>s</sub> reaches '
+        'zero, the rectifier turns off and the clamp is gone. L<sub>m</sub> '
+        'joins the resonance with C<sub>r</sub>, i<sub>&mu;</sub> is nearly '
+        'flat, and B holds at its peak. That peak was set by V<sub>out</sub> '
+        'and T<sub>r</sub>/2 and by nothing else.',
+        '<b>LLC, 3.</b> Dead time. i<sub>&mu;</sub> swings the bridge node '
+        'to the other rail; the flux hardly moves.',
+        '<b>LLC, 4.</b> The other switch closes and the other rectifier '
+        'clamps the secondary to &minus;V<sub>out</sub>; B ramps back down '
+        'at the same slope to &minus;B<sub>pk</sub>.']))
+    ext(tbl('The same two cores, compared.',
+            [['', 'Flyback', 'LLC'],
+             ['Which winding sets the flux',
+              'whichever one conducts; B follows its current',
+              'the clamped secondary; B follows its volt-seconds'],
+             ['What the peak flux depends on',
+              'I<sub>p,pk</sub>: load, input voltage and conduction mode',
+              'V<sub>out</sub>, T<sub>r</sub> and N<sub>s</sub> only'],
+             ['Flux against load', 'rises with load', 'does not move'],
+             ['Flux against switching frequency',
+              'falls as the frequency rises (shorter on-time)',
+              'constant below resonance, falls above it'],
+             ['What the gap does',
+              'stores the load energy; gap and A<sub>e</sub> together set '
+              'the power',
+              'sets L<sub>m</sub>, i.e. the magnetising current and ZVS; '
+              'holds only the magnetising energy'],
+             ['What threatens the core', 'overload, over-current',
+              'over-voltage on the output'],
+             ['Which protection guards the core', 'the current limit',
+              'the output OVP; the current limit does not'],
+             ['Saturation test current',
+              'the peak winding current, with margin',
+              'i<sub>&mu;,pk</sub> scaled to the OVP ceiling; far below the '
+              'winding peak'],
+             ['What sizes A<sub>e</sub>',
+              'peak current and L<sub>p</sub>: energy',
+              'output volt-seconds at f<sub>r</sub>: Faraday']],
+            widths=[CW * 0.26, CW * 0.37, CW * 0.37], key='flyllc',
+            split=True))
     add(note('&ldquo;An LLC transformer stores no energy&rdquo; is a slogan. '
              'It stores the magnetising energy twice per period; it does not '
              'store the load energy.'))
@@ -468,6 +544,38 @@ def build(A):
         'resonance: the rectifier clamps the winding for T<sub>r</sub>/2 '
         'whatever f<sub>sw</sub> is, which is why f<sub>r</sub> appears in '
         'the flux equation.']))
+    add(p('<b>What to keep in mind when designing.</b>'))
+    ext(bullets([
+        '<b>Size A<sub>e</sub> from volt-seconds, not from current.</b> '
+        'The input is V<sub>out</sub>, N<sub>s</sub> and f<sub>r</sub> '
+        '(Section&nbsp;'
+        + SR('Peak flux is set by the secondary, not the primary')
+        + '); the winding current does not enter.',
+        '<b>Do not add gap for margin.</b> In a flyback more gap means more '
+        'stored energy. Here more gap means a smaller L<sub>m</sub>: more '
+        'magnetising current, more circulating loss, a different '
+        '&lambda;, and no change in the flux at all. The gap is set by '
+        'L<sub>m</sub> and checked by L<sub>open</sub>; the flux margin is '
+        'set by the OVP ceiling and checked by the DC-overlap test.',
+        '<b>The current limit does not protect the core.</b> OCP guards '
+        'the copper and the silicon. What bounds the flux is the output '
+        'OVP, so the saturation specification comes from the OVP threshold '
+        '(Section&nbsp;'
+        + SR('The saturation test is not the peak winding current') + ').',
+        '<b>The test current follows L<sub>&mu;</sub>; the flux does '
+        'not.</b> A smaller gap raises L<sub>&mu;</sub> and lowers '
+        'i<sub>&mu;,pk</sub> at the same flux. Recompute I<sub>eq</sub> from '
+        'the actual L<sub>&mu;</sub> whenever the gap changes; never carry '
+        'it over.',
+        '<b>B<sub>pk</sub> is fixed, so core loss follows frequency.</b> '
+        'The flux is the same at every point of the line cycle below '
+        'resonance, and the loss per cycle at that flux rises with '
+        'f<sub>sw</sub>: the worst core loss is at the top of the frequency '
+        'sweep, the worst flux at the bottom.',
+        '<b>The flyback habit that costs the most</b> is asking the '
+        'supplier for saturation at the tank peak current. That asks for a '
+        'core well over twice the size the converter needs, for a flux the '
+        'converter can never produce.']))
     add(p('A DC-overlap test is made with the secondary open, which removes '
           'the cancellation: all of the test current is magnetising current. '
           'Section&nbsp;'
@@ -1361,14 +1469,41 @@ def build(A):
              'of the sweep, worst loss at the top.'))
 
     add(h2('The saturation test is not the peak winding current'))
-    add(p('Mark <b>3</b> and the bench panel of Figure&nbsp;%(f)s. The '
-          'current to ask for is the peak of the magnetising trace, scaled '
-          'to the over-voltage ceiling, not the peak winding current at '
-          'mark&nbsp;1.' % dict(f=FR('an_xfmr_read'))))
-    add(p('A DC-overlap test leaves the other windings open, so nothing '
-          'cancels the primary ampere-turns and the same current makes far '
-          'more flux than in operation. Ask for the current that reproduces '
-          'the operating flux in that test:'))
+    add(p('<b>What the line on the specification says.</b> Every transformer '
+          'specification carries a line of the form &ldquo;DC overlap: '
+          'inductance more than 90&nbsp;% of initial, test current '
+          'I<sub>sat</sub>, normal temperature&rdquo;. The name is the '
+          'measurement. An LCR meter reads the primary inductance with a '
+          'small ac signal (100&nbsp;kHz, 1&nbsp;V is a common setting, the '
+          'same one the leakage test uses) while a bias source overlaps a '
+          'dc current on the same winding; every other winding is open. The '
+          'dc current is stepped up and the inductance is read at each '
+          'step. The same test is called dc bias or dc superposition.'))
+    add(fig('an_dc_overlap',
+            'The DC-overlap test. Left: the bench. Right: inductance against '
+            'the dc current, an illustrative shape, with this '
+            'design&rsquo;s three currents marked: the operating magnetising '
+            'peak, the test current the specification asks for, and the '
+            'current that would have to be used if the controller had no '
+            'voltage ceiling.'))
+    add(p('<b>What it reveals.</b> With the other windings open the dc '
+          'current alone sets the flux, so the inductance stays flat while '
+          'the core is linear and falls as the core approaches saturation; '
+          'the 90&nbsp;% point marks the knee. It is the only test at the '
+          'terminals that reads the flux margin. Turns and A<sub>L</sub> do '
+          'not: the same A<sub>L</sub> comes from a different gap, a '
+          'different A<sub>min</sub> or a different material, and '
+          'L<sub>open</sub> confirms the inductance, not the margin. A part '
+          'with the right L<sub>open</sub> and the wrong core is caught here '
+          'and nowhere else.'))
+    add(p('<b>Which current to write on the line.</b> Mark <b>3</b> and the '
+          'bench panel of Figure&nbsp;%(f)s. The current to ask for is the '
+          'peak of the magnetising trace, scaled to the over-voltage '
+          'ceiling, not the peak winding current at mark&nbsp;1.'
+          % dict(f=FR('an_xfmr_read'))))
+    add(p('In the test nothing cancels the primary ampere-turns, so the '
+          'same current makes far more flux than in operation. Ask for the '
+          'current that reproduces the operating flux in that test:'))
     add(eq(r'I_{eq}=\frac{B_{pk}\,N_{p}\,A_{e}}{L_{\mu}}', key='Isat'))
     add(note('<b>The denominator is L<sub>&mu;</sub>, not L<sub>open</sub></b>: '
              'the primary leakage links no core. Dividing by L<sub>open</sub> '
@@ -1378,8 +1513,56 @@ def build(A):
           'No arbitrary margin is wanted on I<sub>eq</sub> either: the flux '
           'ceiling is already defined by the highest output the controller '
           'allows before it shuts down.'))
+    add(p('<b>Why the ceiling is OVP2.</b> The flux follows the output '
+          'voltage alone (Section&nbsp;'
+          + SR('Peak flux is set by the secondary, not the primary')
+          + '), so the largest flux the core ever carries comes at the '
+          'largest output the controller lets stand. The L6790A has two '
+          'levels on the ZCD pin. At OVP1 (2.3&nbsp;V on the pin) it keeps '
+          'switching at reduced power, so the output can sit between OVP1 '
+          'and OVP2 with the transformer still driven. At OVP2 '
+          '(2.5&nbsp;V) it stops switching for 100&nbsp;ms and restarts '
+          'with a soft start. Above OVP2 the core is never driven, so OVP2 '
+          'is the ceiling, and the ratio of the two voltages is the whole '
+          'margin. No arbitrary factor goes on top of it:'))
     add(eq(r'I_{sat}\;=\;I_{eq}\;\frac{V_{OVP2}}{V_{out,eff}}',
            key='Isatspec'))
+    add(p('What does not raise the flux: overload (the copper and the '
+          'silicon take it), start-up (the output is lower), burst mode, '
+          'and the switching frequency (the clamp lasts T<sub>r</sub>/2 '
+          'whatever f<sub>sw</sub> is). What does: an output '
+          'over-voltage, and temperature. B<sub>s</sub> of a MnZn power '
+          'ferrite falls by about a fifth between 25 and 100&nbsp;&deg;C, '
+          'so a test made at normal temperature is read against the '
+          'material&rsquo;s hot B<sub>s</sub>, and the design flux at OVP2 '
+          'has to sit under it with margin. The 90&nbsp;% criterion is '
+          'that margin.'))
+    add(p('<b>If the controller has no OVP2-like ceiling.</b> Then '
+          'something else has to bound the output voltage, and the '
+          'specification follows whichever bound exists.'))
+    ext(bullets([
+        '<b>A protection that stops the drive</b>, on either side of the '
+        'barrier: a secondary crowbar or latch, an SR-controller OVP, a '
+        'primary OVP that latches. Use its threshold in place of '
+        'V<sub>OVP2</sub>.',
+        '<b>A protection that only reduces power</b>, like OVP1, is not a '
+        'ceiling: the output can rest at it while the core is driven. Do '
+        'not use it.',
+        '<b>No voltage ceiling at all.</b> The output is then bounded only '
+        'by what the tank can deliver at the oscillator floor into the '
+        'lightest load, and with the floor near f<sub>o</sub> that bound '
+        'is not useful. What remains is the current limit: with nothing '
+        'clamping the secondary the primary current is the magnetising '
+        'current, so the core must not saturate at the largest current the '
+        'controller ever lets through the primary, '
+        'I<sub>sat</sub>&nbsp;=&nbsp;I<sub>OCP1</sub>. Safe, and expensive; '
+        'Section&nbsp;' + SR('The transformer, as built')
+        + ' gives the ratio for this design.',
+        '<b>The rule of thumb</b>, 1.2 to 1.5 times i<sub>&mu;,pk</sub> or '
+        'the winding peak at normal temperature, is what a specification '
+        'carries when nobody asked the question. It names no event, so it '
+        'is neither safe nor economical. Replace it with one of the three '
+        'above.']))
 
     add(h2('The specification, and what it is not allowed to leave out'))
     add(note('<b>The open-circuit inductance tolerance cannot be the usual '
@@ -2399,6 +2582,50 @@ def build(A):
             'magnetises the core. The design flux is therefore reached at '
             '%(ILm).2f&nbsp;A on the bench, not at the %(Icomp).2f&nbsp;A '
             'tank peak.' % V))
+    _r1, _r2 = V['OVP1'] / V['Vout'], V['OVP2'] / V['Vout']
+    _iocp = float(A.SH['I.OCP1'])
+    add(p('<b>Why OVP2, in this design&rsquo;s numbers.</b> OVP1 is set at '
+          '%(o1).2f&nbsp;V, %(r1).3f times the output, and OVP2 at '
+          '%(o2).2f&nbsp;V, %(r2).3f times. At OVP1 the controller keeps '
+          'switching, so the flux can reach %(b1).0f&nbsp;mT with the core '
+          'still driven; at OVP2 it stops, and %(b2).0f&nbsp;mT is the '
+          'largest flux this core is ever asked to carry. That is the '
+          'number to hold against the hot B<sub>s</sub> of %(mat)s from '
+          'the material data. The line on the specification reads: DC '
+          'overlap, inductance at least 90&nbsp;%% of initial at '
+          '%(isat).0f&nbsp;A, normal temperature (Table&nbsp;%(t)s).'
+          % dict(o1=V['OVP1'], r1=_r1, o2=V['OVP2'], r2=_r2,
+                 b1=V['Bpk'] * _r1, b2=V['Bpk'] * _r2,
+                 mat=_CORE.CORES[_CORE.CHOSEN]['material'],
+                 isat=V['Isatspec'], t=TR('spec-out'))))
+    add(p('<b>How to run it on this part.</b> LCR meter across the primary '
+          '(NP1, the pins of Table&nbsp;%(t)s) with both secondaries, the '
+          'centre tap and the auxiliary winding open. Small signal '
+          '100&nbsp;kHz, 1&nbsp;V, the same as the leakage test; bias '
+          'current stepped from zero to past %(isat).0f&nbsp;A, inductance '
+          'recorded at each step. Pass if L at %(isat).0f&nbsp;A is at least '
+          '0.9 of L at zero, where L at zero is L<sub>open</sub> '
+          '&asymp; %(lo).1f&nbsp;&micro;H. Keep each step short: the dc '
+          'heats the winding through its resistance, and a warm core '
+          'saturates earlier. A part whose curve knees below '
+          '%(isat).0f&nbsp;A has too little gap or the wrong core, even when '
+          'L<sub>open</sub> is on target; the margin against a hot core '
+          'is in B<sub>pk</sub>, not in the test.'
+          % dict(t=TR('pins'), isat=V['Isatspec'], lo=V['Lopen'])))
+    add(p('<b>If there were no OVP2.</b> The current limit would be the '
+          'only ceiling: OCP1 trips at %(io).2f&nbsp;A, %(rr).2f times the '
+          'OVP2-based %(isat).1f&nbsp;A. At the same L<sub>&mu;</sub> that is '
+          '%(bo).0f&nbsp;mT on this core, which has about twice the area the '
+          'flux target needs; on a core sized to the %(bt).2f&nbsp;T target '
+          'the same ratio would ask for %(bt2).2f&nbsp;T, and the core area '
+          'or N<sub>s</sub> would have to grow by that ratio. The rule of '
+          'thumb of 1.3 times i<sub>&mu;,pk</sub> would give '
+          '%(rule).1f&nbsp;A, near the OVP2 figure by coincidence and with '
+          'no event behind it.'
+          % dict(io=_iocp, rr=_iocp / V['Isatspec'], isat=V['Isatspec'],
+                 bo=V['Bpk'] * _iocp / V['Isateq'], bt=0.20,
+                 bt2=0.20 * _iocp / V['Isatspec'],
+                 rule=1.3 * V['Isateq'])))
 
     # ------------------------------------------------ the core, chosen
     add(h2('The core and the winding'))
@@ -2578,7 +2805,7 @@ def build(A):
               'holds B<sub>pk</sub> at or below 0.20 T (mark 6)'],
              ['Switching frequency', '%(fswA).0f to %(fswB).0f kHz' % V,
               'at full load']],
-            widths=[CW * 0.28, CW * 0.34, CW * 0.38], split=True))
+            widths=[CW * 0.28, CW * 0.34, CW * 0.38], key='spec-out', split=True))
 
     add(h2('The output bank, as sized'))
     add(p('Both conditions of Section&nbsp;%(ref)s; the larger wins. '
@@ -3406,6 +3633,9 @@ def build(A):
         ('N<sub>p</sub>, N<sub>s</sub>, N<sub>x</sub>', 'primary turns, secondary turns per winding, number of units in the assembly'),
         ('N<sub>aux</sub>, n<sub>aux</sub>/n<sub>sec</sub>', 'auxiliary winding turns, and its turns ratio to one secondary'),
         ('L<sub>open</sub>, L<sub>short</sub>', 'primary inductance with the secondaries open, and shorted'),
+        ('I<sub>dc</sub>', 'the dc current the DC-overlap test overlaps on the LCR signal'),
+        ('I<sub>p,pk</sub>, L<sub>p</sub>', 'in the flyback comparison only: the primary peak current and the primary inductance of a flyback'),
+        ('B<sub>s</sub>', 'saturation flux density of the core material, from the material data at temperature'),
         ('L<sub>&mu;</sub>, L<sub>L1</sub>, L<sub>L2</sub>', 'physical magnetising inductance and the two leakage inductances'),
         ('L<sub>1</sub>, L<sub>2</sub>', 'the open-circuit inductance measured at the primary and at one secondary'),
         ('L, &Delta;L', 'an inductance and the change of it a tolerance allows'),
