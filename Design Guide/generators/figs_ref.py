@@ -786,7 +786,15 @@ def an_llc_waves(save, foot):
 def an_three_cases(save, foot):
     """The three cases side by side."""
     import figs_modes8 as F
-    fig = plt.figure(figsize=(9.35, 5.28))
+    #  The waveform block keeps its old proportions; the gain panel under
+    #  it answers where each column sits on M(f_n).  Every y below is laid
+    #  out on the old 5.28 in canvas and mapped through Y() / H().
+    H0, H1 = 5.28, 8.05
+    fig = plt.figure(figsize=(9.35, H1))
+    def Y(y):
+        return 1.0 - (1.0 - y) * H0 / H1
+    def H(h):
+        return h * H0 / H1
     lam = 0.55
     #  The middle column is the boundary case the model itself defines:
     #  the resonant half sine exactly fills the half period less the dead
@@ -805,15 +813,15 @@ def an_three_cases(save, foot):
         t, e, ilm, ilr, io, trunc = _cycle(ratio, lam, 18.32, 12.41,
                                           td=td)
         x0 = 0.055 + c * 0.323
-        fig.text(x0 + 0.128, 0.965, ttl, ha='center', fontsize=12,
+        fig.text(x0 + 0.128, Y(0.965), ttl, ha='center', fontsize=12,
                  color=NAVY, fontweight='bold')
-        fig.text(x0 + 0.128, 0.936, sub, ha='center', fontsize=10.5,
+        fig.text(x0 + 0.128, Y(0.936), sub, ha='center', fontsize=10.5,
                  color=GREY)
         y = 0.915
         axs = []
         for nm, h in zip(names, hgt):
             y -= h + 0.028
-            a = _wave_ax(fig, [x0, y, 0.256, h], 0, 1, -1.25, 1.25,
+            a = _wave_ax(fig, [x0, Y(y), 0.256, H(h)], 0, 1, -1.25, 1.25,
                          nm if c == 0 else None)
             axs.append(a)
         T = t
@@ -860,7 +868,50 @@ def an_three_cases(save, foot):
                   'no freewheeling interval left: still conducting\n'
                   'when the half period ends, so the switches\n'
                   'commutate it - reverse recovery',
-                  color=GRN, size=9.0, ha='right', va='top')
+                  color=GRN, size=9.4, ha='right', va='top')
+
+    #  Where the three columns sit on the gain curve.  Half load, not full:
+    #  at full load (Q = 0.766) f_n = 0.70 is already left of the ZVS edge
+    #  (0.726), and a point in the capacitive band would say the left
+    #  column is a hard-switching waveform, which it is not.  The full-load
+    #  curve is drawn thin to show f_n = 1 is the one point they share.
+    qh, qf = 0.766 / 2.0, 0.766
+    ax = fig.add_axes([0.085, 0.085, 0.88, 0.235])
+    fn = np.linspace(0.45, 1.9, 900)
+    gh = np.array([M(f, qh, lam) for f in fn])
+    gf = np.array([M(f, qf, lam) for f in fn])
+    edge = zvs_edge(qh, lam)
+    #  Same colours as the three regions of f04: capacitive, boost, buck.
+    ax.axvspan(fn[0], edge, color=MAG, alpha=0.12, lw=0)
+    ax.axvspan(edge, 1.0, color=GRN, alpha=0.11, lw=0)
+    ax.axvspan(1.0, fn[-1], color=CYA, alpha=0.10, lw=0)
+    ax.axhline(1.0, color=GREY, lw=0.8, ls=(0, (2, 3)), zorder=1)
+    #  The full-load curve only from its own ZVS edge up: left of it the
+    #  point would sit in a band the shading calls inductive.
+    kf = fn >= zvs_edge(qf, lam)
+    ax.plot(fn[kf], gf[kf], color=GREY, lw=1.3, ls=(0, (5, 3)),
+            label='full load, Q = %.2f' % qf)
+    ax.plot(fn, gh, color=NAVY, lw=2.3, label='half load, Q = %.2f' % qh)
+    ax.set_xlim(fn[0], fn[-1])
+    ax.set_ylim(0.55, 2.35)
+    pts = [(0.70, 'below: M > 1, boost', (0.80, 2.05), 'left'),
+           (1.00, 'at f$_r$: M = 1 at any load', (1.06, 1.62), 'left'),
+           (1.30, 'above: M < 1, buck', (1.42, 1.18), 'left')]
+    for f0, t, xt, ha in pts:
+        m0 = M(f0, qh, lam)
+        ax.plot([f0], [m0], 'o', ms=9, color=MAG, mec='white', mew=1.4,
+                zorder=6)
+        _call(ax, (f0, m0), xt, t, color=MAG, size=10.5, ha=ha)
+    ax.text(fn[0] + 0.012, 0.62, 'capacitive at\nhalf load', fontsize=9.6, color=MAG,
+            ha='left', path_effects=HALO)
+    ax.legend(loc='upper right', fontsize=9.6, frameon=False)
+    ax.set_xlabel('f$_{sw}$ / f$_r$', fontsize=11, color=NAVY)
+    ax.set_ylabel('M', fontsize=11, color=NAVY)
+    ax.tick_params(labelsize=10, colors=GREY)
+    for sp in ('top', 'right'):
+        ax.spines[sp].set_visible(False)
+    fig.text(0.525, 0.345, 'where each column sits on the gain curve',
+             ha='center', fontsize=12, color=NAVY, fontweight='bold')
 
     foot(fig, 'Below resonance the rectifier current reaches zero before the '
               'half period does and the rest of it circulates. At resonance '

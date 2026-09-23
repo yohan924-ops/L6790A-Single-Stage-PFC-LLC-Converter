@@ -204,9 +204,6 @@ def build(A):
             'widened so that steps 3, 4, 7 and 8 are visible; the current '
             'amplitudes are this design&rsquo;s I<sub>Lr,pk</sub> and '
             'I<sub>Lm,pk</sub> at the lowest input voltage.', width=CW))
-    add(note('<b>Steps 1 and 2 are the two resonances, and both are in one '
-             'half cycle with the same switches on. ZVS happens in neither.</b> '
-             'It happens in the dead time, steps 3&ndash;4 and 7&ndash;8.'))
     add(note('<b>&ldquo;Freewheeling&rdquo; means two different intervals in '
              'the literature.</b> Here it is steps 2 and 6: rectifiers off, '
              'L<sub>m</sub> in the resonance, same switches on. Toshiba&rsquo;s '
@@ -215,20 +212,28 @@ def build(A):
              'exists at every frequency; steps 2 and 6 exist only below '
              'resonance.'))
     add(fig('an_three_cases',
-            'Below, at and above resonance: gates, bridge voltage, resonant '
-            'current with the magnetising current dashed, and rectifier '
-            'current. What changes is the resonant half period against the '
-            'switching half period.', width=CW))
+            'Below, at and above resonance. <b>Top:</b> gates, bridge voltage, '
+            'resonant current with the magnetising current dashed, and '
+            'rectifier current. <b>Bottom:</b> the same three switching '
+            'frequencies as points on the half-load gain curve. At full load '
+            'f<sub>sw</sub>/f<sub>r</sub> = 0.70 is already capacitive, so the '
+            'full-load curve is drawn only from its ZVS edge up.', width=CW))
+    add(p('The bottom panel is the gain M of Section&nbsp;%s. Which side of '
+          'f<sub>r</sub> the converter runs on decides whether the tank '
+          'boosts or bucks:' % SR('The gain function and the three regions')))
     ext(bullets([
-        '<b>Below f<sub>r</sub>.</b> The resonant half sine ends early and '
-        'i<sub>Lr</sub> <b>lands on i<sub>Lm</sub></b>. From then on no '
-        'power crosses to the secondary: freewheeling.',
-        '<b>At f<sub>r</sub>.</b> i<sub>Lr</sub> meets i<sub>Lm</sub> as the '
-        'bridge switches and the rectifier current reaches zero at the same '
-        'instant. This is the most efficient point.',
-        '<b>Above f<sub>r</sub>.</b> The switching half period ends first, '
-        'the resonant half sine is <b>cut off</b>, the switches turn off '
-        'more current, and the rectifier is interrupted while conducting.']))
+        '<b>Below f<sub>r</sub>: M&nbsp;&gt;&nbsp;1, boost.</b> The resonant '
+        'half sine ends early and i<sub>Lr</sub> <b>lands on '
+        'i<sub>Lm</sub></b>. From then on no power crosses to the '
+        'secondary: freewheeling.',
+        '<b>At f<sub>r</sub>: M&nbsp;=&nbsp;1 at any load.</b> '
+        'i<sub>Lr</sub> meets i<sub>Lm</sub> as the bridge switches, and the '
+        'rectifier current reaches zero at the same instant. This is the '
+        'most efficient point.',
+        '<b>Above f<sub>r</sub>: M&nbsp;&lt;&nbsp;1, buck.</b> The switching '
+        'half period ends first and the resonant half sine is <b>cut '
+        'off</b>. The switches turn off more current and the rectifier is '
+        'interrupted while conducting.']))
     add(p('<b>The freewheeling interval is f<sub>o</sub>.</b> Nothing clamps '
           'L<sub>m</sub>, so L<sub>r</sub>&nbsp;+&nbsp;L<sub>m</sub> rings '
           'with C<sub>r</sub>; it looks flat only because f<sub>o</sub> is '
@@ -264,27 +269,18 @@ def build(A):
     add(fig('f04_three_regions',
             'The three regions, shaded for the full-load curve. Only the '
             'inductive ones are usable. Framing after ROHM TechWeb.'))
-    add(p('<b>Which side the converter is on can be read from the chart '
-          'without a waveform.</b> Draw the required gain as a horizontal '
-          'line and find where it crosses the curve for the present load. '
-          'Every curve passes through M&nbsp;=&nbsp;1 at f<sub>n</sub>&nbsp;=&nbsp;1, '
-          'so the rule is:'))
-    ext(bullets([
-        '<b>Required gain above 1</b>: the crossing lies left of '
-        'f<sub>n</sub>&nbsp;=&nbsp;1. The converter is below resonance and '
-        'boosts; the waveforms are the first row of Figure&nbsp;%s.'
-        % FR('an_three_cases'),
-        '<b>Required gain equal to 1</b>: the crossing is at f<sub>r</sub>, '
-        'at any load.',
-        '<b>Required gain below 1</b>: the crossing lies right of '
-        'f<sub>n</sub>&nbsp;=&nbsp;1. The converter is above resonance and '
-        'bucks; the resonant half sine is cut off.']))
+    add(p('<b>The side can be read from the chart without a waveform.</b> '
+          'Draw the required gain as a horizontal line and find where it '
+          'crosses the curve for the present load. Above 1 the crossing is '
+          'left of f<sub>n</sub>&nbsp;=&nbsp;1 (below resonance, the left '
+          'column of Figure&nbsp;%s); at 1 it is f<sub>r</sub> at any load; '
+          'below 1 it is to the right (above resonance).'
+          % FR('an_three_cases')))
     add(p('So the input voltage decides the side, not the load: the required '
           'gain is the reflected output voltage over the input the tank '
-          'sees, and the load only picks which curve the line meets. A '
-          'higher input lowers the line and moves the crossing right. The '
-          'load matters for the other question, whether the crossing is '
-          'still on the inductive side of the peak.'))
+          'sees, and the load only picks the curve. A higher input lowers the '
+          'line and moves the crossing right. The load decides whether the '
+          'crossing is still on the inductive side of the peak.'))
 
     add(h2('Capacitive and inductive, and why those words'))
     add(p('The names describe <b>what the bridge sees</b>: the phase of the '
@@ -310,9 +306,8 @@ def build(A):
         'pushes the node back. The next device turns on into the full rail, '
         'and the other body diode is forced off with reverse recovery '
         'through a low impedance. <b>Hard switching, and the failure that '
-        'destroys parts.</b> The capacitive region is a boundary the design '
-        'stays on one side of; the controller has a protection for the case '
-        'where it does not.']))
+        'destroys parts.</b> The design stays out of this region; the '
+        'controller has a protection in case it does not.']))
 
     add(h2('Why a diode has to recover on one side and not on the other'))
     add(p('Take one leg: a high-side switch, a low-side switch and the tank '
@@ -357,10 +352,9 @@ def build(A):
              ['which side is allowed', 'inductive only, always',
               'both sides are legitimate']],
             widths=[CW * 0.19, CW * 0.40, CW * 0.41], key='capind', split=True))
-    add(p('The capacitive boundary sits between f<sub>o</sub> and '
-          'f<sub>r</sub> and <b>rises with load</b>: at no load it is '
-          'f<sub>o</sub>, at full load it has moved up towards f<sub>r</sub>. '
-          'A frequency that is inductive at light load can be capacitive at '
+    add(p('The capacitive boundary <b>rises with load</b>, from '
+          'f<sub>o</sub> at no load towards f<sub>r</sub> at full load, so a '
+          'frequency that is inductive at light load can be capacitive at '
           'overload.'))
     add(note('<b>The boundary is not the gain peak.</b> It is where '
              '<b>arg Z<sub>in</sub> = 0</b>, a little <i>above</i> the peak. '
@@ -416,11 +410,9 @@ def build(A):
              'not the headline C<sub>oss</sub>: the datasheet values differ '
              'by three to five times, and ZVS is a charge question.'))
     add(h2('Not a flyback, and why that changes the core'))
-    add(p('Flyback habits are wrong here. Two of them cost money: <b>why the '
-          'core area matters in a converter that stores none of the energy '
-          'it delivers</b>, and <b>why the saturation test current is '
-          'nothing like the peak winding current</b>. Both come from when '
-          'the two windings conduct.'))
+    add(p('Two flyback habits are wrong here and cost money: sizing the '
+          'core from the current, and asking for saturation at the peak '
+          'winding current. Both come from when the two windings conduct.'))
     add(p('<b>In a flyback they never conduct together</b>, so at every '
           'instant the whole winding current is magnetising current. Every '
           'joule delivered was first stored in the core, the flux follows '
@@ -443,18 +435,15 @@ def build(A):
             'magnetises the core. i<sub>s</sub> is referred to the primary. '
             'Bottom row: dashed, what each winding would drive alone; solid, '
             'their sum; shaded, what the secondary removed.'))
-    add(p('<b>Built in order.</b> Figure&nbsp;%s follows one period of '
-          'each converter interval by interval: which winding conducts, '
-          'what voltage that winding holds, and therefore which way the '
-          'flux moves and what stops it.' % FR('an_flux_steps')))
+    add(p('Figure&nbsp;%s follows one period of each converter interval by '
+          'interval: which winding conducts, what voltage it holds, and so '
+          'which way the flux moves and what stops it.'
+          % FR('an_flux_steps')))
     add(fig('an_flux_steps',
             'The flux built step by step. Left, a flyback in discontinuous '
             'conduction; right, an LLC below resonance, drawn from the '
             'eight-interval model with this design&rsquo;s currents. The '
-            'last row is the point: in the flyback the flux tracks the '
-            'winding current and peaks wherever the switch turns off; in the '
-            'LLC it ramps at V<sub>out</sub>/(N<sub>s</sub>A<sub>e</sub>) for '
-            'exactly T<sub>r</sub>/2 and stops when the rectifier lets go.'))
+            'last row is the point.'))
     ext(bullets([
         '<b>Flyback, 1.</b> The switch closes. V<sub>in</sub> sits on the '
         'primary, i<sub>p</sub> ramps at V<sub>in</sub>/L<sub>p</sub>, and '
@@ -538,8 +527,10 @@ def build(A):
         'i<sub>s</sub> and the reflected part of i<sub>p</sub> together; '
         'their difference i<sub>&mu;</sub> does not move. Overload threatens '
         'the copper and the semiconductors, not the core.',
-        '<b>The flux rises with output voltage</b>, so the ceiling to design '
-        'against is the over-voltage threshold, not the nominal output.',
+        '<b>The flux rises with output voltage</b>, so the saturation '
+        'specification is set at the over-voltage threshold, not the '
+        'nominal output (Section&nbsp;'
+        + SR('The saturation test is not the peak winding current') + ').',
         '<b>The flux does not fall with switching frequency</b> below '
         'resonance: the rectifier clamps the winding for T<sub>r</sub>/2 '
         'whatever f<sub>sw</sub> is, which is why f<sub>r</sub> appears in '
@@ -557,11 +548,6 @@ def build(A):
         '&lambda;, and no change in the flux at all. The gap is set by '
         'L<sub>m</sub> and checked by L<sub>open</sub>; the flux margin is '
         'set by the OVP ceiling and checked by the DC-overlap test.',
-        '<b>The current limit does not protect the core.</b> OCP guards '
-        'the copper and the silicon. What bounds the flux is the output '
-        'OVP, so the saturation specification comes from the OVP threshold '
-        '(Section&nbsp;'
-        + SR('The saturation test is not the peak winding current') + ').',
         '<b>The test current follows L<sub>&mu;</sub>; the flux does '
         'not.</b> A smaller gap raises L<sub>&mu;</sub> and lowers '
         'i<sub>&mu;,pk</sub> at the same flux. Recompute I<sub>eq</sub> from '
@@ -776,8 +762,7 @@ def build(A):
             'variable; this profile satisfies 1 to 3. Normalised; with '
             'numbers in Section&nbsp;%s.'
             % SR('Which side of resonance this design runs on'), width=CW))
-    add(p('There is no bulk capacitor, so the tank sees the mains raw. Unity '
-          'power factor fixes the instantaneous power at '
+    add(p('Unity power factor fixes the instantaneous power at '
           '2&nbsp;P<sub>in</sub>&thinsp;sin&sup2;&thinsp;&theta;, which fixes '
           'both the gain (Equation&nbsp;%(m)s) and the loading '
           '(Equation&nbsp;%(q)s) at every instant. The controller answers '
@@ -898,9 +883,7 @@ def build(A):
     add(note('<b>The mistake this chart invites:</b> checking the tallest '
              'curve against the lowest line. There is no such operating '
              'point. &theta; sets the curve <i>and</i> the line together, so '
-             'only the same-coloured pairs mean anything. That is also why '
-             'this note draws no overview with several input voltages on one '
-             'family: at the line peak every condition looks comfortable.'))
+             'only the same-coloured pairs mean anything.'))
     add(p('At the lowest equivalent input the chart answers &ldquo;can the '
           'tank make the gain and stay inductive?&rdquo; At the highest it '
           'answers &ldquo;how high does the frequency go, and is there a '
@@ -994,8 +977,8 @@ def build(A):
           'design.' % SR('Following the numbers through')))
     add(note('Losing the solution is not a failure: no load at high input voltage '
              'belongs to <b>burst mode</b>. But it decides which candidate '
-             'turns ratios can still regulate by frequency alone at no load, '
-             'and no full-load number shows it.'))
+             'turns ratios can still regulate by frequency alone at no '
+             'load.'))
 
     # =============================================================== 4
     add(h1('Topology morphing'))
@@ -1441,10 +1424,6 @@ def build(A):
     add(eq(r'w_{f}=\frac{A_{cu}}{t_{f}}\,,\qquad '
            r'n_{f}=\left\lceil\frac{w_{f}}{w_{f,max}}\right\rceil',
            key='foil'))
-    add(note('These size the copper for current density and skin depth. '
-             'The ac resistance, skin plus proximity, is a separate '
-             'question, and on a side-by-side winding proximity is usually '
-             'the larger term.'))
 
     add(h2('Isolation, margins and what they cost in window'))
     add(p('The transformer is the isolation barrier. <b>Margin tape</b> '
@@ -1460,16 +1439,13 @@ def build(A):
     add(h2('Loss, and the temperature the drawing has to survive'))
     ext(bullets([
         '<b>Core loss</b> comes off the material curve at the operating flux '
-        'and frequency, not off the headline figure.',
+        'and frequency, not off the headline figure. The flux is fixed, so '
+        'the worst loss is at the top of the frequency sweep.',
         '<b>Copper loss</b> is I&sup2;R<sub>ac</sub> for both windings, and '
         'in a side-by-side arrangement the proximity term is not small.',
         '<b>Temperature rise</b> is what limits the design, and it depends '
         'on surface area and airflow. The computed loss is an input to a '
         'thermal measurement, not an answer.']))
-    add(note('B<sub>pk</sub> is fixed by the secondary volt-seconds at '
-             'f<sub>r</sub>, but core loss rises with frequency, and the '
-             'frequency sweeps over the line cycle: worst flux at the bottom '
-             'of the sweep, worst loss at the top.'))
 
     add(h2('The saturation test is not the peak winding current'))
     add(p('<b>What the line on the specification says.</b> Every transformer '
@@ -1530,16 +1506,14 @@ def build(A):
           'margin. No arbitrary factor goes on top of it:'))
     add(eq(r'I_{sat}\;=\;I_{eq}\;\frac{V_{OVP2}}{V_{out,eff}}',
            key='Isatspec'))
-    add(p('What does not raise the flux: overload (the copper and the '
-          'silicon take it), start-up (the output is lower), burst mode, '
-          'and the switching frequency (the clamp lasts T<sub>r</sub>/2 '
-          'whatever f<sub>sw</sub> is). What does: an output '
-          'over-voltage, and temperature. B<sub>s</sub> of a MnZn power '
+    add(p('Overload, start-up, burst mode and the switching frequency do '
+          'not raise the flux (Section&nbsp;%s); an output over-voltage '
+          'does, and temperature lowers the ceiling. B<sub>s</sub> of a MnZn power '
           'ferrite falls by about a fifth between 25 and 100&nbsp;&deg;C, '
           'so a test made at normal temperature is read against the '
           'material&rsquo;s hot B<sub>s</sub>, and the design flux at OVP2 '
-          'has to sit under it with margin. The 90&nbsp;% criterion is '
-          'that margin.'))
+          'has to sit under it with margin. The 90&nbsp;%% criterion is '
+          'that margin.' % SR('Not a flyback, and why that changes the core')))
     add(p('<b>If the controller has no OVP2-like ceiling.</b> Then '
           'something else has to bound the output voltage, and the '
           'specification follows whichever bound exists.'))
@@ -2335,10 +2309,7 @@ def build(A):
             'to high. Top left, the HB edge (%(lo).0f&nbsp;Vac eq.): highest '
             'required gain, crossings below f<sub>r</sub>. Bottom right, the '
             'FB edge (%(hi).0f&nbsp;Vac eq.): lowest required gain, '
-            'crossings above f<sub>r</sub>. 90&nbsp;Vac in full bridge lands '
-            'close to the HB edge, and 110&nbsp;Vac in full bridge close to '
-            '230&nbsp;Vac in half bridge, so the two mains systems look alike '
-            'to the tank. Each phase is compared with the dashed line of its '
+            'crossings above f<sub>r</sub>. Each phase is compared with the dashed line of its '
             'own colour only.' % dict(lo=V['Veqlo'], hi=V['Veqhi']),
             width=CW))
     _gp = _GAIN.gain_points(A.R)
@@ -2394,10 +2365,8 @@ def build(A):
                p264=100 * (1 - 264.0 / V['Veqhi'])),
         '<b>The FB edge also judges &lambda;.</b> The line-peak '
         'requirement there is %(mm).3f and the no-load floor '
-        'M<sub>&infin;</sub>&nbsp;=&nbsp;%(mi).3f. The requirement is '
-        '<b>below</b> the floor, so at no load and high input voltage there is no '
-        'frequency that satisfies it, and burst mode carries the converter '
-        '(Section&nbsp;%(l)s).'
+        'M<sub>&infin;</sub>&nbsp;=&nbsp;%(mi).3f; below it there is no '
+        'no-load solution and burst mode takes over (Section&nbsp;%(l)s).'
         % dict(mm=V['MFBmax'], mi=V['Minf'],
                l=SR('The other bound on &lambda;, and where it has no '
                     'solution'))]))
@@ -3853,11 +3822,9 @@ def build(A):
         'The <b>0.744</b> in the input-voltage margin factor of the '
         'compensator design. It scales the crossover target and nothing '
         'downstream is sensitive to it at the percent level.',
-        'The <b>16.8 &Omega;&middot;W</b> maximum-power constant is '
-        'consistent with the feedback span and the multiplier gains quoted '
-        'in the datasheet &mdash; 2.8&nbsp;V / 0.167 = 16.8 &mdash; so it is '
-        'derived rather than assumed, and is listed here only because the '
-        'gains themselves are draft values.']))
+        'The <b>16.8 &Omega;&middot;W</b> maximum-power constant follows '
+        'from the feedback span and the multiplier gain (2.8&nbsp;V / 0.167); '
+        'it is listed because those gains are draft values.']))
 
     add(h2('Open items in this design'))
     ext(tbl('What is not settled, and what would settle it.',
