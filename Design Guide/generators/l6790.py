@@ -140,14 +140,39 @@ def line_conditions(R):
     conditions (2026-09-22, user).
     """
     #  the labels are formatted from the same numbers as the levels: typed
-    #  '173' and '332' would outlive a change of turns ratio (2026-09-23)
+    #  '173' and '332' would outlive a change of turns ratio (2026-09-23).
+    #  Named by the MAINS voltage and the bridge mode, not by the equivalent
+    #  input: "332 Vac eq." read as an input that does not exist in the
+    #  specification (2026-09-24, user).  tank_sees() says what the tank gets.
     lo, hi = R['Vac_min'], R['Vac_max']
-    return [('HB edge, %.0f Vac eq.' % R['Vin_min'], R['Vin_min'], 'HB'),
-            ('%.0f Vac (FB), %.0f Vac eq.' % (lo, 2 * lo), 2 * lo, 'FB'),
-            ('110 Vac (FB), 220 Vac eq.', 2 * 110.0, 'FB'),
-            ('230 Vac (HB), 230 Vac eq.', 230.0, 'HB'),
-            ('%.0f Vac (HB), %.0f Vac eq.' % (hi, hi), hi, 'HB'),
-            ('FB edge, %.0f Vac eq.' % R['Vin_FBmax'], R['Vin_FBmax'], 'FB')]
+    hbe, fbe = R['Vin_min'], R['Vin_FBmax'] / 2
+    return [('%.0f Vac, half bridge (HB edge)' % hbe, R['Vin_min'], 'HB'),
+            ('%.0f Vac, full bridge' % lo, 2 * lo, 'FB'),
+            ('110 Vac, full bridge', 2 * 110.0, 'FB'),
+            ('230 Vac, half bridge', 230.0, 'HB'),
+            ('%.0f Vac, half bridge' % hi, hi, 'HB'),
+            ('%.0f Vac, full bridge (FB edge)' % fbe, R['Vin_FBmax'], 'FB')]
+
+
+def mains_of(veq, mode):
+    """the mains rms voltage behind an equivalent input"""
+    return veq / 2 if mode == 'FB' else veq
+
+
+def tank_sees(veq, mode, fmt='tank sees %s Vac'):
+    """'tank sees 2 x 166 = 332 Vac' in full bridge, 'tank sees 173 Vac' in
+    half bridge - the equivalent input spelled out, never as 'Vac eq.'"""
+    if mode == 'FB':
+        return fmt % (u'2 \u00d7 %.0f = %.0f' % (veq / 2, veq))
+    return fmt % ('%.0f' % veq)
+
+
+def cond_short(veq, mode, R, edge='edge'):
+    """a column head: '166 Vac FB edge', '90 Vac FB'"""
+    tag = ''
+    if abs(veq - R['Vin_min']) < 1e-6 or abs(veq - R['Vin_FBmax']) < 1e-6:
+        tag = ' ' + edge
+    return '%.0f Vac %s%s' % (mains_of(veq, mode), mode, tag)
 
 
 def sweep(R, Vac_eq, load=1.0, N=181):

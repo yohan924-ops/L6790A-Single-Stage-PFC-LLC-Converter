@@ -63,7 +63,7 @@ def an_above_below(save, foot, R, sweep, FR):
     hs = [Line2D([], [], color=c, lw=2.2) for _l, _f, c in txt]
     ax.legend(hs, ['%s  \u2014  %.0f %%' % (l, f) for l, f, _c in txt],
               loc='upper right', fontsize=9.4, ncol=1,
-              title='equivalent input, and the share of the\n'
+              title='input voltage and bridge, and the share of the\n'
                     'half cycle it spends above f$_r$',
               title_fontsize=9.4)
     foot(fig, 'At the lowest input voltage the converter never leaves the boosting region. '

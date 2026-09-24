@@ -630,23 +630,26 @@ def f13_morphing():
     aE.set_xlim(85, 272)
     aE.set_ylim(140, 392)
     aE.set_xlabel('mains voltage  [Vac]')
-    aE.set_ylabel('what the TANK sees  [Vac equivalent]')
+    aE.set_ylabel('what the TANK sees  [Vac]')
     aE.set_title('mains %.2f:1  ->  tank %.2f:1' % (rm, rt), fontsize=11,
                  color=NAVY)
     #  Notes in the corners the curve does not visit.  Placed beside the
     #  two branches they sat ON them, and the reader could not see which
     #  part of the line was full bridge and which half.
-    note(aE, 92, 372, 'FULL bridge\nequivalent = 2 x mains', color=MAG, size=10,
+    note(aE, 92, 372, 'FULL bridge\ntank sees 2 \u00d7 mains', color=MAG, size=10,
          va='top')
-    note(aE, 268, 152, 'HALF bridge\nequivalent = mains', color=NAVY, size=10,
+    note(aE, 268, 152, 'HALF bridge\ntank sees the mains', color=NAVY, size=10,
          ha='right')
     #  'MAXIMUM' and 'minimum' before: true only outside the hysteresis
     #  band, which widens the range (Figure f18 and the text say so).
     #  These are the two morphing EDGES, and that is what they are called.
-    note(aE, 268, 372, '%.1f Vac eq.  FB edge\nat only %.0f Vac mains'
-         % (HIq, BOH), color=MAG, size=9.8, ha='right', va='top')
-    note(aE, 120, 152, '%.1f Vac eq.  HB edge' % LOq, color=PUR,
-         size=9.8, ha='center')
+    #  named by the mains voltage, with what the tank sees spelled out:
+    #  "332 Vac eq." read as an input the specification does not have
+    #  (2026-09-24, user)
+    note(aE, 268, 372, 'FB edge: %.0f Vac mains,\ntank sees 2 \u00d7 %.0f = %.0f Vac'
+         % (BOH, BOH, HIq), color=MAG, size=9.8, ha='right', va='top')
+    note(aE, 120, 152, 'HB edge: %.0f Vac mains,\ntank sees %.0f Vac' % (LOq, LOq),
+         color=PUR, size=9.8, ha='center')
     aE.annotate('', xy=(169, 335), xytext=(205, 352),
                 arrowprops=dict(arrowstyle='-|>', color=MAG, lw=1.5))
     aE.annotate('', xy=(176, 172), xytext=(150, 158),
@@ -1024,7 +1027,7 @@ _MORPH_EN = {
          'lane is already HB \u2014 the DIRECTION of travel decides',
     'legFB': 'FB \u2014 tank sees TWICE the mains',
     'legHB': 'HB \u2014 tank sees the mains as it is',
-    'ylab':  'what the TANK sees  [Vac equivalent]',
+    'ylab':  'what the TANK sees  [Vac]',
     'xlab':  'mains  [Vrms]',
     'step':  'the drive jumps 2:1 at the transition \u2014\n'
          '$f_{sw}$ must follow it within one line cycle',

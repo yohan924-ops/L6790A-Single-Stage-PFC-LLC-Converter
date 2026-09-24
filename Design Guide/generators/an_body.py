@@ -2380,28 +2380,29 @@ def build(A):
           % dict(V, ref=SR('The two boundaries are not the same boundary'),
                  **_edge_numbers(A))))
     add(tbl('T<sub>ZC,min</sub> in nanoseconds, the smallest over the line '
-            'half cycle, at each load and equivalent input voltage; '
+            'half cycle, at each load and input voltage; FB is full bridge '
+            '(the tank sees twice the mains), HB half bridge; '
             't<sub>D</sub>&nbsp;=&nbsp;%(tD).0f&nbsp;ns.' % V,
             ZVS_WORST['rows'], widths=[CW * 0.10] + [CW * 0.15] * 6,
             key='zvsgrid'))
     _z = dict(V, t=TR('zvsgrid'), **ZVS_WORST)
     if ZVS_WORST['same']:
-        add(p('The worst point in Table&nbsp;%(t)s is full load at the low '
-              'equivalent corner, <b>T<sub>ZC</sub>&nbsp;=&nbsp;'
+        add(p('The worst point in Table&nbsp;%(t)s is full load at the HB '
+              'edge, <b>T<sub>ZC</sub>&nbsp;=&nbsp;'
               '%(zTzc).0f&nbsp;ns against t<sub>D</sub>&nbsp;=&nbsp;'
               '%(tD).0f&nbsp;ns</b>, a margin of %(zk).2f times &mdash; the '
               'same corner the tank was designed at.' % _z))
     else:
         add(p('<b>The worst point is not the corner the tank was designed '
-              'at.</b> Full load at the low equivalent input is where the '
+              'at.</b> Full load at the HB edge is where the '
               '<i>gain</i> requirement is set, and it gives '
               'T<sub>ZC</sub>&nbsp;=&nbsp;%(cTzc).0f&nbsp;ns, a margin of '
               '%(ck).2f. The smallest number in Table&nbsp;%(t)s is '
-              '<b>%(zTzc).0f&nbsp;ns at %(zLoad).0f&nbsp;%% load and the '
-              '%(zVin).1f&nbsp;Vac equivalent corner</b>, a margin of '
+              '<b>%(zTzc).0f&nbsp;ns at %(zLoad).0f&nbsp;%% load, %(zAt)s</b>, '
+              'a margin of '
               '%(zk).2f against t<sub>D</sub>&nbsp;=&nbsp;'
               '%(tD).0f&nbsp;ns. That is the number this design is held '
-              'to.' % _z))
+              'to.' % dict(_z, zAt=_where(ZVS_WORST['zVin'], A.R))))
         add(note('<b>Why light load at high input voltage can be the ZVS corner.</b> '
                  'The charge that swings the bridge node is carried by the '
                  'magnetising current, and above resonance, where this corner runs, '
@@ -2418,18 +2419,23 @@ def build(A):
           'tank (&lambda;<sub>act</sub>&nbsp;=&nbsp;%(lam).3f, '
           'Q<sub>pk</sub>&nbsp;=&nbsp;%(Qpk).3f), one panel per input '
           'voltage: the two morphing edges and the four mains voltages a '
-          'supply meets. The curves are the same in every panel; only the '
+          'supply meets. Each panel names the mains voltage and the bridge; '
+          'in full bridge the tank sees twice the mains, so each panel also '
+          'says what the tank sees. The curves are the same in every panel; only the '
           'required-gain lines move. The marked crossings are the operating '
           'points the sweep is built from.'
           % dict(V, s=SR('Reading the gain chart of a single-stage '
                          'converter'), f=FR('an_gain_design'))))
     add(fig('an_gain_design',
             'The gain chart of this design at the six input voltages, low '
-            'to high. Top left, the HB edge (%(lo).0f&nbsp;Vac eq.): highest '
-            'required gain, crossings below f<sub>r</sub>. Bottom right, the '
-            'FB edge (%(hi).0f&nbsp;Vac eq.): lowest required gain, '
-            'crossings above f<sub>r</sub>. Each phase is compared with the dashed line of its '
-            'own colour only.' % dict(lo=V['Veqlo'], hi=V['Veqhi']),
+            'to high as the tank sees them. Top left, the HB edge '
+            '(%(lo).0f&nbsp;Vac, half bridge): highest required gain, '
+            'crossings below f<sub>r</sub>. Bottom right, the FB edge '
+            '(%(fb).0f&nbsp;Vac, full bridge, so the tank sees '
+            '%(hi).0f&nbsp;Vac): lowest required gain, crossings above '
+            'f<sub>r</sub>. Each phase is compared with the dashed line of '
+            'its own colour only.'
+            % dict(lo=V['Veqlo'], hi=V['Veqhi'], fb=V['Veqhi'] / 2),
             width=CW))
     _gp = _GAIN.gain_points(A.R)
     import l6790 as _L
@@ -2459,26 +2465,29 @@ def build(A):
             key='gainpts', split=True))
     add(p('Four readings matter:'))
     ext(bullets([
-        '<b>The HB edge sets the tank.</b> %(lo).0f&nbsp;Vac equivalent is '
-        'the lowest voltage the tank sees, so its line-peak requirement '
+        '<b>The HB edge sets the tank.</b> %(lo).0f&nbsp;Vac in half bridge '
+        'is the lowest voltage the tank ever sees, so its line-peak requirement '
         'M<sub>pk</sub>&nbsp;=&nbsp;%(m).3f is the largest of the six. It '
         'is met at f<sub>sw</sub>/f<sub>r</sub>&nbsp;=&nbsp;%(fn).3f, '
         'well to the right of M<sub>Z</sub>: inductive.'
         % dict(lo=V['Veqlo'], m=V['MVmin'], fn=_lo[0][4]),
-        '<b>The FB edge sets the frequency.</b> At %(hi).0f&nbsp;Vac '
-        'equivalent the line-peak crossing is %(f).0f&nbsp;kHz, and that, '
+        '<b>The FB edge sets the frequency.</b> At %(fb).0f&nbsp;Vac in full '
+        'bridge the tank sees %(hi).0f&nbsp;Vac, the most it ever sees; the '
+        'line-peak crossing is %(f).0f&nbsp;kHz, and that, '
         'not the mains maximum, is what the oscillator ceiling must clear '
         '(Section&nbsp;%(o)s).'
-        % dict(hi=V['Veqhi'], f=_hi[0][5] or 0.0,
+        % dict(hi=V['Veqhi'], fb=V['Veqhi'] / 2, f=_hi[0][5] or 0.0,
                o=SR('The oscillator: C<sub>T</sub> first, then '
                     'R<sub>T</sub>')),
         '<b>The four mains voltages sit between the edges.</b> 90&nbsp;Vac '
-        'in full bridge (180&nbsp;Vac eq.) is only %(p90).0f&nbsp;%% above '
-        'the HB edge, so a 90&nbsp;Vac system runs close to the gain worst '
-        'case. 110&nbsp;Vac in full bridge (220) and 230&nbsp;Vac in half '
-        'bridge (230) are within %(p23).0f&nbsp;%% of each other: morphing '
-        'makes the two mains systems nearly alike to the tank. 264&nbsp;Vac '
-        '(264) is still %(p264).0f&nbsp;%% below the FB edge.'
+        'in full bridge puts 2 &times; 90 = 180&nbsp;Vac on the tank, only '
+        '%(p90).0f&nbsp;%% above the HB edge, so a 90&nbsp;Vac system runs '
+        'close to the gain worst case. 110&nbsp;Vac in full bridge '
+        '(220&nbsp;Vac on the tank) and 230&nbsp;Vac in half bridge '
+        '(230&nbsp;Vac on the tank) are within %(p23).0f&nbsp;%% of each '
+        'other: morphing makes the two mains systems nearly alike to the '
+        'tank. 264&nbsp;Vac in half bridge is still %(p264).0f&nbsp;%% below '
+        'what the tank sees at the FB edge.'
         % dict(p90=100 * (180.0 / V['Veqlo'] - 1),
                p23=100 * (230.0 / 220.0 - 1),
                p264=100 * (1 - 264.0 / V['Veqhi'])),
@@ -2511,7 +2520,7 @@ def build(A):
             '%(fr).1f kHz. %(nAbove)d of the %(nc)d input voltages cross into '
             'above-resonance operation for part of the cycle.'
             % dict(V, nc=len(V['fswPk'])),
-            [['Input voltage (bridge mode)', 'V<sub>ac,eq</sub> (Vac rms)',
+            [['Input voltage and bridge', 'the tank sees (Vac rms)',
               'peak f<sub>sw</sub>', 'side of f<sub>r</sub>']]
             + [[nm, '%.0f Vac' % veq, '%.1f kHz' % pk,
                 '<b>above</b>' if ab else 'below']
@@ -2526,7 +2535,7 @@ def build(A):
     add(h2('The currents this design has to carry'))
     add(p('Ratings come from the worst switching cycle and losses from the '
           'line-cycle rms, so both are listed. The peaks are read off one '
-          'cycle at the low equivalent corner, line peak '
+          'cycle at the HB edge, line peak '
           '(&theta;&nbsp;=&nbsp;90&deg; in Table&nbsp;%(t)s). The composite '
           'peak is the peak of the sum, because the two components peak at '
           'different instants:'
@@ -2545,10 +2554,11 @@ def build(A):
     add(p('That is why the line-cycle primary rms, %(Iprilc).2f&nbsp;A, is '
           'lower than the worst cycle&rsquo;s %(Iprims).2f&nbsp;A.' % V))
     add(fig('an_tank_current',
-            'The composite tank current at the low equivalent corner, full '
+            'The composite tank current at the HB edge, full '
             'load, and why its peak is not the sum of the two component '
             'peaks: they occur at different instants.'))
-    ext(tbl('Currents at the low equivalent corner (HB edge), full load. '
+    ext(tbl('Currents at the HB edge (%.0f&nbsp;Vac, half bridge), full load. '
+            % V['Veqlo'] +
             'Peaks and worst-cycle rms are taken in the switching cycle at '
             'the line peak, &theta; = 90&deg;; line-cycle rms values are over '
             'the whole line half cycle.',
@@ -2587,7 +2597,7 @@ def build(A):
             'Where each number is read. Top: primary current, the two '
             'secondary winding currents and the secondary winding voltage '
             'over one switching period at the worst cycle: line peak at '
-            'the HB edge (%(Veqlo).0f&nbsp;Vac equivalent), full load. '
+            'the HB edge (%(Veqlo).0f&nbsp;Vac, half bridge), full load. '
             'Lower left and centre: the rms of the two winding currents '
             'over the input half cycle at the six input voltages; the HB '
             'edge draws the most in both windings, which is why the table '
@@ -2910,7 +2920,7 @@ def build(A):
               '(mark 7)' % V],
              ['Primary current', '%(Iprilc).1f A rms / %(Icomp).1f A pk' % V,
               'line-cycle rms (mark 2) and composite peak (mark 1), both at the '
-              'HB edge (%(Veqlo).0f Vac eq.), full load' % V],
+              'HB edge (%(Veqlo).0f Vac, half bridge), full load' % V],
              ['Secondary current, each winding',
               '%(Idio).1f A rms / %(Isec).0f A pk' % V,
               'line-cycle rms (mark 5) and peak (mark 4), both at the HB edge, '
@@ -3679,9 +3689,10 @@ def build(A):
         'architecture.' % V,
         '<b>ZVS at the half-bridge edge</b> (245&nbsp;V<sub>pk</sub>, full '
         'load): calculated %(cTzc).0f&nbsp;ns against %(tD).0f&nbsp;ns. '
-        'Then the worst point of the sweep, %(zLoad).0f&nbsp;%% load at '
-        '%(zVin).1f&nbsp;Vac equivalent, %(zTzc).0f&nbsp;ns, which is the '
-        'figure this design is held to.' % dict(V, **ZVS_WORST),
+        'Then the worst point of the sweep, %(zLoad).0f&nbsp;%% load, '
+        '%(zAt)s, %(zTzc).0f&nbsp;ns, which is the '
+        'figure this design is held to.'
+        % dict(V, zAt=_where(ZVS_WORST['zVin'], A.R), **ZVS_WORST),
         '<b>Switching frequency at the full-bridge edge</b> '
         '(235&nbsp;V<sub>pk</sub>, full load): calculated %(fswB).1f&nbsp;kHz; '
         'it must not hit the VCO ceiling.' % V,
@@ -4068,7 +4079,24 @@ def _f_idle(V, tidle_ns):
     return 1 / (2 * (tmin + t)) / 1e3, 1 / (2 * (tmax + t)) / 1e3
 
 
-def _zvs_grid(A, head=('Load', '%.1f Vac eq.')):
+def _where(veq, R, fb='at the FB edge (%.0f&nbsp;Vac in full bridge, which the '
+                   'tank sees as %.0f&nbsp;Vac)',
+        hb='at the HB edge (%.0f&nbsp;Vac, half bridge)',
+        other='at %.0f&nbsp;Vac'):
+    """a place on the input axis in words: the mains and the bridge, and
+    what the tank sees when that differs - never 'Vac eq.' (2026-09-24)"""
+    import l6790
+    if abs(veq - R['Vin_FBmax']) < 1e-6:
+        return fb % (veq / 2, veq)
+    if abs(veq - R['Vin_min']) < 1e-6:
+        return hb % veq
+    for nm, v, m in l6790.line_conditions(R):
+        if abs(v - veq) < 1e-6:
+            return other % l6790.mains_of(v, m) + (' in full bridge' if m == 'FB' else ' in half bridge')
+    return other % veq
+
+
+def _zvs_grid(A, head=('Load', 'edge')):
     """T_ZC over load and equivalent input, recomputed - never transcribed
 
     head lets the Korean edition label the same grid in its own language;
@@ -4076,7 +4104,8 @@ def _zvs_grid(A, head=('Load', '%.1f Vac eq.')):
     """
     import l6790
     cols = tuple(v for _n, v, _m in l6790.line_conditions(A.R))
-    rows = [[head[0]] + [head[1] % c for c in cols]]
+    rows = [[head[0]] + [l6790.cond_short(v, m, A.R, head[1]).replace(' Vac ', ' Vac<br/>')
+                         for _n, v, m in l6790.line_conditions(A.R)]]
     worst = None
     for ld in (1.0, 0.75, 0.50, 0.25):
         r = ['%d %%' % (ld * 100)]

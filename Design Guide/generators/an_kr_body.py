@@ -26,7 +26,8 @@ def _kc(name):
     적지 않는다.
     """
     return (name.replace('HB edge', 'HB 경계').replace('FB edge', 'FB 경계')
-                .replace(' Vac eq.', ' Vac 등가'))
+                .replace(', half bridge', ', 하프브리지')
+                .replace(', full bridge', ', 풀브리지'))
 
 
 def _kr_row(text):
@@ -945,7 +946,7 @@ def build(A):
 
     # =============================================================== 5
     # 스윕이 ZVS_WORST 를 채운다 - 설계 예제의 요약표가 격자보다 먼저 읽는다
-    _zvs_grid(A, head=('부하', '등가 %.1f Vac'))
+    _zvs_grid(A, head=('부하', '경계'))
 
     add(h1('설계 절차'))
     add(fig('bom_power_stage',
@@ -1962,8 +1963,9 @@ def build(A):
           '위상이 남아 있다(%(ref)s 절). 어느 쪽도 판정에는 쓰지 않는다.'
           % dict(V, ref=SR('두 경계는 같은 경계가 아니다'),
                  **_edge_numbers(A))))
-    add(tbl('부하와 등가 입력 전압마다 라인 반주기에서 가장 작은 '
-            'T<sub>ZC,min</sub>, 단위 ns. t<sub>D</sub>&nbsp;=&nbsp;'
+    add(tbl('부하와 입력 전압마다 라인 반주기에서 가장 작은 '
+            'T<sub>ZC,min</sub>, 단위 ns. FB 는 풀브리지(탱크에는 상용전원의 '
+            '두 배), HB 는 하프브리지. t<sub>D</sub>&nbsp;=&nbsp;'
             '%(tD).0f&nbsp;ns.' % V,
             ZVS_WORST['rows'], widths=[CW * 0.10] + [CW * 0.15] * 6,
             key='zvsgrid'))
@@ -1971,18 +1973,19 @@ def build(A):
     _z.update(zk_j=' ' + _josa('%.2f' % _z['zk'], '이다', '다'),
               ck_j=' ' + _josa('%.2f' % _z['ck'], '이다', '다'))
     if ZVS_WORST['same']:
-        add(p('표&nbsp;%(t)s 의 최악점은 낮은 등가 코너의 Full load, '
+        add(p('표&nbsp;%(t)s 의 최악점은 HB 경계의 Full load, '
               '<b>T<sub>ZC</sub>&nbsp;=&nbsp;%(zTzc).0f&nbsp;ns 대 '
               't<sub>D</sub>&nbsp;=&nbsp;%(tD).0f&nbsp;ns</b>, 여유 %(zk).2f 배다 '
               '&mdash; 탱크를 설계한 바로 그 코너다.' % _z))
     else:
-        add(p('<b>최악점은 탱크를 설계한 코너가 아니다.</b> 낮은 등가 입력의 '
+        add(p('<b>최악점은 탱크를 설계한 코너가 아니다.</b> HB 경계의 '
               'Full load 는 <i>게인</i> 요구가 정해지는 곳이고, 거기서는 '
               'T<sub>ZC</sub>&nbsp;=&nbsp;%(cTzc).0f&nbsp;ns, 여유 %(ck).2f%(ck_j)s. '
-              '표&nbsp;%(t)s 에서 가장 작은 숫자는 <b>%(zLoad).0f&nbsp;%% 부하, 등가 '
-              '%(zVin).1f&nbsp;Vac 코너의 %(zTzc).0f&nbsp;ns</b>, '
+              '표&nbsp;%(t)s 에서 가장 작은 숫자는 <b>%(zAt)s 의 %(zLoad).0f&nbsp;%% '
+              '부하, %(zTzc).0f&nbsp;ns</b>, '
               't<sub>D</sub>&nbsp;=&nbsp;%(tD).0f&nbsp;ns 에 대해 여유 %(zk).2f'
-              '%(zk_j)s. 이 설계의 ZVS 판정은 이 값으로 한다.' % _z))
+              '%(zk_j)s. 이 설계의 ZVS 판정은 이 값으로 한다.'
+              % dict(_z, zAt=_where(ZVS_WORST['zVin'], A.R, fb='FB 경계(풀브리지 %.0f&nbsp;Vac, 탱크에는 %.0f&nbsp;Vac)', hb='HB 경계(하프브리지 %.0f&nbsp;Vac)', other='%.0f&nbsp;Vac'))))
         add(note('<b>높은 입력 전압의 Light load 가 ZVS 코너가 될 수 있는 이유.</b> '
                  '브리지 노드 전압을 스윙시키는 전하는 자화 전류가 옮기고, 그 피크는 '
                  'n&thinsp;V<sub>o,eff</sub>/(4f<sub>sw</sub>L<sub>m</sub>) 에 비례한다(이 코너가 도는 above 영역에서). '
@@ -1994,16 +1997,19 @@ def build(A):
     add(p('그림&nbsp;%(f)s 에 %(s)s 절의 차트를 이 탱크'
           '(&lambda;<sub>act</sub>&nbsp;=&nbsp;%(lam).3f, Q<sub>pk</sub>&nbsp;='
           '&nbsp;%(Qpk).3f)로 그렸고, 입력 전압마다 패널 하나다: 모핑 '
-          '경계 둘과 실제 상용전원 전압 넷. 곡선은 모든 '
+          '경계 둘과 실제 상용전원 전압 넷. 패널마다 상용전원 전압과 브리지 '
+          '구성을 적었고, 풀브리지에서는 탱크에 상용전원의 두 배가 걸리므로 '
+          '탱크가 보는 전압도 함께 적었다. 곡선은 모든 '
           '패널에서 같고 요구 게인 선만 움직인다. 표시한 교차점이 스윕에 쓴 동작점이다.'
           % dict(V, s=SR('single-stage 컨버터의 게인 차트 읽는 법'),
                  f=FR('an_gain_design'))))
     add(fig('an_gain_design',
-            '이 설계의 게인 차트, 여섯 입력 전압을 낮은 것부터. 왼쪽 위는 HB '
-            '경계(등가 %(lo).0f&nbsp;Vac): 요구 게인이 가장 높고 교차점은 '
-            'f<sub>r</sub> 아래. 오른쪽 아래는 FB 경계(등가 %(hi).0f&nbsp;Vac): '
-            '요구 게인이 가장 낮고 교차점은 f<sub>r</sub> 위. 위상마다 같은 색의 점선과만 비교한다.'
-            % dict(lo=V['Veqlo'], hi=V['Veqhi']), width=CW))
+            '이 설계의 게인 차트, 여섯 입력 전압을 탱크가 보는 전압이 낮은 것부터. '
+            '왼쪽 위는 HB 경계(하프브리지 %(lo).0f&nbsp;Vac): 요구 게인이 가장 '
+            '높고 교차점은 f<sub>r</sub> 아래. 오른쪽 아래는 FB 경계(풀브리지 '
+            '%(fb).0f&nbsp;Vac, 탱크에는 %(hi).0f&nbsp;Vac): 요구 게인이 가장 '
+            '낮고 교차점은 f<sub>r</sub> 위. 위상마다 같은 색의 점선과만 비교한다.'
+            % dict(lo=V['Veqlo'], hi=V['Veqhi'], fb=V['Veqhi'] / 2), width=CW))
     _gp = _GAIN.gain_points(A.R)
     import l6790 as _L
     _cn = {veq: _kc(nm) for nm, veq, _m in _L.line_conditions(A.R)}
@@ -2032,23 +2038,26 @@ def build(A):
             key='gainpts', split=True))
     add(p('읽을 점은 넷이다.'))
     ext(bullets([
-        '<b>HB 경계가 탱크를 정한다.</b> 등가 %(lo).0f&nbsp;Vac 는 탱크가 보는 '
-        '최저 전압이므로 그 라인 피크 요구 게인 M<sub>pk</sub>&nbsp;=&nbsp;%(m)s '
+        '<b>HB 경계가 탱크를 정한다.</b> 하프브리지 %(lo).0f&nbsp;Vac 는 탱크가 '
+        '보는 가장 낮은 전압이므로 그 라인 피크 요구 게인 M<sub>pk</sub>&nbsp;=&nbsp;%(m)s '
         '여섯 조건 중 가장 크다. f<sub>sw</sub>/f<sub>r</sub>&nbsp;='
         '&nbsp;%(fn).3f 에서 만족되고, M<sub>Z</sub> 오른쪽으로 여유가 충분하다: '
         'inductive.' % dict(lo=V['Veqlo'], fn=_lo[0][4],
                             m=_nj('%.3f' % V['MVmin'], '이', '가')),
-        '<b>FB 경계가 주파수를 정한다.</b> 등가 %(hi).0f&nbsp;Vac 에서 라인 '
+        '<b>FB 경계가 주파수를 정한다.</b> 풀브리지 %(fb).0f&nbsp;Vac 에서는 '
+        '탱크에 %(hi).0f&nbsp;Vac 가 걸린다. 탱크가 보는 가장 높은 전압이고, 라인 '
         '피크 교차점은 %(f).0f&nbsp;kHz 이고, 상용전원 최대가 아니라 이것이 '
         '오실레이터 상한이 넘어야 할 값이다(%(o)s 절).'
-        % dict(hi=V['Veqhi'], f=_hi[0][5] or 0.0,
+        % dict(hi=V['Veqhi'], fb=V['Veqhi'] / 2, f=_hi[0][5] or 0.0,
                o=SR('오실레이터: C<sub>T</sub> 먼저, 그다음 R<sub>T</sub>')),
         '<b>상용전원 전압 넷은 두 경계 사이에 있다.</b> 풀브리지의 90&nbsp;Vac'
-        '(등가 180&nbsp;Vac)는 HB 경계보다 %(p90).0f&nbsp;%% 위일 뿐이라 '
-        '90&nbsp;Vac 쪽은 게인 최악 조건 가까이에서 돈다. 풀브리지의 '
-        '110&nbsp;Vac(220)와 하프브리지의 230&nbsp;Vac(230)는 %(p23).0f&nbsp;%% '
-        '차이다: 모핑 덕분에 탱크가 보는 두 전압이 거의 같다. 264&nbsp;Vac(264)는 '
-        'FB 경계보다 아직 %(p264).0f&nbsp;%% 아래다.'
+        '는 탱크에 2 &times; 90 = 180&nbsp;Vac 를 걸고, HB 경계보다 '
+        '%(p90).0f&nbsp;%% 위일 뿐이라 90&nbsp;Vac 쪽은 게인 최악 조건 가까이에서 '
+        '돈다. 풀브리지의 110&nbsp;Vac(탱크에는 220&nbsp;Vac)와 하프브리지의 '
+        '230&nbsp;Vac(탱크에도 230&nbsp;Vac)는 %(p23).0f&nbsp;%% 차이다: 모핑 '
+        '덕분에 두 상용전원 계통이 탱크에는 거의 같게 보인다. 하프브리지의 '
+        '264&nbsp;Vac 는 FB 경계에서 탱크가 보는 전압보다 아직 %(p264).0f&nbsp;%% '
+        '아래다.'
         % dict(p90=100 * (180.0 / V['Veqlo'] - 1),
                p23=100 * (230.0 / 220.0 - 1),
                p264=100 * (1 - 264.0 / V['Veqhi'])),
@@ -2074,7 +2083,7 @@ def build(A):
     ext(tbl('반주기 동안의 피크 f<sub>sw</sub>, f<sub>r</sub> = %(fr).1f kHz 에 '
             '대해. 여섯 입력 전압 중 %(nAbove)d 개가 주기의 일부에서 above 로 '
             '넘어간다.' % dict(V, nc=len(V['fswPk'])),
-            [['입력 전압 (브리지 모드)', 'V<sub>ac,eq</sub> (Vac rms)',
+            [['입력 전압과 브리지', '탱크가 보는 전압 (Vac rms)',
               '피크 f<sub>sw</sub>', 'f<sub>r</sub> 의 어느 쪽']]
             + [[_kc(nm), '%.0f Vac' % veq, '%.1f kHz' % pk,
                 '<b>above</b>' if ab else 'below']
@@ -2087,7 +2096,7 @@ def build(A):
 
     add(h2('이 설계가 흘려야 하는 전류'))
     add(p('정격은 최악의 스위칭 사이클에서, 손실은 라인 사이클 실효값에서 '
-          '오므로 둘 다 적는다. 피크는 낮은 등가 코너의 라인 피크'
+          '오므로 둘 다 적는다. 피크는 HB 경계의 라인 피크'
           '(표&nbsp;%(t)s 의 &theta;&nbsp;=&nbsp;90&deg;)에서 한 사이클을 읽은 '
           '것이다. 합성 피크는 두 성분을 더한 파형의 피크다. 두 성분의 피크가 다른 순간에 오기 '
           '때문이다.' % dict(t=TR('gainpts'))))
@@ -2105,9 +2114,10 @@ def build(A):
     add(p('그래서 라인 사이클 1차 실효값 %(Iprilc).2f&nbsp;A 는 최악 '
           '사이클의 %(Iprims).2f&nbsp;A 보다 작다.' % V))
     add(fig('an_tank_current',
-            '낮은 등가 코너, Full load 의 합성 탱크 전류. 그 피크가 두 성분 피크의 '
+            'HB 경계, Full load 의 합성 탱크 전류. 그 피크가 두 성분 피크의 '
             '합이 아닌 이유: 두 피크가 다른 순간에 온다.'))
-    ext(tbl('낮은 등가 코너(HB 경계), Full load 의 전류. 피크와 최악 사이클 실효값은 '
+    ext(tbl('HB 경계(하프브리지 %.0f&nbsp;Vac), Full load 의 전류. ' % V['Veqlo'] +
+            '피크와 최악 사이클 실효값은 '
             '라인 피크(&theta; = 90&deg;)의 스위칭 사이클에서, 라인 사이클 실효값은 '
             '라인 반주기 전체에서 구했다.',
             [['항목', '값', '쓰이는 곳'],
@@ -2141,7 +2151,7 @@ def build(A):
           % dict(V, ref2=SR('트랜스포머 한 개로 안 될 때'),
                  f1=FR('an_llc_stage'))))
     add(fig('an_xfmr_read',
-            '각 숫자를 어디서 읽나. 위: 최악 사이클(HB 경계, 등가 '
+            '각 숫자를 어디서 읽나. 위: 최악 사이클(HB 경계, 하프브리지 '
             '%(Veqlo).0f&nbsp;Vac 의 라인 피크, Full load)의 한 스위칭 주기 동안의 '
             '1차 전류, 2차 두 권선의 전류, 2차 권선 전압. 아래 왼쪽과 가운데: '
             '입력 반주기에 걸친 두 권선 전류의 실효값, 여섯 입력 전압에서. '
@@ -2433,7 +2443,7 @@ def build(A):
               '%(IsatTest).0f A 를 겹쳐 인가, 상온 (표시 7)' % V],
              ['1차 전류', '%(Iprilc).1f A rms / %(Icomp).1f A pk' % V,
               '라인 사이클 실효값(표시 2)과 합성 피크(표시 1), 둘 다 HB 경계'
-              '(등가 %(Veqlo).0f Vac), Full load' % V],
+              '(하프브리지 %(Veqlo).0f Vac), Full load' % V],
              ['2차 전류, 권선마다',
               '%(Idio).1f A rms / %(Isec).0f A pk' % V,
               '라인 사이클 실효값(표시 5)과 피크(표시 4), 둘 다 HB 경계, Full load'],
@@ -3137,9 +3147,10 @@ def build(A):
         '오실레이터 클램프 둘, 곧 설계에서 가장 작은 여유를 확정한다.',
         '<b>%(Cout).1f&nbsp;mF 뱅크를 모두 단 상태의 cold start.</b> 기동 허용 시간은 정해져 있고, 이 위험은 이 구조에서 새로 생긴다.' % V,
         '<b>하프브리지 경계(245&nbsp;V<sub>pk</sub>, Full load)의 ZVS</b>: 계산 '
-        '%(cTzc).0f&nbsp;ns 대 %(tD).0f&nbsp;ns. 그다음 스윕의 최악점, 등가 '
-        '%(zVin).1f&nbsp;Vac 의 %(zLoad).0f&nbsp;%% 부하, %(zTzc).0f&nbsp;ns. '
-        '이 설계를 판정하는 숫자다.' % dict(V, **ZVS_WORST),
+        '%(cTzc).0f&nbsp;ns 대 %(tD).0f&nbsp;ns. 그다음 스윕의 최악점, '
+        '%(zAt)s 의 %(zLoad).0f&nbsp;%% 부하, %(zTzc).0f&nbsp;ns. '
+        '이 설계를 판정하는 숫자다.'
+        % dict(V, zAt=_where(ZVS_WORST['zVin'], A.R, fb='FB 경계(풀브리지 %.0f&nbsp;Vac, 탱크에는 %.0f&nbsp;Vac)', hb='HB 경계(하프브리지 %.0f&nbsp;Vac)', other='%.0f&nbsp;Vac'), **ZVS_WORST),
         '<b>풀브리지 경계(235&nbsp;V<sub>pk</sub>, Full load)의 스위칭 주파수</b>: '
         '계산 %(fswB).1f&nbsp;kHz. VCO 상한에 닿으면 안 된다.' % V,
         '<b>%(Vacmin).0f&nbsp;Vac Full load 의 입력 전류와 THD</b>: 영교차 '
@@ -3466,4 +3477,4 @@ def build(A):
 
 
 # ZVS 스윕과 그 결과 사전은 영문판과 한 벌이다 - 숫자를 두 번 계산하지 않는다.
-from an_body import ZVS_WORST, _zvs_grid, _minus, _f_idle      # noqa: E402
+from an_body import ZVS_WORST, _zvs_grid, _minus, _f_idle, _where      # noqa: E402

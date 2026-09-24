@@ -2779,8 +2779,8 @@ def an_xfmr_read(save, foot):
                arrowprops=dict(arrowstyle='-|>', color=NAVY, lw=1.1),
                path_effects=HALO, zorder=9)
 
-    foot(fig, 'Worst switching cycle of the design: line peak at the %.0f '
-              'Vac equivalent input, full load, f_sw/f_r = %.2f. The traces '
+    foot(fig, 'Worst switching cycle of the design: line peak at the HB '
+              'edge (%.0f Vac, half bridge), full load, f_sw/f_r = %.2f. The traces '
               'are the eight-interval model of the mode figures, labelled '
               'with the sheet values; the lower panels are the design sweep '
               'over the input half cycle at the six input voltages. Circled '

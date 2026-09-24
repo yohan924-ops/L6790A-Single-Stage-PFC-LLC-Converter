@@ -358,12 +358,15 @@ def an_gain_design(save, foot, R, sweep):
         #  the line-peak crossing, in words, in the empty upper part of the
         #  panel where nothing is drawn
         x90 = _cross(fn, curves[PHASES[0][0]], mpk)
+        from l6790 import tank_sees
         if x90:
-            txt = (u'line peak:  f$_{sw}$ = %.0f kHz\n'
+            txt = (tank_sees(vac, mode) + u'\n'
+                   u'line peak:  f$_{sw}$ = %.0f kHz\n'
                    u'f$_{sw}$/f$_r$ = %.2f,  M$_{pk}$ = %.3f'
                    % (x90 * fr / 1e3, x90, mpk))
         else:
-            txt = u'M$_{pk}$ = %.3f: no full-load solution' % mpk
+            txt = (tank_sees(vac, mode) + u'\n'
+                   u'M$_{pk}$ = %.3f: no full-load solution' % mpk)
         if mpk < minf:
             #  the no-load curve never gets this low: burst mode owns it
             txt += u'\nM$_{pk}$ < M$_{\\infty}$: no no-load solution'
