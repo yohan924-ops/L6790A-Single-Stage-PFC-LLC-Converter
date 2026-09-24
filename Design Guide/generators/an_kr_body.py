@@ -638,7 +638,8 @@ def build(A):
     add(p('역률 1 에서 순시 입력 전력은 sin&sup2;&thinsp;&theta; 를 따라, '
           '라인 주파수의 2배로 0 과 평균의 2배 사이를 오간다.'))
     add(eq(r'p_{in}(t)=V_{ac}I_{ac}\,\left[\,1-\cos(2\omega_l t)\,\right]'))
-    add(p('V<sub>ac</sub> 와 I<sub>ac</sub> 는 상용전원 전압과 전류의 실효값이다. '
+    add(p('V<sub>ac</sub> 와 I<sub>ac</sub> 는 상용전원 전압과 전류의 실효값, '
+          '&omega;<sub>l</sub> = 2&pi;f<sub>l</sub> 이다. '
           '부하는 일정한 전력을 요구하므로, 토폴로지가 무엇이든 그 차이를 '
           '저장했다가 몇 ms 뒤에 되돌려 줘야 한다.'))
     add(p('그림&nbsp;%s 의 패널 2 가 그것이다: sin&sup2; 곡선과 평평한 부하 '
@@ -869,6 +870,7 @@ def build(A):
           '점근선까지만 내려간다.'))
     add(eq(r'M_{\infty}\;=\;\lim_{f\to\infty}M_{OL}'
            r'\;=\;\frac{1}{1+\lambda}', key='Minf'))
+    add(p('M<sub>OL</sub> 은 No load(Q = 0, 출력 Open)의 게인 곡선이다.'))
     add(p('<b>요구 최소 게인이 M<sub>&infin;</sub> 아래이면 어느 주파수도 '
           '만족시키지 못한다.</b> 그 주파수를 구하는 스프레드시트는 오류를 내는데, 수식이 깨진 것처럼 보이지만 실제로는 해가 없는 것이다. 탱크가 점근선 위인지 아래인지는 1 %% 차이이고, Full load '
           '검사로는 보이지 않는다. %s 절에 이 설계의 결과가 있다.'
@@ -929,7 +931,9 @@ def build(A):
           '%(Veqhi2).1f&nbsp;Vac (%(rt2).2f:1)</b> 이다. 이 설계는 넓은 범위에서도 '
           '통과한다. 사양을 조일 때 좁은 쪽 숫자를 쓰지 말 것.' % dict(V, rm=V['Vacmax'] / V['Vacmin'], rt=V['Veqhi'] / V['Veqlo'], rt2=V['Veqhi2'] / V['Veqlo2'])))
     add(fig('f18_morph_levels',
-            '각 모드가 적용되는 곳. 띠 안에서는 입력 전압이 올라가는 중인지 내려가는 중인지에 따라 모드가 달라진다.'))
+            '각 모드가 적용되는 곳. 띠 안에서는 입력 전압이 올라가는 중인지 내려가는 중인지에 따라 모드가 달라진다. '
+            'V<sub>BO</sub> 는 R<sub>CFG</sub> 가 정하는 브라운아웃 threshold 다(%s 절).'
+            % SR('브라운아웃과 브리지 구성: CFG 핀')))
     add(note('공칭 상용전원 전압 중 166 ~ 173&nbsp;Vrms 에 드는 것은 없다. 이 구간은 sag 가 왔을 때, 그리고 프로그래머블 AC 소스를 쓴 시험이나 dip·surge 시험에서 나타난다. 램프가 아니라 '
              'threshold 를 가로지르는 <b>스텝</b>으로 시험할 것.'))
     add(note('<b>전환 시 과도 응답.</b> threshold 를 넘으면 한 라인 주기 안에 구동이 2:1 로 '
@@ -989,7 +993,7 @@ def build(A):
           '같다.'))
     add(eq(r'R_{ac}=\frac{4}{\pi^{2}}\,'
            r'\frac{n^{2}V_{o,eff}^{2}}{P_{in,LLC}}', key='Rac'))
-    add(p('P<sub>in,LLC</sub> 는 공진단으로 들어가는 전력이다. LLC 교과서는 모두 8/&pi;&sup2; 계수와 two-stage 컨버터의 출력 전력을 쓴다. 여기서 입력 전력은 2P&thinsp;sin&sup2;&thinsp;&theta; 이므로 '
+    add(p('P<sub>in,LLC</sub> 는 공진단으로 들어가는 전력이다. 일반적인 LLC 식은 8/&pi;&sup2; 계수와 two-stage 컨버터의 출력 전력을 쓴다. 여기서 입력 전력은 2P&thinsp;sin&sup2;&thinsp;&theta; 이므로 '
           'R<sub>ac</sub> 는 p = 2P 인 라인 피크에 고정한다: 8 이 4 가 되고, '
           'Q 는 피크에서의 품질계수이며 다른 곳에서는 Q(&theta;) = '
           'Q<sub>pk</sub>sin&sup2;&thinsp;&theta; 다. two-stage 값을 쓰면 부하를 '
@@ -1118,6 +1122,8 @@ def build(A):
     add(eq(r'L_{\mu}=\sqrt{L_{m}\,(L_{m}+L_{r})}\,,\qquad '
            r'L_{L1}=L_{m}+L_{r}-L_{\mu}\,,\qquad '
            r'L_{L2}=\frac{L_{L1}}{n_{T}^{2}}', key='Lmu'))
+    add(p('L<sub>L1</sub> 은 1차 누설, L<sub>L2</sub> 는 2차 누설로, 각각 비의 '
+          '자기 쪽에 있다.'))
     add(fig('an_integrated',
             '같은 트랜스포머를 두 가지로 그린 것. 위는 실제 구조: 양쪽 누설, '
             '병렬의 실제 L<sub>&mu;</sub>, 비 n<sub>T</sub>&nbsp;:&nbsp;1. '
@@ -1179,7 +1185,7 @@ def build(A):
         '권선창이 넉넉해야 하는 이유다.',
         '권선창 안의 <b>자기 션트</b>: 권선 폭 없이 누설을 얻되, 부품 하나와 더 '
         '까다로운 공차가 대가다.']))
-    add(note('트랜스포머 교과서는 전부 샌드위치로 감으라고 한다. 여기서 '
+    add(note('트랜스포머는 보통 샌드위치로 감으라고 권한다. 여기서 '
              'L<sub>r</sub> 은 설계값이고, 결합을 "개선" 하는 벤더는 컨버터를 '
              '망가뜨린다. 도면의 L<sub>short</sub> 옆에 그렇게 적을 것.'))
 
@@ -1189,7 +1195,7 @@ def build(A):
     add(eq(r'A_{L}=\frac{L_{open}/N_{x}}{N_{p}^{2}}'
            r'\qquad\qquad '
            r'g\;\approx\;\frac{\mu_{0}\,A_{e}}{A_{L}}', key='ALgap'))
-    add(p('N<sub>x</sub> 는 유닛 수(트랜스포머 하나면 1, %s 절), g 는 중앙 다리의 총 갭이다. 갭 '
+    add(p('N<sub>x</sub> 는 유닛 수(트랜스포머 하나면 1, %s 절), g 는 중앙 다리의 총 갭, &mu;<sub>0</sub> 는 진공 투자율이다. 갭 '
           '식은 프린징을 무시하므로 실제로 필요한 갭은 더 크다. '
           '<b>A<sub>L</sub>, 아니면 더 좋게 L<sub>open</sub> 을 적고 갭은 벤더에게 '
           '맡길 것</b>: 벤더가 그 값에 맞춰 갭을 연마하고, LCR 미터로 확인할 수 있다.'
@@ -1372,8 +1378,9 @@ def build(A):
         '비슷한 크기이고 제곱합으로 더해진다.',
         '센터탭 2차에서는 커패시터 리플 전류를 권선당이 아니라 <b>출력 '
         '노드</b>에서 판단할 것.',
-        'ESR 은 <b>스위칭 주파수</b>의 값을 쓸 것. 120&nbsp;Hz tan&thinsp;'
-        '&delta; 값은 5 ~ 10 배 크다.']))
+        'ESR 은 전류 성분마다 그 주파수의 값을 쓸 것: 스위칭 성분에는 '
+        '<b>스위칭 주파수</b> ESR, 2f<sub>l</sub> 성분에는 tan&thinsp;&delta; '
+        '에서 구한 <b>120&nbsp;Hz</b> ESR. 여기서는 두 성분의 크기가 비슷하다.']))
     add(note('컨트롤러의 기동 허용 시간은 정해져 있고, 이 뱅크는 일반 설계보다 훨씬 큰 기동 부하다. 뱅크를 모두 단 상태의 cold start 를 초기에 확인할 것.'))
 
     add(h2('반도체 요구조건'))
@@ -2513,7 +2520,10 @@ def build(A):
               '라인 사이클 평균; 최악 스위칭 사이클에서는 %(b).2f W'
               % dict(b=A.SH['P.RCS_pk'])],
              ['출력 커패시터 ESR', '%(a).3f W'
-              % dict(a=A.SH['P.Cout']), '&mdash;'],
+              % dict(a=A.SH['P.Cout']),
+              '리플 전류 전부를 스위칭 주파수 ESR 로 계산. 더 큰 120&nbsp;Hz '
+              'ESR 에 흐르는 2f<sub>l</sub> 성분은 빠져 있다(실장 부품의 '
+              'tan&thinsp;&delta; 모름)'],
              ['<b>항목 합계</b>', '<b>%(t).2f W</b>'
               % dict(t=A.SH['P.mos_dc'] + A.SH['P.mos_sw'] + A.SH['P.SR']
                      + A.SH['P.RCS'] + A.SH['P.Cout']),
@@ -3114,7 +3124,7 @@ def build(A):
         '%.0f&nbsp;%% 과대평가한다.' % _d_overstate(A),
         '<b>트랜스포머 도면에 턴수 옆에 L<sub>open</sub> 과 L<sub>short</sub> '
         '를 적는다.</b>',
-        '<b>ESR 은 스위칭 주파수 값</b>, 120&nbsp;Hz 값이 아니다.',
+        '<b>ESR 은 전류 성분마다 그 주파수의 값</b>: 스위칭과 2f<sub>l</sub>.',
         '<b>L<sub>m</sub> 을 올렸으면 ZVS 를 다시 검사한다.</b>',
         '<b>ZVS 는 선정한 탱크를 스윕해 검증한다.</b> 닫힌 식은 오차 부호가 '
         '정해져 있지 않다.',

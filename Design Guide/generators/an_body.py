@@ -717,7 +717,7 @@ def build(A):
           'average at twice the line frequency:'))
     add(eq(r'p_{in}(t)=V_{ac}I_{ac}\,\left[\,1-\cos(2\omega_l t)\,\right]'))
     add(p('with V<sub>ac</sub> and I<sub>ac</sub> the rms mains voltage and '
-          'current. The load wants constant power, so the difference must be '
+          'current and &omega;<sub>l</sub> = 2&pi;f<sub>l</sub>. The load wants constant power, so the difference must be '
           'stored and returned a few milliseconds later, whatever the '
           'topology.'))
     add(p('Panel&nbsp;2 of Figure&nbsp;%s draws it: the two shaded areas '
@@ -1023,6 +1023,8 @@ def build(A):
           'down to an asymptote:'))
     add(eq(r'M_{\infty}\;=\;\lim_{f\to\infty}M_{OL}'
            r'\;=\;\frac{1}{1+\lambda}', key='Minf'))
+    add(p('with M<sub>OL</sub> the gain curve at no load (Q = 0, output '
+          'open).'))
     add(p('<b>If the required minimum gain is below M<sub>&infin;</sub>, no '
           'frequency satisfies it.</b> A spreadsheet solving for that '
           'frequency returns an error, and the error looks like a broken '
@@ -1097,7 +1099,9 @@ def build(A):
           'figure when tightening a specification.' % dict(V, rm=V['Vacmax'] / V['Vacmin'], rt=V['Veqhi'] / V['Veqlo'], rt2=V['Veqhi2'] / V['Veqlo2'])))
     add(fig('f18_morph_levels',
             'Where each mode applies. Inside the band the mode depends on '
-            'which direction the mains arrived from.'))
+            'which direction the mains arrived from. V<sub>BO</sub> is the '
+            'brown-out threshold, set by R<sub>CFG</sub> (Section&nbsp;%s).'
+            % SR('Brown-out and bridge configuration: the CFG pin')))
     add(note('No nominal mains voltage lies in 166 to 173&nbsp;Vrms; the '
              'band is met in sags, on a programmable ac source and in dip and '
              'surge tests. '
@@ -1175,8 +1179,8 @@ def build(A):
           'evaluated at the line peak, is'))
     add(eq(r'R_{ac}=\frac{4}{\pi^{2}}\,'
            r'\frac{n^{2}V_{o,eff}^{2}}{P_{in,LLC}}', key='Rac'))
-    add(p('with P<sub>in,LLC</sub> the power into the resonant stage. Every '
-          'LLC text writes 8/&pi;&sup2; with the one output power a two-stage '
+    add(p('with P<sub>in,LLC</sub> the power into the resonant stage. The '
+          'usual LLC form writes 8/&pi;&sup2; with the one output power a two-stage '
           'converter has. Here the drawn power is '
           '2P&thinsp;sin&sup2;&thinsp;&theta;, so R<sub>ac</sub> is pinned '
           'to the line peak, where p = 2P: the 8 becomes a 4, and Q means '
@@ -1338,6 +1342,8 @@ def build(A):
     add(eq(r'L_{\mu}=\sqrt{L_{m}\,(L_{m}+L_{r})}\,,\qquad '
            r'L_{L1}=L_{m}+L_{r}-L_{\mu}\,,\qquad '
            r'L_{L2}=\frac{L_{L1}}{n_{T}^{2}}', key='Lmu'))
+    add(p('with L<sub>L1</sub> the primary leakage and L<sub>L2</sub> the '
+          'secondary leakage, each on its own side of the ratio.'))
     add(fig('an_integrated',
             'The same transformer drawn both ways. Above, as wound: leakage '
             'on both sides, the physical L<sub>&mu;</sub> in shunt, ratio '
@@ -1419,7 +1425,7 @@ def build(A):
         'and why the window must be generous.',
         '<b>A magnetic shunt</b> in the window: leakage without winding '
         'width, at the cost of a part and a harder tolerance.']))
-    add(note('Every transformer text says to interleave. Here L<sub>r</sub> '
+    add(note('The usual transformer advice is to interleave. Here L<sub>r</sub> '
              'is a design value, and a supplier who &ldquo;improves&rdquo; '
              'the coupling breaks the converter. Say so on the drawing, next '
              'to L<sub>short</sub>.'))
@@ -1431,8 +1437,9 @@ def build(A):
            r'\qquad\qquad '
            r'g\;\approx\;\frac{\mu_{0}\,A_{e}}{A_{L}}', key='ALgap'))
     add(p('with N<sub>x</sub> the number of units in the assembly (1 for a '
-          'single transformer; Section&nbsp;%s) and g the '
-          'total centre-leg gap. The gap expression ignores fringing, which '
+          'single transformer; Section&nbsp;%s), g the '
+          'total centre-leg gap and &mu;<sub>0</sub> the permeability of free '
+          'space. The gap expression ignores fringing, which '
           'makes the gap actually needed larger. <b>Specify A<sub>L</sub>, or '
           'better L<sub>open</sub>, and leave the gap to the supplier</b>: '
           'that is what they grind to and what a meter can check.'
@@ -1684,8 +1691,10 @@ def build(A):
         'it is comparable to the switching part and adds in quadrature.',
         'With a centre-tapped secondary, judge capacitor ripple current at '
         'the <b>output node</b>, not per winding.',
-        'Use the ESR at the <b>switching frequency</b>; the 120&nbsp;Hz '
-        'tan&thinsp;&delta; figure is five to ten times larger.']))
+        'Use the ESR at the frequency of each current component: the '
+        '<b>switching-frequency</b> ESR for the switching part, the '
+        '<b>120&nbsp;Hz</b> figure from tan&thinsp;&delta; for the '
+        '2f<sub>l</sub> part. Here the two parts are of similar size.']))
     add(note('The controller start-up window is finite and this bank is a '
              'far heavier start-up load than a conventional design. Cold '
              'start into the full bank should be measured early.'))
@@ -3005,7 +3014,10 @@ def build(A):
               'line-cycle average; %(b).2f W at the worst switching cycle'
               % dict(b=A.SH['P.RCS_pk'])],
              ['Output capacitor ESR', '%(a).3f W'
-              % dict(a=A.SH['P.Cout']), '&mdash;'],
+              % dict(a=A.SH['P.Cout']),
+              'all of the ripple current in the switching-frequency ESR; '
+              'the 2f<sub>l</sub> part in the higher 120&nbsp;Hz ESR is not '
+              'in it (tan&thinsp;&delta; of the fitted part not known)'],
              ['<b>Itemised total</b>', '<b>%(t).2f W</b>'
               % dict(t=A.SH['P.mos_dc'] + A.SH['P.mos_sw'] + A.SH['P.SR']
                      + A.SH['P.RCS'] + A.SH['P.Cout']),
@@ -3648,7 +3660,8 @@ def build(A):
         'the loss by about %.0f&nbsp;%% here.' % _d_overstate(A),
         '<b>Put L<sub>open</sub> and L<sub>short</sub> on the transformer '
         'drawing</b> beside the turns.',
-        '<b>ESR at the switching frequency</b>, not 120&nbsp;Hz.',
+        '<b>ESR at each current component&rsquo;s own frequency</b>: '
+        'switching and 2f<sub>l</sub>.',
         '<b>Recheck ZVS after raising L<sub>m</sub>.</b>',
         '<b>Verify ZVS by sweeping the selected tank</b>; the closed form '
         'has no fixed error sign.',
