@@ -3560,8 +3560,11 @@ def build(A):
              r'V_{OVP2}=\frac{2.5}{2.3}\cdot%(OVP1).2f'
              r'=%(OVP2).2f\;\mathrm{V}'
              % dict(V, naux=A.SH['n.aux'])))
-    add(p('Start-up hands over to the loop at %(su).2f&nbsp;V of output.'
-          % dict(V, su=A.SH['V.out_SUend'])))
+    add(p('Start-up hands over to the loop when the ZCD pin reaches '
+          '%(zs).2f&nbsp;V, the datasheet&rsquo;s start-up end threshold. '
+          'Through the same divider that is %(zs).2f/2.3 of the OVP1 output '
+          'voltage: %(su).2f&nbsp;V of output.'
+          % dict(V, su=A.SH['V.out_SUend'], zs=A._builder_const('V.ZCD_SUend'))))
     add(note('Swapping the two resistors makes OVP1 trip below a volt of '
              'output, so the converter never starts. Reversed winding '
              'polarity makes the bridge hard switch from the first pulse.'))

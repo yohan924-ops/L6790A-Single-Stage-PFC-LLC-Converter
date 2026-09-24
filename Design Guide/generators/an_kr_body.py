@@ -3036,8 +3036,10 @@ def build(A):
              r'V_{OVP2}=\frac{2.5}{2.3}\cdot%(OVP1).2f'
              r'=%(OVP2).2f\;\mathrm{V}'
              % dict(V, naux=A.SH['n.aux'])))
-    add(p('기동 제어는 출력 %(su).2f&nbsp;V 에서 루프로 넘어간다.'
-          % dict(V, su=A.SH['V.out_SUend'])))
+    add(p('기동 제어는 ZCD 핀이 데이터시트의 기동 종료 threshold '
+          '%(zs).2f&nbsp;V 에 닿을 때 루프로 넘어간다. 같은 분압기를 거치므로 '
+          'OVP1 출력 전압의 %(zs).2f/2.3 배, 곧 출력 %(su).2f&nbsp;V 다.'
+          % dict(V, su=A.SH['V.out_SUend'], zs=A._builder_const('V.ZCD_SUend'))))
     add(note('두 저항을 바꿔 끼우면 OVP1 이 출력 1 V 아래에서 트립해 컨버터가 '
              '기동하지 못한다. 권선 극성이 뒤집히면 첫 펄스부터 브리지가 하드 '
              '스위칭한다.'))

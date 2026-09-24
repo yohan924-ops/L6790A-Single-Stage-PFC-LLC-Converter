@@ -38,6 +38,7 @@
 | `fix_xl_fbcorner.py` · `fix_xl_fnmax_shared.py` | `Vin_max` 를 FB 코너(332.34 V)로 + `fn.max` 클램프. **후자는 공유 수식을 깨뜨려 되돌렸다** — `HISTORY.md` 시트 §3.7 |
 | `fix_xl_ipri.py` | 1차 실효의 θ=0 끝점(자화 전류) |
 | `fix_xl_f.py` | 실현 출력전압을 `Design Spec` 에 표기 |
+| `fix_xl_suend.py` | `Device Setting` D71 기동 종료 ZCD 임계 1.35 → **1.36 V**(DS 값, 2026-09-24 사용자) + D88·D98·D99 캐시값 재계산 · CHANGELOG 기록. 정본·variants 복사본·6:1 |
 | `fix_xl_cc.py` | **원인 B(C.18) 수정** — `CC` 에 θ 3열 + Simpson 적분(열 J)을 넣고 설계를 거기에 연결. 적용됨 |
 | **`fix_xl_simpson_refs.py`** | **살아 있는 참조 위에 손으로 적은 상수가 얹혀 있었다** — C.18 이 `CC` 에 Simpson J열을 만들고 세 셀만 연결했다. `Power Components` D60·D61·D84·D85 는 θ=π/4 한 점(`CC!C..`)을 읽은 채 F열 손입력으로 덮여 있었다. J열로 연결하고 손입력 4칸 삭제 |
 | **`fix_xl_comp.py`** | **kT 를 1 에서 2 / 1.5 로** — 데이터시트 max 는 25 °C 공정산포이지 온도가 아니다. 그리고 **`V.Fo` 1.45 → 1.15 V** — 이 한 입력이 두 문서의 R_B 창을 **겹치지 않게** 벌려 놓고 있었다. R_P 1.3 k · R_B 6.2 k |

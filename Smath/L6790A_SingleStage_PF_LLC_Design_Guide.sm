@@ -13658,7 +13658,7 @@
     <math>
       <input>
         <e type="operand">V.ZCD_SUend</e>
-        <e type="operand">1.35</e>
+        <e type="operand">1.36</e>
         <e type="operand" style="unit">V</e>
         <e type="operator" args="2">*</e>
         <e type="operator" args="2">:</e>
@@ -13689,7 +13689,7 @@
           <e type="operand" style="unit">V</e>
         </contract>
         <result action="numeric">
-          <e type="operand">16.53</e>
+          <e type="operand">16.65</e>
         </result>
     </math>
     </region>

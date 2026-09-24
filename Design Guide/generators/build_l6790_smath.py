@@ -986,7 +986,9 @@ S.row('- Test current on the vendor specification:', 'I.sat_spec',
            'well under the tank peak I.Lr_pk and that is correct - with the '
            'secondary OPEN there is no ampere-turn cancellation, so this '
            'current makes the same core flux that I.Lr_pk makes in service.')
-S.const('- ZCD voltage at the end of start-up:', 'V.ZCD_SUend', "1.35*'V", 'V', 2)
+#   V.ZCD_SUend: the draft datasheet's electrical characteristics give 1.36 V
+#   (typ); the ST tool carried 1.35 V.  Datasheet value, user 2026-09-24.
+S.const('- ZCD voltage at the end of start-up:', 'V.ZCD_SUend', "1.36*'V", 'V', 2)
 S.row('- Output voltage where start-up hands over:', 'V.out_SUend',
       "V.ZCD_SUend/(2.3*'V)*V.OVP1_act", 'V', 2)
 S.row('- OVP1 against the target (near 1):', 'k.OVP1', 'V.OVP1_act/V.OVP1_out', None, 3)
