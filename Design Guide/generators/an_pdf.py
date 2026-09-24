@@ -248,6 +248,23 @@ V['ripLHS'] = (1 - V['dv'] / 200.0) ** 2 - V['kv'] ** 2
 V['ripRHS'] = 4 * pi * V['flmin'] * (V['dv'] / 100.0) * V['Thold'] * 1e-3
 V['ripK'] = V['Crip'] / V['Chold']      # which condition wins, and by how much
 V['ripKs'] = V['ripLHS'] / V['ripRHS']  # the same call made by the screening rule
+
+
+def _rip_swap(V):
+    """the ripple allowance [%] at which the two sides of the screening
+    rule are equal - above it hold-up sizes the bank.  The text said "at
+    10 % they would swap"; they swap just above 5 % (2026-09-24)."""
+    def g(dv):
+        return ((1 - dv / 200.0) ** 2 - V['kv'] ** 2
+                - 4 * pi * V['flmin'] * (dv / 100.0) * V['Thold'] * 1e-3)
+    lo, hi = 0.01, 100.0
+    for _ in range(80):
+        m = 0.5 * (lo + hi)
+        lo, hi = (m, hi) if g(m) > 0 else (lo, m)
+    return lo
+
+
+V['ripSwap'] = _rip_swap(V)
 # what hold-up would be if it were allowed to start from Vout instead
 V['tholdVo'] = (V['Cout'] * 1e-3 * (V['Vout'] ** 2 - V['Vomin'] ** 2)
                 / (2 * V['Pout']) * 1e3)
@@ -1074,8 +1091,8 @@ def legal():
         'TBD and at least one place where it contradicts itself. Check every '
         'controller constant against the released datasheet before the design '
         'goes to production.',
-        'The worked design has not been built. Only the numbers marked as '
-        'measured are measured; the rest are calculated.',
+        'The worked design has not been built. None of its numbers is '
+        'measured: each is calculated or read from a component datasheet.',
         'The figures were drawn for this note, except the power-stage, '
         'controller and compensator drawings of Chapter&nbsp;'
         + secref('Design procedure') + ', which come '

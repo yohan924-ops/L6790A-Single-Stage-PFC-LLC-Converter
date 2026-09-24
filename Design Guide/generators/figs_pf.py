@@ -44,7 +44,16 @@ def _cross(fn, g, level):
     """the INDUCTIVE crossing: the highest f_n at which the curve still
     reaches `level`.  None when the curve never gets there."""
     idx = np.where(g >= level)[0]
-    return None if not len(idx) else float(fn[idx[-1]])
+    if not len(idx):
+        return None
+    i = idx[-1]
+    if i + 1 >= len(fn):
+        return float(fn[i])
+    # interpolate inside the grid step: the last point at or above the
+    # level alone floors the crossing onto the grid, and Table 11 then read
+    # 0.06 kHz below the sweep's root in Table 12 (156.3 vs 156.4 kHz,
+    # 2026-09-24)
+    return float(fn[i] + (fn[i + 1] - fn[i]) * (g[i] - level) / (g[i] - g[i + 1]))
 
 
 def _mz(lam, fn):

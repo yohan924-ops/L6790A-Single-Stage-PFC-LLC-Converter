@@ -170,7 +170,7 @@ def an_rac(save, foot):
     ax = _ax(fig, [0.02, 0.30, 0.62, 0.66], -1.2, 14.6, -2.3, 4.6)
     # the tank, standing in as a current source
     S.acsrc(ax, 0.3, 1.5, None)
-    S.label(ax, 0.06, 0.76, 'i$_{ac}$', size=11, color=MAG, ha='right')
+    S.label(ax, 0.06, 0.76, 'i$_{RI}$', size=11, color=MAG, ha='right')
     S.wire(ax, [(0.3, 1.86), (0.3, 3.3), (2.5, 3.3)])
     S.wire(ax, [(0.3, 1.14), (0.3, -0.3), (2.5, -0.3)])
     S.label(ax, 1.45, 1.80, 'v$_{RI}$', size=11.5)
@@ -245,7 +245,7 @@ def an_rac(save, foot):
     # the two waveforms the argument rests on
     t = np.linspace(0, 2, 600)
     aw = _wave_ax(fig, [0.07, 0.115, 0.36, 0.145], 0, 2, -1.4, 1.4,
-                  'i$_{ac}$')
+                  'i$_{RI}$')
     aw.plot(t, np.sin(np.pi * t), color=MAG, lw=2.0)
     aw.text(0.5, 1.13, 'a sine, because the tank filters everything else',
             transform=aw.transAxes, ha='center', va='bottom', fontsize=9.8,
@@ -1085,17 +1085,18 @@ def an_cap_ind(save, foot):
                                      2.35 * np.exp(-(tt - k) / 0.009), 0.0)
             ids = np.clip(ids, ILOW, IHI)
         y = 0.410
-        #  v_d is the mid-point to 0, which in a half bridge is 0 to V_in -
-        #  it was drawn +-1 about the axis, as if it were the full bridge's
-        #  v_A - v_B.  The switch current is S1's, named as in Figure 2.
-        rows = (('v$_d$', 0.0735, -0.45, 1.45),
+        #  The trace is the leg-1 mid-point to 0, 0 to V_in.  It was
+        #  labelled v_d, which the symbol table defines as v_A - v_B and
+        #  which swings +-V_in in full bridge - so it is v_A (2026-09-24).
+        #  The switch current is S1's, named as in Figure 2.
+        rows = (('v$_A$', 0.0735, -0.45, 1.45),
                 ('i$_{Lr}$', 0.0735, -1.45, 1.45),
                 ('i$_{S1}$', 0.0931, ILOW, IHI))
         for nmx, h, lo, hi in rows:
             y -= h + 0.0245
             a = _wave_ax(fig, [0.095 + c * 0.462, y, 0.376, h], 0, 2,
                          lo, hi, nmx if c == 0 else None)
-            if nmx.startswith('v$_d$'):
+            if nmx.startswith('v$_A$'):
                 a.plot(tt, (vd + 1.0) / 2.0, color=NAVY, lw=1.9)
             elif nmx.startswith('i$_{Lr}$'):
                 a.plot(tt, cur, color=col, lw=2.1)
@@ -1184,8 +1185,9 @@ def commutation(ax, cap, title=True):
     S.wire(ax, [(XL, YM), (XB0, YM)])
     S.wire(ax, [(XB1, YM), (XR, YM), (XR, LO)])
     S.dot(ax, XL, YM)
-    #  the node the v_d row is measured at, against 0
-    X.txt(ax, XL - 0.30, YM, 'v$_d$', size=11, weight='bold', ha='right')
+    #  the node the v_A row is measured at, against 0 (leg-1 mid-point;
+    #  v_d is v_A - v_B, 2026-09-24)
+    X.txt(ax, XL - 0.30, YM, 'v$_A$', size=11, weight='bold', ha='right')
     ax.add_patch(Rectangle((XB0, YM - 0.70), XB1 - XB0, 1.40, fc=LT,
                            ec=GREY, lw=1.3, zorder=4))
     X.txt(ax, (XB0 + XB1) / 2, YM, 'resonant\ntank', size=10.5, z=5)

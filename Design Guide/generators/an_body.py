@@ -140,7 +140,7 @@ def build(A):
     add(fig('an_rac',
             'Why the rectifier and load can be one resistance. The output is '
             'stiff, so the tank sees a square voltage v<sub>RI</sub>; the tank '
-            'passes only the fundamental, so the current i<sub>ac</sub> is a '
+            'passes only the fundamental, so the current i<sub>RI</sub> is a '
             'sine. At the fundamental the pair takes the same power as a '
             'resistor.'))
     add(fig('an_fha_steps',
@@ -321,7 +321,7 @@ def build(A):
             'S<sub>1</sub> closes onto a conducting diode. Right, it is '
             'negative, has carried the mid-point up during the dead time, and '
             'S<sub>1</sub> finds its own body diode conducting at zero volts. '
-            '<b>Bottom:</b> the mid-point voltage v<sub>d</sub> (to 0), the '
+            '<b>Bottom:</b> the mid-point voltage v<sub>A</sub> (to 0), the '
             'tank current and the drain current i<sub>S1</sub> of the closing '
             'switch, to one scale.', width=CW))
     ext(bullets([
@@ -450,10 +450,14 @@ def build(A):
     add(eq(r'N_{p}\,i_{p}\;-\;N_{s}\,i_{s}\;=\;N_{p}\,i_{\mu}', key='mmf'))
     add(p('The load current passes through by transformer action and never '
           'enters the core. What the core holds is the magnetising energy '
-          '&frac12;L<sub>m</sub>i<sub>&mu;</sub>&sup2;, and that is not a '
-          'by-product: i<sub>&mu;</sub> is what swings the bridge node in the '
-          'dead time. The gap exists to set L<sub>m</sub>, not to store '
-          'load energy.'))
+          '&frac12;L<sub>&mu;</sub>i<sub>&mu;</sub>&sup2;, with '
+          'L<sub>&mu;</sub> the magnetising inductance of the physical '
+          'transformer (it is not quite the tank&rsquo;s L<sub>m</sub>; '
+          'Section&nbsp;%s). That energy is not a by-product: '
+          'i<sub>&mu;</sub> is what swings the bridge node in the dead time. '
+          'The gap exists to set L<sub>&mu;</sub>, and through it '
+          'L<sub>m</sub>, not to store load energy.'
+          % SR('Two ratios, two inductances')))
     add(fig('an_flyback_llc',
             'Left: the switch and the rectifier are never on together, so '
             'the conducting winding carries all the magnetising current and '
@@ -634,9 +638,9 @@ def build(A):
           'harmonics.'))
     add(h2('Power factor, and why it is not the same as distortion'))
     add(p('<b>Power factor</b> is the ratio of real power to apparent power, '
-          'with V<sub>rms</sub> and I<sub>rms</sub> the rms input voltage and '
+          'with V<sub>ac</sub> and I<sub>ac</sub> the rms input voltage and '
           'current:'))
-    add(eq(r'PF=\frac{P}{V_{rms}I_{rms}}\;=\;\cos\varphi_{1}\;\times\;\frac{I_{1,rms}}{I_{rms}}'))
+    add(eq(r'PF=\frac{P}{V_{ac}I_{ac}}\;=\;\cos\varphi_{1}\;\times\;\frac{I_{1,rms}}{I_{ac}}'))
     add(p('with P the average power, I<sub>1,rms</sub> the rms of the '
           'fundamental alone, and &phi;<sub>1</sub> its phase against the '
           'voltage. <b>Displacement</b> (the phase) is what a motor gets '
@@ -645,8 +649,8 @@ def build(A):
           'and still scores about 0.6.'))
     add(p('Total harmonic distortion, THD, is the harmonic content as a '
           'fraction of the fundamental:'))
-    add(eq(r'THD=\frac{\sqrt{I_{rms}^{2}-I_{1,rms}^{2}}}{I_{1,rms}}'
-           r'\,,\qquad \frac{I_{1,rms}}{I_{rms}}=\frac{1}{\sqrt{1+THD^{2}}}'))
+    add(eq(r'THD=\frac{\sqrt{I_{ac}^{2}-I_{1,rms}^{2}}}{I_{1,rms}}'
+           r'\,,\qquad \frac{I_{1,rms}}{I_{ac}}=\frac{1}{\sqrt{1+THD^{2}}}'))
     add(note('A converter can hold PF above 0.99 and still fail '
              'IEC&nbsp;61000-3-2, which limits <i>individual</i> harmonics '
              'in amperes. Class&nbsp;D covers only the product types the '
@@ -687,7 +691,8 @@ def build(A):
             'The two-stage arrangement with the waveform at every node. The '
             'buffer that absorbs the twice-line-frequency pulsation sits '
             'between the stages at 400&nbsp;V. Ripple on the dc nodes is '
-            'exaggerated.', width=CW))
+            'exaggerated; v<sub>ac</sub> is the instantaneous mains voltage.',
+            width=CW))
     add(p('The bus capacitor does two jobs:'))
     ext(bullets([
         'it <b>buffers</b> the difference between the pulsating input power '
@@ -970,7 +975,7 @@ def build(A):
              'rectifier body diode and the SR dead time matter here.'))
 
     add(h2('Why &lambda; must be about 0.5'))
-    add(p('A classic LLC uses m&nbsp;=&nbsp;L<sub>p</sub>/L<sub>r</sub> of 5 '
+    add(p('A classic LLC uses m&nbsp;=&nbsp;(L<sub>r</sub>+L<sub>m</sub>)/L<sub>r</sub> of 5 '
           'to 10, that is &lambda; of 0.11 to 0.25. A single-stage converter '
           'needs very high gain near the zero crossing, and peak gain falls '
           'as &lambda; falls. ST&rsquo;s evaluation board runs '
@@ -1258,9 +1263,10 @@ def build(A):
           'design&rsquo;s waveforms; Table&nbsp;%(t)s says what each mark '
           'sets.' % dict(f=FR('an_xfmr_read'), t=TR('xfmr-read'))))
     _J = _CORE.J_CU
-    ext(tbl('What each mark in the figure sets. Currents are per unit of '
-            'the assembly: the primaries are in series and the secondaries '
-            'in parallel.',
+    ext(tbl('What each mark in the figure sets. Currents are per unit: for '
+            'one transformer that is the whole part; split into N<sub>x</sub> '
+            'units (Section&nbsp;%s), the primaries are in series and the '
+            'secondaries in parallel.' % SR('If one transformer is not practical'),
             [['Mark', 'Item', 'Read from &mdash; and over what',
               'What it sets'],
              ['<b>1</b>', 'Primary peak current',
@@ -1271,8 +1277,8 @@ def build(A):
               'test.'],
              ['<b>2</b>', 'Primary rms current',
               'i<sub>p</sub>&sup2; averaged over the whole switching period, '
-              'then over the line half cycle. Every unit carries the same '
-              'current: the primaries are in series.',
+              'then over the line half cycle. With N<sub>x</sub> units each '
+              'carries all of it: the primaries are in series.',
               'Primary copper: A<sub>cu</sub> = I<sub>rms</sub>/J per unit'],
              ['<b>3</b>', 'Magnetising peak',
               'The dashed i<sub>Lm</sub> at the switching instant. Below '
@@ -1282,8 +1288,8 @@ def build(A):
               'DC-overlap test current (mark 7)'],
              ['<b>4</b>', 'Secondary peak current',
               'Top of the pulse in either secondary winding, same worst '
-              'cycle. Per unit it is 1/N<sub>x</sub> of the rectifier-leg '
-              'value: the secondaries are in parallel.',
+              'cycle. With N<sub>x</sub> units each carries 1/N<sub>x</sub> of '
+              'the rectifier-leg value: the secondaries are in parallel.',
               'Rectifier peak rating; the foil termination'],
              ['<b>5</b>', 'Secondary rms current, each winding',
               'One pulse per period in each winding, so the rms is taken '
@@ -1424,11 +1430,13 @@ def build(A):
     add(eq(r'A_{L}=\frac{L_{open}/N_{x}}{N_{p}^{2}}'
            r'\qquad\qquad '
            r'g\;\approx\;\frac{\mu_{0}\,A_{e}}{A_{L}}', key='ALgap'))
-    add(p('with N<sub>x</sub> the number of units in the assembly and g the '
+    add(p('with N<sub>x</sub> the number of units in the assembly (1 for a '
+          'single transformer; Section&nbsp;%s) and g the '
           'total centre-leg gap. The gap expression ignores fringing, which '
           'makes the gap actually needed larger. <b>Specify A<sub>L</sub>, or '
           'better L<sub>open</sub>, and leave the gap to the supplier</b>: '
-          'that is what they grind to and what a meter can check.'))
+          'that is what they grind to and what a meter can check.'
+          % SR('If one transformer is not practical')))
 
     add(h2('The window: wire, current density and what actually fits'))
     add(p('Marks <b>2</b> and <b>5</b> of Figure&nbsp;%(f)s. Copper is sized '
@@ -1446,9 +1454,10 @@ def build(A):
           'is <b>0.3 or less</b> with Litz wire once insulation, bobbin '
           'wall, margins and tape are counted. Sizing on bare copper '
           'overstates what fits by three times.'))
-    add(note('With primaries in series every unit carries the whole primary '
-             'current; only the secondaries share. That is why splitting '
-             'helps a low-voltage, high-current output.'))
+    add(note('Split into N<sub>x</sub> units (Section&nbsp;%s), every unit '
+             'carries the whole primary current, because the primaries are in '
+             'series; only the secondaries share. That is why splitting helps '
+             'a low-voltage, high-current output.' % SR('If one transformer is not practical')))
 
     add(h2('Skin depth, and why the wire is not a wire'))
     add(p('At the switching frequency current crowds into a surface layer '
@@ -2080,14 +2089,14 @@ def build(A):
               'about %.0f %%; nothing downstream is sensitive' % (100 * (V['etaHB'] / 95.0 - 1))],
              ['Oscillator idle time', 'T<sub>idle</sub>',
               '%(Tidle).0f ns' % V, 'assumed',
-              'the draft datasheet also says 700 ns, which would close the '
-              'floor margin &mdash; the first thing to measure'],
+              'the draft datasheet also implies 350 and 700 ns; 700 ns would '
+              'close the floor margin &mdash; the first thing to measure'],
              ['R<sub>DS(on)</sub> temperature factor', 'k<sub>T</sub>',
               '%(Rdpk).1f / %(Rdsk).1f' % V, 'assumed',
               'primary / secondary, read off the datasheet curves at '
               'T<sub>j,max</sub>'],
              ['Burst entry point', 'r<sub>BM</sub>',
-              '%(PinBM).0f W (%(rBM).0f %% of rated)'
+              '%(PinBM).0f W (%(rBM).0f %% of P<sub>in</sub>)'
               % dict(V, rBM=A.SH['r.BM'] * 100), 'assumed',
               'sets R<sub>BM</sub>, then checked against the feedback '
               'ripple']],
@@ -2120,7 +2129,7 @@ def build(A):
               'C<sub>T</sub> %(CT).0f pF, R<sub>CS</sub> %(RCS).1f m&Omega;, '
               'R<sub>CFG</sub> %(RCFG).0f k&Omega;, '
               'R<sub>BM</sub> %(RBM).0f k&Omega;' % V],
-             ['Loop', 'f<sub>cross</sub> %(fcross).2f Hz, '
+             ['Loop', 'f<sub>c</sub> %(fcross).2f Hz, '
               '&Phi;<sub>M</sub> %(PM).2f&deg;, '
               'third harmonic %(D3).2f %%' % V]],
             widths=[CW * 0.18, CW * 0.82], split=True))
@@ -2718,9 +2727,9 @@ def build(A):
     _R = _CORE.CORES[_CORE.CHOSEN]
     _cw = _CORE.window(V) / _CORE.K_U
     add(p('The core is TDK <b>%(chosen)s</b>, %(mat)s (core %(core)s, coil '
-          'former %(former)s), centre leg ground to '
-          'A<sub>L</sub>&nbsp;=&nbsp;%(AL).0f&nbsp;nH, about %(gap).1f&nbsp;mm '
-          'of gap. Figure&nbsp;%(f)s shows the section and the winding; '
+          'former %(former)s), with a distributed gap on the centre leg, about '
+          '%(gap).1f&nbsp;mm in total, ground to '
+          'A<sub>L</sub>&nbsp;=&nbsp;%(AL).0f&nbsp;nH. Figure&nbsp;%(f)s shows the section and the winding; '
           'Table&nbsp;%(t)s names each item and Table&nbsp;%(t2)s gives the '
           'arithmetic.'
           % dict(chosen=_CORE.CHOSEN, mat=_R['material'], core=_R['core'],
@@ -2853,15 +2862,16 @@ def build(A):
               % (2 * V['Ns'] * _w['n_foil'], _w['t_foil'], _CORE.T_FOIL_INS,
                  _w['build_s'])],
              ['Left between the windings',
-              '%.1f &minus; 2 &times; %.1f &minus; %.2f &minus; %.1f = '
+              '%.1f &minus; 2 &times; %.1f &minus; %.3f &minus; %.3f = '
               '<b>%.2f mm</b>'
               % (_w['M']['wind_w'], _CORE.MARGIN, _w['w_pri'], _w['w_foil'],
                  _w['gap']), ''],
              ['Copper in the window',
-              '%d &times; %.2f + %d &times; %.2f = %.1f mm&sup2;, '
-              '%.0f %% of A<sub>N</sub> at k<sub>u</sub> = %.2f'
+              '%d &times; %.2f + %d &times; %.2f = %.1f mm&sup2;; at '
+              'k<sub>u</sub> = %.2f that needs %.0f mm&sup2; of window, '
+              '%.0f %% of A<sub>N</sub> = %.0f mm&sup2;'
               % (V['Np'], _rp[3], 2 * V['Ns'], _rs[3], _CORE.window(V),
-                 100 * _cw / _R['AN'], _CORE.K_U),
+                 _CORE.K_U, _cw, 100 * _cw / _R['AN'], _R['AN']),
               '']],
             widths=[CW * 0.26, CW * 0.40, CW * 0.34],
             key='winding', split=True))
@@ -2878,8 +2888,8 @@ def build(A):
               'NAUX %(Naux)d T' % V,
               'two secondary windings, centre tap outside the part'],
              ['Open-circuit inductance',
-              '%(Lopen).1f &micro;H, &minus;%(Ldrop).1f %% at worst'
-              % V,
+              '%(Lopen).1f &micro;H, no more than %(Ldrop).1f %% low '
+              '(Equation&nbsp;%(e)s)' % dict(V, e=ER('Ldrop')),
               'measured across NP1; every other winding (NS2, NS3, NAUX) open; '
               'LCR meter 100 kHz, 1 V'],
              ['Leakage inductance', '%(Lshort).1f &micro;H &plusmn;10 %%' % V,
@@ -2930,11 +2940,11 @@ def build(A):
     #  the margin of the screen just shown, not the sheet's C ratio: that
     #  one uses the ripple of the bank as built and read 1.060 under a
     #  line whose two sides divide to 1.053 (2026-09-23)
-    add(p('The left side is only %(pks).1f&nbsp;%% larger; at 10&nbsp;%% '
-          'ripple they would swap. The bank fitted is the next assembly above '
+    add(p('The left side is only %(pks).1f&nbsp;%% larger; allow more than %(swap).1f&nbsp;%% '
+          'ripple and hold-up would decide instead. The bank fitted is the next assembly above '
           '%(Crip).1f&nbsp;mF: <b>%(Cout1).0f&nbsp;&micro;F &times; '
           '%(nC).0f = %(Cout).1f&nbsp;mF</b>.'
-          % dict(V, pks=100 * (V['ripKs'] - 1))))
+          % dict(V, pks=100 * (V['ripKs'] - 1), swap=V['ripSwap'])))
     add(fig('f19_cout_criterion',
             'Left: both conditions fall as 1/V<sub>out</sub>&sup2;; at '
             '%(Vout).0f&nbsp;V ripple asks for %(Crip).1f&nbsp;mF and hold-up '
@@ -3008,7 +3018,7 @@ def build(A):
           '%(R25).0f&nbsp;m&Omega; (Section&nbsp;%(ref)s):'
           % dict(V, kT=V['Rdpk'], R25=V['Rdp'],
                  ref=SR('Semiconductor requirements'))))
-    add(calc(r'P_{cond}=I_{pri}^{2}\,k_{T}R_{DS(on),25}'
+    add(calc(r'P_{mos,dc}=I_{pri}^{2}\,k_{T}R_{DS(on),25}'
              r'=(%(I).3f)^{2}\cdot%(kT).1f\cdot%(R).0f\times10^{-3}'
              r'=%(P).2f\;\mathrm{W}'
              % dict(I=A.SH['I.pri_lc'], kT=V['Rdpk'], R=V['Rdp'],
@@ -3228,6 +3238,11 @@ def build(A):
              r'=\mathbf{%.2f\ k\Omega},\qquad R_{BM}=%.0f-%.2f'
              r'=\mathbf{%.1f\ k\Omega}'
              % (V['dVFBBM'], V['dRBM'], V['RBMsel'], V['dRBM'], V['RBMrec'])))
+    add(p('The fitted %(RBMsel).0f&nbsp;k&Omega; is kept for now: the burst '
+          'entry it is set from is an assumption (Table&nbsp;%(t)s), so '
+          'R<sub>BM</sub> is traded against this ripple once the standby '
+          'power has been measured (Appendix&nbsp;%(a)s).'
+          % dict(V, t=TR('spec-given'), a=SR('Open items in this design'))))
     add(fig('an_loop_bode',
             '|T| and 180&deg; + arg&nbsp;T of the loop as built. The second '
             'trace is the phase margin only at the crossover; the gain margin '
@@ -3284,7 +3299,7 @@ def build(A):
              ['Compensation',
               '%(CFo).0f nF / %(CF).0f nF / %(RF).0f k&Omega; / %(Cfx).2f nF'
               % V,
-              'f<sub>cross</sub> %(fcross).2f Hz, &Phi;<sub>M</sub> '
+              'f<sub>c</sub> %(fcross).2f Hz, &Phi;<sub>M</sub> '
               '%(PM).2f&deg;' % V]],
             widths=[CW * 0.20, CW * 0.34, CW * 0.46], split=True))
 
@@ -3371,8 +3386,10 @@ def build(A):
               % dict(a=A.SH['k.CT_lo'], b=A.SH['k.CT_hi'])]],
             widths=[CW * 0.18, CW * 0.20, CW * 0.44, CW * 0.18], split=True))
     add(note('<b>T<sub>idle</sub> is the weakest number in this chapter.</b> '
-             'The draft datasheet gives 700&nbsp;ns in the text and a table '
-             'that back-solves to 250&nbsp;ns; this design uses '
+             'The draft datasheet implies 700&nbsp;ns in its frequency '
+             'expressions and 350&nbsp;ns in its C<sub>T,max</sub> '
+             'expression, and its Table&nbsp;2 back-solves to about '
+             '250&nbsp;ns; this design uses '
              '%(Tidle).0f&nbsp;ns. At 700&nbsp;ns f<sub>Min</sub> would be '
              '%(a).1f&nbsp;kHz, below f<sub>o</sub>, and f<sub>Max</sub> '
              '%(b).1f&nbsp;kHz against the %(c).1f&nbsp;kHz the FB edge '
@@ -3461,7 +3478,7 @@ def build(A):
                     sel=V['RCFG'])))
     add(p('That is a maximum, so it rounds down; the selected part sets'))
     add(calc(r'V_{BO,rms}=\frac{%(R).0f\cdot4}{\sqrt{2}}'
-             r'=%(V).2f\;\mathrm{V_{rms}}'
+             r'=%(V).2f\;\mathrm{Vac}'
              % dict(R=V['RCFG'], V=V['VBO'])))
     add(p('against a %(Vacmin).0f&nbsp;Vac minimum, margin %(k).3f. Rounding '
           'up would stop the converter starting at the lowest input voltage.'
@@ -3675,7 +3692,6 @@ def build(A):
     _SYM = [
         ('<b>The tank and its gain</b>', ''),
         ('C<sub>r</sub>, L<sub>r</sub>, L<sub>m</sub>', 'resonant capacitor, series inductance and magnetising inductance of the tank model'),
-        ('L<sub>p</sub>', 'L<sub>r</sub> + L<sub>m</sub>, the inductance the tank shows at no load'),
         ('Z<sub>0</sub>, Z<sub>0,design</sub>', 'characteristic impedance &radic;(L<sub>r</sub>/C<sub>r</sub>); the value the tank is designed to, R<sub>ac</sub>Q<sub>ZVS</sub>'),
         ('Z<sub>in</sub>', 'input impedance the bridge drives; arg Z<sub>in</sub> = 0 is the capacitive boundary'),
         ('f<sub>r</sub>, f<sub>o</sub>', 'series resonance, and the lower resonance with L<sub>m</sub> included'),
@@ -3688,10 +3704,10 @@ def build(A):
         ('&lambda;<sub>1</sub>, &lambda;<sub>2</sub>, &lambda;<sub>TD</sub>, &lambda;<sub>3</sub>', 'the four candidate &lambda;: minimum gain, the same with the frequency ceiling, the dead-time condition, and the minimum-frequency condition; the largest binds'),
         ('Q, Q<sub>pk</sub>, Q<sub>ZVS</sub>', 'quality factor Z<sub>0</sub>/R<sub>ac</sub>; its value at the line peak; the cap the ZVS condition puts on it'),
         ('R<sub>ac</sub>', 'the rectifier and load as one resistance at the fundamental'),
-        ('v<sub>RI</sub>, v<sub>RI</sub><sup>F</sup>, i<sub>ac</sub>', 'the square voltage at the rectifier input, referred to the primary; its fundamental; and the sine current the tank delivers into the rectifier'),
+        ('v<sub>RI</sub>, v<sub>RI</sub><sup>F</sup>, i<sub>RI</sub>', 'the square voltage at the rectifier input, referred to the primary; its fundamental; and the sine current the tank delivers into the rectifier'),
         ('M', 'tank gain, n V<sub>o,eff</sub> over the drive'),
         ('M<sub>req</sub>, M<sub>pk</sub>', 'the gain the operating point demands, and its value at the line peak'),
-        ('M<sub>min</sub>, M<sub>max</sub>', 'the gain range the tank must cover, from the two equivalent-input corners'),
+        ('M<sub>min</sub>, M<sub>max</sub>', 'in the classic LLC procedure: the gain range the tank must cover, from the input range and the output tolerance'),
         ('M<sub>low</sub>, M<sub>high</sub>', 'the required gain at the low and the high equivalent corner'),
         ('M<sub>OL</sub>, M<sub>&infin;</sub>', 'the gain curve at no load (Q = 0, output open), and the floor 1/(1+&lambda;) it flattens onto'),
         ('M<sub>Z</sub>', 'the gain on the capacitive/inductive boundary (arg Z<sub>in</sub> = 0), traced as Q varies; a little to the right of the gain peaks'),
@@ -3708,11 +3724,11 @@ def build(A):
         ('&theta;', 'line phase angle'),
         ('f<sub>l</sub>, f<sub>l,min</sub>, &omega;<sub>l</sub>', 'line frequency, its lowest specified value, and 2&pi;f<sub>l</sub>'),
         ('v<sub>ac</sub>, V<sub>ac</sub>, I<sub>ac</sub>', 'the instantaneous mains voltage, and the rms voltage and current drawn'),
-        ('V<sub>rms</sub>, I<sub>rms</sub>, I<sub>1,rms</sub>', 'rms input voltage and current, and the rms of the current&rsquo;s fundamental alone'),
+        ('I<sub>1,rms</sub>', 'the rms of the input current&rsquo;s fundamental alone'),
         ('p<sub>in</sub>(t), P', 'instantaneous and average input power'),
         ('v<sub>in</sub>(&theta;), i<sub>in</sub>(&theta;)', 'the rectified mains voltage and the current drawn from it, over the line half cycle'),
         ('PF, THD', 'power factor, and total harmonic distortion of the input current'),
-        ('&phi;<sub>1</sub>, D', 'displacement angle of the fundamental, and the distortion factor I<sub>1,rms</sub>/I<sub>rms</sub>'),
+        ('&phi;<sub>1</sub>, D', 'displacement angle of the fundamental, and the distortion factor I<sub>1,rms</sub>/I<sub>ac</sub>'),
         ('D<sub>3</sub>', 'third harmonic on the input current, as a fraction of the fundamental'),
         ('V<sub>in</sub>, V<sub>pk</sub>', 'the rail the bridge works from, and the peak of the mains'),
         ('V<sub>bus</sub>', 'the regulated dc bus between the two stages of a two-stage converter'),
@@ -3724,7 +3740,7 @@ def build(A):
         ('P<sub>LLC</sub>, P<sub>EMI</sub>, P<sub>BR</sub>', 'the three budgeted losses: the LLC stage, the EMI filter, the input bridge'),
         ('P<sub>in,LLC</sub>', 'power into the tank, P<sub>out</sub>/&eta;<sub>HB</sub>'),
         ('&eta;<sub>HB</sub>', 'assumed efficiency of the LLC stage'),
-        ('P<sub>cond</sub>, P<sub>mos,dc</sub>', 'conduction loss of the primary device that stands on in half-bridge morphing'),
+        ('P<sub>mos,dc</sub>', 'conduction loss of the primary device that stands on in half-bridge morphing'),
         ('P<sub>SR</sub>, P<sub>SR,leg</sub>', 'secondary rectifier loss, per device and per rectifier leg'),
         ('P<sub>CS</sub>', 'dissipation in the current-sense resistors'),
         ('P<sub>budget</sub>', 'the loss a device position is allowed, before parts are chosen'),
@@ -3771,7 +3787,7 @@ def build(A):
         ('l<sub>N</sub>', 'mean length of one turn on the coil former'),
 
         ('<b>The copper</b>', ''),
-        ('A<sub>cu</sub>, J', 'copper cross-section one winding needs, and the current density it is sized to'),
+        ('A<sub>cu</sub>, J, I<sub>rms</sub>', 'copper cross-section one winding needs, the current density it is sized to, and the rms current of that winding; I<sub>rms</sub>(&theta;) is its rms over one switching period at line phase &theta;'),
         ('N<sub>w</sub>, A<sub>cu,w</sub>', 'turns and copper area of winding w, in the sum over all the windings'),
         ('k<sub>u</sub>', 'window utilisation: the share of A<sub>N</sub> that ends up copper'),
         ('&delta;, &rho;, &rho;<sub>20</sub>, f', 'skin depth, the resistivity of copper at the working temperature and at 20&nbsp;&deg;C, and the frequency the depth is evaluated at'),
@@ -3795,7 +3811,7 @@ def build(A):
         ('V<sub>ref</sub>, I<sub>EA</sub>, I<sub>EA,max</sub>', 'the oscillator reference, the error-amplifier current that is the only control input, and its maximum'),
         ('f<sub>Min</sub>, f<sub>Max</sub>, f<sub>SU</sub>', 'oscillator floor, ceiling and start-up frequency set by R<sub>T</sub>, C<sub>T</sub> and T<sub>idle</sub>'),
         ('T<sub>idle</sub>', 'oscillator idle time'),
-        ('R<sub>BM</sub>, r<sub>BM</sub>, V<sub>BM,eq</sub>, P<sub>in,BM</sub>', 'burst-mode resistor, the fraction of rated power burst starts at, the equivalent FB threshold, and the input power that corresponds to'),
+        ('R<sub>BM</sub>, r<sub>BM</sub>, V<sub>BM,eq</sub>, P<sub>in,BM</sub>', 'burst-mode resistor, the fraction of the rated input power P<sub>in</sub> burst starts at, the equivalent FB threshold, and the input power that corresponds to'),
         ('R<sub>CFG</sub>, R<sub>CFG,max</sub>', 'configuration resistor, and the largest value the lowest input voltage allows'),
         ('V<sub>BO</sub>, V<sub>BO,pk</sub>, V<sub>BO,rms</sub>', 'brown-out threshold, as a mains peak and as an rms voltage'),
         ('R<sub>ZCD,H</sub>, R<sub>ZCD,L</sub>, I<sub>bias</sub>', 'the ZCD divider, and the current it is designed to draw'),
@@ -3807,7 +3823,7 @@ def build(A):
         ('G<sub>o</sub>, EA<sub>o</sub>', 'gain constant of the plant integrator and of the compensator, in rad/s'),
         ('&omega;<sub>z</sub>, &omega;<sub>p</sub>, &omega;<sub>px</sub>, &omega;<sub>c</sub>', 'compensator zero, pole, high-frequency pole, and the crossover, in rad/s'),
         ('f<sub>z</sub>, f<sub>p</sub>, f<sub>px</sub>, f<sub>180</sub>', 'the same zero and poles in hertz, and the frequency where arg T = &minus;180&deg;'),
-        ('f<sub>c</sub>, f<sub>cross</sub>, &Phi;<sub>M</sub>, GM', 'loop crossover frequency, phase margin, gain margin'),
+        ('f<sub>c</sub>, &Phi;<sub>M</sub>, GM', 'loop crossover frequency, phase margin, gain margin'),
         ('f<sub>cto</sub>', 'where the bare plant integrator would cross 0&nbsp;dB, G<sub>o</sub>/2&pi;'),
         ('f<sub>pHF</sub>, f<sub>MB</sub>', 'the high-frequency pole chosen for C<sub>fx</sub>, and the centre frequency the K-factor method places the zero and the pole around'),
         ('K<sub>v</sub>, &Gamma;<sub>v</sub>, &alpha;<sub>v</sub>', 'K factor of the Type II compensator, and the input-voltage margin factor and weighting constant it is built from'),

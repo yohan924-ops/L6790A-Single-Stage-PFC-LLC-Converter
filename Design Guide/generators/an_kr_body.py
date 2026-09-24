@@ -172,7 +172,7 @@ def build(A):
     add(fig('an_rac',
             '정류기와 부하가 왜 저항 하나가 되는가. 출력 전압이 일정하므로 탱크가 '
             '보는 전압 v<sub>RI</sub> 는 사각파이고, 탱크가 기본파만 통과시키므로 전류 '
-            'i<sub>ac</sub> 는 사인파다. 기본파만 보면 이 둘은 저항과 같은 전력을 소비한다.'))
+            'i<sub>RI</sub> 는 사인파다. 기본파만 보면 이 둘은 저항과 같은 전력을 소비한다.'))
     add(fig('an_fha_steps',
             '등가 회로를 만드는 세 단계: 실제 회로, 2차를 1차로 환산한 것, 기본파만 남긴 것. 결과는 게인 M 과 품질계수 Q 를 가진 AC 회로 하나다.'))
     ext(bullets([
@@ -321,7 +321,7 @@ def build(A):
             '흐르고 있고, S<sub>1</sub> 이 도통 중인 다이오드 위에서 켜진다. '
             '오른쪽은 음이라 데드타임 동안 중점을 올려놓았고, S<sub>1</sub> 은 '
             '자기 바디 다이오드가 0 V 에서 도통하는 상태에서 켜진다. '
-            '<b>아래:</b> 중점 전압 v<sub>d</sub>(0 기준), 탱크 전류, 켜지는 '
+            '<b>아래:</b> 중점 전압 v<sub>A</sub>(0 기준), 탱크 전류, 켜지는 '
             '스위치의 드레인 전류 i<sub>S1</sub>. 같은 축척이다.', width=CW))
     ext(bullets([
         '<b>inductive: 전류가 뒤처진다.</b> 턴오프 때 전류가 아직 브리지 '
@@ -426,10 +426,13 @@ def build(A):
           '그 차이만 코어를 자화시킨다.'))
     add(eq(r'N_{p}\,i_{p}\;-\;N_{s}\,i_{s}\;=\;N_{p}\,i_{\mu}', key='mmf'))
     add(p('부하 전류는 트랜스포머 작용으로 통과할 뿐 코어에 들어가지 않는다. '
-          '코어에 저장되는 것은 자화 에너지 &frac12;L<sub>m</sub>i<sub>&mu;</sub>'
-          '&sup2; 이고, 이것은 부산물이 아니다. i<sub>&mu;</sub> 가 데드타임 '
-          '동안 브리지 노드 전압을 스윙시키는 전류다. 갭은 L<sub>m</sub> 을 맞추려고 '
-          '있는 것이지 부하 에너지를 저장하려고 있는 것이 아니다.'))
+          '코어에 저장되는 것은 자화 에너지 &frac12;L<sub>&mu;</sub>i<sub>&mu;</sub>'
+          '&sup2; 이다. L<sub>&mu;</sub> 는 실제 트랜스포머의 자화 인덕턴스로, '
+          '탱크 모델의 L<sub>m</sub> 과 꼭 같지는 않다(%s 절). 이 에너지는 '
+          '부산물이 아니다. i<sub>&mu;</sub> 가 데드타임 동안 브리지 노드 '
+          '전압을 스윙시키는 전류다. 갭은 L<sub>&mu;</sub> 를, 그리고 그것을 '
+          '통해 L<sub>m</sub> 을 맞추려고 있는 것이지 부하 에너지를 저장하려고 '
+          '있는 것이 아니다.' % SR('두 개의 비, 두 개의 인덕턴스')))
     add(fig('an_flyback_llc',
             '왼쪽: 스위치와 정류기가 같이 켜지는 일이 없으므로 도통하는 권선이 '
             '자화 전류 전부를 흘리고 자속은 그것을 따라 오른다. 오른쪽: 둘이 '
@@ -580,14 +583,14 @@ def build(A):
             '다이오드는 좁은 구간에서만 도통하며, 그 안의 전류는 높다.'))
     add(p('피크 전류는 같은 전력의 저항 부하에 흐를 전류의 몇 배이고, 그렇게 좁은 펄스 전류는 고조파 성분이 대부분이다.'))
     add(h2('역률과 distortion 은 다르다'))
-    add(p('<b>역률</b>은 유효 전력과 피상 전력의 비다. V<sub>rms</sub> 와 I<sub>rms</sub> 는 입력 전압과 전류의 실효값이다.'))
-    add(eq(r'PF=\frac{P}{V_{rms}I_{rms}}\;=\;\cos\varphi_{1}\;\times\;\frac{I_{1,rms}}{I_{rms}}'))
+    add(p('<b>역률</b>은 유효 전력과 피상 전력의 비다. V<sub>ac</sub> 와 I<sub>ac</sub> 는 입력 전압과 전류의 실효값이다.'))
+    add(eq(r'PF=\frac{P}{V_{ac}I_{ac}}\;=\;\cos\varphi_{1}\;\times\;\frac{I_{1,rms}}{I_{ac}}'))
     add(p('P 는 평균 전력, I<sub>1,rms</sub> 는 기본파만의 실효값, '
           '&phi;<sub>1</sub> 은 전압에 대한 기본파의 위상이다. <b>변위</b>'
           '(위상)는 모터 부하에서 나빠지고, <b>distortion</b>(실효값 중 고조파의 몫)은 정류기 부하에서 나빠진다. 위의 전류는 위상이 거의 같은데도 역률이 0.6 정도밖에 안 된다.'))
     add(p('THD(total harmonic distortion)는 기본파에 대한 고조파의 비다.'))
-    add(eq(r'THD=\frac{\sqrt{I_{rms}^{2}-I_{1,rms}^{2}}}{I_{1,rms}}'
-           r'\,,\qquad \frac{I_{1,rms}}{I_{rms}}=\frac{1}{\sqrt{1+THD^{2}}}'))
+    add(eq(r'THD=\frac{\sqrt{I_{ac}^{2}-I_{1,rms}^{2}}}{I_{1,rms}}'
+           r'\,,\qquad \frac{I_{1,rms}}{I_{ac}}=\frac{1}{\sqrt{1+THD^{2}}}'))
     add(note('PF 가 0.99 를 넘어도 IEC&nbsp;61000-3-2 를 통과하지 못할 수 있다. 이 규격은 <i>개별</i> 고조파를 A 단위로 제한한다. Class&nbsp;D 는 '
              '규격이 열거한 제품군에만 600&nbsp;W 이하에서 적용되고, 그 위는 Class&nbsp;A 의 '
              '절대 한도다. 등급부터 정할 것.'))
@@ -614,7 +617,8 @@ def build(A):
     add(h2('왜 보통 two-stage 인가'))
     add(fig('an_two_stage',
             'two-stage 구성과 각 노드의 파형. 라인 주파수 2배의 리플을 흡수하는 '
-            '버퍼는 두 단 사이 400&nbsp;V 에 있다. DC 노드의 리플은 과장했다.',
+            '버퍼는 두 단 사이 400&nbsp;V 에 있다. DC 노드의 리플은 과장했다. '
+            'v<sub>ac</sub> 는 순시 상용전원 전압이다.',
             width=CW))
     add(p('버스 커패시터는 두 가지 일을 한다.'))
     ext(bullets([
@@ -827,7 +831,7 @@ def build(A):
              '된다.'))
 
     add(h2('&lambda; 가 0.5 근처여야 하는 이유'))
-    add(p('고전적인 LLC 는 m&nbsp;=&nbsp;L<sub>p</sub>/L<sub>r</sub> 을 5 ~ 10, '
+    add(p('고전적인 LLC 는 m&nbsp;=&nbsp;(L<sub>r</sub>+L<sub>m</sub>)/L<sub>r</sub> 을 5 ~ 10, '
           '즉 &lambda; 를 0.11 ~ 0.25 로 쓴다. single-stage 컨버터는 영교차 '
           '근처에서 아주 높은 게인이 필요한데, 피크 게인은 &lambda; 가 '
           '작아질수록 떨어진다. ST 의 평가 보드는 &lambda;&nbsp;=&nbsp;0.500 '
@@ -1048,8 +1052,9 @@ def build(A):
     add(p('도면의 숫자는 전부 1차 전류, 2차 각 권선의 전류, 2차 권선 전압, '
           '또는 벤치 시험 하나에서 읽는다. 그림&nbsp;%(f)s 에 각 값을 파형의 어디에서 읽는지 표시했고, 표&nbsp;%(t)s 에 각 표시가 무엇을 정하는지 적었다.' % dict(f=FR('an_xfmr_read'), t=TR('xfmr-read'))))
     _J = _CORE.J_CU
-    ext(tbl('그림의 각 표시가 무엇을 정하나. 전류는 유닛 하나의 값이다: '
-            '1차는 직렬, 2차는 병렬.',
+    ext(tbl('그림의 각 표시가 무엇을 정하나. 전류는 유닛 하나의 값이다. '
+            '트랜스포머가 하나이면 그 트랜스포머 전체이고, N<sub>x</sub> 개 '
+            '유닛으로 나누면(%s 절) 1차는 직렬, 2차는 병렬이다.' % SR('트랜스포머 한 개로 안 될 때'),
             [['표시', '항목', '읽는 위치와 구간',
               '정하는 것'],
              ['<b>1</b>', '1차 피크 전류',
@@ -1058,7 +1063,8 @@ def build(A):
               '1차 스위치와 OCP1 여유. 포화 시험이 <b>아니다</b>.'],
              ['<b>2</b>', '1차 실효 전류',
               'i<sub>p</sub>&sup2; 을 스위칭 주기 전체로, 그다음 라인 반주기로 '
-              '평균. 모든 유닛이 같은 전류를 흘린다: 1차는 직렬.',
+              '평균. N<sub>x</sub> 개 유닛으로 나누면 각 유닛이 이 전류를 '
+              '전부 흘린다: 1차는 직렬.',
               '1차 동선: 유닛당 A<sub>cu</sub> = I<sub>rms</sub>/J'],
              ['<b>3</b>', '자화 피크',
               '스위칭 순간의 점선 i<sub>Lm</sub>. below 에서는 f<sub>sw</sub> '
@@ -1067,8 +1073,9 @@ def build(A):
               '피크 자속. 그리고 V<sub>OVP2</sub> 로 환산해 DC overlap 시험 '
               '전류(표시 7)'],
              ['<b>4</b>', '2차 피크 전류',
-              '어느 2차 권선이든 펄스의 피크, 같은 최악 사이클. 유닛당은 '
-              '정류기 레그 값의 1/N<sub>x</sub>: 2차는 병렬.',
+              '어느 2차 권선이든 펄스의 피크, 같은 최악 사이클. N<sub>x</sub> '
+              '개 유닛으로 나누면 유닛마다 정류기 레그 값의 1/N<sub>x</sub>: '
+              '2차는 병렬.',
               '정류기 피크 정격, 동박 단자'],
              ['<b>5</b>', '2차 실효 전류, 권선마다',
               '권선마다 주기당 펄스 하나이므로 도통하지 않는 반주기를 포함한 주기 '
@@ -1182,10 +1189,11 @@ def build(A):
     add(eq(r'A_{L}=\frac{L_{open}/N_{x}}{N_{p}^{2}}'
            r'\qquad\qquad '
            r'g\;\approx\;\frac{\mu_{0}\,A_{e}}{A_{L}}', key='ALgap'))
-    add(p('N<sub>x</sub> 는 유닛 수, g 는 중앙 다리의 총 갭이다. 갭 '
+    add(p('N<sub>x</sub> 는 유닛 수(트랜스포머 하나면 1, %s 절), g 는 중앙 다리의 총 갭이다. 갭 '
           '식은 프린징을 무시하므로 실제로 필요한 갭은 더 크다. '
           '<b>A<sub>L</sub>, 아니면 더 좋게 L<sub>open</sub> 을 적고 갭은 벤더에게 '
-          '맡길 것</b>: 벤더가 그 값에 맞춰 갭을 연마하고, LCR 미터로 확인할 수 있다.'))
+          '맡길 것</b>: 벤더가 그 값에 맞춰 갭을 연마하고, LCR 미터로 확인할 수 있다.'
+          % SR('트랜스포머 한 개로 안 될 때')))
 
     add(h2('권선창: 도선과 전류 밀도'))
     add(p('그림&nbsp;%(f)s 의 표시 <b>2</b> 와 <b>5</b>. 동선은 <b>라인 '
@@ -1200,9 +1208,9 @@ def build(A):
           '면적이다. J 는 가정이다: 자연 대류에서 4 ~ 5&nbsp;A/mm&sup2;, '
           '밀폐되면 그보다 낮게. 권선창 점적률 k<sub>u</sub> 는 절연, 보빈 벽, '
           '마진, 테이프까지 세면 Litz 선에서 <b>0.3 이하</b>다. 순수 동선 면적만으로 계산하면 들어가는 양을 세 배 과대평가한다.'))
-    add(note('1차가 직렬이면 모든 유닛이 1차 전류 전부를 흘린다. 나누는 것은 '
-             '2차뿐이다. 그래서 유닛을 나누는 것이 저전압 대전류 출력에 '
-             '도움이 된다.'))
+    add(note('N<sub>x</sub> 개 유닛으로 나누면(%s 절) 1차가 직렬이므로 모든 '
+             '유닛이 1차 전류 전부를 흘린다. 나누는 것은 2차뿐이다. 그래서 '
+             '유닛을 나누는 것이 저전압 대전류 출력에 도움이 된다.' % SR('트랜스포머 한 개로 안 될 때')))
 
     add(h2('skin depth, 그리고 권선을 단선으로 만들지 않는 이유'))
     add(p('스위칭 주파수에서 전류는 다음 깊이의 표면층으로 몰린다.'))
@@ -1690,13 +1698,13 @@ def build(A):
               '움직일 뿐, 이후 계산에 크게 영향을 주는 것은 없다' % (100 * (V['etaHB'] / 95.0 - 1))],
              ['오실레이터 idle 시간', 'T<sub>idle</sub>',
               '%(Tidle).0f ns' % V, '가정',
-              '초안 데이터시트는 700 ns 라고도 하는데, 그러면 하한 여유가 '
-              '없어진다 &mdash; 가장 먼저 잴 것'],
+              '초안 데이터시트에서는 350 ns 와 700 ns 도 나온다. 700 ns 이면 '
+              '하한 여유가 없어진다 &mdash; 가장 먼저 잴 것'],
              ['R<sub>DS(on)</sub> 온도 계수', 'k<sub>T</sub>',
               '%(Rdpk).1f / %(Rdsk).1f' % V, '가정',
               '1차 / 2차, T<sub>j,max</sub> 에서 데이터시트 곡선을 읽음'],
              ['버스트 진입점', 'r<sub>BM</sub>',
-              '%(PinBM).0f W (정격의 %(rBM).0f %%)'
+              '%(PinBM).0f W (P<sub>in</sub> 의 %(rBM).0f %%)'
               % dict(V, rBM=A.SH['r.BM'] * 100), '가정',
               'R<sub>BM</sub> 을 정하고, 피드백 리플에 대해 검사']],
             widths=[CW * 0.20, CW * 0.12, CW * 0.22, CW * 0.09, CW * 0.37],
@@ -1726,7 +1734,7 @@ def build(A):
               'C<sub>T</sub> %(CT).0f pF, R<sub>CS</sub> %(RCS).1f m&Omega;, '
               'R<sub>CFG</sub> %(RCFG).0f k&Omega;, '
               'R<sub>BM</sub> %(RBM).0f k&Omega;' % V],
-             ['루프', 'f<sub>cross</sub> %(fcross).2f Hz, '
+             ['루프', 'f<sub>c</sub> %(fcross).2f Hz, '
               '&Phi;<sub>M</sub> %(PM).2f&deg;, '
               '3차 고조파 %(D3).2f %%' % V]],
             widths=[CW * 0.18, CW * 0.82], split=True))
@@ -2255,7 +2263,7 @@ def build(A):
     _R = _CORE.CORES[_CORE.CHOSEN]
     _cw = _CORE.window(V) / _CORE.K_U
     add(p('코어는 TDK <b>%(chosen)s</b>, %(mat)s (코어 %(core)s, 보빈 '
-          '%(former)s) 이고, 중앙 다리를 연마해 A<sub>L</sub>&nbsp;=&nbsp;%(AL).0f&nbsp;nH 로 맞추고 갭이 약 %(gap).1f&nbsp;mm 다. 그림&nbsp;%(f)s 에 단면과 권선을, 표&nbsp;%(t)s 에 항목을, 표&nbsp;%(t2)s 에 계산 과정을 실었다.'
+          '%(former)s) 이다. 갭은 중앙 다리에 나뉘어 있는 분산 갭(distributed gap)이고, 합쳐 약 %(gap).1f&nbsp;mm 로 연마해 A<sub>L</sub>&nbsp;=&nbsp;%(AL).0f&nbsp;nH 에 맞춘다. 그림&nbsp;%(f)s 에 단면과 권선을, 표&nbsp;%(t)s 에 항목을, 표&nbsp;%(t2)s 에 계산 과정을 실었다.'
           % dict(chosen=_CORE.CHOSEN, mat=_R['material'], core=_R['core'],
                  former=_R['former'], AL=V['AL'], gap=_CORE.dg_gap(V),
                  f=FR('an_core_section'), t=TR('legend42'),
@@ -2381,15 +2389,16 @@ def build(A):
               % (2 * V['Ns'] * _w['n_foil'], _w['t_foil'], _CORE.T_FOIL_INS,
                  _w['build_s'])],
              ['권선 사이에 남는 폭',
-              '%.1f &minus; 2 &times; %.1f &minus; %.2f &minus; %.1f = '
+              '%.1f &minus; 2 &times; %.1f &minus; %.3f &minus; %.3f = '
               '<b>%.2f mm</b>'
               % (_w['M']['wind_w'], _CORE.MARGIN, _w['w_pri'], _w['w_foil'],
                  _w['gap']), ''],
              ['권선창 안의 동선',
-              '%d &times; %.2f + %d &times; %.2f = %.1f mm&sup2;, '
-              'k<sub>u</sub> = %.2f 에서 A<sub>N</sub> 의 %.0f %%'
+              '%d &times; %.2f + %d &times; %.2f = %.1f mm&sup2;. '
+              'k<sub>u</sub> = %.2f 이면 권선창이 %.0f mm&sup2; 필요하고, '
+              'A<sub>N</sub> = %.0f mm&sup2; 의 %.0f %% 다'
               % (V['Np'], _rp[3], 2 * V['Ns'], _rs[3], _CORE.window(V),
-                 _CORE.K_U, 100 * _cw / _R['AN']),
+                 _CORE.K_U, _cw, _R['AN'], 100 * _cw / _R['AN']),
               '']],
             widths=[CW * 0.26, CW * 0.40, CW * 0.34],
             key='winding', split=True))
@@ -2405,8 +2414,8 @@ def build(A):
               'NAUX %(Naux)d T' % V,
               '2차 권선 둘, 센터탭은 PCB 에서'],
              ['Open 인덕턴스',
-              '%(Lopen).1f &micro;H, 최악 &minus;%(Ldrop).1f %%'
-              % V,
+              '%(Lopen).1f &micro;H, 공칭보다 최대 %(Ldrop).1f %% 낮은 값까지 허용'
+              '(식&nbsp;%(e)s)' % dict(V, e=ER('Ldrop')),
               'NP1 에서 측정, 나머지 권선(NS2, NS3, NAUX) 모두 Open, LCR 미터 '
               '100 kHz / 1 V'],
              ['누설 인덕턴스', '%(Lshort).1f &micro;H &plusmn;10 %%' % V,
@@ -2449,10 +2458,10 @@ def build(A):
     add(eqagain('ripscreen'))
     add(calc(r'%.3f\ >\ %.3f\quad\Longrightarrow\quad\mathrm{ripple\ decides}'
              % (V['ripLHS'], V['ripRHS'])))
-    add(p('좌변이 우변보다 %(pks).1f&nbsp;%% 클 뿐이다. 허용 리플이 10&nbsp;%% 이면 결정 조건이 바뀐다. '
+    add(p('좌변이 우변보다 %(pks).1f&nbsp;%% 클 뿐이다. 허용 리플이 %(swap).1f&nbsp;%% 를 넘으면 홀드업이 결정한다. '
           '실장한 뱅크는 %(Crip).1f&nbsp;mF 이상인 가장 가까운 조합이다: '
           '<b>%(Cout1).0f&nbsp;&micro;F &times; %(nC).0f = '
-          '%(Cout).1f&nbsp;mF</b>.' % dict(V, pks=100 * (V['ripKs'] - 1))))
+          '%(Cout).1f&nbsp;mF</b>.' % dict(V, pks=100 * (V['ripKs'] - 1), swap=V['ripSwap'])))
     add(fig('f19_cout_criterion',
             '왼쪽: 두 조건 모두 1/V<sub>out</sub>&sup2; 으로 내려간다. '
             '%(Vout).0f&nbsp;V 에서 리플은 %(Crip).1f&nbsp;mF, hold-up 은 '
@@ -2515,7 +2524,7 @@ def build(A):
           'k<sub>T</sub>&nbsp;=&nbsp;%(kT)s 곱한 <b>고온</b> 값이다(%(ref)s 절).'
           % dict(V, kT=_nj('%.1f' % V['Rdpk'], '을', '를'), R25=V['Rdp'],
                  ref=SR('반도체 요구조건'))))
-    add(calc(r'P_{cond}=I_{pri}^{2}\,k_{T}R_{DS(on),25}'
+    add(calc(r'P_{mos,dc}=I_{pri}^{2}\,k_{T}R_{DS(on),25}'
              r'=(%(I).3f)^{2}\cdot%(kT).1f\cdot%(R).0f\times10^{-3}'
              r'=%(P).2f\;\mathrm{W}'
              % dict(I=A.SH['I.pri_lc'], kT=V['Rdpk'], R=V['Rdp'],
@@ -2728,6 +2737,10 @@ def build(A):
              r'=\mathbf{%.2f\ k\Omega},\qquad R_{BM}=%.0f-%.2f'
              r'=\mathbf{%.1f\ k\Omega}'
              % (V['dVFBBM'], V['dRBM'], V['RBMsel'], V['dRBM'], V['RBMrec'])))
+    add(p('지금은 선정값 %(RBMsel).0f&nbsp;k&Omega; 을 그대로 둔다. 기준이 된 '
+          '버스트 진입점이 가정값이기 때문이다(표&nbsp;%(t)s). 대기 전력을 '
+          '실측한 뒤 이 리플과 맞바꿔 R<sub>BM</sub> 을 정한다(부록&nbsp;%(a)s).'
+          % dict(V, t=TR('spec-given'), a=SR('이 설계의 미결 항목'))))
     add(fig('an_loop_bode',
             '설계한 루프의 |T| 와 180&deg; + arg&nbsp;T. 둘째 곡선은 crossover 주파수에서만 phase margin 이고, gain margin 은 f<sub>180</sub> 에서 '
             '읽는다.'))
@@ -2755,7 +2768,7 @@ def build(A):
              ['버스트 점의 피드백 리플',
               '%(dVFBBM).0f mV' % V,
               'R<sub>BM</sub> 을 선정값 %(RBMsel).0f k&Omega; 에서 %(RBMrec).1f k&Omega; 으로 '
-              '낮추면 버스트 threshold 를 벗어난다' % V]],
+              '낮추면 리플이 버스트 threshold 를 넘나들지 않는다' % V]],
             widths=[CW * 0.34, CW * 0.28, CW * 0.38], key='loop-result', split=True))
 
     # ------------------------------------------------ 컨트롤러 주변 회로
@@ -2782,7 +2795,7 @@ def build(A):
              ['보상',
               '%(CFo).0f nF / %(CF).0f nF / %(RF).0f k&Omega; / %(Cfx).2f nF'
               % V,
-              'f<sub>cross</sub> %(fcross).2f Hz, &Phi;<sub>M</sub> '
+              'f<sub>c</sub> %(fcross).2f Hz, &Phi;<sub>M</sub> '
               '%(PM).2f&deg;' % V]],
             widths=[CW * 0.20, CW * 0.34, CW * 0.46], split=True))
 
@@ -2864,8 +2877,9 @@ def build(A):
               % dict(a=A.SH['k.CT_lo'], b=A.SH['k.CT_hi'])]],
             widths=[CW * 0.18, CW * 0.20, CW * 0.44, CW * 0.18], split=True))
     add(note('<b>T<sub>idle</sub> 은 이 장에서 가장 불확실한 값이다.</b> 초안 '
-             '데이터시트는 본문에 700&nbsp;ns 를 적고, 표를 역산하면 '
-             '250&nbsp;ns 가 나온다. 이 설계는 %(Tidle).0f&nbsp;ns 를 쓴다. '
+             '데이터시트의 주파수 식은 700&nbsp;ns, C<sub>T,max</sub> 식은 '
+             '350&nbsp;ns 를 뜻하고, Table&nbsp;2 를 역산하면 약 250&nbsp;ns 가 '
+             '나온다. 이 설계는 %(Tidle).0f&nbsp;ns 를 쓴다. '
              '700&nbsp;ns 이면 f<sub>Min</sub> 은 %(a).1f&nbsp;kHz 로 '
              'f<sub>o</sub> 아래가 되고, f<sub>Max</sub> 는 %(b).1f&nbsp;kHz 로 '
              'FB 경계에 필요한 %(c).1f&nbsp;kHz 에 못 미친다. 가장 먼저 잴 것.'
@@ -2947,7 +2961,7 @@ def build(A):
                     sel=V['RCFG'])))
     add(p('최대값이므로 내려서 잡는다. 선정한 부품이 정하는 값은'))
     add(calc(r'V_{BO,rms}=\frac{%(R).0f\cdot4}{\sqrt{2}}'
-             r'=%(V).2f\;\mathrm{V_{rms}}'
+             r'=%(V).2f\;\mathrm{Vac}'
              % dict(R=V['RCFG'], V=V['VBO'])))
     add(p('최저 %(Vacmin).0f&nbsp;Vac 에 대해 여유 %(k).3f 이다. 올려 잡으면 '
           '컨버터가 최저 입력 전압에서 기동하지 못한다.'
@@ -3137,7 +3151,6 @@ def build(A):
     _SYM = [
         ('<b>탱크와 게인</b>', ''),
         ('C<sub>r</sub>, L<sub>r</sub>, L<sub>m</sub>', '탱크 모델의 공진 커패시터, 직렬 인덕턴스, 자화 인덕턴스'),
-        ('L<sub>p</sub>', 'L<sub>r</sub> + L<sub>m</sub>, No load 에서 탱크가 보는 인덕턴스'),
         ('Z<sub>0</sub>, Z<sub>0,design</sub>', '특성 임피던스 &radic;(L<sub>r</sub>/C<sub>r</sub>); 탱크를 설계하는 기준값 R<sub>ac</sub>Q<sub>ZVS</sub>'),
         ('Z<sub>in</sub>', '브리지가 구동하는 입력 임피던스; arg Z<sub>in</sub> = 0 이 capacitive 경계'),
         ('f<sub>r</sub>, f<sub>o</sub>', '직렬 공진, 그리고 L<sub>m</sub> 을 포함한 아래쪽 공진'),
@@ -3150,10 +3163,10 @@ def build(A):
         ('&lambda;<sub>1</sub>, &lambda;<sub>2</sub>, &lambda;<sub>TD</sub>, &lambda;<sub>3</sub>', '&lambda; 후보 넷: 최소 게인, 여기에 주파수 상한을 더한 것, 데드타임 조건, 최소 주파수 조건; 가장 큰 것이 결정한다'),
         ('Q, Q<sub>pk</sub>, Q<sub>ZVS</sub>', '품질계수 Z<sub>0</sub>/R<sub>ac</sub>; 라인 피크에서의 값; ZVS 조건이 두는 한도'),
         ('R<sub>ac</sub>', '기본파에서 정류기와 부하를 저항 하나로 본 것'),
-        ('v<sub>RI</sub>, v<sub>RI</sub><sup>F</sup>, i<sub>ac</sub>', '1차로 환산한 정류기 입력의 구형파 전압, 그 기본파, 그리고 탱크가 정류기로 보내는 사인 전류'),
+        ('v<sub>RI</sub>, v<sub>RI</sub><sup>F</sup>, i<sub>RI</sub>', '1차로 환산한 정류기 입력의 구형파 전압, 그 기본파, 그리고 탱크가 정류기로 보내는 사인 전류'),
         ('M', '탱크 게인, n V<sub>o,eff</sub> 를 구동 진폭으로 나눈 것'),
         ('M<sub>req</sub>, M<sub>pk</sub>', '동작점이 요구하는 게인, 그리고 라인 피크에서의 값'),
-        ('M<sub>min</sub>, M<sub>max</sub>', '두 등가 입력 코너에서 탱크가 커버해야 하는 게인 범위'),
+        ('M<sub>min</sub>, M<sub>max</sub>', '고전적인 LLC 설계 절차에서: 입력 범위와 출력 허용 오차로 정해지는, 탱크가 커버해야 하는 게인 범위'),
         ('M<sub>low</sub>, M<sub>high</sub>', '낮은·높은 등가 코너의 요구 게인'),
         ('M<sub>OL</sub>, M<sub>&infin;</sub>', 'No load(Q = 0, 출력 Open)의 게인 곡선, 그리고 그것이 수렴하는 하한 1/(1+&lambda;)'),
         ('M<sub>Z</sub>', 'capacitive/inductive 경계(arg Z<sub>in</sub> = 0)에서의 게인을 Q 를 바꿔 가며 이은 곡선. 게인 피크보다 조금 오른쪽'),
@@ -3170,11 +3183,11 @@ def build(A):
         ('&theta;', '라인 위상각'),
         ('f<sub>l</sub>, f<sub>l,min</sub>, &omega;<sub>l</sub>', '라인 주파수, 그 최저 규정값, 그리고 2&pi;f<sub>l</sub>'),
         ('v<sub>ac</sub>, V<sub>ac</sub>, I<sub>ac</sub>', '순시 상용전원 전압, 그리고 입력 실효 전압과 전류'),
-        ('V<sub>rms</sub>, I<sub>rms</sub>, I<sub>1,rms</sub>', '실효 입력 전압과 전류, 그리고 전류 기본파만의 실효값'),
+        ('I<sub>1,rms</sub>', '입력 전류 기본파만의 실효값'),
         ('p<sub>in</sub>(t), P', '순시·평균 입력 전력'),
         ('v<sub>in</sub>(&theta;), i<sub>in</sub>(&theta;)', '라인 반주기 동안의 정류된 상용전원 전압과 거기서 끌어오는 전류'),
         ('PF, THD', '역률, 그리고 입력 전류의 THD'),
-        ('&phi;<sub>1</sub>, D', '기본파의 변위각, 그리고 distortion 계수 I<sub>1,rms</sub>/I<sub>rms</sub>'),
+        ('&phi;<sub>1</sub>, D', '기본파의 변위각, 그리고 distortion 계수 I<sub>1,rms</sub>/I<sub>ac</sub>'),
         ('D<sub>3</sub>', '입력 전류의 3차 고조파, 기본파에 대한 비'),
         ('V<sub>in</sub>, V<sub>pk</sub>', '브리지 레일 전압, 그리고 상용전원 피크'),
         ('V<sub>bus</sub>', 'two-stage 컨버터의 두 단 사이에 있는 정전압 DC 버스'),
@@ -3186,7 +3199,7 @@ def build(A):
         ('P<sub>LLC</sub>, P<sub>EMI</sub>, P<sub>BR</sub>', 'budget 으로 잡은 손실 셋: LLC 단, EMI 필터, 입력 브리지'),
         ('P<sub>in,LLC</sub>', '탱크로 들어가는 전력, P<sub>out</sub>/&eta;<sub>HB</sub>'),
         ('&eta;<sub>HB</sub>', 'LLC 단의 가정 효율'),
-        ('P<sub>cond</sub>, P<sub>mos,dc</sub>', '하프브리지 모핑에서 켜진 채 고정되는 1차 소자의 도통 손실'),
+        ('P<sub>mos,dc</sub>', '하프브리지 모핑에서 켜진 채 고정되는 1차 소자의 도통 손실'),
         ('P<sub>SR</sub>, P<sub>SR,leg</sub>', '2차 정류기 손실, 소자당과 정류 레그당'),
         ('P<sub>CS</sub>', '전류 sense 저항의 손실'),
         ('P<sub>budget</sub>', '부품을 고르기 전에 소자 한 개에 허용한 손실'),
@@ -3233,7 +3246,7 @@ def build(A):
         ('l<sub>N</sub>', '보빈 위 한 턴의 평균 길이'),
 
         ('<b>동선</b>', ''),
-        ('A<sub>cu</sub>, J', '권선 하나에 필요한 동선 단면적, 그리고 그 기준 전류 밀도'),
+        ('A<sub>cu</sub>, J, I<sub>rms</sub>', '권선 하나에 필요한 동선 단면적, 그 기준 전류 밀도, 그리고 그 권선의 실효 전류. I<sub>rms</sub>(&theta;) 는 라인 위상 &theta; 에서 스위칭 한 주기에 걸친 실효값'),
         ('N<sub>w</sub>, A<sub>cu,w</sub>', '모든 권선에 대한 합에서 권선 w 의 턴수와 동선 면적'),
         ('k<sub>u</sub>', '권선창 점적률: A<sub>N</sub> 중 동선이 되는 몫'),
         ('&delta;, &rho;, &rho;<sub>20</sub>, f', 'skin depth, 동작 온도와 20&nbsp;&deg;C 에서의 구리 비저항, 그리고 깊이를 평가하는 주파수'),
@@ -3257,7 +3270,7 @@ def build(A):
         ('V<sub>ref</sub>, I<sub>EA</sub>, I<sub>EA,max</sub>', '오실레이터 기준, 유일한 제어 입력인 error amp 전류, 그리고 그 최대'),
         ('f<sub>Min</sub>, f<sub>Max</sub>, f<sub>SU</sub>', 'R<sub>T</sub>, C<sub>T</sub>, T<sub>idle</sub> 이 정하는 오실레이터 하한·상한·기동 주파수'),
         ('T<sub>idle</sub>', '오실레이터 idle 시간'),
-        ('R<sub>BM</sub>, r<sub>BM</sub>, V<sub>BM,eq</sub>, P<sub>in,BM</sub>', '버스트 모드 저항, 버스트가 시작되는 정격 전력의 비, 등가 FB threshold, 그리고 그에 해당하는 입력 전력'),
+        ('R<sub>BM</sub>, r<sub>BM</sub>, V<sub>BM,eq</sub>, P<sub>in,BM</sub>', '버스트 모드 저항, 버스트가 시작되는 전력의 정격 입력 전력 P<sub>in</sub> 에 대한 비, 등가 FB threshold, 그리고 그에 해당하는 입력 전력'),
         ('R<sub>CFG</sub>, R<sub>CFG,max</sub>', '구성 저항, 그리고 최저 입력 전압이 허용하는 최대값'),
         ('V<sub>BO</sub>, V<sub>BO,pk</sub>, V<sub>BO,rms</sub>', '브라운아웃 threshold, 그리고 그것을 상용전원 피크와 실효값으로 나타낸 값'),
         ('R<sub>ZCD,H</sub>, R<sub>ZCD,L</sub>, I<sub>bias</sub>', 'ZCD 분압기, 그리고 그 분압기에 흐르도록 설계한 전류'),
@@ -3269,7 +3282,7 @@ def build(A):
         ('G<sub>o</sub>, EA<sub>o</sub>', '플랜트 적분기와 보상기의 게인 상수, rad/s'),
         ('&omega;<sub>z</sub>, &omega;<sub>p</sub>, &omega;<sub>px</sub>, &omega;<sub>c</sub>', '보상기 zero, pole, 고주파 pole, 그리고 crossover 주파수, rad/s'),
         ('f<sub>z</sub>, f<sub>p</sub>, f<sub>px</sub>, f<sub>180</sub>', '같은 zero 와 pole 을 Hz 로, 그리고 arg T = &minus;180&deg; 인 주파수'),
-        ('f<sub>c</sub>, f<sub>cross</sub>, &Phi;<sub>M</sub>, GM', '루프 crossover 주파수, phase margin, gain margin'),
+        ('f<sub>c</sub>, &Phi;<sub>M</sub>, GM', '루프 crossover 주파수, phase margin, gain margin'),
         ('f<sub>cto</sub>', '플랜트 적분기 단독으로 0&nbsp;dB 를 지나는 곳, G<sub>o</sub>/2&pi;'),
         ('f<sub>pHF</sub>, f<sub>MB</sub>', 'C<sub>fx</sub> 를 정하려고 고른 고주파 pole, 그리고 K-factor 법이 zero 와 pole 을 그 양쪽에 두는 중심 주파수'),
         ('K<sub>v</sub>, &Gamma;<sub>v</sub>, &alpha;<sub>v</sub>', 'Type II 보상기의 K factor, 그리고 그것을 만드는 입력 전압 여유 계수와 가중 상수'),
