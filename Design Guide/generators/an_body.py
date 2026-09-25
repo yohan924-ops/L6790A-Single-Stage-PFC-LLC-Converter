@@ -1580,20 +1580,52 @@ def build(A):
           'I<sub>eq</sub> either: the flux '
           'ceiling is already defined by the highest output the controller '
           'allows before it shuts down.'))
-    add(p('<b>Why the ceiling is OVP2.</b> The flux follows the output '
-          'voltage alone (Section&nbsp;'
-          + SR('Peak flux is set by the secondary, not the primary')
-          + '), so the largest flux the core ever carries comes at the '
-          'largest output the controller lets stand. The L6790A has two '
-          'levels on the ZCD pin. At OVP1 (2.3&nbsp;V on the pin) it keeps '
-          'switching at reduced power, so the output can sit between OVP1 '
-          'and OVP2 with the transformer still driven. At OVP2 '
-          '(2.5&nbsp;V) it stops switching for 100&nbsp;ms and restarts '
-          'with a soft start. Above OVP2 the core is never driven, so OVP2 '
-          'is the ceiling, and the ratio of the two voltages is the whole '
-          'margin. No arbitrary factor goes on top of it:'))
+    #  The derivation the user asked for (2026-09-25): why the saturation
+    #  test current is tied to OVP2 and to nothing else.  Two expressions
+    #  of the same flux; A_e cancels; the magnetising peak is proportional
+    #  to the output voltage; the bench current obeys the same relation.
+    add(p('<b>Why the ceiling is OVP2.</b> Write the same peak flux twice: '
+          'from the volt-seconds the clamped secondary applies '
+          '(Equation&nbsp;%(b)s), and from the current that magnetises the '
+          'core (Equation&nbsp;%(i)s). A<sub>e</sub> cancels:'
+          % dict(b=ER('Bpk'), i=ER('Isat'))))
+    add(eq(r'B_{pk}=\frac{V_{o,eff}}{4\,f_{r}\,N_{s}\,A_{e}}'
+           r'=\frac{L_{\mu}\,i_{\mu,pk}}{N_{p}\,A_{e}}'
+           r'\qquad\Longrightarrow\qquad '
+           r'i_{\mu,pk}=\frac{n_{T}\,V_{o,eff}}{4\,f_{r}\,L_{\mu}}',
+           key='imuVo'))
+    add(p('with n<sub>T</sub> = N<sub>p</sub>/N<sub>s</sub>. Nothing that '
+          'the load or the input sets is left in it. Below resonance the '
+          'secondary is clamped for T<sub>r</sub>/2 whatever f<sub>sw</sub> '
+          'is; above resonance for less, so the flux is lower. '
+          '<b>The magnetising peak, and the flux with it, is proportional to '
+          'the output voltage and to nothing else in operation.</b> The '
+          'worst case is therefore the highest output voltage at which the '
+          'bridge is still switching.'))
+    add(p('The L6790A has two levels on the ZCD pin. At OVP1 '
+          '(2.3&nbsp;V on the pin) it keeps switching at reduced power, so '
+          'the output can sit between OVP1 and OVP2 with the transformer '
+          'still driven. At OVP2 (2.5&nbsp;V) it stops switching for '
+          '100&nbsp;ms and restarts with a soft start. While the core is '
+          'driven, the output therefore stays at or below V<sub>OVP2</sub>, '
+          'and Equation&nbsp;%(m)s gives the largest magnetising peak the '
+          'core ever carries.'
+          % dict(m=ER('imuVo'))))
+    add(p('On the bench every other winding is open, so the dc current is '
+          'the only ampere-turns on the core and makes '
+          'B&nbsp;=&nbsp;L<sub>&mu;</sub>&thinsp;I<sub>dc</sub>/'
+          '(N<sub>p</sub>A<sub>e</sub>), the same relation as in operation. '
+          'The test current that reproduces the flux at OVP2 is the '
+          'magnetising peak scaled by the voltage ratio, and the ratio of the '
+          'two voltages is the whole margin. No arbitrary factor goes on top '
+          'of it:'))
     add(eq(r'I_{sat}\;=\;I_{eq}\;\frac{V_{OVP2}}{V_{o,eff}}',
            key='Isatspec'))
+    add(p('With V<sub>f</sub> = 0 this is the exact flux ratio. With a '
+          'rectifier drop the flux ratio is (V<sub>OVP2</sub> + '
+          'N<sub>rect</sub>V<sub>f</sub>)/V<sub>o,eff</sub>, a little '
+          'smaller, so Equation&nbsp;%s errs on the safe side.'
+          % ER('Isatspec')))
     add(p('Overload, start-up, burst mode and the switching frequency do '
           'not raise the flux (Section&nbsp;%s); an output over-voltage '
           'does, and temperature lowers the ceiling. B<sub>s</sub> of a MnZn power '
@@ -2888,6 +2920,14 @@ def build(A):
              r'{%.2f\ \mu\mathrm{H}}=\mathbf{%.2f\ A}\ =\ i_{\mu,pk}'
              % (V['Bpk'] / 1e3, V['Np'], V['Aemm'], V['Lmu'] / V['nser'],
                 V['Isateq'])))
+    add(p('The same current from the output voltage alone '
+          '(Equation&nbsp;%s), with no core data in it:' % ER('imuVo')))
+    add(calc(r'i_{\mu,pk}=\frac{%.2f\times %.1f\ \mathrm{V}}'
+             r'{4\times %.2f\ \mathrm{kHz}\times %.2f\ \mu\mathrm{H}}'
+             r'=\mathbf{%.2f\ A}'
+             % (V['nT'], V['Vout'], V['fr'], V['Lmu'] / V['nser'],
+                V['nT'] * V['Vout'] / (4 * V['fr'] * 1e3
+                                       * V['Lmu'] / V['nser'] * 1e-6))))
     add(p('<b>Saturation test current</b>, the magnetising peak at the '
           'OVP2 output voltage:'))
     add(eqagain('Isatspec'))
