@@ -325,7 +325,20 @@ K_LITZ = 0.55       # copper fill of a served Litz bundle, insulation included
 T_FOIL = 0.20       # mm, copper foil thickness - the nearest standard gauge
                     # at or under twice the skin depth
 T_FOIL_INS = 0.05   # mm, interlayer insulation on each foil turn
-MARGIN = 2.0        # mm of margin tape at each flange
+#  Margin tape, per flange (2026-09-25, insulation.py).  The core counts as
+#  PRIMARY (its centre leg lies under the primary with nothing but the tube
+#  wall between), so the primary-to-core distance is functional and the
+#  primary flange needs only enough tape to keep the Litz off the flange.
+#  The secondary flange is part of the reinforced secondary-to-core path.
+#  What the reinforced primary-to-secondary insulation rests on is the
+#  SEPARATION between the two sections - insulation.py checks it.
+MARGIN_P = 1.0      # mm, primary flange
+MARGIN_S = 2.0      # mm, secondary flange
+MARGIN = MARGIN_S   # the Korean edition still reads this until it is ported
+#  The auxiliary winding supplies VCC and must follow the OUTPUT, so it is
+#  wound over the secondary - in triple-insulated wire, which carries the
+#  reinforced insulation to the primary-referenced winding by itself.
+TIW_OD = 0.6        # mm, outer diameter of the TIW, assumed - vendor datasheet
 D_STRAND = 0.10     # mm, Litz strand diameter
 W_FOIL_MAX = 12.0   # mm, widest single foil strip before it is split in parallel
 
@@ -344,7 +357,10 @@ def winding(V, name=None):
     L_short/L_open = lambda/(1+lambda), and only a deliberate gap between
     primary and secondary gives leakage of that order.  The gap is
     therefore not slack - it is the resonant inductor, and this function
-    reports what is left for it after the copper and the margins.
+    reports what is left for it after the copper and the margins.  It is
+    ALSO the reinforced insulation between primary and secondary (creepage
+    along the tube and clearance across it), so it may not come out below
+    insulation.separation_min(), whatever the leakage would like.
 
     Returns a dict the drawing can render directly.  Nothing is rounded
     for appearance: if the copper does not fit, 'gap' comes out negative
@@ -356,7 +372,7 @@ def winding(V, name=None):
     ap, asec = rows[0][3], rows[1][3]
     dp, nstr = litz(ap)
     wf = asec / T_FOIL                       # foil width for one turn
-    usable = M['wind_w'] - 2 * MARGIN
+    usable = M['wind_w'] - MARGIN_P - MARGIN_S
     r_tube = M['tube_od'] / 2.0
     r_free = M['r_win_out'] - r_tube         # radial room at the narrow section
     #  A foil wider than W_FOIL_MAX is split into parallel strips: one
@@ -365,15 +381,18 @@ def winding(V, name=None):
     n_foil = max(1, -(-int(wf / W_FOIL_MAX + 0.999999) // 1))
     n_foil = max(1, int(-(-wf // W_FOIL_MAX)))
     wf = wf / n_foil
-    #  fewest primary layers that leave room for the foil and a gap AND
-    #  stay inside the radial room; if none does, the deepest that fits
-    #  radially is reported so the shortfall is visible
+    #  fewest primary layers that leave room for the foil and the
+    #  separation the reinforced insulation needs (insulation.py) AND stay
+    #  inside the radial room; if none does, the deepest that fits radially
+    #  is reported so the shortfall is visible
+    from insulation import separation_min        # lazy: it imports cores
+    SEPARATION_MIN = separation_min()
     lay, chosen = 1, None
     while lay <= V['Np']:
         per = -(-V['Np'] // lay)             # ceil
         if lay * dp > r_free:
             break
-        if per * dp + wf < usable:
+        if per * dp + wf + SEPARATION_MIN <= usable:
             chosen = lay
             break
         lay += 1
@@ -384,13 +403,20 @@ def winding(V, name=None):
     gap_ax = usable - wp - wf
     build_p = lay * dp
     build_s = 2 * V['Ns'] * n_foil * (T_FOIL + T_FOIL_INS)
+    #  NAUX, one layer of TIW over the secondary foil (V['Naux'] turns)
+    n_aux = int(V.get('Naux', 0))
+    aux_fits = n_aux * TIW_OD <= wf
+    build_s += TIW_OD if n_aux else 0.0
     return dict(
         name=name, M=M, Np=V['Np'], Ns=V['Ns'],
         ap=ap, asec=asec, d_litz=dp, n_strand=nstr,
-        t_foil=T_FOIL, w_foil=wf, n_foil=n_foil, margin=MARGIN, usable=usable,
+        t_foil=T_FOIL, w_foil=wf, n_foil=n_foil, margin_p=MARGIN_P,
+        margin_s=MARGIN_S, n_aux=n_aux, tiw_od=TIW_OD, usable=usable,
         layers=lay, per_layer=per, rows_p=rows_p, w_pri=wp, gap=gap_ax,
         build_p=build_p, build_s=build_s, r_tube=r_tube, r_free=r_free,
-        fits=(gap_ax > 0 and build_p <= r_free and build_s <= r_free))
+        sep_min=SEPARATION_MIN,
+        fits=(gap_ax >= SEPARATION_MIN and build_p <= r_free
+              and build_s <= r_free and aux_fits))
 
 
 def report(V, name=None):
@@ -401,8 +427,8 @@ def report(V, name=None):
     out = [
         '%s   core %s   coil former %s' % (name, M['core'], M['former']),
         '  bobbin winding width      %6.2f mm   (datasheet)' % M['wind_w'],
-        '  margin tape, both flanges %6.2f mm   (assumed %.1f each)'
-        % (2 * MARGIN, MARGIN),
+        '  margin tape, both flanges %6.2f mm   (primary %.1f, secondary %.1f)'
+        % (MARGIN_P + MARGIN_S, MARGIN_P, MARGIN_S),
         '  usable axial              %6.2f mm' % w['usable'],
         '  primary  %d turns of %.2f mm2 -> Litz %d x %.2f mm, bundle '
         'd = %.2f mm' % (w['Np'], w['ap'], w['n_strand'], D_STRAND,
@@ -412,10 +438,12 @@ def report(V, name=None):
         '  secondary %d + %d turns of %.2f mm2 -> foil %.2f x %.2f mm%s'
         % (w['Ns'], w['Ns'], w['asec'], w['t_foil'], w['w_foil'],
            '' if w['n_foil'] == 1 else ' x %d in parallel' % w['n_foil']),
-        '           %d turns -> %6.2f mm axial, %.2f mm build'
-        % (2 * w['Ns'], w['w_foil'], w['build_s']),
-        '  LEFT FOR THE SEPARATION    %5.2f mm   %s'
-        % (w['gap'], 'ok' if w['gap'] > 0 else '** DOES NOT FIT'),
+        '           %d turns -> %6.2f mm axial, %.2f mm build%s'
+        % (2 * w['Ns'], w['w_foil'], w['build_s'],
+           ' (with %d T of TIW NAUX on top)' % w['n_aux'] if w['n_aux'] else ''),
+        '  LEFT FOR THE SEPARATION    %5.2f mm   %s (insulation needs %.2f)'
+        % (w['gap'], 'ok' if w['gap'] >= w['sep_min'] else '** TOO NARROW',
+           w['sep_min']),
         '  radial room at the narrow section %.2f mm  '
         '(window %.2f - bobbin r %.2f)' % (w['r_free'], M['r_win_out'],
                                            w['r_tube']),

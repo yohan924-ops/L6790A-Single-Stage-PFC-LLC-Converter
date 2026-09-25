@@ -344,6 +344,31 @@ V.update(
     T180=SH.get('T.180', 10 ** (-SH['GM'] / 20.0)),
 )
 
+
+def _sig2(x):
+    """a fitted part value back from its ratio: E-series values have two
+    significant figures, so rounding there is exact, not cosmetic"""
+    from math import floor, log10
+    e = floor(log10(abs(x))) - 1
+    return round(x / 10 ** e) * 10 ** e
+
+
+#  V.CC from the auxiliary winding (sheet section 14c, 2026-09-25).  The
+#  fitted R.BZ and C.VCC are variant picks, so they are read back from the
+#  ratios the sheet prints rather than from the builder's source line.
+V.update(
+    DZ=_builder_const('V.DZ_sel'), tolDZ=_builder_const('tol.DZ'),
+    VFj=_builder_const('V.F_j'), Qg=_builder_const('Q.g'),      # nC
+    bmin=_builder_const('β.min'), IDZmin=_builder_const('I.DZ_min'),
+    ICC=_builder_const('I.CC'), IHVlo=_builder_const('I.HVSU_lo'),
+    IHVhi=_builder_const('I.HVSU_hi'), VCCon=_builder_const('V.CC_on'),
+    VCCHV=_builder_const('V.CC_HVSUon'), VCCoff=_builder_const('V.CC_off'),
+    VCCmax=_builder_const('V.CC_opmax'), tHVSU=_builder_const('t.HVSU'),
+    Nsw=_builder_const('N.sw'),
+    RBZ=_sig2(SH['R.BZ_max'] / SH['k.RBZ']),
+    CVCC=_sig2(SH['C.VCC_req'] * SH['k.CVCC']),
+)
+
 # Two oscillator inputs the sheet does not echo as results, recovered from
 # rows that it does, so that the design example can quote them without a
 # typed constant.

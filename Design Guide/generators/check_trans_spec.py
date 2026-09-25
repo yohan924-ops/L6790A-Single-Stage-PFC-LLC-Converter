@@ -7,6 +7,7 @@ build_trans_spec.py 의 VARIANTS 는 손으로 박은 상수 표다.  시트를 
 이 스크립트는 상수 하나하나를 Smath/variants/*.sm 에서 역산해 비교한다.
 """
 import io
+import math
 import os
 import sys
 import xml.etree.ElementTree as ET
@@ -68,9 +69,12 @@ def derive(s):
     Ae_now = g('A.e_mm')
     return dict(
         Np=int(round(Np)), Ns=int(round(Ns)), Nx=int(round(Nx)),
-        # 보조 권선은 코어당 정수 턴이어야 한다.  시트가 n.aux 를 세트 기준으로
-        # 들고 있으므로 여기서 유닛 턴수로 되돌린다 - 사양서에 나가는 것은 이쪽이다.
-        Naux=int(round(g('n.aux') * Ns / Nx)),
+        # 보조 권선은 세트 전체로 n.aux*N.s 턴(시트 N.aux)이다.  코어가 여럿이면
+        # 유닛마다 같은 수를 감고 필요한 만큼만 직렬로 쓴다 - 유닛당 턴수는
+        # 올림이다(7.5:1 3코어: 2 T 가 필요하니 유닛마다 1 T, 둘만 직렬).
+        Naux=int(math.ceil(g('n.aux') * Ns / Nx - 1e-9)),
+        Naux_set=int(round(g('n.aux') * Ns)),
+        Ivcc=g('I.VCC'),
         Lopen=Lopen / Nx,                           # uH/개
         Lshort=g('L.r') / Nx,                       # uH/개
         Ipri_rms=g('I.pri_lc'), Ipri_pk=g('I.Lr_pk'),      # 1차 직렬 -> 나누지 않는다
@@ -115,9 +119,12 @@ def spec_from_xlsx(path):
         return float(re.findall(r'[\d.]+', row[col])[0])
 
     wnd = lambda lab: find(lab)
-    np_, ns_ = wnd('NP1'), wnd('NS2')
+    np_, ns_, na_ = wnd('NP1'), wnd('NS2'), wnd('NAUX')
+    ins = find('Creepage')
     return dict(
-        Np=int(num(np_, 5)), Ns=int(num(ns_, 5)),
+        Np=int(num(np_, 5)), Ns=int(num(ns_, 5)), Naux=int(num(na_, 5)),
+        creep=num(ins, 5), clear=num(find('Clearance'), 5),
+        sep=num(find('Separation'), 5),
         Lopen=num(find('INDUCTANCE'), 5),
         Lshort=num(find('LEAKAGE INDUCTANCE'), 5),
         Isat=num(find('D.C OVERLAP'), 6),
@@ -129,6 +136,9 @@ def spec_from_xlsx(path):
 
 def main():
     import re as _re
+    global INS, SEP
+    import insulation                   # 절연 요구치의 유일한 출처
+    INS, SEP = insulation.req(), insulation.separation_min()
     bad = 0
     for var in ('7p5to1', '7p5to1_x1', '8to1', '6to1'):
         smp = os.path.join(SMDIR, 'L6790A_%s.sm' % var)
@@ -151,6 +161,10 @@ def main():
         for name, have, want, tol in [
                 ('Np  1차 턴수',        spec['Np'],     d['Np'],     0.0),
                 ('Ns  2차 턴수',        spec['Ns'],     d['Ns'],     0.0),
+                ('Naux 보조 턴수/유닛',  spec['Naux'],   d['Naux'],   0.0),
+                ('연면거리 mm',          spec['creep'],  INS['creep'], 0.0),
+                ('공간거리 mm',          spec['clear'],  INS['clearance'], 0.0),
+                ('1-2차 간격 mm',        spec['sep'],    SEP, 0.0),
                 ('L.open  uH/개',       spec['Lopen'],  d['Lopen'],  0.005),
                 ('L.short uH/개',       spec['Lshort'], d['Lshort'], 0.005),
                 ('A.e  mm2 (B<=0.2T)',  spec['Ae'],     d['Ae'],     0.01)]:

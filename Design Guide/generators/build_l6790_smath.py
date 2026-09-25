@@ -35,20 +35,25 @@ VARIANTS = {
     #  9 : 1 (Np 3 · Ns 1 · L.m 24 uH) 은 2026-09-23 에 지웠다 - 정본이 7.5:1 이
     #  되면서 쓰는 곳이 없어졌다.  근거와 수치는 docs/HISTORY.md.
     '7p5to1': dict(nT=7.5, Cr=100, Lr=11.0, Lm=20.0, Nx=3, Np=5, Ns=2,
-                  kaux=1.5, RzH=330, CT=470, label='7.5 : 1'),
+                  kaux=1, RzH=220, CT=470, label='7.5 : 1'),
     '8to1':   dict(nT=8.0, Cr=100, Lr=11.0, Lm=20.0, Nx=2, Np=8, Ns=2,
                   kaux=1, RzH=220, CT=470, label='8 : 1'),
     '6to1':   dict(nT=6.0, Cr=180, Lr=6.4, Lm=14.2, Nx=3, Np=2, Ns=1,
-                  kaux=3, RzH=680, CT=330, label='6 : 1'),
+                  kaux=1, RzH=220, CT=330, label='6 : 1',
+                  RBZ=680, CVCC=1000),
     #  ONE transformer, 15 : 2 on a single core (2026-09-22, user: the
     #  guide's example is one transformer).  Same tank as 7p5to1; N.aux =
-    #  1.5 * 2 / 1 = 3 turns.  The core is TDK ETD 49/25/16DG, A.e 211 mm2
+    #  1 * 2 = 2 turns.  The core is TDK ETD 49/25/16DG, A.e 211 mm2
     #  - the PQ 40/40 of the three-unit build has no room for a 15-turn
     #  primary (cores.winding, HISTORY.md 2026-09-22).
     '7p5to1_x1': dict(nT=7.5, Cr=100, Lr=11.0, Lm=20.0, Nx=1, Np=15, Ns=2,
-                      kaux=1.5, RzH=330, CT=470, label='7.5 : 1',
+                      kaux=1, RzH=220, CT=470, label='7.5 : 1',
                       Ae=211.0),
 }
+#  2026-09-25: the auxiliary winding supplies VCC (no external rail), n.aux
+#  = 1.0 on every design point, so R.ZCD_H is 220 k on all of them.  RBZ and
+#  CVCC are the Zener feed resistor and the VCC capacitor of section 14c; only
+#  6:1 differs, because its higher f.Max and f.SU draw more gate current.
 VAR = os.environ.get('L6790_VARIANT', '7p5to1')    # 정본 = 7.5:1, 3 코어 (2026-09-23)
 V = VARIANTS[VAR]
 V['n'] = V['nT'] / (1 + V['Lr'] / V['Lm']) ** 0.5
@@ -924,25 +929,31 @@ S.row('- input film capacitor check (>1):', 'k.Cin', 'C.in_sel/C.in', None, 3,
 S.const('- OVP1 overshoot above Vout:', 'Δ.OVP1', '0.10', None, 3)
 S.row('- OVP1 output voltage:', 'V.OVP1_out', 'V.out*(1+Δ.OVP1)', 'V', 2)
 S.row('- OVP2 output voltage:', 'V.OVP2_out', "V.OVP1_out*2.5/2.3", 'V', 2)
-S.note('THE THREE ROWS BELOW DO NOT APPLY TO THIS DESIGN. n.aux_max, k.auxr '
-       'and k.VCC all ask "will V.aux stay under the 25 V VCC rating at OVP2", '
-       'Here VCC is supplied externally and this winding feeds nothing but '
-       'the ZCD pin '
-       'through the divider below, so its voltage is free. What DOES constrain '
-       'it is N.aux: one turn per core is the smallest that can be wound.')
-S.row('- Maximum auxiliary-to-secondary turns ratio:', 'n.aux_max',
-      "25*'V/V.OVP2_out", None, 4)
+S.note('The auxiliary winding SUPPLIES VCC (2026-09-25): there is no external '
+       'rail. It feeds VCC through a Zener-referenced emitter follower and a '
+       'bypass diode (DS 5.1.8), and the ZCD divider below. n.aux_max and '
+       'k.auxr are the ST tool\'s test for an auxiliary winding wired straight '
+       'to VCC; with the regulator in between, the 25 V limit applies to the '
+       'regulator OUTPUT, and k.VCC in section 14c tests that instead. This is '
+       'a deliberate difference from the ST workbook.')
+S.row('- Maximum auxiliary-to-secondary turns ratio (direct feed only):',
+      'n.aux_max', "25*'V/V.OVP2_out", None, 4)
 S.const('[PICK] SELECTED auxiliary-to-secondary ratio:', 'n.aux', '%g' % V['kaux'],
         None, 3,
-        )
-S.row('- auxiliary ratio under its limit (>1):', 'k.auxr', 'n.aux_max/n.aux', None, 3)
-S.row('- Auxiliary turns this implies (whole number):', 'N.aux',
-      'n.aux*N.s/N.x', None, 2,
-      note='per core. It has to be a whole number, and nothing else here checks that.')
+        note='1.0: the lowest whole-turn ratio that keeps the regulator in '
+             'regulation at the end of hold-up (k.RBZ, 14c); 0.5 puts VCC below '
+             'the HVSU threshold, 1.5 raises everything the regulator burns '
+             'by half.')
+S.row('- auxiliary ratio under the direct-feed limit (>1 only if wired '
+      'straight to VCC):', 'k.auxr', 'n.aux_max/n.aux', None, 3)
+S.row('- Auxiliary turns in series (whole number):', 'N.aux',
+      'n.aux*N.s', None, 2,
+      note='TOTAL, all cores together. It has to be a whole number, and '
+           'nothing else here checks that. With N.x > 1, wind one turn on '
+           'every unit and series as many as this needs; the rest stay open.')
 S.row('- Auxiliary winding nominal voltage:', 'V.aux', 'n.aux*V.out', 'V', 2,
-      note='this is a SENSE voltage, divided down to the ZCD pin by R.ZCD_H / '
-           'R.ZCD_L below. It does not have to sit in the VCC range, because '
-           'it does not supply VCC.')
+      note='holds only while the winding is coupled to the SECONDARY: wind it '
+           'in triple-insulated wire over the secondary (section 14c).')
 S.row('- Auxiliary voltage at OVP2:', 'V.aux_OVP2', 'n.aux*V.OVP2_out', 'V', 2)
 S.const('- ZCD divider bias current at OVP1:', 'I.bias', "120*'μA", 'μA', 1)
 S.row('- Lower ZCD resistor:', 'R.ZCD_L', "2.3*'V/I.bias", 'kohm', 3)
@@ -996,8 +1007,98 @@ S.const('- ZCD voltage at the end of start-up:', 'V.ZCD_SUend', "1.36*'V", 'V', 
 S.row('- Output voltage where start-up hands over:', 'V.out_SUend',
       "V.ZCD_SUend/(2.3*'V)*V.OVP1_act", 'V', 2)
 S.row('- OVP1 against the target (near 1):', 'k.OVP1', 'V.OVP1_act/V.OVP1_out', None, 3)
-S.row('- VCC at OVP2 stays under 25 V (>1):', 'k.VCC',
-      "25*'V/(n.aux*V.OVP2_act)", None, 3)
+
+S.h2('14c. VCC from the auxiliary winding - 2 T and a Zener regulator')
+S.note('aux winding -> D.aux -> C.aux -> NPN emitter follower (base held by a '
+       'Zener fed through R.BZ from C.aux) -> bypass diode -> VCC pin and '
+       'C.VCC. The bypass diode is the one DS 5.1.8 asks for: it keeps the '
+       'HVSU charge current out of the regulator. The same winding drives the '
+       'ZCD divider above.')
+S.const('[DS] VCC turn-on threshold (rising):', 'V.CC_on', "17*'V", 'V', 1)
+S.const('[DS] HVSU charge-current turn-on threshold (falling):', 'V.CC_HVSUon',
+        "12*'V", 'V', 1)
+S.const('[DS] VCC turn-off (UVLO) threshold (falling):', 'V.CC_off', "8*'V", 'V', 1)
+S.const('[DS] VCC recommended operating maximum:', 'V.CC_opmax', "25*'V", 'V', 1)
+S.const('[DS] IC operating supply current:', 'I.CC', "3*'mA", 'mA', 1)
+S.const('[DS] HVSU charge current at 115 Vac:', 'I.HVSU_lo', "13*'mA", 'mA', 1)
+S.const('[DS] HVSU charge current at 230 Vac:', 'I.HVSU_hi', "9*'mA", 'mA', 1)
+S.const('[DS] HVSU shut-down timeout after VCC passes V.CC_on:', 't.HVSU',
+        "120*'ms", 'ms', 0)
+S.const('[ASSUMED] Silicon junction drop (D.aux, V.BE, bypass diode):', 'V.F_j',
+        "0.7*'V", 'V', 2)
+S.row('- C.aux at the nominal output:', 'V.Caux', 'n.aux*V.out-V.F_j', 'V', 2)
+S.row('- C.aux at OVP1 (the highest it stays at):', 'V.Caux_OVP1',
+      'n.aux*V.OVP1_act-V.F_j', 'V', 2)
+S.row('- C.aux at OVP2 (transient; rates C.aux and the pass transistor):',
+      'V.Caux_OVP2', 'n.aux*V.OVP2_act-V.F_j', 'V', 2,
+      note='plus whatever leakage spike the winding carries - measure it on '
+           'the prototype and rate V.CEO and C.aux above both.')
+S.row('- C.aux at the end of hold-up:', 'V.Caux_hold', 'n.aux*V.out_min-V.F_j',
+      'V', 2)
+S.const('[PICK] SELECTED Zener voltage:', 'V.DZ_sel', "15*'V", 'V', 1)
+S.const('[PICK] Zener tolerance (the part grade to buy):', 'tol.DZ', '0.05',
+        None, 3)
+S.row('- Zener, low end:', 'V.DZ_min', 'V.DZ_sel*(1-tol.DZ)', 'V', 2)
+S.row('- Zener, high end:', 'V.DZ_max', 'V.DZ_sel*(1+tol.DZ)', 'V', 2)
+S.row('- Regulated VCC, nominal:', 'V.CC_reg', 'V.DZ_sel-2*V.F_j', 'V', 2)
+S.row('- Regulated VCC, low end:', 'V.CC_reg_min', 'V.DZ_min-2*V.F_j', 'V', 2)
+S.row('- Regulated VCC, high end:', 'V.CC_reg_max', 'V.DZ_max-2*V.F_j', 'V', 2)
+S.row('- lowest VCC above the HVSU threshold (>1):', 'k.VCClo',
+      'V.CC_reg_min/V.CC_HVSUon', None, 3,
+      note='below 12 V the HVSU would switch back on and burn line power.')
+S.row('- highest VCC under the 25 V operating limit (>1):', 'k.VCC',
+      'V.CC_opmax/V.CC_reg_max', None, 3)
+S.note('The load on this rail is the IC and the gate drivers. The driver share '
+       'is the gate charge of every switch position, once per period.')
+S.const('[CANDIDATE] Primary MOSFET gate charge, typ.:', 'Q.g',
+        "78.6*10^(-9)*'A*'s", None, 1,
+        note='STO60N045DM9, the candidate primary MOSFET, as listed by '
+             'DiscoverEE; confirm it on the ST datasheet. 78.6 nC.')
+S.const('- Switch positions driven in full bridge:', 'N.sw', '4', None, 0)
+S.row('- Supply current in run, bound at f.Max:', 'I.VCC',
+      'I.CC+N.sw*n.par*Q.g*f.Max', 'mA', 1,
+      note='Q.g holds at the datasheet test condition; a gate driven harder '
+           'takes more charge. f.Max is the highest run frequency.')
+S.const('[PICK] Pass transistor current gain at I.VCC, min.:', 'β.min',
+        '50', None, 0)
+S.const('[PICK] Minimum Zener bias current:', 'I.DZ_min', "1*'mA", 'mA', 1)
+S.row('- Largest R.BZ that still regulates at the end of hold-up:', 'R.BZ_max',
+      '(V.Caux_hold-V.DZ_max)/(I.VCC/β.min+I.DZ_min)', 'ohm', 0)
+S.const('[PICK] SELECTED Zener feed resistor R.BZ:', 'R.BZ_sel',
+        "%g*'ohm" % V.get('RBZ', 820),
+        'ohm', 0)
+S.row('- R.BZ margin (>1):', 'k.RBZ', 'R.BZ_max/R.BZ_sel', None, 3)
+S.row('- Zener dissipation, no load, C.aux at OVP1 (rating to buy):', 'P.DZ',
+      'V.DZ_max*(V.Caux_OVP1-V.DZ_min)/R.BZ_sel', 'mW', 0)
+S.row('- Pass transistor dissipation at OVP1 and I.VCC (rating to buy):',
+      'P.Qpass', '(V.Caux_OVP1-(V.DZ_min-V.F_j))*I.VCC', 'W', 2,
+      note='at the nominal output it is (V.Caux-V.CC_reg-V.F_j)*I.VCC. With '
+           'n.aux = 1.5 the voltage across it would grow by V.out/2.')
+S.note('START-UP. The HVSU charges C.VCC to V.CC_on and switching begins. '
+       'Until the output is high enough for the winding to carry VCC, C.VCC '
+       'supplies the drivers - the HVSU only returns its own few mA below '
+       'V.CC_HVSUon. The worst case is the full bridge (low line, 13 mA) at the '
+       'start-up frequency.')
+S.row('- Supply current during start-up (full bridge at f.SU):', 'I.VCC_SU',
+      'I.CC+N.sw*n.par*Q.g*f.SU', 'mA', 1)
+S.row('- Output voltage at which the winding holds VCC at V.CC_off:',
+      'V.out_UV', '(V.CC_off+3*V.F_j+I.VCC_SU/β.min*R.BZ_sel)/n.aux', 'V', 2)
+S.row('- Time to get there, rated current into C.out and NO load:', 't.hand',
+      'C.out*V.out_UV/I.out', 'ms', 1,
+      note='[ASSUMED] the load is held off until the rail is up, as a TV '
+           'sequences its panel. Any load during start-up stretches this.')
+S.row('- hand-over inside the HVSU window (>1):', 'k.thand', 't.HVSU/t.hand',
+      None, 3)
+S.row('- C.VCC that bridges the hand-over:', 'C.VCC_req',
+      '(I.VCC_SU-I.HVSU_lo)*t.hand/(V.CC_on-V.CC_off)', 'μF', 0)
+S.const('[PICK] SELECTED C.VCC:', 'C.VCC_sel', "%g*'μF" % V.get('CVCC', 680),
+        'μF', 0)
+S.row('- C.VCC margin (>1):', 'k.CVCC', 'C.VCC_sel/C.VCC_req', None, 3)
+S.row('- Delay before the first switching, 230 Vac:', 't.VCCchg',
+      'C.VCC_sel*V.CC_on/I.HVSU_hi', 's', 2,
+      note='the price of C.VCC: the HVSU fills it at 9 mA from the line. '
+           'Check the HVSU temperature on the prototype (DS: HVSU over-'
+           'temperature protection).')
 
 S.h2('14b. Datasheet Operating Limits - every ratio below must be greater than 1')
 S.note('DS Table 2 (recommended operating range) and DS section 5.3.2. These are hard silicon '
@@ -1517,12 +1618,13 @@ for lbl, var, un, dp in [
 S.h2('17.1  Every verdict in one place')
 S.note('All of these must be greater than 1. Each line is the ratio itself, '
        'then what to change if it fails.')
-S.note('THREE OF THEM CANNOT BE READ THAT WAY. k.auxr and k.VCC ask whether '
-       'the auxiliary winding stays under the VCC rating, which is a question '
-       'only when that winding supplies VCC - see section 14. k.lam is a '
-       'NO-LOAD gain condition, and the hardware limit it stands in for is '
-       'k.ceil. Every other row is a real test, and the text beside it is what '
-       'to change when it reads below 1.')
+S.note('TWO OF THEM CANNOT BE READ THAT WAY. k.auxr asks whether the '
+       'auxiliary winding, wired STRAIGHT to VCC, stays under the 25 V rating; '
+       'here a Zener regulator sits in between and k.VCC asks the same '
+       'question of its output - see section 14. k.lam is a NO-LOAD gain '
+       'condition, and the hardware limit it stands in for is k.ceil. Every '
+       'other row is a real test, and the text beside it is what to change '
+       'when it reads below 1.')
 
 S.h2('       power stage')
 for lbl, var in [('T.ZC_min / t.D            raise L.m or lower Q', 'k.ZVS'),
@@ -1565,10 +1667,14 @@ S.h2('       supervision and auxiliary')
 for lbl, var in [('V.AC_min / V.BO_act       smaller R.CFG', 'k.BO'),
                  ('R.CFG_sel / 15 kohm       morphing window', 'k.CFG_lo'),
                  ('47 kohm / R.CFG_sel       morphing window', 'k.CFG_hi'),
-                 ('n.aux_max / n.aux        DOES NOT APPLY - see 14',
+                 ('n.aux_max / n.aux        DIRECT FEED ONLY - see 14',
                   'k.auxr'),
-                 ('25 V / (n.aux*V.OVP2_act) DOES NOT APPLY - see 14',
-                  'k.VCC'),
+                 ('25 V / V.CC_reg_max       lower V.DZ_sel', 'k.VCC'),
+                 ('V.CC_reg_min / 12 V       raise V.DZ_sel', 'k.VCClo'),
+                 ('R.BZ_max / R.BZ_sel       smaller R.BZ_sel', 'k.RBZ'),
+                 ('C.VCC_sel / C.VCC_req     larger C.VCC_sel', 'k.CVCC'),
+                 ('120 ms / t.hand           hold the load off longer',
+                  'k.thand'),
                  ('V.OVP1_act / V.OVP1_out   against target, near 1',
                   'k.OVP1')]:
     S.show('- ' + lbl, var, None, 3)
@@ -1601,6 +1707,7 @@ S.show('- Transformers in the series string:', 'N.x', None, 0)
 S.show('- Primary turns per transformer:', 'N.p', None, 0)
 S.show('- Secondary half-winding turns:', 'N.s', None, 0)
 S.show('- Auxiliary to secondary turns ratio:', 'n.aux', None, 2)
+S.show('- Auxiliary turns in series, all cores:', 'N.aux', None, 0)
 S.show('- Inductance factor per core:', 'A.L', 'nH', 1)
 
 S.h2('19.2  Input and output capacitors - single, count, TOTAL')
@@ -1640,6 +1747,11 @@ S.show('- VCO timing resistor:', 'R.T', 'kohm', 1)
 S.show('- Burst-mode resistor, SELECTED:', 'R.BM_sel', 'kohm', 1)
 S.show('- CFG resistor, SELECTED:', 'R.CFG_sel', 'kohm', 1)
 S.show('- Input film capacitor, SELECTED:', 'C.in_sel', 'nF', 0)
+S.show('- VCC regulator Zener, SELECTED:', 'V.DZ_sel', 'V', 1)
+S.show('- Zener tolerance grade:', 'tol.DZ', None, 3)
+S.show('- Zener feed resistor, SELECTED:', 'R.BZ_sel', 'ohm', 0)
+S.show('- Zener power rating, at least:', 'P.DZ', 'mW', 0)
+S.show('- VCC capacitor, SELECTED:', 'C.VCC_sel', 'μF', 0)
 
 S.h2('19.6  Semiconductors - the REQUIREMENT each part has to meet')
 S.table(['function', 'designator', 'device class and count'],
@@ -1648,6 +1760,10 @@ S.table(['function', 'designator', 'device class and count'],
          ['Primary switches', 'HVG1 HVG2 LVG1 LVG2',
           '4 positions x n.par, superjunction'],
          ['Centre-tap rectifiers', 'D1 D2', '2 legs x n.SR, SR MOSFET'],
+         ['VCC rectifier and bypass diodes', 'D.aux D.byp',
+          '2 x, rated above V.Caux_OVP2'],
+         ['VCC pass transistor', 'Q.VCC',
+          '1 x NPN, beta >= beta.min, P >= P.Qpass'],
          ['Feedback optocoupler', '-', '1 x, CTR binned - see 16.5'],
          ['External error amplifier', '-', '1 x, 2.5 V shunt regulator']],
         widths=[430, 260, 230])
@@ -1670,6 +1786,8 @@ S.show('- Secondary: required RDSon per DEVICE at Tj,max:', 'R.dson_req_dev',
        'mohm', 2)
 S.show('- Secondary: the same, as a 25 C datasheet number:', 'R.dson_req_25_s',
        'mohm', 2)
+S.show('- VCC pass transistor: power to dissipate:', 'P.Qpass', 'W', 2)
+S.show('- VCC pass transistor: V.CE it must block:', 'V.Caux_OVP2', 'V', 1)
 S.show('- Optocoupler: CTR at steady state:', 'CTR.s', None, 3)
 S.show('- Shunt regulator: reference voltage:', 'V.R', 'V', 3)
 

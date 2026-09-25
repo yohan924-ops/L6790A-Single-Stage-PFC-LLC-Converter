@@ -59,6 +59,7 @@ _d = CTS.derive(CTS.sheet(_sm))
 
 V.update(
     Np=_d['Np'], Ns=_d['Ns'], Nx=_d['Nx'], Naux=_d['Naux'],
+    Naux_set=_d['Naux_set'], Ivcc=_d['Ivcc'],
     Lopen=_d['Lopen'], Lshort=_d['Lshort'],
     Ae=int(round(_d['Ae'])),
     Ipri='%.1f A   /   %.1f A' % (_d['Ipri_rms'], _d['Ipri_pk']),
@@ -195,7 +196,8 @@ WIND = [
     ('1', 'NP1     Primary', pins('NP1'), '%d Ts' % V['Np'], V['Ipri']),
     ('2', 'NS2     Secondary A', pins('NS2'), '%d T' % V['Ns'], V['Isec']),
     ('3', 'NS3     Secondary B', pins('NS3'), '%d T' % V['Ns'], V['Isec']),
-    ('4', 'NAUX   Auxiliary (ZCD)', pins('NAUX'), '%d T' % V['Naux'], 'sense only'),
+    ('4', 'NAUX   Auxiliary (VCC, ZCD)', pins('NAUX'), '%d T' % V['Naux'],
+     '%.0f mA dc load (VCC)' % V['Ivcc']),
 ]
 for i, (n, des, term, turns, cur) in enumerate(WIND):
     line(12 + i, [('B', n, 'center'), ('C', des, 'left'), ('D', term, 'center'),
@@ -259,7 +261,59 @@ for i, (item, val, tail) in enumerate(COND):
     ws.row_dimensions[row].height = 16
 
 note(32, 'Core, bobbin, wire and winding arrangement are the supplier’s choice, '
-         'provided section 3 is met.')
+         'provided sections 3 and 5 are met.')
+
+# --------------------------------------------------- 5. 안전 절연 (insulation.py)
+import insulation as INS                                        # noqa: E402
+_R = INS.req()
+section(34, '5.    SAFETY  INSULATION',
+        'Household AV (TV) for the US, EU, Japan, Korea and China: IEC 62368-1 '
+        'as adopted there, GB 4943.1-2022 in China (5000 m).')
+head(36, [('B', 'No'), ('C', 'Item'), ('D', 'Between'), ('E', 'Requirement'),
+          ('F', 'Condition')])
+PRI, SEC = 'primary', 'secondary'
+SAFE = [
+    ('1', 'Insulation grade', '%s  |  %s' % (PRI, SEC), 'REINFORCED',
+     'Primary = NP1, NAUX and the CORE; secondary = NS2, NS3. Pollution '
+     'degree 2, overvoltage category II, material group IIIb, 5000 m.', 30),
+    ('2', 'Creepage', '%s  |  %s' % (PRI, SEC), '≥ %.1f mm' % _R['creep'],
+     'Everywhere: along the bobbin, over the flanges, at leads and pins '
+     '(%d V rms row, reinforced = 2 × basic).' % _R['row'], 30),
+    ('3', 'Clearance', '%s  |  %s' % (PRI, SEC), '≥ %.1f mm' % _R['clearance'],
+     '%.1f mm at 2000 m × %.2f for 5000 m, rounded up.'
+     % (_R['cl_2000'], INS.K_ALT), 22),
+    ('4', 'Separation', 'the two winding sections',
+     '≥ %.1f mm' % INS.separation_min(),
+     'It is also the leakage (item 3-2): reach L.short WITHOUT narrowing it.',
+     22),
+    ('5', 'NAUX wire', 'NAUX  |  %s' % SEC, 'TIW, reinforced',
+     'Triple-insulated wire approved as reinforced insulation to IEC 62368-1, '
+     'wound OVER the secondary; leads stay insulated up to the primary-row '
+     'pins. Its approved frequency must cover the start-up frequency.', 30),
+    ('6', 'Solid insulation', '%s  |  %s' % (PRI, SEC),
+     'DTI ≥ %.1f mm  or  ≥ %d tape layers' % (_R['dti'], _R['layers']),
+     'Bobbin rated for reinforced insulation; each tape layer passes the '
+     'reinforced test. Sleeve secondary leads that pass the core.', 30),
+    ('7', 'Electric strength', '%s  |  %s' % (PRI, SEC),
+     '%d V ac 60 s  (%d V dc)' % (_R['hipot_ac'], _R['hipot_dc']),
+     'NP1 + NAUX + core joined against NS2 + NS3 joined. Type test, no '
+     'breakdown. Routine test voltage and time as agreed with the certifier.',
+     30),
+]
+for i, (n, item, betw, req, cond, h) in enumerate(SAFE):
+    row = 37 + i
+    line(row, [('B', n, 'center'), ('C', item, 'left'), ('D', betw, 'center'),
+               ('E', req, 'center'), ('F', cond, 'left')], h=h)
+    ws['E%d' % row].font = Font(name='Calibri', size=10, bold=True)
+    ws['D%d' % row].alignment = Alignment(horizontal='center',
+                                          vertical='center', wrap_text=True)
+note(45, 'The working voltage behind item 2 is an estimate from the design '
+         '(%.0f V rms, %.0f V peak at %g Vac); the certifying body measures it.'
+         % (_R['u_rms'], _R['u_pk'], INS.V_MAINS_DESIGN))
+if V['Nx'] > 1:
+    note(46, 'NAUX: %d T on EVERY unit; the set series-connects %d turn%s in '
+             'all, the rest stay open.'
+             % (V['Naux'], V['Naux_set'], '' if V['Naux_set'] == 1 else 's'))
 
 # ------------------------------------------------------------- 인쇄
 ws.page_setup.orientation = 'portrait'
@@ -267,7 +321,7 @@ ws.page_setup.paperSize = ws.PAPERSIZE_A4
 ws.page_setup.fitToWidth = 1
 ws.page_setup.fitToHeight = 1
 ws.sheet_properties.pageSetUpPr.fitToPage = True
-ws.print_area = 'A1:G33'
+ws.print_area = 'A1:G47'
 ws.page_margins.left = ws.page_margins.right = 0.3
 ws.page_margins.top = ws.page_margins.bottom = 0.4
 

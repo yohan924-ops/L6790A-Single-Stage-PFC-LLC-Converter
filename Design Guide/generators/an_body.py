@@ -1516,16 +1516,43 @@ def build(A):
            r'n_{f}=\left\lceil\frac{w_{f}}{w_{f,max}}\right\rceil',
            key='foil'))
 
-    add(h2('Isolation, margins and what they cost in window'))
-    add(p('The transformer is the isolation barrier. <b>Margin tape</b> '
-          'leaves a creepage margin at each end of the bobbin, typically '
-          '3&nbsp;mm a side for reinforced isolation from universal mains, '
-          'so 6&nbsp;mm of winding width is lost. <b>Triple-insulated '
-          'wire</b> needs no margin but is thicker for the same copper and '
-          'costs more.'))
-    add(note('On a side-by-side winding the width is spent twice: on the '
-             'isolation margin and on the gap that sets the leakage. Budget '
-             'both.'))
+    add(h2('Safety insulation: what the winding has to carry'))
+    add(p('The transformer is the isolation barrier, and a product sold in '
+          'several markets needs one construction that passes all of them. '
+          'Take every requirement at its strictest market: the insulation '
+          'grade of a Class&nbsp;II set, <b>reinforced</b> between everything '
+          'mains-referenced and the secondary (it covers Class&nbsp;I too); '
+          'the highest altitude any market assumes, because clearances grow '
+          'with it; and the working voltage at the top of the input range.'))
+    ext(bullets([
+        '<b>Clearance</b> follows the mains transient of overvoltage '
+        'category&nbsp;II. Reinforced insulation is taken one withstand step '
+        'higher, and above 2000&nbsp;m the result is multiplied by the '
+        'altitude factor.',
+        '<b>Creepage</b> follows the rms working voltage, the pollution '
+        'degree and the material group of the surface; reinforced is twice '
+        'basic. Without a tracking index for the bobbin, take the lowest '
+        'group.',
+        '<b>Solid insulation</b> &mdash; tape, bobbin wall, sleeving &mdash; '
+        'needs either a minimum thickness or several layers that each pass '
+        'the reinforced electric-strength test.',
+        '<b>On a side-by-side winding the separation between the two '
+        'sections is the reinforced insulation</b>: creepage along the tube, '
+        'clearance across the gap. It is also the leakage, so the insulation '
+        'sets its floor; L<sub>short</sub> must be reached without narrowing '
+        'it.',
+        '<b>The core counts as the side it lies closest to.</b> Its centre '
+        'leg sits under the primary with only the tube wall between, so treat '
+        'it as primary and give the secondary reinforced distances to the '
+        'core as well: over the flange, to the outer legs and at the leads.',
+        '<b>An auxiliary winding that feeds V<sub>CC</sub> and senses the '
+        'output belongs over the secondary</b>, where it follows the output. '
+        'It is mains-referenced, so there it must carry reinforced insulation '
+        'itself; triple-insulated wire does that without tape.']))
+    add(note('Where the windings are stacked instead, margin tape at both '
+             'flanges buys the creepage and costs winding width. '
+             'Triple-insulated wire needs no margin but is thicker for the '
+             'same copper and costs more.'))
 
     add(h2('Loss, and the temperature the drawing has to survive'))
     ext(bullets([
@@ -1775,18 +1802,18 @@ def build(A):
             'side of the bridge; the auxiliary winding drives ZCD through a '
             'divider; R<sub>T</sub> and C<sub>T</sub> set the oscillator '
             'limits; R<sub>CFG</sub> and R<sub>BM</sub> are read at power-up. '
-            'The drawing also feeds V<sub>CC</sub> from the auxiliary winding '
-            'through a diode; the worked design does not, and takes '
-            'V<sub>CC</sub> from an external rail (Section&nbsp;%s). '
+            'The drawing feeds V<sub>CC</sub> from the auxiliary winding '
+            'through a diode alone; the worked design puts a Zener-referenced '
+            'regulator in between (Section&nbsp;%s). '
             'Drawing from the ST L6790A design spreadsheet.'
-            % SR('HVSU and V<sub>CC</sub>'),
+            % SR('V<sub>CC</sub> from the auxiliary winding, as built'),
             width=CW))
-    add(p('Decide first what the auxiliary winding is for. If it supplies '
+    add(p('Decide first what the auxiliary winding is for. Wired straight to '
           'V<sub>CC</sub>, its voltage at OVP2 must stay under the '
-          'V<sub>CC</sub> rating, which caps its ratio. Here V<sub>CC</sub> '
-          'comes from elsewhere, so the winding only senses and the only '
-          'constraint is whole turns (Section&nbsp;'
-          + SR('Output sensing and over-voltage: the ZCD divider') + ').'))
+          'V<sub>CC</sub> rating, which caps its ratio. With a regulator in '
+          'between the cap moves to the regulator output, and the ratio is '
+          'set by two other things (Section&nbsp;'
+          + SR('Supplying V<sub>CC</sub> from the auxiliary winding') + ').'))
     add(p('Section&nbsp;' + SR('The parts around the controller')
           + ' sizes the parts in order. R<sub>T</sub> deserves the most '
           'attention: it sets the oscillator floor, and that floor must stay '
@@ -1809,6 +1836,50 @@ def build(A):
           'zero-crossing dead zone (Section&nbsp;%s). <b>Check before the '
           'transformer is ordered.</b>'
           % SR('Frequency modulation is the power factor correction')))
+
+    add(h2('Supplying V<sub>CC</sub> from the auxiliary winding'))
+    add(p('The winding charges a capacitor through a diode, and an NPN '
+          'emitter follower whose base a Zener holds passes it on to the pin '
+          'through the bypass diode the datasheet asks for, which keeps the '
+          'start-up current out of the regulator. The pin then sits at '
+          'V<sub>CC,reg</sub>, the Zener voltage V<sub>Z</sub> less the '
+          'base-emitter drop V<sub>BE</sub> and the diode drop V<sub>F</sub>:'))
+    add(eq(r'V_{CC,reg}=V_{Z}-V_{BE}-V_{F}', key='vccreg'))
+    add(p('and the Zener tolerance puts it in a band. The bottom of the band '
+          'must stay above the level at which the start-up unit switches '
+          'back on, or it burns line power in run; the top must stay under '
+          'the pin&rsquo;s operating limit. The load I<sub>VCC</sub> is the '
+          'controller&rsquo;s own I<sub>CC</sub> and the gate drivers, whose '
+          'share is the gate charge Q<sub>g</sub> of each of the '
+          'N<sub>sw</sub> switch positions, once per period:'))
+    add(eq(r'I_{VCC}=I_{CC}+N_{sw}\,Q_{g}\,f_{sw}', key='ivcc'))
+    add(p('<b>The winding ratio has a floor and a cost.</b> At the end of '
+          'hold-up, output V<sub>o,min</sub>, the winding must still lift the '
+          'base above the highest Zener voltage V<sub>Z,max</sub> with enough '
+          'current left for the base, I<sub>VCC</sub>/&beta;<sub>min</sub>, '
+          'and the Zener bias I<sub>Z,min</sub>; that caps the feed resistor '
+          'R<sub>BZ</sub>,'))
+    add(eq(r'R_{BZ}\leq\frac{n_{aux}V_{o,min}-V_{F}-V_{Z,max}}'
+           r'{I_{VCC}/\beta_{min}+I_{Z,min}}', key='rbz'))
+    add(p('and at OVP1 the pass transistor burns the difference between the '
+          'capacitor and the pin, times I<sub>VCC</sub>. The lowest '
+          'whole-turn ratio that meets the floor therefore also minimises the '
+          'cost.'))
+    add(p('<b>Start-up is the other sizing case.</b> The start-up unit fills '
+          'C<sub>VCC</sub> to V<sub>CCon</sub>; switching begins, and until the '
+          'output is high enough for the winding to hold the pin, '
+          'C<sub>VCC</sub> alone feeds the drivers. That lasts '
+          't<sub>hand</sub>, until the output reaches V<sub>out,UV</sub>, '
+          'the level at which the winding holds the pin at '
+          'V<sub>CCoff</sub>. With the output bank charged at rated current '
+          'and no load, I<sub>VCC,SU</sub> the supply current at the '
+          'start-up frequency and I<sub>HVSU</sub> what the start-up unit '
+          'returns,'))
+    add(eq(r't_{hand}=\frac{C_{out}V_{out,UV}}{I_{out}}\,,\qquad '
+           r'C_{VCC}\geq\frac{\left(I_{VCC,SU}-I_{HVSU}\right)t_{hand}}'
+           r'{V_{CCon}-V_{CCoff}}', key='cvcc'))
+    add(p('A larger C<sub>VCC</sub> is paid for in the delay before the first '
+          'pulse, C<sub>VCC</sub>V<sub>CCon</sub>/I<sub>HVSU</sub>.'))
 
     add(h2('Voltage loop and compensation'))
     add(p('The loop is the chain of Figure&nbsp;%(f)s: a divider measures '
@@ -2158,8 +2229,10 @@ def build(A):
                    '&mdash; it computes it')],
              ['Bridge dead time', 't<sub>D</sub>', '%(tD).0f ns' % V, 'chosen',
               'what the ZVS sweep has to beat'],
-             ['V<sub>CC</sub> source', '&mdash;', 'external 12 V rail',
-              'chosen', 'no turns-ratio ceiling on the auxiliary winding'],
+             ['V<sub>CC</sub> source', '&mdash;',
+              'auxiliary winding, %(Naux)d T, through a Zener regulator' % V,
+              'chosen', 'no external rail; the regulator, not the turns '
+              'ratio, keeps the pin under its rating'],
              ['LLC stage efficiency', '&eta;<sub>HB</sub>',
               '%(etaHB).0f %%' % V, 'assumed',
               'a 95 %% outcome moves R<sub>ac</sub> and R<sub>CS</sub> by '
@@ -2680,8 +2753,8 @@ def build(A):
             [['Quantity', 'Value', 'Note'],
              ['Turns', 'N<sub>p</sub> %(Np)d T; NS2 %(Ns)d T, NS3 %(Ns)d T; '
               'NAUX %(Naux)d T' % V,
-              'n<sub>T</sub> = %(Np)d / %(Ns)d = %(nT).1f; the auxiliary is '
-              'ZCD sense only' % V],
+              'n<sub>T</sub> = %(Np)d / %(Ns)d = %(nT).1f; the auxiliary '
+              'feeds V<sub>CC</sub> and ZCD' % V],
              ['Open-circuit inductance', '%(Lopen).1f &micro;H' % V,
               'L<sub>r</sub> + L<sub>m</sub>; across NP1, every other winding '
               'open'],
@@ -2785,13 +2858,16 @@ def build(A):
           '%(ae).0f&nbsp;mm&sup2;; a window of at least %(cu).1f/%(ku).2f = '
           '%(win).0f&nbsp;mm&sup2; for the copper of all four windings at '
           'k<sub>u</sub>&nbsp;=&nbsp;%(ku).2f; and a winding width for '
-          '%(wp).2f&nbsp;mm of primary, %(wf).1f&nbsp;mm of foil and '
-          '2&nbsp;&times;&nbsp;%(mg).1f&nbsp;mm of margin tape, with room '
-          'left between primary and secondary for the separation that sets '
-          'L<sub>short</sub> (Section&nbsp;%(ref)s).'
+          '%(wp).2f&nbsp;mm of primary, %(wf).1f&nbsp;mm of foil, '
+          '%(mp).1f&nbsp;+&nbsp;%(ms).1f&nbsp;mm of margin tape and a '
+          'separation of at least %(sm).1f&nbsp;mm between primary and '
+          'secondary, which sets L<sub>short</sub> (Section&nbsp;%(ref)s) '
+          'and carries the reinforced insulation (Section&nbsp;%(ins)s).'
           % dict(ae=V['Aereq'], cu=_CORE.window(V), ku=_CORE.K_U, win=_cw,
-                 wp=_w['w_pri'], wf=_w['w_foil'], mg=_CORE.MARGIN,
-                 ref=SR('The winding arrangement is the leakage'))))
+                 wp=_w['w_pri'], wf=_w['w_foil'], mp=_w['margin_p'],
+                 ms=_w['margin_s'], sm=_w['sep_min'],
+                 ref=SR('The winding arrangement is the leakage'),
+                 ins=SR('Safety insulation of this transformer'))))
     add(p('<b>The core.</b> TDK <b>%(chosen)s</b>, %(mat)s (core %(core)s, '
           'coil former %(former)s) meets all three: A<sub>e</sub> = '
           '%(ae).0f&nbsp;mm&sup2;, %(rae).1f times what the flux needs; '
@@ -2844,14 +2920,14 @@ def build(A):
              ['Radial build',
               '%d &times; %.2f = %.2f mm' % (_w['layers'], _w['d_litz'],
                                              _w['build_p']),
-              'NS2 + NS3: %d &times; (%.2f + %.2f) = %.1f mm'
+              'NS2 + NS3: %d &times; (%.2f + %.2f) + %.1f (NAUX) = %.1f mm'
               % (2 * V['Ns'] * _w['n_foil'], _w['t_foil'], _CORE.T_FOIL_INS,
-                 _w['build_s'])],
+                 _w['tiw_od'], _w['build_s'])],
              ['Left between the windings',
-              '%.1f &minus; 2 &times; %.1f &minus; %.3f &minus; %.3f = '
-              '<b>%.2f mm</b>'
-              % (_w['M']['wind_w'], _CORE.MARGIN, _w['w_pri'], _w['w_foil'],
-                 _w['gap']), ''],
+              '%.1f &minus; %.1f &minus; %.1f &minus; %.3f &minus; %.3f = '
+              '<b>%.2f mm</b> (at least %.1f)'
+              % (_w['M']['wind_w'], _w['margin_p'], _w['margin_s'],
+                 _w['w_pri'], _w['w_foil'], _w['gap'], _w['sep_min']), ''],
              ['Copper in the window',
               '%d &times; %.2f + %d &times; %.2f = %.1f mm&sup2;; at '
               'k<sub>u</sub> = %.2f that needs %.0f mm&sup2; of window, '
@@ -2889,21 +2965,23 @@ def build(A):
              ['3', 'NS3 secondary, pins %s' % _CORE.pins('NS3', '&ndash;'),
               '%d T' % V['Ns'], 'the same foil, on top of NS2'],
              ['4', 'Separation', '&mdash;',
-              '%.2f mm between primary and secondary; sets L<sub>short</sub>'
-              % _w['gap']],
+              '%.2f mm between primary and secondary; sets L<sub>short</sub> '
+              'and is the reinforced insulation' % _w['gap']],
              ['5', 'Margin tape', '&mdash;',
-              '%.1f mm at each flange, assumed; check the creepage against '
-              'the safety standard (Section&nbsp;%s)'
-              % (_CORE.MARGIN, SR('Isolation, margins and what they cost in window'))],
+              '%.1f mm at the primary flange, %.1f mm at the secondary '
+              'flange (Section&nbsp;%s)'
+              % (_w['margin_p'], _w['margin_s'],
+                 SR('Safety insulation of this transformer'))],
              ['6', 'Centre-leg gap', '&mdash;',
               'about %.1f mm in total, ground to A<sub>L</sub> = %.0f nH'
               % (_CORE.dg_gap(V), V['AL'])],
              ['7', 'Window', '&mdash;',
               'A<sub>N</sub> = %.0f mm&sup2;, %.0f mm&sup2; of copper in it'
               % (_R['AN'], _CORE.window(V))],
-             ['&mdash;', 'NAUX auxiliary, pins %s'
+             ['8', 'NAUX auxiliary, pins %s'
               % _CORE.pins('NAUX', '&ndash;'), '%d T' % V['Naux'],
-              'any wire; ZCD sense only']],
+              'triple-insulated wire, &oslash;%.1f mm assumed, one layer over '
+              'NS3; feeds V<sub>CC</sub> and ZCD' % _w['tiw_od']]],
             widths=[CW * 0.07, CW * 0.30, CW * 0.09, CW * 0.54],
             key='legend42', split=True))
     _w = _CORE.winding(V)
@@ -2929,8 +3007,9 @@ def build(A):
              ['NP1 primary', _CORE.pins('NP1', '&ndash;'), '%d T' % V['Np'],
               'Litz %d &times; &oslash;%.2f mm' % (_w['n_strand'], _CORE.D_STRAND),
               _B['rows'][0]],
-             ['NAUX auxiliary (ZCD)', _CORE.pins('NAUX', '&ndash;'),
-              '%d T' % V['Naux'], 'any wire, sense only', _B['rows'][0]],
+             ['NAUX auxiliary (V<sub>CC</sub>, ZCD)',
+              _CORE.pins('NAUX', '&ndash;'), '%d T' % V['Naux'],
+              'triple-insulated wire over the secondary', _B['rows'][0]],
              ['NS2 secondary', _CORE.pins('NS2', '&ndash;'), '%d T' % V['Ns'],
               'foil %.2f &times; %.1f mm, %d in parallel'
               % (_w['t_foil'], _w['w_foil'], _w['n_foil']),
@@ -2950,10 +3029,102 @@ def build(A):
     add(p('<b>Polarity.</b> The datasheet asks for ZCD positive while the '
           'low-side switch of leg 1 (LOUT1) is on. The primary dot is then '
           'negative, so the auxiliary start, pin %(a)d (the dot), goes to '
-          'ground and its finish, pin %(b)d, to R<sub>ZCD,H</sub>. NS2 and '
-          'NS3 are wound in the same sense; the tap joins the finish of NS2 '
-          'to the start of NS3.'
+          'ground and its finish, pin %(b)d, to R<sub>ZCD,H</sub> and to the '
+          'V<sub>CC</sub> rectifier. NS2 and NS3 are wound in the same sense; '
+          'the tap joins the finish of NS2 to the start of NS3.'
           % dict(a=_PM['NAUX'][0][0], b=_PM['NAUX'][1][0])))
+
+    add(h2('Safety insulation of this transformer'))
+    import insulation as _INS
+    _IR = _INS.req()
+    _ck, _cw2 = _INS.checks(V)
+    add(p('The set is a TV sold in the US, the EU, Japan, Korea and China, '
+          'so each requirement is taken where it is strictest: '
+          '<b>reinforced</b> insulation, because a Class&nbsp;II set needs it '
+          'and it covers Class&nbsp;I; <b>%(alt)d&nbsp;m</b>, because '
+          'GB&nbsp;4943.1-2022 assumes that altitude unless the product is '
+          'marked otherwise [GB]; and the working voltage at '
+          '<b>%(vm).0f&nbsp;Vac</b>, the top of the design range. Primary '
+          'means NP1, NAUX and the core; secondary means NS2 and NS3.'
+          % dict(alt=_INS.ALTITUDE_M, vm=_INS.V_MAINS_DESIGN)))
+    add(p('<b>The working voltage</b> between the primary winding and the '
+          'secondary is estimated from the design: the mains neutral and the '
+          'secondary at earth, the bridge taking the primary ground to the '
+          'line in one half-cycle, the leg voltages and the C<sub>r</sub> '
+          'swing of the sweep at every point of the line cycle. At '
+          '%(vm).0f&nbsp;Vac it comes to %(ur).0f&nbsp;V rms and '
+          '%(up).0f&nbsp;V peak, below the mains itself, so the mains sets the '
+          'creepage row. The certifying body measures it; the row taken '
+          'covers %(row)d&nbsp;V.'
+          % dict(vm=_INS.V_MAINS_DESIGN, ur=_IR['u_rms'], up=_IR['u_pk'],
+                 row=_IR['row'])))
+    ext(tbl('The insulation requirements and where each number comes from. '
+            'The sources are listed under References.',
+            [['Item', 'Requirement', 'Basis'],
+             ['Grade', 'reinforced, primary to secondary',
+              'Class II set; the core counts as primary, as the CB reports '
+              'treat it [TUV]'],
+             ['Conditions', 'pollution degree 2, overvoltage category II, '
+              'material group IIIb, %d m' % _INS.ALTITUDE_M,
+              'IIIb because the bobbin&rsquo;s tracking index is not known; '
+              'altitude [GB]'],
+             ['Clearance', '%.1f &times; %.2f = %.2f &rarr; <b>%.1f mm</b>'
+              % (_IR['cl_2000'], _INS.K_ALT, _IR['cl_2000'] * _INS.K_ALT,
+                 _IR['clearance']),
+              'mains transient %.0f V; reinforced at the next step, 4000 V, '
+              'which reads %.1f mm [ATIS, TUV]; the temporary-overvoltage '
+              'route gives only %.2f mm [PI]; &times;%.2f for %d m, rounded '
+              'up [PI]' % (_INS.V_TRANSIENT, _INS.CL_TABLE14_R,
+                           _INS.CL_TABLE10_R, _INS.K_ALT, _INS.ALTITUDE_M)],
+             ['Creepage', '2 &times; %.1f = <b>%.1f mm</b>'
+              % (_IR['creep_basic'], _IR['creep']),
+              'basic at the %d V row [PI]; reinforced is twice basic [TI]; '
+              'the same rows a CB report applies [TUV]' % _IR['row']],
+             ['Solid insulation', 'thickness &ge; %.1f mm, or &ge; %d tape '
+              'layers' % (_IR['dti'], _IR['layers']),
+              'each layer must pass the reinforced electric-strength test '
+              '[TUV]'],
+             ['Electric strength', '%d V ac for 60 s, or %d V dc'
+              % (_IR['hipot_ac'], _IR['hipot_dc']),
+              'type test, NP1 + NAUX + core against NS2 + NS3; the value a CB '
+              'report applies to a Class II 100&ndash;240 V product at '
+              '%d m [TUV]' % _INS.ALTITUDE_M],
+             ['NAUX', 'triple-insulated wire approved as reinforced',
+              'approvals exist to EN IEC 62368-1 at %d V rms and %d kHz [TIW]'
+              % (_INS.TIW_VRMS, _INS.TIW_FMAX / 1e3)]],
+            widths=[CW * 0.16, CW * 0.30, CW * 0.54], key='insreq',
+            split=True))
+    add(p('Table&nbsp;%(t)s holds the drawing against it. The separation is '
+          'the one that matters most: it is both the insulation and the '
+          'leakage, and the winding layout of Section&nbsp;%(s)s was chosen '
+          'with this floor in it.'
+          % dict(t=TR('inscheck'), s=SR('Choosing the core'))))
+    ext(tbl('The drawing against the insulation requirements, on the %s.'
+            % _cw2['name'],
+            [['Path', 'On the drawing', 'Required', 'How it is measured']]
+            + [[pth, '%.2f mm' % have, '%.1f mm' % need, how]
+               for pth, have, need, ok, how in _ck],
+            widths=[CW * 0.33, CW * 0.13, CW * 0.11, CW * 0.43],
+            key='inscheck', split=True))
+    add(p('NAUX is wound at the secondary end of the bobbin but ends on the '
+          'primary row of pins, so its leads cross the separation. They stay '
+          'in their triple insulation all the way to the pins; only the ends '
+          'at the pins are stripped. What the drawing cannot settle goes to '
+          'the certifying body and the vendor:'))
+    ext(bullets([
+        'The secondary leads and pins against the core yoke: set by the '
+        'bobbin and the lead routing. Reinforced distances, or sleeving '
+        'qualified as reinforced insulation.',
+        'The electric-strength value under the edition the certificate will '
+        'cite, and the production test voltage and time.',
+        'Clearance for the high-frequency part of the working voltage: the '
+        'sources quoted do not give that table. A CB report applied the '
+        'ordinary values at 133 kHz and 588 V peak [UL].',
+        'The TIW approval quoted stops at %d kHz; the start-up frequency is '
+        '%.0f kHz for the first milliseconds of safe start. Ask the wire '
+        'vendor.' % (_INS.TIW_FMAX / 1e3, A.SH['f.SU']),
+        'L<sub>short</sub> must be reached with the separation at or above '
+        '%.1f mm, never by narrowing it.' % _INS.separation_min()]))
 
     add(h2('Checking the flux, and the specification'))
     add(p('<b>Peak flux density</b> on the chosen core, at f<sub>r</sub> '
@@ -3720,25 +3891,88 @@ def build(A):
     add(note('Swapping the two resistors makes OVP1 trip below a volt of '
              'output, so the converter never starts. Reversed winding '
              'polarity makes the bridge hard switch from the first pulse.'))
-    add(note('The ceiling that the 25&nbsp;V V<sub>CC</sub> rating puts on the '
-             'turns ratio applies only when the '
-             'auxiliary winding supplies V<sub>CC</sub>. Here it senses '
-             'only (%(va).1f&nbsp;V nominal, %(vo).1f&nbsp;V at OVP2), so '
-             'the only constraint is whole turns.'
-             % dict(va=A.SH['V.aux'],
-                    vo=A.SH['n.aux'] * A.SH['V.OVP2_act'])))
+    add(note('Wired straight to V<sub>CC</sub>, this winding would put '
+             '%(vo).2f&nbsp;V on the pin at OVP2, over its 25&nbsp;V rating; '
+             'the ST tool&rsquo;s ratio test reads %(k).3f. The regulator of '
+             'the next section is why that does not matter here.'
+             % dict(vo=A.SH['n.aux'] * A.SH['V.OVP2_act'], k=A.SH['k.auxr'])))
 
-    add(h2('HVSU and V<sub>CC</sub>'))
+    add(h2('V<sub>CC</sub> from the auxiliary winding, as built'))
+    add(p('There is no external rail. The auxiliary winding is %(Naux)d turns '
+          'of triple-insulated wire over the secondary, n<sub>aux</sub> = '
+          '%(na).1f, so it sits at the output voltage: %(va).1f&nbsp;V on the '
+          'winding and %(vc).1f&nbsp;V on its capacitor after the diode. With '
+          'a %(DZ).0f&nbsp;V Zener of &plusmn;%(tp).0f&nbsp;%% and '
+          'V<sub>BE</sub> = V<sub>F</sub> = %(VFj).1f&nbsp;V assumed, '
+          'Equation&nbsp;%(e)s gives'
+          % dict(V, na=A.SH['n.aux'], va=A.SH['V.aux'], vc=A.SH['V.Caux'],
+                 tp=100 * V['tolDZ'], e=ER('vccreg'))))
+    add(calc(r'V_{CC,reg}=%(DZ).0f-%(VFj).1f-%(VFj).1f=%(r).2f\;\mathrm{V}'
+             r'\,,\qquad %(lo).2f\ldots%(hi).2f\;\mathrm{V}'
+             % dict(V, r=A.SH['V.CC_reg'], lo=A.SH['V.CC_reg_min'],
+                    hi=A.SH['V.CC_reg_max'])))
+    add(p('The bottom of the band clears the %(hv).0f&nbsp;V at which the '
+          'start-up unit switches back on by %(k1).3f; the top stays under '
+          'the %(mx).0f&nbsp;V operating limit by %(k2).3f. The load is the '
+          'controller, %(ICC).0f&nbsp;mA, and %(Nsw).0f switch positions at '
+          'the gate charge of the candidate MOSFET, %(Qg).1f&nbsp;nC typical, '
+          'bounded at f<sub>Max</sub> (Equation&nbsp;%(e)s):'
+          % dict(V, hv=V['VCCHV'], mx=V['VCCmax'], k1=A.SH['k.VCClo'],
+                 k2=A.SH['k.VCC'], e=ER('ivcc'))))
+    add(calc(r'I_{VCC}=%(ICC).0f\,\mathrm{mA}+%(Nsw).0f\cdot%(Qg).1f'
+             r'\,\mathrm{nC}\cdot%(fk).1f\,\mathrm{kHz}'
+             r'=%(I).1f\;\mathrm{mA}'
+             % dict(V, fk=A.SH['f.Max'], I=A.SH['I.VCC'])))
+    add(p('The feed resistor comes from Equation&nbsp;%(e)s at the end of '
+          'hold-up, with &beta;<sub>min</sub> = %(b).0f and '
+          'I<sub>Z,min</sub> = %(iz).0f&nbsp;mA set as requirements on the '
+          'parts:' % dict(e=ER('rbz'), b=V['bmin'], iz=V['IDZmin'])))
+    add(calc(r'R_{BZ}\leq\frac{%(na).1f\cdot%(vm).0f-%(VFj).1f-%(zm).2f}'
+             r'{%(I).1f/%(b).0f+%(iz).0f}=%(r).3f\;\mathrm{k\Omega}'
+             r'\;\rightarrow\;%(RBZ).0f\;\Omega'
+             % dict(V, na=A.SH['n.aux'], vm=V['Vomin'], zm=A.SH['V.DZ_max'],
+                    I=A.SH['I.VCC'], b=V['bmin'], iz=V['IDZmin'],
+                    r=A.SH['R.BZ_max'] / 1e3)))
+    add(p('What the two parts burn is set at OVP1, where the capacitor stays '
+          'highest, %(c1).2f&nbsp;V: the Zener, with no load to share the '
+          'feed current, %(pz).0f&nbsp;mW; the pass transistor, at '
+          'I<sub>VCC</sub>, %(pq).2f&nbsp;W. Both are ratings to buy, not '
+          'margins. The transistor must also block %(c2).2f&nbsp;V at OVP2 '
+          'plus any spike the winding carries, which only a measurement '
+          'gives.' % dict(c1=A.SH['V.Caux_OVP1'], pz=A.SH['P.DZ'],
+                          pq=A.SH['P.Qpass'], c2=A.SH['V.Caux_OVP2'])))
+    add(p('<b>Start-up.</b> In full bridge at the start-up frequency the '
+          'drivers take'))
+    add(calc(r'I_{VCC,SU}=%(ICC).0f\,\mathrm{mA}+%(Nsw).0f\cdot%(Qg).1f'
+             r'\,\mathrm{nC}\cdot%(fk).1f\,\mathrm{kHz}'
+             r'=%(I).1f\;\mathrm{mA}'
+             % dict(V, fk=A.SH['f.SU'], I=A.SH['I.VCC_SU'])))
+    add(p('and the winding can hold the pin at V<sub>CCoff</sub> once the '
+          'output reaches (V<sub>CCoff</sub> + 3V<sub>F</sub> + '
+          'I<sub>VCC,SU</sub>R<sub>BZ</sub>/&beta;<sub>min</sub>)/'
+          'n<sub>aux</sub> = %(uv).2f&nbsp;V. Equation&nbsp;%(e)s then gives'
+          % dict(uv=A.SH['V.out_UV'], e=ER('cvcc'))))
+    add(calc(r't_{hand}=\frac{%(co).1f\cdot%(uv).2f}{%(Iout).1f}'
+             r'=%(th).1f\;\mathrm{ms}\,,\qquad '
+             r'C_{VCC}\geq\frac{(%(I).1f-%(IHVlo).0f)\cdot%(th).1f}'
+             r'{%(VCCon).0f-%(VCCoff).0f}=%(cr).0f\;\mathrm{\mu F}'
+             r'\;\rightarrow\;%(CVCC).0f\;\mathrm{\mu F}'
+             % dict(V, co=A.SH['C.out'], uv=A.SH['V.out_UV'],
+                    th=A.SH['t.hand'], I=A.SH['I.VCC_SU'],
+                    cr=A.SH['C.VCC_req'])))
+    add(p('The hand-over falls well inside the %(t).0f&nbsp;ms the start-up '
+          'unit stays available. The price is the delay before the first '
+          'pulse, %(d).2f&nbsp;s at 230&nbsp;Vac, during which the start-up '
+          'unit carries the whole charge; check its temperature on the '
+          'prototype.' % dict(t=V['tHVSU'], d=A.SH['t.VCCchg'])))
+    add(note('t<sub>hand</sub> assumes the set holds its load off until the '
+             'rail is up, as a TV sequences its panel. Any load during '
+             'start-up stretches it, and C<sub>VCC</sub> with it.'))
     ext(bullets([
         '<b>HVSU connects ahead of the bridge</b>, on the ac side, through '
         'one 1000&nbsp;V diode per line; behind the bridge X-capacitor '
         'discharge and brown-out detection both stop working.',
-        'The V<sub>CC</sub> capacitor must hold the IC from '
-        'V<sub>CCon</sub> = 17&nbsp;V to V<sub>CCoff</sub> = 8&nbsp;V until '
-        'the supply takes over; the start-up unit stops 120&nbsp;ms after '
-        'V<sub>CCon</sub> regardless.',
-        'A diode between a linear regulator and the pin keeps the start-up '
-        'current out of the regulator. 100&nbsp;nF at the pin.']))
+        '100&nbsp;nF at the pin, beside C<sub>VCC</sub>.']))
 
     # =============================================================== 7
     add(h2('Controller pin rules'))
@@ -3862,7 +4096,14 @@ def build(A):
         '<b>Feedback ripple against the burst threshold</b> at light load.',
         '<b>An ac dropout at the ripple trough</b>: output still above '
         '%(Vomin).0f&nbsp;V after %(Thold).0f&nbsp;ms.' % V,
-        '<b>A step across the morphing band</b>, both directions.']))
+        '<b>A step across the morphing band</b>, both directions.',
+        '<b>V<sub>CC</sub> and the auxiliary voltage against the output</b>, '
+        'at no load, at full load and through a cold start: whether the '
+        'winding follows the output, and when it takes over from '
+        'C<sub>VCC</sub>.',
+        '<b>The transformer&rsquo;s working voltage and an electric-strength '
+        'test</b> on the first samples, before they go to the certifying '
+        'body.']))
 
     # =============================================================== 8
     add(h1('List of symbols'))
@@ -3994,6 +4235,12 @@ def build(A):
         ('R<sub>ZCD,H</sub>, R<sub>ZCD,L</sub>, I<sub>bias</sub>', 'the ZCD divider, and the current it is designed to draw'),
         ('V<sub>OVP1</sub>, V<sub>OVP2</sub>, V<sub>OVP1,out</sub>', 'the two over-voltage thresholds, and the output voltage OVP1 is aimed at'),
         ('V<sub>CC</sub>, V<sub>CCon</sub>, V<sub>CCoff</sub>', 'the IC supply, and the two thresholds of its under-voltage lockout'),
+        ('V<sub>CC,reg</sub>, C<sub>VCC</sub>', 'the voltage the regulator holds the V<sub>CC</sub> pin at, and the capacitor on the pin'),
+        ('V<sub>Z</sub>, V<sub>Z,max</sub>, V<sub>BE</sub>, V<sub>F</sub>', 'regulator Zener voltage and its top of tolerance, the pass transistor base-emitter drop, and a diode forward drop'),
+        ('R<sub>BZ</sub>, &beta;<sub>min</sub>, I<sub>Z,min</sub>', 'Zener feed resistor, the least current gain of the pass transistor, and the least Zener bias'),
+        ('I<sub>VCC</sub>, I<sub>VCC,SU</sub>, I<sub>CC</sub>', 'current the V<sub>CC</sub> rail supplies in run and at the start-up frequency, and the controller&rsquo;s own share'),
+        ('N<sub>sw</sub>, Q<sub>g</sub>', 'switch positions driven, and the gate charge of one primary MOSFET'),
+        ('I<sub>HVSU</sub>, t<sub>hand</sub>, V<sub>out,UV</sub>', 'start-up unit charge current; time from the first pulse until the auxiliary winding holds V<sub>CC</sub>, and the output voltage at which it does'),
 
         ('<b>The voltage loop</b>', ''),
         ('G<sub>plant</sub>(s), G<sub>EA</sub>(s), T(s)', 'plant v<sub>out</sub>/v<sub>FB</sub>, compensator &minus;v<sub>FB</sub>/v<sub>out</sub> (the feedback sign taken out), and loop gain T = G<sub>plant</sub>G<sub>EA</sub>'),
@@ -4056,7 +4303,26 @@ def build(A):
         'W. Wenbo et al., <i>A single-stage 1.65 kW ac-dc LLC converter</i>, '
         'IEEE ECCE.',
         'onsemi, <i>The TL431 in the control of switching power supplies</i>, '
-        'TND381-D (compensator design with a TL431 and an optocoupler).']))
+        'TND381-D (compensator design with a TL431 and an optocoupler).',
+        '[PI] Power Integrations, <i>If your power converter is not safe, '
+        'you may have an expensive recall</i>, PSMA IS293, 2020 '
+        '(IEC 62368-1 creepage and clearance tables, altitude factors).',
+        '[ATIS] M. Maytum, <i>IEC 62368-1 and pluggable mains powered '
+        'equipment surge protection</i>, ATIS PEG, 2019 (mains transients, '
+        'Table 14 clearances).',
+        '[TUV] TUV Rheinland, CB test report 60431427 001 to IEC 62368-1, '
+        'Class II AV/ICT adapter, evaluated for 5000 m.',
+        '[UL] UL, CB test report E135803-A6002-CB-1 to IEC 62368-1, '
+        'Advanced Energy GB130Q, evaluated for 5000 m.',
+        '[TI] Texas Instruments, <i>Demystifying clearance and creepage '
+        'distance for high-voltage end equipment</i>, SLUP419, 2024.',
+        '[GB] GB 4943.1-2022, <i>Audio/video, information and communication '
+        'technology equipment &mdash; Part 1: Safety requirements</i> '
+        '(foreword and scope).',
+        '[TIW] Furukawa Electric, <i>TEX-E triple-insulated wire, safety '
+        'approvals</i>.',
+        'DiscoverEE, STO60N045DM9 parameter listing (gate charge of the '
+        'candidate primary MOSFET; confirm on the ST datasheet).']))
 
     # =============================================================== 10
     add(h1('Errata and open items'))

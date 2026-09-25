@@ -1495,11 +1495,11 @@ def an_core_section(save, foot):
             xf = RT if sgn > 0 else -RF
             ax.add_patch(Rectangle((xf, yy), RF - RT, FH - WW, **bob))
 
-    yP1 = WW - w['margin']
+    yP1 = WW - w['margin_p']
     yP0 = yP1 - w['w_pri']
     yS1 = yP0 - w['gap']
     yS0 = yS1 - w['w_foil']
-    for y0, y1 in ((yP1, WW), (-WW, -WW + w['margin'])):
+    for y0, y1 in ((yP1, WW), (-WW, -WW + w['margin_s'])):
         for sgn in (-1, 1):
             x0 = RT if sgn > 0 else -RF
             ax.add_patch(Rectangle((x0, y0), RF - RT, y1 - y0, fc=TAPE,
@@ -1522,6 +1522,14 @@ def an_core_section(save, foot):
         x0 = RT if sgn > 0 else -RF
         ax.add_patch(Rectangle((x0, yS1), RF - RT, w['gap'], fc='none',
                                ec=GOLD, lw=1.1, ls=(0, (3.5, 2.5)), zorder=7))
+    #  NAUX: one layer of triple-insulated wire over the foil stack
+    TW, NA = w['tiw_od'], w['n_aux']
+    ra = RT + 2 * NL * tp + TW / 2.0
+    for k in range(NA):
+        ya = yS0 + w['w_foil'] * (k + 0.5) / NA
+        for sgn in (-1, 1):
+            ax.add_patch(Circle((sgn * ra, ya), TW / 2.0, fc=PUR, ec=PUR,
+                                lw=0.5, zorder=7))
 
     _dimh(ax, -HW, HW, -HH - 10.5, '%.1f' % M['W'], ext=-HH)
     _dimh(ax, -RC, RC, -HH - 3.2, 'ø%.1f' % M['d_centre'], ext=-WH,
@@ -1543,8 +1551,10 @@ def an_core_section(save, foot):
              yS0 + w['w_foil'] * 0.70, EDG['NS3'])
     _balloon(ax, 4, -(RT + 2.6), yS1 + w['gap'] * 0.5, BX,
              yS1 + w['gap'] * 0.5, GOLD)
-    _balloon(ax, 5, -(RT + 2.6), -WW + w['margin'] * 0.5, BX,
-             -WW + w['margin'] * 0.5, GREY)
+    _balloon(ax, 5, -(RT + 2.6), -WW + w['margin_s'] * 0.5, BX,
+             -WW + w['margin_s'] * 0.5, GREY)
+    _balloon(ax, 8, -ra, yS0 + w['w_foil'] * (NA - 0.5) / NA, BX, yS1,
+             PUR)
     _balloon(ax, 6, 0.0, gp / 2.0, 0.0, HH + 4.4, GOLD)
     _balloon(ax, 7, 10.5, WH - 2.2, 10.5, HH + 4.4, GREY)
 
@@ -1557,10 +1567,11 @@ def an_core_section(save, foot):
                             fc=FERR, ec=FERRE, lw=1.0, hatch='////', zorder=3))
     for x0 in (OX - fl, OX + L):
         ax2.add_patch(Rectangle((x0, OY), fl, BH, **bob))
-    for x0 in (OX, OX + L - w['margin']):
-        ax2.add_patch(Rectangle((x0, OY), w['margin'], BH, fc=TAPE,
+    for x0, mw in ((OX, w['margin_p']), (OX + L - w['margin_s'],
+                                         w['margin_s'])):
+        ax2.add_patch(Rectangle((x0, OY), mw, BH, fc=TAPE,
                                 ec='#b9a25e', lw=0.6, zorder=4))
-    xP = OX + w['margin']
+    xP = OX + w['margin_p']
     for li, n in enumerate(w['rows_p']):
         y = OY + d * (li + 0.5)
         x0 = xP + d * 0.5 + (w['per_layer'] - n) * d * 0.5
@@ -1575,6 +1586,10 @@ def an_core_section(save, foot):
         c = COL[fcol(k)]
         ax2.add_patch(Rectangle((xS, OY + k * tp), w['w_foil'], w['t_foil'],
                                 fc=c, ec=c, lw=0.4, zorder=6))
+    for k in range(NA):
+        ax2.add_patch(Circle((xS + w['w_foil'] * (k + 0.5) / NA,
+                              OY + 2 * NL * tp + TW / 2.0), TW / 2.0,
+                             fc=PUR, ec=PUR, lw=0.5, zorder=7))
     ax2.text(OX + L / 2.0, OY + BH + 5.4,
              'the winding unrolled along the bobbin', ha='center',
              va='bottom', fontsize=10.5, color=NAVY, zorder=8)
@@ -1590,7 +1605,7 @@ def an_core_section(save, foot):
                      (2, xS + w['w_foil'] * 0.30, EDG['NS2']),
                      (3, xS + w['w_foil'] * 0.70, EDG['NS3'])):
         _balloon(ax2, n, 0, 0, xb, OY + BH + 3.1, c, r=0.62, lead=False)
-    _balloon(ax2, 5, OX + w['margin'] * 0.5, OY + BH * 0.62,
+    _balloon(ax2, 5, OX + w['margin_p'] * 0.5, OY + BH * 0.62,
              OX - 1.5, OY + BH + 3.1, GREY, r=0.62)
     #  which windings the foil layers are, read at the stack itself
     #  (the labels sit in the empty separation box, left of the stack)
@@ -1667,9 +1682,10 @@ def an_core_section(save, foot):
     foot(fig, 'Drawn to scale from the TDK %s datasheets, core %s and coil '
               'former %s; the third panel is not to scale. The winding is '
               'laid out by cores.winding() at J = %.1f A/mm2, Litz fill '
-              '%.2f, %.2f mm foil and %.1f mm margin tape.'
+              '%.2f, %.2f mm foil, %.1f / %.1f mm margin tape (primary / '
+              'secondary flange) and %.1f mm TIW for NAUX.'
               % (NAME, M['core'], M['former'], _C.J_CU, _C.K_LITZ,
-                 _C.T_FOIL, _C.MARGIN))
+                 _C.T_FOIL, w['margin_p'], w['margin_s'], w['tiw_od']))
     save(fig, 'an_core_section')
 
 
