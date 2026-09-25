@@ -285,10 +285,8 @@ SAFE = [
      % (_R['cl_2000'], INS.K_ALT), 22),
     ('4', 'NP1 wire', 'NP1  |  %s' % SEC, 'TIW-Litz, reinforced',
      'Triple-insulated Litz approved as reinforced insulation to IEC '
-     '62368-1, one wire from pin to pin%s. The gaps between the sections '
-     'carry NO insulation: set them for item 3-2.'
-     % (' (split winding: part A, the crossing, part B)' if V['Nx'] == 1
-        else ''), 30),
+     '62368-1, one wire from pin to pin. The partition between the '
+     'sections carries NO insulation; it sets item 3-2.', 30),
     ('5', 'NAUX wire', 'NAUX  |  %s' % SEC, 'TIW, reinforced',
      'Triple-insulated wire approved as reinforced insulation to IEC 62368-1, '
      'wound OVER the secondary; leads stay insulated up to the primary-row '

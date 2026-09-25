@@ -432,34 +432,48 @@ def winding_v64(V, name=None):
 #  The construction since 2026-09-25 (user: integrated leakage, Litz
 #  secondary).  leakage.py found that no side-by-side layout on these cores
 #  leaks as little as 11 uH once the separation also has to be the
-#  reinforced insulation (6.4 mm): about 28 uH with a Litz secondary, and
-#  still 12.6 uH with the sections touching.  So the insulation moves into
-#  the WIRE and the layout is split:
+#  reinforced insulation (6.4 mm): about 28 uH with a Litz secondary.  So
+#  the insulation moves into the WIRE: NP1 is triple-insulated Litz, NAUX is
+#  TIW, and the core is on the secondary's side.
 #
-#      flange | NP1 part A | gap | NS2 + NS3 | gap | NP1 part B | flange
+#  The WINDING is a plain section winding on a TWO-SECTION coil former, the
+#  way the onsemi / Fairchild LLC reference transformers are wound (user,
+#  2026-09-25: "do not split the primary; wind it like onsemi", then "with
+#  a partition"):
 #
-#  NP1 is one continuous triple-insulated Litz wire (A, then across the
-#  secondary to B), so it carries the reinforced insulation to everything
-#  around it, and the gaps are free to be whatever the leakage asks.  With
-#  the primary ampere-turns split on both sides of the secondary, each gap
-#  carries only its share, and the leakage falls to a value the gaps can
-#  trim.  NAUX stays TIW, over the secondary.  The core is then the
-#  secondary's side: nothing reinforced separates it from NS2/NS3.
+#      flange | NP1, one section | PARTITION | NS2 + NS3 | tape | flange
+#
+#  TDK lists the B66368 former with ONE section only; a two-section former
+#  for ETD 49 has to come from another bobbin maker, and its partition
+#  thickness and position are not known here - G_NOM is the assumption.
+#  A split primary (12 + 3 around the secondary) was the other way; it put
+#  L_short on target (10.9 uH) and was withdrawn at the user's request.  The
+#  section winding leaks MORE than 11 uH on this core by leakage.py - about
+#  14 uH with the sections 1 mm apart, 12.5 uH touching - and that is left
+#  standing, recorded as an open item for the first samples (DESIGN.md
+#  4.2 13).  PRI_SPLIT = 1.0 is the plain winding; winding() still lays out
+#  a split one for any other value.
 TIW_LITZ_ADD = 0.2  # mm, triple insulation over the Litz bundle, on the
                     # diameter - assumed, the wire vendor's datasheet decides
-PRI_SPLIT = 0.8     # share of NP1 turns in part A, rounded to whole turns.
-                    # Selected with leakage.py so that L_short sits inside
-                    # the range the gaps can reach (12 + 3 on ETD 49)
-SEC_PAR = 2         # Litz bundles in parallel per secondary turn
+PRI_SPLIT = 1.0     # share of NP1 turns in the first section: 1.0 = no split
+SEC_PAR = 1         # Litz bundles per secondary turn: one leaks least here
+                    # (7.6 mm deep, 8.2 with NAUX, of the 8.40 mm room)
 SEC_LAYERS = 2      # the secondary group: 2 layers, one turn per layer
-G_NOM = 2.0         # mm, each gap, nominal - selected: leakage.py gives
-                    # L_short = 11.0 uH near it; the vendor trims it
+G_NOM = 1.0         # mm, the bobbin partition between the sections -
+                    # ASSUMED (no two-section ETD 49 former in the data).
+                    # It carries no insulation (that is in the wire); the
+                    # leakage grows with it, 12.5 uH at 0 and 14.2 at 1.0
+T_TAPE = 0.05       # mm, one wrap of layer tape over every winding layer
+                    # and over NAUX, as the onsemi reference winding shows
+                    # (user, 2026-09-25) - ASSUMED thickness; functional
+                    # only, the reinforced insulation is in the wire
 MARGIN_F = 1.0      # mm, margin tape at each flange - mechanical only now
                     # (keeps the Litz off the flange); no insulation role
 
 
 def winding(V, name=None, g=None):
-    """The split winding laid out along the bobbin, in millimetres.
+    """The section winding laid out along the bobbin, in millimetres
+    (split around the secondary only when PRI_SPLIT < 1).
 
     Axial positions run from the flange of the primary pin row (y = 0) to
     the other flange (y = wind_w); radial heights from the top of the tube.
@@ -484,18 +498,18 @@ def winding(V, name=None, g=None):
     why = []
 
     def section(n):
-        lay = max(1, min(n, int(r_free // dp)))
+        lay = max(1, min(n, int(r_free // (dp + T_TAPE))))
         per = -(-n // lay)
         lay = -(-n // per)
         rows_ = [min(per, n - k * per) for k in range(lay)]
-        return lay, per, rows_, per * dp, lay * dp
+        return lay, per, rows_, per * dp, lay * (dp + T_TAPE)
     lA, pA, rA, wA, hA = section(nA)
     lB, pB, rB, wB, hB = section(nB) if nB else (0, 0, [], 0.0, 0.0)
     n_pos = 2 * Ns * SEC_PAR                 # bundle positions, NS2 + NS3
     per_s = -(-n_pos // SEC_LAYERS)
-    wS, hS = per_s * ds, SEC_LAYERS * ds
+    wS, hS = per_s * ds, SEC_LAYERS * (ds + T_TAPE)
     n_aux = int(V.get('Naux', 0))
-    hS_aux = hS + (TIW_OD if n_aux else 0.0)
+    hS_aux = hS + (TIW_OD + T_TAPE if n_aux else 0.0)
     n_gaps = 2 if nB else 1                 # no part B: one gap, side by side
     room = M['wind_w'] - 2 * MARGIN_F - wA - wS - wB
     spare = room - n_gaps * g
@@ -528,6 +542,7 @@ def winding(V, name=None, g=None):
         layers_A=lA, per_A=pA, rows_A=rA, w_A=wA, h_A=hA,
         layers_B=lB, per_B=pB, rows_B=rB, w_B=wB, h_B=hB,
         w_S=wS, h_S=hS, h_S_aux=hS_aux, n_aux=n_aux, tiw_od=TIW_OD,
+        t_tape=T_TAPE,
         gap=g, n_gaps=n_gaps, room=room, spare=spare, margin=MARGIN_F,
         yA=(yA0, yA1), yS=(yS0, yS1), yB=(yB0, yB1),
         r_tube=M['tube_od'] / 2.0, r_free=r_free,
@@ -546,10 +561,12 @@ def report(V, name=None):
         '  NP1 %d T TIW-Litz %d x %.2f mm, bundle %.2f + %.2f = %.2f mm'
         % (w['Np'], w['n_strand'], D_STRAND, w['d_litz'], w['tiw_add'],
            w['d_pri']),
-        '      part A %2d T  %s -> %5.2f mm axial, %.2f mm deep'
-        % (w['nA'], w['rows_A'], w['w_A'], w['h_A']),
+        '      %s %2d T  %s -> %5.2f mm axial, %.2f mm deep'
+        % ('part A' if w['nB'] else 'section', w['nA'], w['rows_A'],
+           w['w_A'], w['h_A']),
+    ] + ([
         '      part B %2d T  %s -> %5.2f mm axial, %.2f mm deep'
-        % (w['nB'], w['rows_B'], w['w_B'], w['h_B']),
+        % (w['nB'], w['rows_B'], w['w_B'], w['h_B'])] if w['nB'] else []) + [
         '  NS2, NS3 %d T each, %d Litz bundles %d x %.2f mm (d %.2f) per turn'
         % (w['Ns'], w['sec_par'], w['n_strand_s'], D_STRAND, w['d_sec']),
         '      group %s -> %5.2f mm axial, %.2f mm deep, %.2f with NAUX'

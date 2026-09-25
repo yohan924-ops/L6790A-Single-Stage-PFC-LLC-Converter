@@ -218,14 +218,16 @@ def checks(V=None, name=None):
            'of %.0f V rms' % (TIW_VRMS, r['u_rms']))
     rows = [
         ('NP1 to NS2, NS3 and the core', 'the triple insulation of the '
-         'NP1 Litz, one wire from pin to pin (part A, the crossing over the '
-         'secondary, part B)', 'reinforced: ' + tiw,
+         'NP1 Litz, one wire from pin to pin'
+         + (' (part A, the crossing over the secondary, part B)'
+            if w['nB'] else ''), 'reinforced: ' + tiw,
          'ok' if TIW_VRMS >= r['u_rms'] else 'FAIL'),
         ('NAUX to NS2, NS3 and the core', 'the triple insulation of NAUX, '
          'from pin to pin', 'reinforced: ' + tiw,
          'ok' if TIW_VRMS >= r['u_rms'] else 'FAIL'),
-        ('the two gaps (%.1f mm nominal)' % w['gap'], 'nothing: they set '
-         'the leakage only', 'none', 'ok'),
+        (('the two gaps (%.1f mm nominal)' if w['nB'] else
+          'the partition between the sections (%.1f mm)') % w['gap'],
+         'nothing: it sets the leakage only', 'none', 'ok'),
         ('NS2, NS3 to the core', 'the same side of the barrier: the core is '
          'secondary here', 'functional', 'ok'),
     ]
@@ -280,8 +282,9 @@ OPEN = [
     'above that for the first milliseconds of safe start.  Ask the wire '
     'vendor.  The approval is Class B: the winding hot spot stays under '
     '130 C, which the thermal measurement has to show.',
-    'L_short is an estimate (leakage.py, a 2-D field solution); the gaps '
-    'are the vendor\'s trim, and the first samples decide them.',
+    'L_short is an estimate (leakage.py, a 2-D field solution), and for the '
+    'section winding it is above the 11 uH the tank asks; the first samples '
+    'decide.',
 ]
 
 

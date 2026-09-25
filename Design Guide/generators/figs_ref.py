@@ -1466,6 +1466,19 @@ def an_core_section(save, foot):
         ax.add_patch(Circle((x, y), ds / 2.0, fc=COL[who], ec=EDG[who],
                             lw=0.6, alpha=0.75, zorder=6))
 
+    tt = w['t_tape']
+    TAPEC = '#e0b000'                         # layer tape, drawn as a line
+
+    def layer_tape(ax, c, a0, a1, vertical=False):
+        """one wrap of layer tape: at radius c from a0 to a1 along the axis.
+        Its 0.05 mm would not show at scale, so it is drawn as a line."""
+        if vertical:
+            ax.plot([c, c], [a0, a1], color=TAPEC, lw=1.6, zorder=8,
+                    solid_capstyle='butt')
+        else:
+            ax.plot([a0, a1], [c, c], color=TAPEC, lw=1.6, zorder=8,
+                    solid_capstyle='butt')
+
     def aux(ax, x, y):
         ax.add_patch(Circle((x, y), w['tiw_od'] / 2.0, fc=PUR, ec=PUR,
                             lw=0.5, zorder=7))
@@ -1508,31 +1521,46 @@ def an_core_section(save, foot):
     def Y(yax):
         """axial position from the part-A flange -> drawing y"""
         return WW - yax
-    tape = ((0.0, w['yA'][0], w['h_A']), (w['yB'][1], M['wind_w'], w['h_B']))
+    SPLIT = w['nB'] > 0                      # part B exists only if split
+    tape = ((0.0, w['yA'][0], w['h_A']),
+            (w['yB'][1], M['wind_w'], w['h_B'] if SPLIT else w['h_S']))
+    gaps = [(w['yA'][1], w['yS'][0])] + ([(w['yS'][1], w['yB'][0])]
+                                         if SPLIT else [])
     hmax = max(w['h_A'], w['h_B'], w['h_S_aux'])
     for sgn in (-1, 1):
         for y0, y1, h in tape:
             x0 = RT if sgn > 0 else -(RT + h)
             ax.add_patch(Rectangle((x0, Y(y1)), h, y1 - y0, fc=TAPE,
                                    ec='#b9a25e', lw=0.6, zorder=5))
-        for g0, g1 in ((w['yA'][1], w['yS'][0]), (w['yS'][1], w['yB'][0])):
-            x0 = RT if sgn > 0 else -(RT + hmax)
-            ax.add_patch(Rectangle((x0, Y(g1)), hmax, g1 - g0, fc='none',
-                                   ec=GOLD, lw=1.1, ls=(0, (3.5, 2.5)),
-                                   zorder=7))
+        for g0, g1 in gaps:
+            if SPLIT:                        # gaps: empty, dashed
+                x0 = RT if sgn > 0 else -(RT + hmax)
+                ax.add_patch(Rectangle((x0, Y(g1)), hmax, g1 - g0, fc='none',
+                                       ec=GOLD, lw=1.1, ls=(0, (3.5, 2.5)),
+                                       zorder=7))
+            else:                            # the bobbin partition, a wall
+                x0 = RT if sgn > 0 else -RF
+                ax.add_patch(Rectangle((x0, Y(g1)), RF - RT, g1 - g0, **bob))
         for part, y0 in (('A', w['yA'][0]), ('B', w['yB'][0])):
-            per = w['per_' + part]
+            y1 = w['y' + part][1]
             for li, n in enumerate(w['rows_' + part]):
-                r = RT + dp * (li + 0.5)
+                r = RT + (dp + tt) * li + dp / 2.0
                 for k in range(n):
                     pri(ax, sgn * r, Y(y0 + dp * (k + 0.5)))
+                layer_tape(ax, sgn * (r + dp / 2.0 + tt / 2.0), Y(y0), Y(y1),
+                           vertical=True)
         for li, row in enumerate(w['smap']):
-            r = RT + ds * (li + 0.5)
+            r = RT + (ds + tt) * li + ds / 2.0
             for c, who in enumerate(row):
                 sec(ax, sgn * r, Y(w['yS'][0] + ds * (c + 0.5)), who)
+            layer_tape(ax, sgn * (r + ds / 2.0 + tt / 2.0), Y(w['yS'][0]),
+                       Y(w['yS'][1]), vertical=True)
         ra = RT + w['h_S'] + w['tiw_od'] / 2.0
         for k in range(w['n_aux']):
             aux(ax, sgn * ra, Y(w['yS'][0] + w['w_S'] * (k + 0.5) / w['n_aux']))
+        if w['n_aux']:
+            layer_tape(ax, sgn * (ra + w['tiw_od'] / 2.0 + tt / 2.0),
+                       Y(w['yS'][0]), Y(w['yS'][1]), vertical=True)
 
     _dimh(ax, -HW, HW, -HH - 10.5, '%.1f' % M['W'], ext=-HH)
     _dimh(ax, -RC, RC, -HH - 3.2, 'ø%.1f' % M['d_centre'], ext=-WH,
@@ -1554,16 +1582,18 @@ def an_core_section(save, foot):
     marks = [
         (5, -(RT + w['h_A'] * 0.5), Y(w['yA'][0] * 0.5), 0.6, GREY),
         (1, -(RT + dp * 1.5), Y(w['yA'][0] + dp * 1.5), 5.4, EDG['NP1']),
-        (4, -(RT + hmax * 0.5), Y((w['yA'][1] + yS0) / 2), 12.0, GOLD),
+        (4, -(RT + hmax * 0.5), Y((w['yA'][1] + yS0) / 2), 12.0, GOLD if SPLIT else '#55606c'),
         (2, -(RT + ds * 0.5), Y(yS0 + ds * (c2 + 0.5)), 15.3, EDG['NS2']),
         (8, -(RT + w['h_S'] + w['tiw_od'] / 2), Y(yS0 + w['w_S'] * 0.5 /
                                                    max(w['n_aux'], 1)),
          18.5, PUR),
         (3, -(RT + ds * 0.5), Y(yS0 + ds * (c3 + 0.5)), 21.7, EDG['NS3']),
+        ] + ([
         (4, -(RT + hmax * 0.5), Y((w['yS'][1] + w['yB'][0]) / 2), 24.9, GOLD),
-        (1, -(RT + dp * 1.5), Y(w['yB'][0] + dp * 0.5), 28.1, EDG['NP1']),
-        (5, -(RT + w['h_B'] * 0.5), Y((w['yB'][1] + M['wind_w']) / 2), 31.3,
-         GREY)]
+        (1, -(RT + dp * 1.5), Y(w['yB'][0] + dp * 0.5), 28.1, EDG['NP1'])]
+        if SPLIT else []) + [
+        (5, -(RT + tape[1][2] * 0.5), Y((w['yB'][1] + M['wind_w']) / 2),
+         31.3 if SPLIT else 27.0, GREY)]
     for n, x, y, yt, c in marks:
         _balloon(ax, n, x, y, BX, WW - yt, c)
     _balloon(ax, 6, 0.0, gp / 2.0, 0.0, HH + 4.4, GOLD)
@@ -1584,37 +1614,54 @@ def an_core_section(save, foot):
     for y0, y1, h in tape:
         ax2.add_patch(Rectangle((OX + y0, OY), y1 - y0, h, fc=TAPE,
                                 ec='#b9a25e', lw=0.6, zorder=4))
-    for g0, g1 in ((w['yA'][1], w['yS'][0]), (w['yS'][1], w['yB'][0])):
-        ax2.add_patch(Rectangle((OX + g0, OY), g1 - g0, hmax, fc='none',
-                                ec=GOLD, lw=1.1, ls=(0, (3.5, 2.5)), zorder=7))
+    for g0, g1 in gaps:
+        if SPLIT:
+            ax2.add_patch(Rectangle((OX + g0, OY), g1 - g0, hmax, fc='none',
+                                    ec=GOLD, lw=1.1, ls=(0, (3.5, 2.5)),
+                                    zorder=7))
+        else:
+            ax2.add_patch(Rectangle((OX + g0, OY), g1 - g0, BH, **bob))
     for part in ('A', 'B'):
-        y0 = w['y' + part][0]
+        y0, y1 = w['y' + part]
         for li, n in enumerate(w['rows_' + part]):
+            yl = OY + (dp + tt) * li + dp / 2.0
             for k in range(n):
-                pri(ax2, OX + y0 + dp * (k + 0.5), OY + dp * (li + 0.5))
+                pri(ax2, OX + y0 + dp * (k + 0.5), yl)
+            layer_tape(ax2, yl + dp / 2.0 + tt / 2.0, OX + y0, OX + y1)
     for li, row in enumerate(w['smap']):
+        yl = OY + (ds + tt) * li + ds / 2.0
         for c, who in enumerate(row):
-            sec(ax2, OX + yS0 + ds * (c + 0.5), OY + ds * (li + 0.5), who)
+            sec(ax2, OX + yS0 + ds * (c + 0.5), yl, who)
+        layer_tape(ax2, yl + ds / 2.0 + tt / 2.0, OX + yS0, OX + w['yS'][1])
     for k in range(w['n_aux']):
         aux(ax2, OX + yS0 + w['w_S'] * (k + 0.5) / w['n_aux'],
             OY + w['h_S'] + w['tiw_od'] / 2.0)
+    if w['n_aux']:
+        layer_tape(ax2, OY + w['h_S'] + w['tiw_od'] + tt / 2.0, OX + yS0,
+                   OX + w['yS'][1])
     ax2.text(OX + L / 2.0, OY + BH + 5.6,
              'the winding unrolled along the bobbin', ha='center',
              va='bottom', fontsize=10.5, color=NAVY, zorder=8)
     _dimh(ax2, OX, OX + L, OY - 3.5, 'winding width  %.1f' % L,
           ext=OY - 1.9, side=-1)
     dims = [(w['yA'][0], w['yA'][1], '%.2f' % w['w_A'], EDG['NP1'], 1),
-            (w['yA'][1], w['yS'][0], '%.1f' % w['gap'], GOLD, 4),
-            (w['yS'][0], w['yS'][1], '%.2f' % w['w_S'], EDG['NS2'], None),
-            (w['yS'][1], w['yB'][0], '%.1f' % w['gap'], GOLD, 4)]
+            (w['yA'][1], w['yS'][0], '%.1f' % w['gap'], GOLD if SPLIT else '#55606c', 4),
+            (w['yS'][0], w['yS'][1], '%.2f' % w['w_S'], EDG['NS2'], None)] + (
+           [(w['yS'][1], w['yB'][0], '%.1f' % w['gap'], GOLD, 4)]
+           if SPLIT else [])
     for x0, x1, t, c, n in dims:
         _dimh(ax2, OX + x0, OX + x1, OY + BH + 1.1, t, color=c)
         if n:
             _balloon(ax2, n, 0, 0, OX + (x0 + x1) / 2, OY + BH + 3.3, c,
                      r=0.62, lead=False)
-    xb = OX + (w['yB'][0] + w['yB'][1]) / 2
-    _balloon(ax2, 1, xb, OY + w['h_B'], xb + 1.2, OY + BH + 3.3,
-             EDG['NP1'], r=0.62)
+    if SPLIT:
+        xb = OX + (w['yB'][0] + w['yB'][1]) / 2
+        _balloon(ax2, 1, xb, OY + w['h_B'], xb + 1.2, OY + BH + 3.3,
+                 EDG['NP1'], r=0.62)
+    else:
+        xt = OX + (w['yB'][1] + L) / 2
+        _balloon(ax2, 5, xt, OY + tape[1][2] * 0.7, xt, OY + BH + 3.3, GREY,
+                 r=0.62)
     for n, xx, c in ((2, yS0 + ds * (c2 + 0.5), EDG['NS2']),
                      (3, yS0 + ds * (c3 + 0.5), EDG['NS3'])):
         _balloon(ax2, n, 0, 0, OX + xx, OY + BH + 3.3, c, r=0.62, lead=False)
@@ -1642,6 +1689,9 @@ def an_core_section(save, foot):
                      fontsize=8.3, color='white', zorder=7)
         ax3.text(CX0 - 0.55, LY[li], 'turn %d' % (li + 1), ha='right',
                  va='center', fontsize=8.3, color=GREY, zorder=7)
+        ax3.plot([CX0 - RR - 0.05, CX0 + DX * (w['per_layer_s'] - 1) + RR
+                  + 0.05], [LY[li] + RR + 0.05] * 2, color=TAPEC, lw=1.6,
+                 zorder=7, solid_capstyle='butt')
     YA = LY[1] + RR + 0.20
     for k in range(w['n_aux']):
         xx = CX0 + DX * (w['per_layer_s'] - 1) * (k + 0.5) / w['n_aux']
@@ -1649,19 +1699,31 @@ def an_core_section(save, foot):
                              zorder=7))
     ax3.text(CX0 - 0.55, YA, 'NAUX', ha='right', va='center', fontsize=8.3,
              color=PUR, zorder=7)
+    if w['n_aux']:
+        ax3.plot([CX0 - RR - 0.05, CX0 + DX * (w['per_layer_s'] - 1) + RR
+                  + 0.05], [YA + 0.19] * 2, color=TAPEC, lw=1.6, zorder=7,
+                 solid_capstyle='butt')
     xe = CX0 + DX * (w['per_layer_s'] - 1)
-    ax3.text(CX0 - 0.35, 0.36, u'\u2190 part A', ha='left', va='center',
+    ax3.text(CX0 - 0.35, 0.36, u'\u2190 NP1' if not SPLIT else
+             u'\u2190 part A', ha='left', va='center',
              fontsize=8.3, color=EDG['NP1'], zorder=7)
-    ax3.text(xe + 0.35, 0.36, u'part B \u2192', ha='right', va='center',
-             fontsize=8.3, color=EDG['NP1'], zorder=7)
+    if SPLIT:
+        ax3.text(xe + 0.35, 0.36, u'part B \u2192', ha='right',
+                 va='center', fontsize=8.3, color=EDG['NP1'], zorder=7)
     XN = xe + 0.95
-    ax3.text(XN, 3.62, 'one circle = one Litz bundle,\n%d × ø%.2f mm, '
+    ax3.text(XN, 3.62, ('one circle = one Litz bundle,\n%d × ø%.2f mm, '
              'ø%.2f mm; two per\nturn, in parallel, each to its own pin'
+             if w['sec_par'] > 1 else
+             'one circle = one turn, a Litz bundle\nof %d × ø%.2f mm, '
+             'ø%.2f mm; its\nends split over two pins')
              % (w['n_strand_s'], _C.D_STRAND, ds), ha='left', va='center',
              fontsize=8.3, color=GREY, zorder=8, linespacing=1.3)
     ax3.text(XN, 2.30, 'turned over at the layer change: each\n'
              'winding sits next to part A in one turn\n'
-             'and next to part B in the other', ha='left', va='center',
+             'and next to part B in the other' if SPLIT else
+             'NS2 and NS3 wound together, swapped\n'
+             'at the layer change so that each takes\n'
+             'one place near NP1 and one away', ha='left', va='center',
              fontsize=8.3, color=GREY, zorder=8, linespacing=1.3)
     ax3.text(XN, 1.05, '2  NS2 %d T, pins %s\n3  NS3 %d T, pins %s\n'
              'NAUX %d T of TIW over the group'
@@ -1673,10 +1735,13 @@ def an_core_section(save, foot):
               'former %s; the third panel is not to scale. The winding is '
               'laid out by cores.winding() at J = %.1f A/mm2, Litz fill '
               '%.2f, %.1f mm of triple insulation on the NP1 bundle '
-              '(assumed), gaps of %.1f mm (nominal, trimmed for L_short), '
-              '%.1f mm margin tape at each flange and %.1f mm TIW for NAUX.'
+              '(assumed), %s of %.1f mm, '
+              '%.1f mm margin tape at each flange, %.1f mm TIW for NAUX, and '
+              'a wrap of %.2f mm layer tape over every layer (the yellow '
+              'lines, not to scale).'
               % (NAME, M['core'], M['former'], _C.J_CU, _C.K_LITZ,
-                 w['tiw_add'], w['gap'], w['margin'], w['tiw_od']))
+                 w['tiw_add'], 'gaps' if SPLIT else 'a partition', w['gap'],
+                 w['margin'], w['tiw_od'], w['t_tape']))
     save(fig, 'an_core_section')
 
 

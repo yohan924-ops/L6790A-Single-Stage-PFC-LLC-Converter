@@ -1176,9 +1176,10 @@ def legal():
                     'auxiliary winding through a Zener regulator, and the '
                     'safety insulation of the transformer for household AV '
                     'equipment in the US, EU, Japan, Korea and China. The '
-                    'transformer of the example rebuilt so that it reaches its '
-                    'leakage: a leakage estimate added, the primary in '
-                    'triple-insulated Litz split around a Litz secondary.',
+                    'transformer of the example rebuilt around its '
+                    'leakage: a leakage estimate added, a section winding on '
+                    'a two-section former with the primary in '
+                    'triple-insulated Litz beside a Litz secondary.',
                     S['tc'])]],
         colWidths=[70, 90, CW - 160],
         style=TableStyle([('BACKGROUND', (0, 0), (-1, 0), NAVY),

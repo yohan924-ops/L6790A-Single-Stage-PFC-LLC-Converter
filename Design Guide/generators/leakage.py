@@ -136,9 +136,10 @@ def blocks_of(V, name=None, g=None, only=None, turned=True):
     else:
         pos = [(k, c) for k, row in enumerate(w['smap'])
                for c, who in enumerate(row) if who == only]
+        pk = w['d_sec'] + w.get('t_tape', 0.0)      # layer pitch, tape in
         for k, c in pos:
-            bl.append(((x0 + k * w['d_sec']) * mm,
-                       (x0 + (k + 1) * w['d_sec']) * mm,
+            bl.append(((x0 + k * pk) * mm,
+                       (x0 + k * pk + w['d_sec']) * mm,
                        (y0 + c * w['d_sec']) * mm,
                        (y0 + (c + 1) * w['d_sec']) * mm,
                        -float(w['Np']) / len(pos)))
