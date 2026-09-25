@@ -776,6 +776,12 @@ def build(out_dir, dpi=150):
     fig.savefig(w, dpi=dpi, bbox_inches='tight', facecolor='white')
     plt.close(fig)
 
+    #  The registry is global to schemx and other figures reset it (the
+    #  boost panel of an_pfc_boost ends with register()).  Set only at
+    #  import, the highlight followed the coils or ran straight across them
+    #  depending on which figure the batch had drawn before this one
+    #  (2026-09-25).  Set it where it is used.
+    register(HOPS, VCOILS, HCOILS)
     return [w] + [sheet(list(pair),
                         os.path.join(out_dir, 'an_modes_%d%d.png' % pair),
                         dpi)
