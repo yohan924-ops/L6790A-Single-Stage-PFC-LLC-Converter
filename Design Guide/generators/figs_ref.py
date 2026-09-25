@@ -2091,7 +2091,7 @@ def an_flyback_llc(save, foot):
 
     #  Two lines each.  On one line they ran off both edges of the page
     #  and into each other in the middle.
-    fig.text(0.030 + 0.231, 0.992, 'FLYBACK\nan inductor with a second '
+    fig.text(0.030 + 0.231, 0.992, 'FLYBACK (DCM)\nan inductor with a second '
              'winding', ha='center', va='top', fontsize=11.0, color=NAVY,
              fontweight='bold', linespacing=1.35)
     fig.text(0.508 + 0.231, 0.992, 'LLC\na transformer, and a magnetising '
@@ -2271,14 +2271,20 @@ def an_flyback_llc(save, foot):
         ax.plot(t, fs, color=GRN, lw=1.5, ls=(0, (5, 2.6)))
         ax.plot(t, fn, color=PUR, lw=2.4)
 
-    #  ---- flyback, continuous conduction, one period drawn twice
-    D = 0.45
+    #  ---- flyback, DISCONTINUOUS conduction, one period drawn twice.
+    #  It was continuous here and discontinuous in Figure 18 (an_flux_steps)
+    #  beside it, so the two flyback columns disagreed (2026-09-25, user).
+    #  DCM is the one the argument needs: the flux starts from zero every
+    #  period, all of it is stored and all of it delivered, and B_pk is set
+    #  by I_p,pk alone.
+    D, DS = 0.40, 0.40                      # on time, secondary conduction
     t = np.linspace(0, 2, 4000)
     ph = t % 1.0
     on = ph < D
-    lo, hi = 0.36, 1.0
-    ip = np.where(on, lo + (hi - lo) * ph / D, 0.0)
-    isr = np.where(on, 0.0, hi - (hi - lo) * (ph - D) / (1.0 - D))
+    sec = (ph >= D) & (ph < D + DS)
+    hi = 1.0
+    ip = np.where(on, hi * ph / D, 0.0)
+    isr = np.where(sec, hi * (1.0 - (ph - D) / DS), 0.0)
     #  The dots are inverted, so the secondary ampere-turns ADD: they take
     #  over holding the flux up when the primary stops carrying it.
     imu = ip + isr
@@ -2304,7 +2310,7 @@ def an_flyback_llc(save, foot):
     flux(axl[3], t, ip, isr, imu, -0.62, 1.42)
     axl[3].annotate('the band is $\\Phi_s$ holding the flux up\n'
                     'after the primary has stopped',
-                    xy=(0.72, 0.36), xytext=(1.30, -0.40),
+                    xy=(0.60, 0.22), xytext=(1.30, -0.40),
                     fontsize=9.4, color=GREY, ha='center', va='center',
                     arrowprops=dict(arrowstyle='-|>', color=GREY, lw=1.2,
                                     connectionstyle='arc3,rad=0.16'),
