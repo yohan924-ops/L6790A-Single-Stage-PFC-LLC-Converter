@@ -35,7 +35,7 @@ from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 # 로 달고 있었다(참값 110 kHz).  아래에는 시트에서 나오지 않는 것만 둔다.
 VARIANTS = {
     '7p5to1': dict(label='7.5 : 1'),
-    '7p5to1_x1': dict(label='7.5 : 1'),        # ONE transformer, ETD 49/25/16DG
+    '7p5to1_x1': dict(label='7.5 : 1'),        # ONE transformer, cores.CHOSEN
     '8to1':   dict(label='8 : 1'),
     '6to1':   dict(label='6 : 1'),
 }
@@ -76,7 +76,7 @@ V.update(
 # 7.5:1 을 채택한다면 R.T 를 10 kohm 으로 내려 k.floor 를 1.117 로 올려야 한다.
 V['tol_open'] = V['tol_short'] = '±10 %'
 
-# 보빈과 핀 배정: 단일 코어 설계점은 cores.CHOSEN(ETD 49/25/16DG, 20핀), 3코어
+# 보빈과 핀 배정: 단일 코어 설계점은 cores.CHOSEN(E 60/22/16, 주문 제작 20핀), 3코어
 # 설계점은 PQ 40/40(12핀) 을 쓴다.  둘 다 cores.BOBBINS 한 곳에서 읽는다.
 BOB_NAME = CORES.CHOSEN if V['Nx'] == 1 else 'PQ 40/40'
 BOB = CORES.BOBBINS[BOB_NAME]
@@ -175,9 +175,9 @@ ws.row_dimensions[4].height = 4
 section(6, '1.    CONFIGURATION')
 COUNT = {1: 'One', 2: 'Two', 3: 'Three', 4: 'Four'}.get(V['Nx'], str(V['Nx']))
 for i, (t, red) in enumerate([
-        ('One transformer per set on TDK %s (core %s, coil former %s, %d pins).'
-         % (BOB_NAME, CORES.CORES[BOB_NAME]['core'],
-            BOB['former'], BOB['pins'])
+        ('One transformer per set on %s %s (core %s, %s coil former, %d pins).'
+         % (CORES.CORES[BOB_NAME].get('vendor', 'TDK'), BOB_NAME,
+            CORES.CORES[BOB_NAME]['core'], BOB['former'], BOB['pins'])
          if V['Nx'] == 1 else
          '%s identical transformers per set — primaries in series, '
          'secondaries in parallel.' % COUNT, False),
@@ -206,12 +206,16 @@ for i, (n, des, term, turns, cur) in enumerate(WIND):
 
 note(17, 'Centre tap is made on the PCB by joining pins %s — do NOT join '
          'them inside the transformer.%s'
-         % (tap_text(), '   Two pins per secondary terminal: confirm the pin '
-            'current rating or bring the foil out as lugs.'
+         % (tap_text(), '   Two pins per secondary terminal, one per '
+            'sub-winding: confirm the pin current rating.'
             if V['Nx'] == 1 else ''))
-note(18, 'Coil former TDK %s (%s), %d pins.   Pin numbers count along one row '
-         'from pin 1 and back along the other — confirm on the bobbin drawing '
-         'before winding.' % (BOB['former'], BOB_NAME, BOB['pins']))
+note(18, ('Coil former %s for %s, %d pins, made to this specification.   '
+          % (BOB['former'], BOB_NAME, BOB['pins'])
+          if CORES.MECH.get(BOB_NAME, {}).get('custom') else
+          'Coil former TDK %s (%s), %d pins.   '
+          % (BOB['former'], BOB_NAME, BOB['pins'])) +
+         'Pin numbers count along one row from pin 1 and back along the other '
+         '— confirm on the bobbin drawing before winding.')
 
 # ------------------------------------------------- 3. 전기 요구사양
 section(19, '3.    ELECTRICAL  REQUIREMENTS',
@@ -236,8 +240,8 @@ for i, (n, item, term, req, cond, h) in enumerate(REQ):
                                           wrap_text=True)
 
 note(25, 'Both measured at %s of ONE transformer.   ' % pins('NP1') +
-         ('Item 2 is set by the winding arrangement (split primary or spacer): '
-          'the vendor proposes it.' if V['Nx'] == 1 else
+         ('Item 2 is set by the partition between the two sections of the '
+          'former: trim it on the first samples.' if V['Nx'] == 1 else
           '%s in series give a total ratio of %s.' % (COUNT, V['label'])))
 note(26, 'Item 2 follows the existing production part 26OP-LM83W clause 4-2, '
          '"SECONDARY ALL SHORT" — same vendor, same centre-tapped construction.   '

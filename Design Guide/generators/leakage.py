@@ -105,7 +105,8 @@ def energy_open(blocks, n=20):
     return 0.25 * float(I @ L @ I)           # half of the space, half of LI2
 
 
-def blocks_of(V, name=None, g=None, only=None, turned=True):
+def blocks_of(V, name=None, g=None, only=None, turned=True, k=None,
+              order=None):
     """The window and the winding blocks of cores.winding(), in metres.
 
     only=None: NS2 and NS3 both shorted, the secondary group one block (the
@@ -115,14 +116,14 @@ def blocks_of(V, name=None, g=None, only=None, turned=True):
     every layer of the group in the order of the first, as if it had not
     been turned over at the layer change."""
     import cores
-    w = cores.winding(V, name, g)
+    w = cores.winding(V, name, g, k, order)
     if not turned:
         w = dict(w, smap=[w['smap'][0]] * len(w['smap']))
     M = w['M']
     a = M['r_win_out'] - M['d_centre'] / 2.0         # across the window
     b = M['win_h']                                    # along the axis
     x0 = M['tube_od'] / 2.0 - M['d_centre'] / 2.0    # top of the tube
-    fl = (b - M['wind_w']) / 2.0                      # flange, each end
+    fl = (b - w['wind_w']) / 2.0                      # flange, each end
     mm = 1e-3
     bl = [(x0 * mm, (x0 + w['h_A']) * mm, (fl + w['yA'][0]) * mm,
            (fl + w['yA'][1]) * mm, float(w['nA']))]
@@ -136,25 +137,26 @@ def blocks_of(V, name=None, g=None, only=None, turned=True):
     else:
         pos = [(k, c) for k, row in enumerate(w['smap'])
                for c, who in enumerate(row) if who == only]
-        pk = w['d_sec'] + w.get('t_tape', 0.0)      # layer pitch, tape in
-        for k, c in pos:
-            bl.append(((x0 + k * pk) * mm,
-                       (x0 + k * pk + w['d_sec']) * mm,
-                       (y0 + c * w['d_sec']) * mm,
-                       (y0 + (c + 1) * w['d_sec']) * mm,
+        pc = w['d_sec'] * w['k']                     # pitch along the layer
+        pk = pc + w['t_tape']                       # layer pitch, tape in
+        for q, c in pos:
+            bl.append(((x0 + q * pk) * mm,
+                       (x0 + q * pk + w['d_sec']) * mm,
+                       (y0 + c * pc) * mm,
+                       (y0 + c * pc + w['d_sec']) * mm,
                        -float(w['Np']) / len(pos)))
     return w, a * mm, b * mm, bl
 
 
-def estimate(V, name=None, g=None, only=None, turned=True):
-    """L_short [uH] referred to NP1, and its two parts."""
+def estimate(V, name=None, g=None, only=None, turned=True, k=None,
+             order=None):
+    """L_short [uH] referred to NP1, and its two parts.  k: the winding
+    pitch over the bundle (cores.K_WIND if None; 1.0 = packed tight)."""
     import cores
     name = name or cores.CHOSEN
-    w, a, b, bl = blocks_of(V, name, g, only, turned)
-    C, M = cores.CORES[name], w['M']
-    l_n = C['lN'] * 1e-3
-    r_mean = (M['tube_od'] / 2.0 + max(w['h_A'], w['h_S']) / 2.0) * 1e-3
-    inside = min(1.0, 2 * M['plan_d'] * 1e-3 / (2 * pi * r_mean))
+    w, a, b, bl = blocks_of(V, name, g, only, turned, k, order)
+    ln_mm, inside = cores.turn(name)
+    l_n = ln_mm * 1e-3
     l_in = 2.0 * energy(a, b, bl, M=200, N=500)       # H/m at 1 A in NP1
     l_out = 2.0 * energy_open(bl)
     L = (l_in * inside + l_out * (1 - inside)) * l_n * 1e6
@@ -185,7 +187,7 @@ def sweep(V, name=None, step=0.5):
     """[(gap, L_short)] from touching to the widest the bobbin allows."""
     import cores
     w0 = cores.winding(V, name, 0.0)
-    gmax = w0['room'] / w0['n_gaps']
+    gmax = 3.0 if w0['M'].get('custom') else w0['room'] / w0['n_gaps']
     out, g = [], 0.0
     while g <= gmax + 1e-9:
         out.append((g, estimate(V, name, g)['L']))
@@ -222,8 +224,8 @@ def report(V=None):
            ' free-space pair %.0e (relative error)' % (e1, e2, e3)]
     r = estimate(V)
     w = r['w']
-    out.append('%s, NP1 %d + %d T (TIW-Litz), NS2/NS3 group %s' %
-               (r['name'], w['nA'], w['nB'], w['smap']))
+    out.append('%s, NP1 %d T (%d TIW-Litz in parallel), NS2/NS3 layers %s'
+               % (r['name'], w['Np'], w['pri_par'], w['sub']))
     out.append('  outside the core per metre: %.2f of the in-core value; '
                '%.0f %% of the turn inside the core' %
                (r['out_ratio'], 100 * r['inside']))
@@ -234,6 +236,8 @@ def report(V=None):
     out.append('  at the nominal gap %.2f mm: %.2f uH (asked %.1f uH); '
                'in-core-only figure %.2f uH' %
                (w['gap'], r['L'], V['Lshort'], r['L_in_only']))
+    out.append('  packed tight (pitch 1.00 instead of %.2f): %.2f uH'
+               % (w['k_wind'], estimate(V, k=1.0)['L']))
     for who in ('NS2', 'NS3'):
         h = estimate(V, only=who)
         out.append('  %s alone shorted: %.2f uH' % (who, h['L']))

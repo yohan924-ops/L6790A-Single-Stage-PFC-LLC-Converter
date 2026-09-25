@@ -1167,7 +1167,7 @@ def legal():
                     'names the equation it comes from and shows the numbers '
                     'put into it.', S['tc'])],
          [Paragraph('V1.3', S['tc']), Paragraph('September 2026', S['tc']),
-          Paragraph('Design example on one transformer (ETD 49/25/16DG) with '
+          Paragraph('Design example on one transformer with '
                     'the winding and pin assignment drawn. Compensator chapter '
                     'rewritten with the loop equations, the op-amp equivalent '
                     'of the TL431 network and a worked loop design. Text '
@@ -1179,7 +1179,10 @@ def legal():
                     'transformer of the example rebuilt around its '
                     'leakage: a leakage estimate added, a section winding on '
                     'a two-section former with the primary in '
-                    'triple-insulated Litz beside a Litz secondary.',
+                    'triple-insulated Litz beside a Litz secondary, moved to '
+                    'an E 60/22/16 core whose deep, short window takes that '
+                    'winding at the tank\'s leakage, with an allowance for '
+                    'the looseness of a real winding.',
                     S['tc'])]],
         colWidths=[70, 90, CW - 160],
         style=TableStyle([('BACKGROUND', (0, 0), (-1, 0), NAVY),

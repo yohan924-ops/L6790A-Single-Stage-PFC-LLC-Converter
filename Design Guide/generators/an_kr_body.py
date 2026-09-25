@@ -2176,12 +2176,12 @@ def build(A):
             widths=[CW * 0.24, CW * 0.30, CW * 0.46],
             key='trafo-built', split=True))
     _w = _CORE.winding_v64(V)
-    _B = _CORE.BOBBIN
+    _B = _CORE.BOBBINS[_CORE.V64_CORE]
     add(p('<b>핀.</b> %(chosen)s 코어의 %(former)s 보빈에는 핀이 두 줄 '
           '%(half)d 개씩 %(pins)d 개 있다. NP1 과 ZCD 보조 권선이 한 줄, NS2 와 '
           'NS3 가 다른 줄을 쓰고, 2차 단자마다 핀 두 개다. 센터탭은 PCB 에서 연결한다.'
           % dict(former=_B['former'], pins=_B['pins'], half=_B['pins'] // 2,
-                 chosen=_CORE.CHOSEN)))
+                 chosen=_CORE.V64_CORE)))
     add(fig('an_xfmr_pins',
             '핀 번호를 붙인 회로 기호, 그리고 %(former)s 보빈 위의 같은 핀'
             '(%(pins)d 핀, 피치 %(pitch).2f&nbsp;mm, 줄 간격 '
@@ -2189,7 +2189,7 @@ def build(A):
             '빈 핀이다. 극성점 쪽 끝이 각 쌍의 첫 핀이다. %(note)s'
             % dict(former=_B['former'], pins=_B['pins'], pitch=_B['pitch'],
                    rows=_B['rows_apart'], note=_CORE.PIN_NOTE_KR)))
-    _PM = _CORE.PINMAP
+    _PM = _CORE.BOBBINS[_CORE.V64_CORE]['map']
     ext(tbl('권선-핀 배정.',
             [['권선', '핀 (시작 &ndash; 끝)', '턴수', '도체', '줄'],
              ['NP1 1차', _CORE.pins('NP1', '&ndash;'), '%d T' % V['Np'],
@@ -2247,7 +2247,7 @@ def build(A):
           '상온(표&nbsp;%(t)s).'
           % dict(o1=V['OVP1'], r1=_r1, o2=V['OVP2'], r2=_r2,
                  b1=V['Bpk'] * _r1, b2=V['Bpk'] * _r2,
-                 mat=_CORE.CORES[_CORE.CHOSEN]['material'],
+                 mat=_CORE.CORES[_CORE.V64_CORE]['material'],
                  isat=V['IsatTest'], calc=V['Isatspec'],
                  t=TR('spec-out'))))
     add(p('<b>이 부품에서 시험하는 법.</b> LCR 미터를 1차(NP1, 표&nbsp;%(t)s 의 '
@@ -2279,12 +2279,12 @@ def build(A):
     # ------------------------------------------------ 선정한 코어
     add(h2('코어와 권선'))
     _w = _CORE.winding_v64(V)
-    _R = _CORE.CORES[_CORE.CHOSEN]
+    _R = _CORE.CORES[_CORE.V64_CORE]
     _cw = _CORE.window(V) / _CORE.K_U
     add(p('코어는 TDK <b>%(chosen)s</b>, %(mat)s (코어 %(core)s, 보빈 '
           '%(former)s) 이다. 갭은 중앙 다리에 나뉘어 있는 분산 갭(distributed gap)이고, 합쳐 약 %(gap).1f&nbsp;mm 로 연마해 A<sub>L</sub>&nbsp;=&nbsp;%(AL).0f&nbsp;nH 에 맞춘다. 그림&nbsp;%(f)s 에 단면과 권선을, 표&nbsp;%(t)s 에 항목을, 표&nbsp;%(t2)s 에 계산 과정을 실었다.'
-          % dict(chosen=_CORE.CHOSEN, mat=_R['material'], core=_R['core'],
-                 former=_R['former'], AL=V['AL'], gap=_CORE.dg_gap(V),
+          % dict(chosen=_CORE.V64_CORE, mat=_R['material'], core=_R['core'],
+                 former=_R['former'], AL=V['AL'], gap=_CORE.dg_gap(V, _CORE.V64_CORE),
                  f=FR('an_core_section'), t=TR('legend42'),
                  t2=TR('winding'))))
     add(fig('an_core_section',
@@ -2314,7 +2314,7 @@ def build(A):
               '양쪽 플랜지에 %.1f mm' % _CORE.MARGIN],
              ['6', '중앙 다리 갭', '&mdash;',
               '총 약 %.1f mm, A<sub>L</sub> = %.0f nH 로 연마'
-              % (_CORE.dg_gap(V), V['AL'])],
+              % (_CORE.dg_gap(V, _CORE.V64_CORE), V['AL'])],
              ['7', '권선창', '&mdash;',
               'A<sub>N</sub> = %.0f mm&sup2;, 그중 동선 %.0f mm&sup2;'
               % (_R['AN'], _CORE.window(V))],
@@ -2427,7 +2427,7 @@ def build(A):
     ext(tbl('설계 예제의 트랜스포머 사양.',
             [['항목', '값', '조건'],
              ['코어', '%s, %s, A<sub>L</sub> %.0f nH' % (
-                 _CORE.CHOSEN, _R['material'], V['AL']),
+                 _CORE.V64_CORE, _R['material'], V['AL']),
               '코어 %s, 보빈 %s; 분산 갭' % (_R['core'], _R['former'])],
              ['턴수', 'N<sub>p</sub> %(Np)d T; NS2 %(Ns)d T, NS3 %(Ns)d T; '
               'NAUX %(Naux)d T' % V,

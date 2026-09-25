@@ -67,6 +67,20 @@ CORES = {
         le=127.0, Ae=280.0, Amin=280.0, Ve=35600.0, mass=180.0,
         AN=315.6, lN=96.0,
         AL_ungapped=4450.0, material='N87'),
+    #  E 60/22/16 - Magnetics 0R46016EC (R material, the power ferrite
+    #  with its loss minimum near 100 C), Magnetics "Ferrite Cores" 2022
+    #  catalogue p. 30-31: l_e 110, A_e 248 (min 240), V_e 27200, 135 g
+    #  a set, A_L 5733 nH ungapped in R; gapped to A_L on order (p. 18).
+    #  No coil former is catalogued for it: the two-section former is
+    #  CUSTOM, and A_N and l_N are computed from MECH below, not read.
+    #  Chosen 2026-09-25 by a search over the Magnetics and TDK ranges
+    #  for the one window that takes the section winding at the tank's
+    #  leakage with both sections filling the depth (HISTORY.md).
+    'E 60/22/16': dict(
+        core='0R46016EC', former='custom two-section former',
+        le=110.0, Ae=248.0, Amin=240.0, Ve=27200.0, mass=135.0,
+        AN=None, lN=None,
+        AL_ungapped=5733.0, material='Magnetics R', vendor='Magnetics'),
 }
 
 #  Assumptions, stated here so that they are in one place and can be
@@ -207,7 +221,55 @@ MECH = {
         tube_od=22.0, bore=19.8, wind_w=36.8, flange_h=39.4,
         former_w=61.6, former_d=61.4, flange_w=39.5, former_h=46.0,
         pitch_a=5.08, pitch_b=None, pins=22, rows=45.72),
+    #  E 60/22/16, Magnetics catalogue p. 31: A 59.99, B 22.3 (one half,
+    #  so the set is 44.6 high), C 15.62 (depth), D 13.8 min (one half
+    #  of the window height), E 44.0 min (between the outer legs), F
+    #  15.62 +-0.38 (the centre leg, RECTANGULAR, F wide across the window
+    #  and C deep).  Minima are used where the drawing gives them, so the
+    #  radial room is a minimum: 22.0 - 18.6 / 2 = 12.70 mm.
+    #  The former is custom (none catalogued).  Its dimensions are the
+    #  SPECIFICATION this note gives the bobbin maker, not a reading:
+    #  tube 18.6 wide = F max 16.0 + 0.3 clearance + 2 x 1.15 wall (the
+    #  wall and clearance of TDK's ETD 49 former B66368); flanges at least
+    #  FLANGE_MIN, made as thick as the winding leaves (winding()); pins as
+    #  BOBBINS below.  'shape': 'E' tells the turn-length arithmetic that
+    #  the leg is rectangular.
+    'E 60/22/16': dict(
+        core='0R46016EC', former='custom two-section former',
+        shape='E', custom=True,
+        W=60.0, H=44.6, d_centre=15.62, win_h=27.6, r_win_out=22.0,
+        plan_w=60.0, plan_d=15.62,
+        tube_od=18.6, bore=16.3, wind_w=27.6 - 2 * 1.35, flange_h=27.6,
+        pitch_a=5.08, pitch_b=None, pins=20, rows=40.64),
 }
+FLANGE_MIN = 1.35   # mm, thinnest flange of a custom former - the flange of
+                    # TDK's ETD 49 former (35.4 - 32.7) / 2, taken as the
+                    # moulding minimum; ASSUMED, the bobbin maker decides
+
+
+def turn(name):
+    """-> (mean turn l_N [mm], share of it inside the core) of a winding
+    that fills the radial room of MECH[name].
+
+    Round leg: the datasheet's l_N, and the two arcs of core depth over
+    the circumference at mid-winding.  Rectangular leg (shape 'E'): the
+    turn follows the tube - two straight sides of F, two of C - and turns
+    the corners on a radius of the tube wall plus half the winding; the
+    two C sides are the part inside the core."""
+    M = MECH[name]
+    room = M['r_win_out'] - M['tube_od'] / 2.0
+    wall = (M['tube_od'] - M['d_centre']) / 2.0
+    if M.get('shape') == 'E':
+        ln = 2 * (M['d_centre'] + M['plan_d']) + 2 * pi * (wall + room / 2)
+        return ln, min(1.0, 2 * M['plan_d'] / ln)
+    r_mean = M['tube_od'] / 2.0 + room / 2.0
+    return CORES[name]['lN'], min(1.0, 2 * M['plan_d'] / (2 * pi * r_mean))
+
+
+for _n, _M in MECH.items():
+    if _M.get('custom'):
+        CORES[_n]['lN'] = turn(_n)[0]
+        CORES[_n]['AN'] = (_M['r_win_out'] - _M['tube_od'] / 2.0) * _M['wind_w']
 
 # ===================================================================
 #  The core this note builds on, and its coil-former terminals
@@ -221,7 +283,17 @@ MECH = {
 #  15-turn primary needs a window that is deep (7.1 mm radial for three
 #  layers) or wide (19 mm axial for two), and every PQ is shallow.  The
 #  comparison is winding() on each entry of CORES; HISTORY.md 2026-09-22.
-CHOSEN = 'ETD 49/25/16DG'
+#
+#  2026-09-25: E 60/22/16 (Magnetics).  The section winding the user asked
+#  for (onsemi-style, no split primary, a partition, tape on every layer,
+#  no empty space in the former) leaks about 14 uH on ETD 49 against the
+#  11 uH the tank is built on.  A search over the Magnetics and TDK ranges
+#  (ETD, EER, ER, EC, E) found that a filled section winding reaches the
+#  tank's L_short only in a window that is DEEP and SHORT - leakage goes
+#  as the mean turn times the section widths over the depth - and E 60/22/16
+#  (14.2 mm deep, 27.6 mm high) is the one that does it at the current
+#  density this note allows.  HISTORY.md 2026-09-25.
+CHOSEN = 'E 60/22/16'
 
 #  Terminals, per coil former.  'xy' is pin number -> (x, y) in mm in the
 #  datasheet's mounting-direction view; 'map' is winding -> (start pins,
@@ -266,7 +338,22 @@ _PQ40_XY = {}
 for _i, _y in enumerate((-17.78, -12.70, -7.62, 7.62, 12.70, 17.78)):
     _PQ40_XY[1 + _i] = (-19.05, _y)           # marked side, upwards
     _PQ40_XY[12 - _i] = (19.05, _y)           # other side, downwards
+#  E 60/22/16, CUSTOM former: the same 20-pin arrangement is SPECIFIED for
+#  it (two rows of ten, 5.08 pitch, rows 40.64 apart under the core,
+#  which is 44.6 high and 60 long), so that the terminal rating and the
+#  pin-to-pin creepage are those of a known former.  Each end of NS2 and
+#  NS3 takes two pins: a winding is two sub-windings of four Litz bundles
+#  in parallel (winding()), and each sub-winding ends on its own pin.
+#  NP1 is two TIW-Litz bundles in parallel, one to each pin of a pair.
 BOBBINS = {
+    'E 60/22/16': dict(
+        former='custom two-section', pins=20, pin='square 0.8 mm',
+        xy=_ETD49_XY,
+        map={'NP1': ((1, 2), (4, 5)), 'NAUX': ((8,), (10,)),
+             'NS2': ((11, 12), (14, 15)), 'NS3': ((16, 17), (19, 20))},
+        rows=('front row 1-10', 'back row 11-20'),
+        plan=dict(w=64.0, h=50.0, coil_w=44.0, coil_h=27.6, mark=None),
+        pitch=5.08, rows_apart=40.64),
     'ETD 49/25/16DG': dict(
         former='B66368', pins=20, pin='square 0.8 mm', xy=_ETD49_XY,
         map={'NP1': ((1, 2), (4, 5)), 'NAUX': ((8,), (10,)),
@@ -289,11 +376,12 @@ BOBBIN = BOBBINS[CHOSEN]
 PIN_XY = BOBBIN['xy']
 PINMAP = BOBBIN['map']
 CENTRE_TAP = PINMAP['NS2'][1] + PINMAP['NS3'][0]
-PIN_NOTE = ('The datasheet prints no pin numbers; the numbering shown counts '
-            'along one row from pin 1 and back along the other, the usual '
-            'convention. Confirm it against the bobbin drawing before the '
-            'specification is released; the assignment does not depend on '
-            'it, only the printed numbers do.')
+PIN_NOTE = ('The former is custom, so its pins are this note\'s '
+            'specification: the numbering counts along one row from pin 1 '
+            'and back along the other, the usual convention. Agree it with '
+            'the bobbin maker\'s drawing before the specification is '
+            'released; the assignment does not depend on it, only the '
+            'printed numbers do.')
 PIN_NOTE_KR = ('데이터시트에는 핀 번호가 없다. 여기 적은 번호는 핀 1 에서 한 '
                '열을 따라 세고 다른 열로 돌아오는 관례를 따랐다. 사양서를 내기 전에 '
                '보빈 도면으로 확인할 것. 번호 방향이 달라도 권선 배정은 그대로이고 '
@@ -353,6 +441,9 @@ def litz(area_mm2):
     return (4.0 * area_mm2 / (pi * K_LITZ)) ** 0.5, n
 
 
+V64_CORE = 'ETD 49/25/16DG'   # the core that withdrawn layout was drawn on
+
+
 def winding_v64(V, name=None):
     """WITHDRAWN 2026-09-25 - the side-by-side foil layout of rounds 63-65.
 
@@ -376,7 +467,7 @@ def winding_v64(V, name=None):
     for appearance: if the copper does not fit, 'gap' comes out negative
     and 'fits' is False.
     """
-    name = name or CHOSEN
+    name = name or V64_CORE
     M = MECH[name]
     rows = copper(V)
     ap, asec = rows[0][3], rows[1][3]
@@ -455,14 +546,34 @@ def winding_v64(V, name=None):
 #  a split one for any other value.
 TIW_LITZ_ADD = 0.2  # mm, triple insulation over the Litz bundle, on the
                     # diameter - assumed, the wire vendor's datasheet decides
+#  The layout (2026-09-25, E 60/22/16).  Both sections are as deep as the
+#  radial room; the wire is sized to FILL it, so the diameters come out of
+#  the room and the layer counts, and the current density is the result
+#  (checked against J_CU).  The user asked for thin bundles that can be
+#  wound by hand (the 3 x 498-strand secondary of the first E 60 layout
+#  was judged unwindable): the primary is two TIW-Litz bundles in parallel
+#  (bifilar), the secondary turn is eight thin bundles - two sub-windings of
+#  four, stacked, each sub-winding one layer per turn.
 PRI_SPLIT = 1.0     # share of NP1 turns in the first section: 1.0 = no split
-SEC_PAR = 1         # Litz bundles per secondary turn: one leaks least here
-                    # (7.6 mm deep, 8.2 with NAUX, of the 8.40 mm room)
-SEC_LAYERS = 2      # the secondary group: 2 layers, one turn per layer
-G_NOM = 1.0         # mm, the bobbin partition between the sections -
-                    # ASSUMED (no two-section ETD 49 former in the data).
-                    # It carries no insulation (that is in the wire); the
-                    # leakage grows with it, 12.5 uH at 0 and 14.2 at 1.0
+PRI_PAR = 2         # TIW-Litz bundles per primary turn, wound bifilar
+PRI_LAYERS = 6      # 30 bundle positions -> 5 a layer (2.5 turns)
+SEC_PAR = 8         # Litz bundles per secondary turn
+SEC_SUB = 2         # ... as this many sub-windings of SEC_PAR / SEC_SUB,
+                    # paralleled at the pins (each on its own pin)
+SEC_LAYERS = 8      # one sub-winding turn per layer: 2 windings x 2 T x 2
+SEC_ORDER = ('NS2', 'NS2', 'NS3', 'NS3', 'NS2', 'NS2', 'NS3', 'NS3')
+                    # layer by layer from the tube: NS2a, NS3a, NS2b, NS3b,
+                    # two turns each - every sub-winding in two adjacent
+                    # layers, NS2 and NS3 each once near the tube
+K_WIND = 1.10       # winding pitch over bundle diameter, along the layer and
+                    # layer to layer: a real winding is not packed tight
+                    # (user, 2026-09-25: "leave for the small gaps").
+                    # ASSUMED; the first sample's measured build replaces it.
+                    # The wire is sized so that the winding at K_WIND fills
+                    # the room; a tighter one leaves the difference to the
+                    # margin tape and a finishing wrap.
+G_NOM = 1.1         # mm, the partition - set so that L_short = L_r at K_WIND
+                    # by leakage.py (the trimming knob after the first sample)
 T_TAPE = 0.05       # mm, one wrap of layer tape over every winding layer
                     # and over NAUX, as the onsemi reference winding shows
                     # (user, 2026-09-25) - ASSUMED thickness; functional
@@ -471,80 +582,106 @@ MARGIN_F = 1.0      # mm, margin tape at each flange - mechanical only now
                     # (keeps the Litz off the flange); no insulation role
 
 
-def winding(V, name=None, g=None):
-    """The section winding laid out along the bobbin, in millimetres
-    (split around the secondary only when PRI_SPLIT < 1).
+def winding(V, name=None, g=None, k=None, order=None):
+    """The section winding laid out along the former, in millimetres.
 
-    Axial positions run from the flange of the primary pin row (y = 0) to
-    the other flange (y = wind_w); radial heights from the top of the tube.
-    Each section is as DEEP as the radial room allows and therefore as
-    narrow as it can be - a narrow section leaks less (leakage.py).  What
-    the gaps and margins do not take is left as margin tape at the part-B
-    flange ('spare').  Nothing is rounded for appearance: if it does not
-    fit, 'fits' is False and the reason is in 'why'.
+        flange | margin | NP1 | PARTITION | NS2/NS3 + NAUX | margin | flange
+
+    Axial positions run from the primary margin's outer edge (y = 0) - the
+    inside of the primary flange - to the other flange (y = wind_w); radial
+    heights from the top of the tube.  The bundles are sized so that the
+    two sections, wound at pitch K_WIND, both fill the radial room; k
+    builds the same wire at another pitch (k = 1.0: packed tight) to see
+    what the looseness does.  On a custom former the flanges take what the
+    winding leaves of the window height ('flange'); on a catalogue former
+    what is left is margin tape ('spare').  Nothing is rounded for
+    appearance: if it does not fit, 'fits' is False and the reason is in
+    'why'.
     """
     name = name or CHOSEN
     g = G_NOM if g is None else g
+    k = K_WIND if k is None else k
+    order = SEC_ORDER if order is None else order
     M = MECH[name]
     rows = copper(V)
-    ap, asec = rows[0][3], rows[1][3]
-    d_bare, nstr = litz(ap)
-    dp = d_bare + TIW_LITZ_ADD
-    ds, nstr_s = litz(asec / SEC_PAR)
-    r_free = M['r_win_out'] - M['tube_od'] / 2.0
     Np, Ns = V['Np'], V['Ns']
-    nA = int(round(PRI_SPLIT * Np))
-    nB = Np - nA
+    r_free = M['r_win_out'] - M['tube_od'] / 2.0
     why = []
-
-    def section(n):
-        lay = max(1, min(n, int(r_free // (dp + T_TAPE))))
-        per = -(-n // lay)
-        lay = -(-n // per)
-        rows_ = [min(per, n - k * per) for k in range(lay)]
-        return lay, per, rows_, per * dp, lay * (dp + T_TAPE)
-    lA, pA, rA, wA, hA = section(nA)
-    lB, pB, rB, wB, hB = section(nB) if nB else (0, 0, [], 0.0, 0.0)
-    n_pos = 2 * Ns * SEC_PAR                 # bundle positions, NS2 + NS3
-    per_s = -(-n_pos // SEC_LAYERS)
-    wS, hS = per_s * ds, SEC_LAYERS * (ds + T_TAPE)
+    #  wire from the room: PRI_LAYERS layers of pitch dp K_WIND + tape
+    dp = (r_free / PRI_LAYERS - T_TAPE) / K_WIND
+    d_bare = dp - TIW_LITZ_ADD
+    area_p = pi * K_LITZ * d_bare ** 2 / 4.0          # copper, one bundle
+    nstr = int(area_p / (pi * D_STRAND ** 2 / 4.0) + 0.9999)
     n_aux = int(V.get('Naux', 0))
-    hS_aux = hS + (TIW_OD + T_TAPE if n_aux else 0.0)
-    n_gaps = 2 if nB else 1                 # no part B: one gap, side by side
-    room = M['wind_w'] - 2 * MARGIN_F - wA - wS - wB
-    spare = room - n_gaps * g
+    h_aux = (TIW_OD * K_WIND + T_TAPE) if n_aux else 0.0
+    ds = ((r_free - h_aux) / SEC_LAYERS - T_TAPE) / K_WIND
+    area_s = pi * K_LITZ * ds ** 2 / 4.0
+    nstr_s = int(area_s / (pi * D_STRAND ** 2 / 4.0) + 0.9999)
+    j_p = rows[0][2] / (PRI_PAR * area_p)
+    j_s = rows[1][2] / (SEC_PAR * area_s)
+    #  the build at pitch k
+    pos = Np * PRI_PAR
+    per = -(-pos // PRI_LAYERS)
+    rA = [min(per, pos - q * per) for q in range(PRI_LAYERS)]
+    wA, hA = per * dp * k, PRI_LAYERS * (dp * k + T_TAPE)
+    per_s = 2 * Ns * SEC_PAR // SEC_LAYERS
+    wS = per_s * ds * k
+    hS = SEC_LAYERS * (ds * k + T_TAPE)
+    hS_aux = hS + ((TIW_OD * k + T_TAPE) if n_aux else 0.0)
+    need = 2 * MARGIN_F + wA + g + wS
+    if M.get('custom'):
+        flange = (M['win_h'] - (2 * MARGIN_F + wA + g + wS)
+                  if k == K_WIND else None)
+        #  the former is made for the K_WIND build; a tighter one leaves
+        #  its difference in the margin tape of the secondary side
+        if flange is None:
+            w0 = winding(V, name, g, order=order)
+            flange, wind_w = w0['flange'], w0['wind_w']
+        else:
+            flange /= 2.0
+            wind_w = M['win_h'] - 2 * flange
+        if flange < FLANGE_MIN:
+            why.append('flanges %.2f mm, under %.2f' % (flange, FLANGE_MIN))
+    else:
+        flange = (M['flange_h'] - M['wind_w']) / 2.0
+        wind_w = M['wind_w']
+    spare = wind_w - need
     yA0 = MARGIN_F
     yA1 = yA0 + wA
     yS0 = yA1 + g
     yS1 = yS0 + wS
-    yB0 = yS1 + (g if nB else 0.0)
-    yB1 = yB0 + wB
-    if spare < 0:
+    if spare < -1e-9:
         why.append('axial: %.2f mm short' % -spare)
-    if max(hA, hB) > r_free:
-        why.append('primary %.2f mm deep, room %.2f' % (max(hA, hB), r_free))
-    if hS_aux > r_free:
+    if hA > r_free + 1e-9:
+        why.append('primary %.2f mm deep, room %.2f' % (hA, r_free))
+    if hS_aux > r_free + 1e-9:
         why.append('secondary + NAUX %.2f mm deep, room %.2f' % (hS_aux, r_free))
     if n_aux * TIW_OD > wS:
         why.append('NAUX wider than the secondary')
-    #  bundle map of the secondary group: in each layer NS2 and NS3
-    #  alternate; the group is turned over at the layer change, so that
-    #  each winding sits once next to part A and once next to part B
-    smap = []
-    for k in range(SEC_LAYERS):
-        order = ['NS2', 'NS3'] * (per_s // 2) + ['NS2'] * (per_s % 2)
-        smap.append(order if k % 2 == 0 else order[::-1])
+    #  bundle map of the secondary group, layer by layer from the tube; the
+    #  sub-winding letter of each layer beside it
+    smap = [[order[q]] * per_s for q in range(SEC_LAYERS)]
+    seen = {}
+    sub = []
+    for q in range(SEC_LAYERS):
+        who = order[q]
+        n = seen.get(who, 0)
+        seen[who] = n + 1
+        sub.append('%s%s' % (who, 'ab'[n // Ns]))
     return dict(
-        name=name, M=M, Np=Np, Ns=Ns, nA=nA, nB=nB,
-        ap=ap, asec=asec, d_litz=d_bare, d_pri=dp, n_strand=nstr,
+        name=name, M=M, Np=Np, Ns=Ns, nA=Np, nB=0,
+        ap=rows[0][3], asec=rows[1][3], d_litz=d_bare, d_pri=dp,
+        n_strand=nstr, pri_par=PRI_PAR, area_p=area_p, j_p=j_p,
         tiw_add=TIW_LITZ_ADD, d_sec=ds, n_strand_s=nstr_s, sec_par=SEC_PAR,
-        sec_layers=SEC_LAYERS, per_layer_s=per_s, smap=smap,
-        layers_A=lA, per_A=pA, rows_A=rA, w_A=wA, h_A=hA,
-        layers_B=lB, per_B=pB, rows_B=rB, w_B=wB, h_B=hB,
+        sec_sub=SEC_SUB, area_s=area_s, j_s=j_s,
+        sec_layers=SEC_LAYERS, per_layer_s=per_s, smap=smap, sub=sub,
+        layers_A=PRI_LAYERS, per_A=per, rows_A=rA, w_A=wA, h_A=hA,
+        layers_B=0, per_B=0, rows_B=[], w_B=0.0, h_B=0.0,
         w_S=wS, h_S=hS, h_S_aux=hS_aux, n_aux=n_aux, tiw_od=TIW_OD,
-        t_tape=T_TAPE,
-        gap=g, n_gaps=n_gaps, room=room, spare=spare, margin=MARGIN_F,
-        yA=(yA0, yA1), yS=(yS0, yS1), yB=(yB0, yB1),
+        t_tape=T_TAPE, k=k, k_wind=K_WIND,
+        gap=g, n_gaps=1, room=wind_w - 2 * MARGIN_F - wA - wS,
+        spare=spare, margin=MARGIN_F, flange=flange, wind_w=wind_w,
+        yA=(yA0, yA1), yS=(yS0, yS1), yB=(yS1, yS1),
         r_tube=M['tube_od'] / 2.0, r_free=r_free,
         fits=not why, why=why)
 
@@ -556,25 +693,25 @@ def report(V, name=None):
     M = w['M']
     out = [
         '%s   core %s   coil former %s' % (name, M['core'], M['former']),
-        '  bobbin winding width      %6.2f mm   (datasheet)' % M['wind_w'],
-        '  margin tape               %6.2f mm   at each flange' % MARGIN_F,
-        '  NP1 %d T TIW-Litz %d x %.2f mm, bundle %.2f + %.2f = %.2f mm'
-        % (w['Np'], w['n_strand'], D_STRAND, w['d_litz'], w['tiw_add'],
-           w['d_pri']),
-        '      %s %2d T  %s -> %5.2f mm axial, %.2f mm deep'
-        % ('part A' if w['nB'] else 'section', w['nA'], w['rows_A'],
-           w['w_A'], w['h_A']),
-    ] + ([
-        '      part B %2d T  %s -> %5.2f mm axial, %.2f mm deep'
-        % (w['nB'], w['rows_B'], w['w_B'], w['h_B'])] if w['nB'] else []) + [
-        '  NS2, NS3 %d T each, %d Litz bundles %d x %.2f mm (d %.2f) per turn'
-        % (w['Ns'], w['sec_par'], w['n_strand_s'], D_STRAND, w['d_sec']),
-        '      group %s -> %5.2f mm axial, %.2f mm deep, %.2f with NAUX'
-        % (w['smap'], w['w_S'], w['h_S'], w['h_S_aux']),
-        '  gaps %d x %.2f mm, spare %.2f mm (room %.2f)'
-        % (w['n_gaps'], w['gap'], w['spare'], w['room']),
-        '  radial room %.2f mm  (window %.2f - bobbin r %.2f)'
-        % (w['r_free'], M['r_win_out'], w['r_tube']),
+        '  radial room %.2f mm  (window %.2f - tube %.2f / 2), window '
+        'height %.1f' % (w['r_free'], M['r_win_out'], M['tube_od'],
+                         M['win_h']),
+        '  winding pitch K_WIND %.2f x the bundle, margin tape %.2f mm, '
+        'partition %.2f mm' % (w['k_wind'], MARGIN_F, w['gap']),
+        '  NP1 %d T, %d TIW-Litz bundles in parallel, %d x %.2f mm, bundle '
+        '%.2f + %.2f = %.2f mm, J %.2f A/mm2'
+        % (w['Np'], w['pri_par'], w['n_strand'], D_STRAND, w['d_litz'],
+           w['tiw_add'], w['d_pri'], w['j_p']),
+        '      %d layers %s -> %5.2f mm axial, %.2f mm deep'
+        % (w['layers_A'], w['rows_A'], w['w_A'], w['h_A']),
+        '  NS2, NS3 %d T each, %d Litz bundles per turn (%d sub-windings), '
+        '%d x %.2f mm, d %.2f mm, J %.2f A/mm2'
+        % (w['Ns'], w['sec_par'], w['sec_sub'], w['n_strand_s'], D_STRAND,
+           w['d_sec'], w['j_s']),
+        '      %d layers %s -> %5.2f mm axial, %.2f mm deep, %.2f with NAUX'
+        % (w['sec_layers'], w['sub'], w['w_S'], w['h_S'], w['h_S_aux']),
+        '  winding width %.2f mm, flanges %.2f mm, spare %.2f mm'
+        % (w['wind_w'], w['flange'], w['spare']),
         '  VERDICT %s' % ('fits' if w['fits'] else
                           '** DOES NOT FIT: ' + '; '.join(w['why'])),
     ]

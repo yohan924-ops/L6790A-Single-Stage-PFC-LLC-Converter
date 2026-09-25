@@ -4,7 +4,7 @@ ST **L6790A** 로 **단일단(Single-Stage) PF LLC** 를 설계한다. 90–264 
 2단(Boost PFC + LLC)의 400 V 벌크 커패시터와 승압단을 없애고, 그 대가로 출력에 **75 mF 뱅크**가 붙는다.
 설계 수치는 **닫혔다** — 시트 · 워크북 · `l6790.py` 세 곳이 일치하고 판정 지표 44개 중 41개 통과
 (미달 3개의 사유는 `docs/DESIGN.md` §3). **VCC 는 보조권선 2T + 제너 레귤레이터**(외부 VCC 없음, 워크북과 의도된 차이),
-**트랜스포머 절연은 미·EU·일·한·중 가정용 AV 기준 강화절연**(`insulation.py`, `docs/DESIGN.md` §4.4) — 2026-09-25. **AN 예제 트랜스포머는 2칸 보빈 섹션 권선**(온세미 방식 — 1차 TIW-Litz 한 칸 · 칸막이 · 2차 Litz 한 칸 · 층마다 테이프, 절연은 전선). `leakage.py` 추정 **14.1 µH 로 목표 11 µH 보다 높다** — 첫 샘플로 판정(`docs/DESIGN.md` §4.2 13). 남은 것은 문서 작업과 실측 뒤의 `R.T` 결정이다(아래 "다음 할 일").
+**트랜스포머 절연은 미·EU·일·한·중 가정용 AV 기준 강화절연**(`insulation.py`, `docs/DESIGN.md` §4.4) — 2026-09-25. **AN 예제 트랜스포머는 Magnetics E 60/22/16 · 주문 제작 2칸 보빈 섹션 권선**(온세미 방식 — 1차 TIW-Litz 2가닥 병렬 한 칸 · 칸막이 1.1 mm · 2차 Litz 턴당 8다발(4다발 부분권선 2개) 한 칸 · 층마다 테이프, 절연은 전선, 권선 피치 k_w 1.10 가정 — 68차). `leakage.py` 추정 **11.00 µH**(목표 11) — 첫 샘플로 판정하고 칸막이로 맞춘다. 남은 위험: 2차 J 4.73 A/mm², 중앙다리 단일 갭(`docs/DESIGN.md` §4.2 13). 남은 것은 문서 작업과 실측 뒤의 `R.T` 결정이다(아래 "다음 할 일").
 
 **응답은 한국어.** 모르는 것은 모른다고 하고, 근거 없는 값을 만들지 않는다. 추측으로 고치지 말고
 진단 수단(프로브 · 검사기)을 먼저 심는다. 요청하지 않은 workflow · agent · deep-research 는 쓰지 않는다.
@@ -49,7 +49,7 @@ ST **L6790A** 로 **단일단(Single-Stage) PF LLC** 를 설계한다. 90–264 
 | `Calculation Excel Sheet/L6790_spreadsheet_r1_0_corrected_rev0_6.xlsx` | ST 툴 수정본, 7.5:1(`variants/…_7p5to1.xlsx` 와 같은 파일). `CHANGELOG_rev0_6` 에 변경 이력 | rev 0.6 |
 | `Calculation Excel Sheet/Uncryped_04092026_LGE_670W_L6790A_spread sheet.xlsx` | ST 원본(디크립트본, openpyxl 로 열림). 원본 `sheetN` ↔ 우리 `sheetN+1` | 읽기 전용 |
 | `Calculation Excel Sheet/variants/` | 워크북 2종(`7p5to1,6to1`) · 벤더 사양서 4종(`+7p5to1_x1,8to1`) | 8:1 · `_x1` 은 워크북 없음 |
-| `Design Guide/AN_L6790A_SingleStage_PFC_LLC_ApplicationNote_v1.3.pdf` · `…_KR_v1.3.pdf` | **배포용 AN** 영문 108쪽 · 한국어 95쪽(한국어판은 60–67차 미이식 — 영문 확인 뒤) · 목차 링크·북마크. `an_pdf.py`+`an_body.py` / `an_kr_pdf.py`+`an_kr_body.py`, 수치 전부 `l6790.py`·시트 | v1.3 · 최종 전수 검토(50차) |
+| `Design Guide/AN_L6790A_SingleStage_PFC_LLC_ApplicationNote_v1.3.pdf` · `…_KR_v1.3.pdf` | **배포용 AN** 영문 110쪽 · 한국어 95쪽(한국어판은 60–68차 미이식 — 영문 확인 뒤) · 목차 링크·북마크. `an_pdf.py`+`an_body.py` / `an_kr_pdf.py`+`an_kr_body.py`, 수치 전부 `l6790.py`·시트 | v1.3 · 최종 전수 검토(50차) |
 | `Design Guide/AN_L6790A_Design_Guide_rev2_1.md` | 한국어 본체 문서(7.5:1). **시트의 식 번호 [n] 의 출처** — `audit_sm` · `audit_guide` 가 읽는다. 9:1 판 rev 2.0 은 2026-09-23 삭제 | rev 2.0/2.1 |
 | `Design Guide/generators/` | 도구 체인 전부 — README 참조 | |
 | `Datasheet/` · `EVB Schematic/` · `LGE Material/` · `Reference/` | 입력 자료. DS 는 **DRAFT**(TBD · 내부 모순 있음). `Reference/Visio-LLC drawing.pdf` 가 본 설계 회로도(벡터) | 원본 |

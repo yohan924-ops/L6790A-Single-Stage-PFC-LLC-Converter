@@ -267,9 +267,9 @@ OPEN = [
     '(the core is secondary here) and against secondary leads: set by the '
     'coil former and the lead dress, not by this drawing.  Reinforced '
     'distances, or sleeving qualified as reinforced insulation.',
-    'Triple-insulated LITZ of 309 x 0.10 mm for NP1: the approval quoted is '
-    'for the series; the size, its outer diameter (0.2 mm over the bare '
-    'bundle assumed) and its approval come from the wire vendor.',
+    'Triple-insulated LITZ for NP1, two bundles in parallel: the approval '
+    'quoted is for the series; the size, its outer diameter (0.2 mm over '
+    'the bare bundle assumed) and its approval come from the wire vendor.',
     'Material group IIIb is assumed for the bobbin and the board; a bobbin '
     'with a higher CTI allows less creepage, not more.',
     'The electric strength test voltage is the value the TUV report applies '
@@ -282,9 +282,12 @@ OPEN = [
     'above that for the first milliseconds of safe start.  Ask the wire '
     'vendor.  The approval is Class B: the winding hot spot stays under '
     '130 C, which the thermal measurement has to show.',
-    'L_short is an estimate (leakage.py, a 2-D field solution), and for the '
-    'section winding it is above the 11 uH the tank asks; the first samples '
-    'decide.',
+    'L_short is an estimate (leakage.py, a 2-D field solution) at an '
+    'assumed winding pitch; the partition that sets it to the 11 uH the '
+    'tank asks is trimmed on the first samples.',
+    'The coil former of E 60/22/16 is custom: its partition, flanges, pins '
+    'and material are this note\'s specification to the bobbin maker, and '
+    'the distances around the pins are checked on its drawing.',
 ]
 
 
