@@ -1131,7 +1131,10 @@ def legal():
         'controller constant against the released datasheet before the design '
         'goes to production.',
         'The worked design has not been built. None of its numbers is '
-        'measured: each is calculated or read from a component datasheet.',
+        'measured: each is calculated, or read from a component datasheet or '
+        'parameter listing. The safety-insulation values come from the '
+        'seminars and certification reports listed under References, not '
+        'from the standards themselves.',
         'The figures were drawn for this note, except the power-stage, '
         'controller and compensator drawings of Chapter&nbsp;'
         + secref('Design procedure') + ', which come '
@@ -1168,7 +1171,11 @@ def legal():
                     'the winding and pin assignment drawn. Compensator chapter '
                     'rewritten with the loop equations, the op-amp equivalent '
                     'of the TL431 network and a worked loop design. Text '
-                    'shortened throughout. Korean edition published with it.', S['tc'])]],
+                    'shortened throughout. Korean edition published with it. '
+                    'Later in September: V<sub>CC</sub> supplied by the '
+                    'auxiliary winding through a Zener regulator, and the '
+                    'safety insulation of the transformer for household AV '
+                    'equipment in the US, EU, Japan, Korea and China.', S['tc'])]],
         colWidths=[70, 90, CW - 160],
         style=TableStyle([('BACKGROUND', (0, 0), (-1, 0), NAVY),
                           ('LINEBELOW', (0, 0), (-1, -1), 0.4, LT),

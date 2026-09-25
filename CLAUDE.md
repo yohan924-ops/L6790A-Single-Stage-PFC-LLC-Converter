@@ -49,7 +49,7 @@ ST **L6790A** 로 **단일단(Single-Stage) PF LLC** 를 설계한다. 90–264 
 | `Calculation Excel Sheet/L6790_spreadsheet_r1_0_corrected_rev0_6.xlsx` | ST 툴 수정본, 7.5:1(`variants/…_7p5to1.xlsx` 와 같은 파일). `CHANGELOG_rev0_6` 에 변경 이력 | rev 0.6 |
 | `Calculation Excel Sheet/Uncryped_04092026_LGE_670W_L6790A_spread sheet.xlsx` | ST 원본(디크립트본, openpyxl 로 열림). 원본 `sheetN` ↔ 우리 `sheetN+1` | 읽기 전용 |
 | `Calculation Excel Sheet/variants/` | 워크북 2종(`7p5to1,6to1`) · 벤더 사양서 4종(`+7p5to1_x1,8to1`) | 8:1 · `_x1` 은 워크북 없음 |
-| `Design Guide/AN_L6790A_SingleStage_PFC_LLC_ApplicationNote_v1.3.pdf` · `…_KR_v1.3.pdf` | **배포용 AN** 영문 94쪽 · 한국어 95쪽 · 목차 링크·북마크. `an_pdf.py`+`an_body.py` / `an_kr_pdf.py`+`an_kr_body.py`, 수치 전부 `l6790.py`·시트 | v1.3 · 최종 전수 검토(50차) |
+| `Design Guide/AN_L6790A_SingleStage_PFC_LLC_ApplicationNote_v1.3.pdf` · `…_KR_v1.3.pdf` | **배포용 AN** 영문 105쪽 · 한국어 95쪽(한국어판은 60–65차 미이식 — 영문 확인 뒤) · 목차 링크·북마크. `an_pdf.py`+`an_body.py` / `an_kr_pdf.py`+`an_kr_body.py`, 수치 전부 `l6790.py`·시트 | v1.3 · 최종 전수 검토(50차) |
 | `Design Guide/AN_L6790A_Design_Guide_rev2_1.md` | 한국어 본체 문서(7.5:1). **시트의 식 번호 [n] 의 출처** — `audit_sm` · `audit_guide` 가 읽는다. 9:1 판 rev 2.0 은 2026-09-23 삭제 | rev 2.0/2.1 |
 | `Design Guide/generators/` | 도구 체인 전부 — README 참조 | |
 | `Datasheet/` · `EVB Schematic/` · `LGE Material/` · `Reference/` | 입력 자료. DS 는 **DRAFT**(TBD · 내부 모순 있음). `Reference/Visio-LLC drawing.pdf` 가 본 설계 회로도(벡터) | 원본 |
@@ -92,6 +92,7 @@ python snapshot.py                 # docs/DESIGN.md §3 갱신 + 지난번 이�
 ```
 
 전량 검증 12종과 기대값은 README §9.1. 문서를 고쳤으면 `python audit_md.py`, AN 을 고쳤으면 `an_check.py` + `an_symbols.py`, 그림을 고쳤으면 **`figcheck.py` 를 인자 없이 전량** + `an_figtext.py`(그림 속 기호·손 입력 숫자, 53차).
+**설계값(시트)이 움직였으면 `figs.py --plain` 전량 재생성** — `figstamp.py` 가 낡은 그림을 찾는다(65차, Stop hook 6번째 검사).
 **Stop hook(`.claude/settings.json` → `guard.py`)이 추적 파일이 바뀐 턴 끝에 이것들을 돌리고, 실패하면 턴을 막는다.**
 Python 3.12 + `openpyxl` · `Pillow` · `numpy` · `matplotlib` · `reportlab`. 경로는 전부 스크립트 기준 상대경로.
 

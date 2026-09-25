@@ -81,7 +81,11 @@ DTI_REINFORCED = 0.4    # mm, solid insulation, reinforced             [TUV]
 TAPE_LAYERS = 2         # thin sheet: each layer passes the reinforced test [TUV]
 HIPOT_AC = 3000         # V rms, 60 s, reinforced type test (= 4242 V dc) [TUV]
 HIPOT_DC = 4242
-TIW_VRMS, TIW_FMAX = 1000, 500e3   # the TEX-E reinforced approval      [TIW]
+#  The TEX-E approvals: TUV Rheinland EN IEC 62368-1:2020+A11 and VDE
+#  IEC 62368-1:2018 Annex J, 1000 V rms, 500 kHz, insulation Class B
+#  (130 C).  The series is sold as reinforced-insulation wire; a Litz
+#  version (TEX-ELZ) is on the same approvals.                        [TIW]
+TIW_VRMS, TIW_FMAX, TIW_CLASS = 1000, 500e3, 'B (130 C)'
 
 V_MAINS_DESIGN = 264.0  # Vac, top of the design range (l6790.design)
 
@@ -206,7 +210,10 @@ def checks(V=None, name=None):
     r_tube = M['tube_od'] / 2.0
     top_s = r_tube + 2 * V['Ns'] * w['n_foil'] * (w['t_foil']
                                                    + cores.T_FOIL_INS)
-    fh = M['flange_h'] / 2.0
+    #  the flange's outer edge in the window: its outline (flange_w, from
+    #  the coil-former drawing), no further out than the outer legs.
+    #  flange_h is the former's AXIAL length and is not this.
+    fh = min(M['flange_w'] / 2.0, M['r_win_out'])
     out = []
     out.append(('primary to secondary, creepage along the tube',
                 w['gap'], r['creep'], w['gap'] >= r['creep'],
@@ -226,8 +233,8 @@ def checks(V=None, name=None):
     cr_fl = w['margin_s'] + (fh - top_s)
     out.append(('secondary to the yoke over its flange, creepage',
                 cr_fl, r['creep'], cr_fl >= r['creep'],
-                'secondary margin + flange face above the foil; the flange '
-                'thickness is not counted'))
+                'secondary margin + flange face from the foil top to the '
+                'flange edge; the flange thickness is not counted'))
     cl_fl = sqrt(w['margin_s'] ** 2 + (fh - top_s) ** 2)
     out.append(('secondary to the yoke over its flange, clearance',
                 cl_fl, r['clearance'], cl_fl >= r['clearance'],
@@ -252,7 +259,8 @@ OPEN = [
     '133 kHz and 588 V peak.',
     'The TIW approval quoted is for 500 kHz; the start-up frequency f.SU is '
     'above that for the first milliseconds of safe start.  Ask the wire '
-    'vendor.',
+    'vendor.  The approval is Class B: the winding hot spot stays under '
+    '130 C, which the thermal measurement has to show.',
     'The separation also sets L_short: the vendor must reach L_short with '
     'the separation at or above SEPARATION_MIN, never by narrowing it.',
 ]

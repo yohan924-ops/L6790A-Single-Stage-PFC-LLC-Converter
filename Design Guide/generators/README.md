@@ -62,6 +62,8 @@
 | **`smresult.py`** | **`<result>` 블록의 값을 제대로 읽는다.** `<result>` 도 RPN 이라 첫 토큰만 읽으면 **단항 마이너스와 지수가 통째로 사라진다.** 도구 4개가 같은 가정을 독립적으로 하고 있었다 (`HISTORY.md` 시트 §6.6) |
 | **`audit_fet.py`** | **1차·2차 FET 선정 파라미터 감사** — LLC 가 요구하는 항목별로 워크북 셀과 SMath 변수가 *있는지* 와 *수식에 쓰이는지* 를 따로 판정한다. 있는데 안 쓰이는 쪽이 더 위험하다 — 검토한 것처럼 보인다. 온도 정합성(Rdson 25 °C ↔ Tj 125 °C)도 함께 본다 |
 | **`cores.py`** | **코어 후보의 데이터시트 값과, 그것으로 푸는 권선 기하.** `CORES` 는 TDK 데이터시트의 전자기 값(A.e·A.min·A.N·l.N·V.e·A.L), **`MECH` 는 치수도의 기계 치수**다 — 라벨이 붙은 값과 **도면 벡터에서 재서 넣은 값**(외각다리 안쪽면 r = 13.60 mm)이 주석으로 구분돼 있다. 재는 방법은 같은 도면의 라벨 두 개(40.5 · 39.8)로 pt/mm 를 잡는 것이고, 그렇게 재면 중앙다리가 **14.94 mm** 로 나와 라벨 14.9 와 맞는다 — 그것이 방법이 옳다는 증거다. **`winding(V)` 가 설계 전류·전류밀도·표피깊이에서 권선을 배치하고 `report(V)` 가 그 산수를 인쇄한다** — 축을 mm 로 그리는 단면도(`figs_ref.an_core_section`)는 이 결과를 그리기만 한다. **구리가 안 들어가면 `gap` 이 음수로 나오고 그림에서 안 들어가는 것이 보인다.** `J_CU`·`K_U`·`K_LITZ`·`T_FOIL`·`MARGIN_P`/`MARGIN_S`·`TIW_OD` 가 가정이고 한 자리에 모아 뒀다. **`winding()` 은 1·2차 분리 간격을 `insulation.separation_min()` 이상으로 강제한다**(나란히 감기에서 그 간격이 강화절연이다, 2026-09-25) |
+| **`leakage.py`** | **그린 권선이 L_short 를 낼 수 있나 — 진단.** `cores.winding()` 배치의 창 단면 2D 자계(Roth 이중 코사인 급수, 코어 µ=∞)로 누설 추정의 하한(코어 밖 턴 0)·상한(l_N 전체)과 2차 포일 면 수직/평행 자계를 낸다. `self_test()` 가 1D 식 두 경우와 대조. 선택 코어와 3코어 PQ 40/40 을 출력(약 20 초). 65차 뒤 신설 — ETD 49 15.6–38.7 µH 대 목표 11.0 µH(`DESIGN.md` §4.2 13) |
+| **`figstamp.py`** | **그림이 낡았는가 — 다시 그리지 않고 판정.** `figs.save()` 가 PNG 마다 설계값 해시(`an_pdf.V` · `SH` · `cores.winding`)와 그린 함수의 소스 해시를 새기고, 이 스크립트가 지금 값과 대조해 `STALE` 을 찍는다(exit 1). **65차에 넣었다** — 64차가 `n.aux` · 개방시험 전류를 바꾸고 그림 1장만 다시 그려 핀 그림에 "NAUX 3 T", 기자력 그림에 15.19 A 가 남았고, 63차의 "2 ×" 수정도 `f13_morphing` PNG 에 반영된 적이 없었다. **Stop hook 의 6번째 검사.** 설계값이 움직이면 전 그림이 STALE 이 되므로 `figs.py --plain` 전량(약 10분) |
 | **`insulation.py`** | **트랜스포머 안전 절연 — 미국 · EU · 일본 · 한국 · 중국 가정용 AV.** 요구치(강화 · 5000 m · 공간 4.5 · 연면 6.4 · 고체 0.4 mm / 테이프 2층 · 3000 V ac)와 **출처 URL**(`SOURCES`), 설계에서 추정한 작업전압(`working_voltage`), 코어 기하 검사(`checks`), 열린 항목(`OPEN`). `cores` · 벤더 사양서 5절 · AN 7.12 가 여기서 읽는다. `python insulation.py` 가 보고서를 찍는다(약 20 s — `an_pdf` 를 읽는다) |
 | **`figcheck.py`** | **그림 기하 검사 — `check_sm.py` 의 matplotlib 판.** 여섯 가지를 본다 — 글이 **남의 패널에 떨어지는가**(`wrong-panel`, 같은 자리의 twin 축은 한 패널로 친다) · **틀 밖으로 나가는가**(`off-page`) · 글이 **선 위에 앉았는가**(`on-ink`) · 글끼리 겹치는가(`text-text`) · **배선 5종**(`no-dot` 점 없는 T · `open-end` 허공에 끝나는 배선 · `crossing` 홉도 점도 없는 교차 · `off-grid` 45° 격자 밖 · `stray-dot` 두 가닥만 만나는 점) · **인쇄 축척에서 6.5 pt 미만 글자**(`tiny`, 실패가 아니라 보고 — 2026-09-23 부터 범례·눈금·축 이름·제목·`fig.text` 까지 잰다. 전에는 `ax.texts` 만 재서 11.6 in 폭 그림의 범례가 5 pt 로 인쇄돼도 통과했다. AN 에 배치되지 않은 그림은 인쇄 폭을 몰라 판정하지 않는다). **글·선 겹침은 픽셀로 잰다** — 그림을 두 번 렌더해(그대로 / 글자 alpha 0) 차이가 글자, 둘째 렌더의 잉크가 선이고, 겹친 픽셀 수를 센다(바닥 10 px). 꼭짓점만 보던 예전 검사는 점 2개짜리 배선 사이에 앉은 글자를 전부 통과시켰다. **검사 대상은 `figs.finish(fig)` 를 부른 뒤의 그림**이고 좌표는 `figs.saved_box(fig)` 기준 비율이다 — `bbox_inches=tight` 는 캔버스가 아니라 잉크를 자르므로 캔버스 기준으로 재면 1인치 넘게 어긋난다. `figs.save()` 가 저장 직전에 `shield()` 를 불러 **선 위에 앉은 글에만** 흰 후광을 입힌다 — 회로도 축은 건드리지 않는다(후광이 배선을 끊는다). `--crops DIR` 로 겹친 곳마다 확대 조각을 저장한다. 경위는 `HISTORY.md` 2026-09-21 |
 | **`an_figtext.py`** | **그림 속 글자 검사**(2026-09-23 신설, 53차). 다른 검사는 본문(`an_symbols`)이나 그림의 기하(`figcheck`)만 읽고 **그림 안에 그려진 기호·숫자는 아무도 읽지 않았다** — NS2/NS3 뒤바뀜, 같은 양의 두 이름(v_tank/v_d), 회로에 자리가 없는 파형 양이 거기 있었다. 그림마다 그려진 글자를 저장 시점에 모아 ① **UNDEFINED** 기호표에 없거나 그 그림 앞 본문·캡션·앞선 그림 라벨에 없는 기호 ② **LITERAL** 그림을 그린 함수들(프로파일러로 호출된 `figs*` 함수 전부)의 **문자열 리터럴 안에** 있는 단위 붙은 숫자 — 손으로 적은 값 ③ **USES** 기호별 사용 그림(이름 불일치 발견용)을 낸다. 약 6분. 남는 LITERAL 은 관례값(400 V 버스, 100/120/230 Vac 상용전원, 측정 조건 예, 180°)뿐이다 |
@@ -104,6 +106,7 @@ python check_trans_spec.py                                           # 벤더 �
 python an_check.py                                                   # AN PDF 기하
 python an_symbols.py                                                 # 기호 ↔ 기호표 전수 대조
 python audit_md.py                                                   # 문서 주장 대조
+python figstamp.py                                                   # AN 그림이 현재 설계값·그림 코드로 그려졌나 (65차)
 python -c "import an_pdf,cores;print(cores.report(an_pdf.V))"          # 권선이 보빈에 들어가는가
 ```
 
@@ -136,7 +139,7 @@ audit_md   no problems found
 **빌드 후 `check_sm.py`를 반드시 돌릴 것.** 현재 상태:
 
 ```
-paper A3 Landscape 1654 x 1169 · regions 1985 · overlaps 0 · right overflow 0
+paper A3 Landscape 1654 x 1169 · regions 1987 · overlaps 0 · right overflow 0
 page straddles 0 (한 쪽이 1120 px · 접힘 25개가 23440 px 을 숨긴다)
 seam clearance 가장 아슬아슬한 곳 61 px · 여백 띠 위 60 / 아래 60
 text re-wrap 0 · functions [abs atan augment cos el eval ln range sin sqrt vectorize] (전부 허용 집합)

@@ -234,7 +234,15 @@ def save(fig, name):
     if not os.path.isdir(d):
         os.makedirs(d)
     p = os.path.join(d, name + '.png')
-    fig.savefig(p, bbox_inches='tight', pad_inches=0.14)
+    #  stamps that let figstamp.py tell a stale figure without redrawing it:
+    #  the design values it was drawn from, and the function that drew it
+    import inspect
+    import figstamp
+    code = inspect.currentframe().f_back.f_code
+    stamp = figstamp.code_stamp(code).replace('__main__:', 'figs:', 1)
+    fig.savefig(p, bbox_inches='tight', pad_inches=0.14,
+                metadata={'l6790-data': figstamp.data_hash(),
+                          'l6790-code': stamp})
     plt.close(fig)
     print('  %-28s %6.1f KB' % (name + '.png', os.path.getsize(p) / 1024))
 
@@ -1439,7 +1447,20 @@ def an_modes8():
     d = os.path.join(OUT, 'an') if PLAIN else OUT
     if not os.path.isdir(d):
         os.makedirs(d)
+    import figstamp
+    from PIL import Image, PngImagePlugin
+    stamp = figstamp.code_stamp(figs_modes8.build.__code__)
     for p in figs_modes8.build(d):
+        #  figs_modes8 writes its own files, so stamp them here the way
+        #  save() stamps the rest (figstamp.py reads both)
+        im = Image.open(p)
+        meta = PngImagePlugin.PngInfo()
+        for k, v in im.info.items():
+            if isinstance(v, str):
+                meta.add_text(k, v)
+        meta.add_text('l6790-data', figstamp.data_hash())
+        meta.add_text('l6790-code', stamp)
+        im.save(p, pnginfo=meta, dpi=im.info.get('dpi', (72, 72)))
         print('  %-28s %6.1f KB' % (os.path.basename(p),
                                      os.path.getsize(p) / 1024))
 

@@ -326,9 +326,10 @@ T_FOIL = 0.20       # mm, copper foil thickness - the nearest standard gauge
                     # at or under twice the skin depth
 T_FOIL_INS = 0.05   # mm, interlayer insulation on each foil turn
 #  Margin tape, per flange (2026-09-25, insulation.py).  The core counts as
-#  PRIMARY (its centre leg lies under the primary with nothing but the tube
-#  wall between), so the primary-to-core distance is functional and the
-#  primary flange needs only enough tape to keep the Litz off the flange.
+#  PRIMARY: the primary fills the window almost to the outer legs (about
+#  1.3 mm of air on ETD 49), so the core cannot be held at a reinforced
+#  distance from it.  The primary-to-core distance is then functional and
+#  the primary flange needs only enough tape to keep the Litz off it.
 #  The secondary flange is part of the reinforced secondary-to-core path.
 #  What the reinforced primary-to-secondary insulation rests on is the
 #  SEPARATION between the two sections - insulation.py checks it.

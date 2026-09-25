@@ -1045,7 +1045,9 @@ S.row('- Regulated VCC, low end:', 'V.CC_reg_min', 'V.DZ_min-2*V.F_j', 'V', 2)
 S.row('- Regulated VCC, high end:', 'V.CC_reg_max', 'V.DZ_max-2*V.F_j', 'V', 2)
 S.row('- lowest VCC above the HVSU threshold (>1):', 'k.VCClo',
       'V.CC_reg_min/V.CC_HVSUon', None, 3,
-      note='below 12 V the HVSU would switch back on and burn line power.')
+      note='the draft datasheet does not say whether the HVSU charge current '
+           'comes back below this threshold once it has shut down; kept '
+           'above it so the run supply never depends on the answer.')
 S.row('- highest VCC under the 25 V operating limit (>1):', 'k.VCC',
       'V.CC_opmax/V.CC_reg_max', None, 3)
 S.note('The load on this rail is the IC and the gate drivers. The driver share '
@@ -1072,13 +1074,15 @@ S.row('- Zener dissipation, no load, C.aux at OVP1 (rating to buy):', 'P.DZ',
       'V.DZ_max*(V.Caux_OVP1-V.DZ_min)/R.BZ_sel', 'mW', 0)
 S.row('- Pass transistor dissipation at OVP1 and I.VCC (rating to buy):',
       'P.Qpass', '(V.Caux_OVP1-(V.DZ_min-V.F_j))*I.VCC', 'W', 2,
-      note='at the nominal output it is (V.Caux-V.CC_reg-V.F_j)*I.VCC. With '
-           'n.aux = 1.5 the voltage across it would grow by V.out/2.')
+      note='With n.aux = 1.5 the voltage across it would grow by V.out/2.')
+S.row('- the same at the nominal output (goes in the loss account):',
+      'P.Qpass_nom', '(V.Caux-(V.DZ_sel-V.F_j))*I.VCC', 'W', 2)
 S.note('START-UP. The HVSU charges C.VCC to V.CC_on and switching begins. '
        'Until the output is high enough for the winding to carry VCC, C.VCC '
-       'supplies the drivers - the HVSU only returns its own few mA below '
-       'V.CC_HVSUon. The worst case is the full bridge (low line, 13 mA) at the '
-       'start-up frequency.')
+       'supplies the drivers alone from V.CC_on down to V.CC_HVSUon, and with '
+       'the HVSU charge current helping from there down to V.CC_off (DS: the '
+       'charge current turns on below V.CC_HVSUon). The worst case is the full '
+       'bridge (low line, 13 mA) at the start-up frequency.')
 S.row('- Supply current during start-up (full bridge at f.SU):', 'I.VCC_SU',
       'I.CC+N.sw*n.par*Q.g*f.SU', 'mA', 1)
 S.row('- Output voltage at which the winding holds VCC at V.CC_off:',
@@ -1090,7 +1094,8 @@ S.row('- Time to get there, rated current into C.out and NO load:', 't.hand',
 S.row('- hand-over inside the HVSU window (>1):', 'k.thand', 't.HVSU/t.hand',
       None, 3)
 S.row('- C.VCC that bridges the hand-over:', 'C.VCC_req',
-      '(I.VCC_SU-I.HVSU_lo)*t.hand/(V.CC_on-V.CC_off)', 'μF', 0)
+      't.hand/((V.CC_on-V.CC_HVSUon)/I.VCC_SU'
+      '+(V.CC_HVSUon-V.CC_off)/(I.VCC_SU-I.HVSU_lo))', 'μF', 0)
 S.const('[PICK] SELECTED C.VCC:', 'C.VCC_sel', "%g*'μF" % V.get('CVCC', 680),
         'μF', 0)
 S.row('- C.VCC margin (>1):', 'k.CVCC', 'C.VCC_sel/C.VCC_req', None, 3)

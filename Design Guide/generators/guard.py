@@ -14,6 +14,9 @@ What it checks, only when one of the tracked files has actually changed:
     3. bom_compare.py - the 29 BOM items, workbook against sheet
     4. snapshot.py    - does docs/DESIGN.md still describe the sheet it points at?
     5. audit_md.py    - do the documents describe things that exist?
+    6. figstamp.py    - is every drawn figure of the note still drawn from the
+                        current design values and drawing code?  (round 65:
+                        two rounds had shipped figures from an older sheet)
 
 Check 4 is the one that matters across machines. CLAUDE.md is what a session
 opening this folder somewhere else reads first, and its design values are
@@ -122,6 +125,13 @@ def main():
         problems.append('CLAUDE.md / DESIGN.md / README.md / HISTORY.md claim something that is not true '
                         '(missing path, dangling section reference, stale count):'
                         + chr(10) + tail(out, 8))
+
+    # 6. figures drawn from an older design, or by older drawing code
+    rc, out = run(['figstamp.py'])
+    if rc != 0:
+        problems.append('Figures of the note are stale - redraw them with '
+                        'figs.py --plain and rebuild the note:' + chr(10)
+                        + tail(out, 10))
 
     if problems:
         sys.stderr.write(
