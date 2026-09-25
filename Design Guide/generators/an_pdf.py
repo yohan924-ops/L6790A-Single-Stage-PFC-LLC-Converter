@@ -207,7 +207,10 @@ V = dict(
     fnl=_noload(R), NpSet=int(round(SH['n.T_act'] * SH['N.s'])),
     # how much the open-circuit inductance may fall before f.o climbs past
     # f.Min:  f.o ~ 1/sqrt(L), so the limit is 1 - 1/k.floor^2
-    Ldrop=100 * (1 - 1 / SH['k.floor'] ** 2),
+    #  from f.Min / f.o, not from k.floor: the sheet shows k.floor to three
+    #  places (1.021), and squaring the rounded value printed 4.1 % against
+    #  the 4.0 % of the unrounded ratio 1.0206 (round 63)
+    Ldrop=100 * (1 - (SH['f.o'] / SH['f.Min']) ** 2),
     # the specified ceiling and the four lambda candidates it feeds: two of
     # them divide by 1 - (f.r/f.sw,max)^2, so the number typed as the maximum
     # switching frequency is what computes the tank
@@ -597,8 +600,11 @@ S = {
     #  5 / 0 pt they packed into a slab (2026-09-21, user)
     'eql': st('eql', fontName=FONTB, fontSize=9.3, leading=12,
               spaceBefore=12, spaceAfter=2),
-    'tc': st('tc', fontSize=8.4, leading=11.2),
-    'th': st('th', fontName=FONTB, fontSize=8.4, leading=10.6,
+    #  12.2, not 11.2: at 11.2 a subscript in a wrapped cell sat on the
+    #  line below it (I_p,pk over "mode", i_mu,pk over "winding" in the
+    #  flyback/LLC table, round 63).  Same ratio as the caption.
+    'tc': st('tc', fontSize=8.4, leading=12.2),
+    'th': st('th', fontName=FONTB, fontSize=8.4, leading=11.8,
              textColor=colors.white),
     'note': st('note', fontSize=8.8, leading=12.4, alignment=TA_JUSTIFY,
                textColor=NAVY),

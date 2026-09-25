@@ -263,7 +263,7 @@ def f02_two_resonances():
     #  them - which is exactly what a reader asked about.
     note(ax, FN0 + 0.03, 3.55,
          'f$_o$\nno-load gain goes to infinity here\n'
-         '→ nothing can push the converter below it', color=PUR,
+         '→ below it the tank is capacitive at any load', color=PUR,
          size=10)
     note(ax, 1.04, 1.45,
          'f$_r$\ngain = 1 at ANY load\n'

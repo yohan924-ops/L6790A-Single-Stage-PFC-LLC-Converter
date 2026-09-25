@@ -40,7 +40,9 @@ CORES = {
         le=113.0, Ae=332.0, Amin=314.0, Ve=37630.0, mass=190.0,
         AN=340.0, lN=100.5,
         AL_ungapped=None, material='N95',
-        AL_gaps={100: 1.67 + 0.85, 250: 0.62 + 0.23, 400: 0.31 + 0.18}),
+        #  set totals: G2 and G3 are dimensions of ONE half (see ETD 49)
+        AL_gaps={100: 2 * (1.67 + 0.85), 250: 2 * (0.62 + 0.23),
+                 400: 2 * (0.31 + 0.18)}),
     #  ETD 49/25/16DG - B66367 core (distributed gap, gapped only: A_L 100
     #  / 250 nH stock), B66368 coil former, 20 pins.  October 2022,
     #  received 2026-09-22 from the user.
@@ -49,8 +51,13 @@ CORES = {
         le=114.0, Ae=211.0, Amin=209.0, Ve=24100.0, mass=124.0,
         AN=269.4, lN=86.0,
         AL_ungapped=None, material='N95',
-        #  stock A_L -> total gap G2 + G3 [mm], datasheet page 2
-        AL_gaps={100: 1.06 + 0.48, 250: 0.39 + 0.15}),
+        #  stock A_L -> total centre-leg gap of the SET [mm], datasheet
+        #  page 2.  G2 and G3 are drawn on one half, and a set is two
+        #  identical halves (single units, one ordering code, A_L "per
+        #  set"), so the set carries 2 x (G2 + G3).  Taken as G2 + G3 it
+        #  put 0.54 mm against 250 nH, where mu0 Ae / A_L alone asks for
+        #  1.06 mm; the set total, 1.08 mm, matches it (round 63).
+        AL_gaps={100: 2 * (1.06 + 0.48), 250: 2 * (0.39 + 0.15)}),
     #  ETD 54/28/19 - B66395 core (ungapped N87 4450 nH; gapped examples
     #  g 1.0 / 1.5 / 2.0 mm -> 393 / 287 / 229 nH, K1 393 K2 -0.779 for
     #  A_L(s) between 0.10 and 3.50 mm), B66396 coil former, 22 pins.

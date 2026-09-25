@@ -351,7 +351,9 @@ def an_integrated(save, foot):
     #  a sine, because this is the first-harmonic circuit: the square-wave
     #  symbol the first version used here belongs to the drawing above
     source(ax2, S.acsrc, 'v$_d^F$')
-    tank(ax2, 4.2, 'L$_r$', 1.05, 'L$_p$ $-$ L$_r$')
+    #  L_m, as the caption and the text call it: 'L_p - L_r' used an L_p
+    #  that is the flyback's primary inductance everywhere else (round 63)
+    tank(ax2, 4.2, 'L$_r$', 1.05, 'L$_m$')
     t2 = X.xfmr(ax2, 7.5, 1.75, hp=3.3, hs=3.3, gap=0.52)
     S.wire(ax2, [(5.1, YT_), t2['p_top']])
     S.wire(ax2, [t2['p_bot'], (XSRC, YB_)])

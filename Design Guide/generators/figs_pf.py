@@ -233,7 +233,8 @@ def an_gain_compare(save, foot, R, sweep):
                 color=NAVY, ha='left', va='top',
                 arrowprops=dict(arrowstyle='-|>', color=NAVY, lw=1.3),
                 path_effects=HALO, zorder=9)
-    a1.text(0.40, 2.52, u'the family is LOAD\n\u03bb = %.2f  (m = %.0f)'
+    #  off the curves: at (0.40, 2.52) two of them ran through it (round 63)
+    a1.text(1.25, 1.84, u'the family is LOAD\n\u03bb = %.2f  (m = %.0f)'
             % (lam1, 1 + 1 / lam1), ha='left', va='top', fontsize=10.6,
             color=NAVY, fontweight='bold', path_effects=HALO, zorder=9)
     a1.set_xlim(0.36, 2.0)
@@ -271,7 +272,9 @@ def an_gain_compare(save, foot, R, sweep):
                u'M$_{\\infty}$ = 1/(1+\u03bb): the no-load floor'))
     a2.set_xlim(0.36, 2.0)
     a2.set_ylim(0, 4.6)
-    a2.text(0.40, 2.72, u'the family is LINE PHASE', ha='left', va='top',
+    #  in the clear band under the curves: at (0.40, 2.72)
+    #  the no-load curve and M_Z ran through the middle of it (round 63)
+    a2.text(1.18, 0.30, u'the family is LINE PHASE', ha='left', va='center',
             fontsize=10.6, color=NAVY, fontweight='bold',
             path_effects=HALO, zorder=9)
     if len(pts) > 1:
