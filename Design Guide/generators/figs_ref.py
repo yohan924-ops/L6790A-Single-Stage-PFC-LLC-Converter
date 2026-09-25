@@ -2980,7 +2980,7 @@ def an_xfmr_pins(save, foot):
     for w, (a, b) in C.PINMAP.items():
         for n in a + b:
             by_pin[n] = w
-    #  pins run along rows (ETD) or columns (PQ): number them on the side
+    #  pins run along rows (20 pins) or columns (PQ): number them on the side
     #  away from the coil
     for n, (x, y) in C.PIN_XY.items():
         w = by_pin.get(n)

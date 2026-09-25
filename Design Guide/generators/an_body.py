@@ -2976,6 +2976,10 @@ def build(A):
     _n3 = _LK.estimate(V, only='NS3', order=_o4)['L']
     _Lmax = V['Lshort'] * 1.10
     _wt = _CORE.winding(V, k=1.0)
+    _sh = _LK.sharing(V)
+    _pa = _LK.proximity(V, V['fswA'])
+    _pb = _LK.proximity(V, V['fr'])
+    _pdc = _LK.dc_loss(V)
     add(p('<b>The arrangement.</b> L<sub>short</sub> must come out at '
           '%(Ls).1f&nbsp;&micro;H. Side by side, with the gap as the '
           'reinforced insulation, the gap is at least the %(sep).1f&nbsp;mm '
@@ -3007,17 +3011,12 @@ def build(A):
           'so Equation&nbsp;%(e)s goes as l<sub>N</sub> times the copper '
           'area over h<sub>w</sub>&sup2;: the leakage of a filled section '
           'winding is set by the SHAPE of the window. It has to be deep and '
-          'short, on a centre leg no thicker than the flux asks. The ETD 49 '
-          'window of the previous revision (%(eh).1f&nbsp;mm deep, '
-          '%(ew).1f&nbsp;mm high) leaks well above L<sub>r</sub> with a '
-          'section winding; across the E, EC, EER, '
-          'ER and ETD ranges of two catalogues, the E&nbsp;60/22/16 window, '
+          'short, on a centre leg no thicker than the flux asks. Across the core '
+          'ranges of two catalogues, the E&nbsp;60/22/16 window, '
           '%(hw).1f&nbsp;mm deep and %(wh).1f&nbsp;mm high, is the one that '
-          'takes it at L<sub>r</sub> within the current density of this note.'
-          % dict(e=ER('leak'), hw=_hw, wh=_M['win_h'],
-                 eh=_CORE.MECH[_CORE.V64_CORE]['r_win_out']
-                 - _CORE.MECH[_CORE.V64_CORE]['d_centre'] / 2.0,
-                 ew=_CORE.MECH[_CORE.V64_CORE]['win_h'])))
+          'takes it at L<sub>r</sub> with both sections filling the depth '
+          'and the flux well inside its limit.'
+          % dict(e=ER('leak'), hw=_hw, wh=_M['win_h'])))
     add(p('<b>The build.</b> Both sections fill the radial room, '
           'h<sub>r</sub> = %(hr).2f&nbsp;mm between the tube and the outer '
           'legs at their tolerance limits. A real winding is not packed '
@@ -3108,11 +3107,40 @@ def build(A):
           'resonant frequencies. Across the secondary section the leakage '
           'field runs radially and falls from the partition to the far '
           'flange, so the %(half)d bundles of a sub-winding, side by side, '
-          'would not share the current equally; they are turned over at the '
-          'layer change (a half twist of the group) so that each takes one '
-          'place near the partition and one away.'
+          'link different flux and a current runs around them. Turned over '
+          'at the layer change (a half twist of the group), each takes one '
+          'place near the partition and one away, which cuts that current, '
+          'to a first order, from %(nt).0f to %(tw).1f&nbsp;A rms against the '
+          '%(ld).1f&nbsp;A each bundle carries; NS2a against NS2b leaves '
+          '%(ab).1f&nbsp;A. <b>That is not small.</b> The bundles of a '
+          'sub-winding want to be one transposed conductor, a rectangular '
+          '(profiled) Litz of the same copper, which is also the flat shape '
+          'that winds easily; the construction is left open until the '
+          'vendor has one (Table&nbsp;%(t)s).'
           % dict(h2=_h2, h3=_h3, n2=_n2, n3=_n3,
-                 half=_w['sec_par'] // _w['sec_sub'])))
+                 half=_w['sec_par'] // _w['sec_sub'], nt=_sh['not_turned'],
+                 tw=_sh['turned'], ld=_sh['load'], ab=_sh['a_b'],
+                 t=TR('openitems'))))
+    add(p('<b>The ac loss.</b> The dc resistance is a floor. Every strand '
+          'also sits in the leakage field, up to %(bp).1f&nbsp;mT rms in '
+          'the primary section and %(bs).1f in the secondary, and a strand '
+          'of diameter d<sub>s</sub> in a field B loses '
+          '&pi;&omega;&sup2;&sigma;d<sub>s</sub><sup>4</sup>B&sup2;/64 per '
+          'metre. Summed over the strands of the drawn layout, at the '
+          'line-cycle rms current, that is %(pa).1f to %(pb).1f&nbsp;W in NP1 '
+          'and %(sa).1f to %(sb).1f&nbsp;W in NS2 and NS3 between '
+          '%(fa).0f&nbsp;kHz (the line peak at the half-bridge edge) and '
+          'f<sub>r</sub>, against %(dc).1f&nbsp;W of dc loss: a first-order '
+          'estimate, and <b>two to three times the dc loss</b>. It is the '
+          'price of using the leakage field as the resonant inductor, and '
+          'the strand sets it: for the same copper it goes as '
+          'd<sub>s</sub>&sup2;, so &oslash;0.071&nbsp;mm strands halve it and '
+          '&oslash;0.05&nbsp;mm quarter it, at a lower k<sub>litz</sub> that '
+          'the wire vendor gives. The thermal measurement of the first sample '
+          'decides the strand.'
+          % dict(bp=1e3 * _pa['B_pri'], bs=1e3 * _pa['B_sec'],
+                 pa=_pa['P_pri'], pb=_pb['P_pri'], sa=_pa['P_sec'],
+                 sb=_pb['P_sec'], fa=V['fswA'], dc=_pdc)))
     _built = (V['Np'] * _w['pri_par'] * _w['area_p']
               + 2 * V['Ns'] * _w['sec_par'] * _w['area_s'])
     add(p('<b>What the core must offer.</b> A<sub>e</sub> of at least '
@@ -3147,8 +3175,7 @@ def build(A):
                  fl=_w['flange'], an=_R['AN'], bu=_built,
                  cg=_CORE.dg_gap(V), AL=V['AL'], t2=TR('winding'))))
     add(p('<b>The gap is one piece, and the winding is close to it.</b> '
-          'The ETD&nbsp;49 core used before carried a distributed gap; the '
-          'catalogue offers E&nbsp;60/22/16 ground to A<sub>L</sub>, which '
+          'The catalogue offers E&nbsp;60/22/16 ground to A<sub>L</sub>, which '
           'is one gap of about %(cg).1f&nbsp;mm at the middle of the centre '
           'leg, under the primary section, with the first layer of NP1 '
           '%(wall).2f&nbsp;mm away across the tube wall. Its fringing field '
@@ -3278,9 +3305,8 @@ def build(A):
     _B = _CORE.BOBBIN
     add(p('<b>Pins.</b> The former is custom, so its pins are specified '
           'here: %(pins)d in two rows of %(half)d at %(pitch).2f&nbsp;mm, '
-          'rows %(rows).2f&nbsp;mm apart under the core, the arrangement of '
-          'a catalogue ETD&nbsp;49 former so that the pin rating and the '
-          'distances are known ones. NP1 and the auxiliary NAUX take the row '
+          'rows %(rows).2f&nbsp;mm apart under the core. NP1 and the '
+          'auxiliary NAUX take the row '
           'at the primary-section flange, NS2 and NS3 the other. Each end of '
           'NP1 takes two pins, one for each bundle of the pair; each end of '
           'NS2 and NS3 takes two, one for each sub-winding. The NAUX leads '
@@ -4909,7 +4935,7 @@ def build(A):
               'that does not fit the %.2f mm of radial room' % _w['r_free']],
              ['Custom coil former',
               'partition %.1f mm, flanges %.2f mm, tube %.1f mm across, '
-              'pins as a catalogue ETD 49 former'
+              '%d pins in two rows' % _CORE.BOBBIN['pins']
               % (_w['gap'], _w['flange'], _M['tube_od']),
               'No former is catalogued for %s; the bobbin maker draws it to '
               'this specification and confirms the partition, the pins and '
@@ -4920,6 +4946,20 @@ def build(A):
               'for a split or distributed gap, and measure the winding '
               'temperature near it'
               % ((_M['tube_od'] - _M['d_centre']) / 2.0)],
+             ['Ac loss of the Litz',
+              '%.1f to %.1f W from the leakage field on %.1f W dc, first '
+              'order, &oslash;%.2f mm strands'
+              % (_pa['P_pri'] + _pa['P_sec'], _pb['P_pri'] + _pb['P_sec'],
+                 _pdc, _CORE.D_STRAND),
+              'Measure the winding temperature; a finer strand (loss as '
+              'd<sub>s</sub>&sup2;) is the remedy, its fill from the vendor'],
+             ['Parallel secondary bundles',
+              'about %.1f A rms around the %d bundles of a sub-winding, '
+              'against %.1f A each, first order'
+              % (_sh['turned'], _w['sec_par'] // _w['sec_sub'], _sh['load']),
+              'Ask for a rectangular (profiled) Litz per sub-winding turn, '
+              'which is transposed along its length; otherwise measure the '
+              'bundle currents on the first sample'],
              ['Secondary current density',
               '%.2f A/mm&sup2; as built, over the %.1f of this note'
               % (_w['j_s'], _CORE.J_CU),

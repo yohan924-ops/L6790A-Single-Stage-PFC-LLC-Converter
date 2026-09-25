@@ -164,6 +164,130 @@ def estimate(V, name=None, g=None, only=None, turned=True, k=None,
                 L_in_only=l_in * l_n * 1e6)
 
 
+def potential(a, b, blocks, x, y, M=200, N=600):
+    """A_z [Wb/m] at (x, y) in the window - the flux linkage per metre of a
+    conductor there; differences between two places are what drives current
+    around two conductors put in parallel."""
+    S, nrm, k2, m, n = _coeffs(a, b, blocks, M, N)
+    C = MU0 * S / nrm / k2
+    return float(np.sum(C * np.cos(m * pi / a * x) * np.cos(n * pi / b * y)))
+
+
+def _centres(w):
+    """(kind, x, y, strands) of every bundle, mm, window coordinates."""
+    M, k, t = w['M'], w['k'], w['t_tape']
+    x0 = M['tube_od'] / 2.0 - M['d_centre'] / 2.0
+    fl = (M['win_h'] - w['wind_w']) / 2.0
+    pa, ps = w['d_pri'] * k, w['d_sec'] * k
+    out = []
+    for li, n in enumerate(w['rows_A']):
+        for q in range(n):
+            out.append(('P', x0 + (pa + t) * li + pa / 2.0,
+                        fl + w['yA'][0] + pa * (q + 0.5), w['n_strand']))
+    for li, row in enumerate(w['smap']):
+        for c, who in enumerate(row):
+            out.append(('S', x0 + (ps + t) * li + ps / 2.0,
+                        fl + w['yS'][0] + ps * (c + 0.5), w['n_strand_s']))
+    return out
+
+
+def proximity(V, f_khz, name=None):
+    """Eddy loss [W] in the Litz strands from the leakage field - the term
+    the dc resistance leaves out (round 68 audit).
+
+    A strand of diameter d_s well under 2 delta in a field of rms B loses
+    pi omega^2 sigma d_s^4 B^2 / 64 per metre.  B is the window field of
+    the drawn layout (both secondaries shorted) at each bundle's centre,
+    for the line-cycle rms primary current; the part of the turn outside
+    the core is taken at the in-core B^2 times the energy ratio out_ratio.
+    A first-order estimate for comparing layouts and strands, not a loss
+    budget: the tank current is not a sine at f and the field outside the
+    core is not solved point by point."""
+    import cores
+    name = name or cores.CHOSEN
+    w, a, b, bl = blocks_of(V, name)
+    ln, inside = cores.turn(name)
+    ro = estimate(V, name)['out_ratio']
+    om = 2 * pi * f_khz * 1e3
+    sig = 1.0 / 2.26e-8                              # copper at 100 C
+    d = cores.D_STRAND * 1e-3
+    l_eff = (inside + (1 - inside) * ro) * ln * 1e-3
+    pp = ps = bmax_p = bmax_s = 0.0
+    for kind, x, y, n in _centres(w):
+        bx, by = field(a, b, bl, x * 1e-3, y * 1e-3)
+        B = np.hypot(bx, by) * V['Iprilc']
+        p1 = pi * om ** 2 * sig * d ** 4 * B ** 2 / 64.0 * n * l_eff
+        if kind == 'P':
+            pp += p1
+            bmax_p = max(bmax_p, B)
+        else:
+            ps += p1
+            bmax_s = max(bmax_s, B)
+    return dict(P_pri=pp, P_sec=ps, B_pri=bmax_p, B_sec=bmax_s)
+
+
+def dc_loss(V, name=None):
+    """I^2 R [W] of NP1 and both secondaries, copper at 100 C."""
+    import cores
+    w = cores.winding(V, name)
+    ln = cores.turn(w['name'])[0] * 1e-3
+    a_s = pi * (cores.D_STRAND * 1e-3) ** 2 / 4.0
+    rp = 2.26e-8 * V['Np'] * ln / (w['n_strand'] * w['pri_par'] * a_s)
+    rs = 2.26e-8 * V['Ns'] * ln / (w['n_strand_s'] * w['sec_par'] * a_s)
+    return V['Iprilc'] ** 2 * rp + 2 * V['Idio'] ** 2 * rs
+
+
+def sharing(V, name=None):
+    """Current driven around bundles put in parallel [A rms], first order.
+
+    Two bundles of one winding link different flux when the leakage field
+    passes between them; the difference, at the line-cycle rms primary
+    current, drives a current around the loop they make, limited by that
+    loop's inductance (in the window the field runs across the depth h_w,
+    outside the core the free-space pair).  Returned for the bundles of one
+    secondary sub-winding (NS2 conducting, NS3 idle), as laid (turned over
+    at the layer change) and as if not turned, and for NS2a against NS2b."""
+    import cores
+    from math import log
+    name = name or cores.CHOSEN
+    w = cores.winding(V, name)
+    ln, inside = cores.turn(name)
+    lin, lout = inside * ln * 1e-3, (1 - inside) * ln * 1e-3
+    M, k, t = w['M'], w['k'], w['t_tape']
+    hw = (M['r_win_out'] - M['d_centre'] / 2.0) * 1e-3
+    x0 = M['tube_od'] / 2.0 - M['d_centre'] / 2.0
+    fl = (M['win_h'] - w['wind_w']) / 2.0
+    ps, ds = w['d_sec'] * k, w['d_sec']
+    _, a, b, bl = blocks_of(V, name, only='NS2')
+    y0 = fl + w['yS'][0]
+    lay = [q for q, row in enumerate(w['smap']) if row[0] == 'NS2']
+    per = w['per_layer_s']
+
+    def A(l, c):
+        return potential(a, b, bl, (x0 + (ps + t) * l + ps / 2.0) * 1e-3,
+                         (y0 + ps * (c + 0.5)) * 1e-3) * lin
+
+    def loop(dy_mm):
+        dy = dy_mm * 1e-3
+        return V['Ns'] * (MU0 * dy / hw * lin + MU0 / pi
+                          * (log(dy / (ds * 5e-4)) + 0.25) * lout)
+    out = {}
+    subs = [lay[i:i + V['Ns']] for i in range(0, len(lay), V['Ns'])]
+    for turned in (True, False):
+        worst = 0.0
+        for sub in subs:
+            L = [sum(A(l, (per - 1 - c) if (turned and j % 2) else c)
+                     for j, l in enumerate(sub)) for c in range(per)]
+            spread = max(L) - min(L)
+            worst = max(worst, spread * V['Iprilc'] / loop((per - 1) * ps))
+        out['turned' if turned else 'not_turned'] = worst
+    la = [sum(A(l, c) for l in sub for c in range(per)) / per for sub in subs]
+    out['a_b'] = abs(la[0] - la[-1]) * V['Iprilc'] / loop(
+        (subs[-1][0] - subs[0][0]) * (ps + t))
+    out['load'] = V['Idio'] / w['sec_par']
+    return out
+
+
 def one_d(nA, nB, wA, wS, wB, g1, g2, h_w, l_n):
     """The note's estimate (Equation 'leak'), SI units in, henry out:
     the whole turn inside the core, windings filling the window depth."""
@@ -241,6 +365,18 @@ def report(V=None):
     for who in ('NS2', 'NS3'):
         h = estimate(V, only=who)
         out.append('  %s alone shorted: %.2f uH' % (who, h['L']))
+    out.append('  copper, dc: %.2f W' % dc_loss(V))
+    for f in (V['fswA'], V['fr']):
+        pr = proximity(V, f)
+        out.append('  strand eddy loss at %.0f kHz (first order): NP1 %.2f W, '
+                   'NS2+NS3 %.2f W; B up to %.1f / %.1f mT rms'
+                   % (f, pr['P_pri'], pr['P_sec'], 1e3 * pr['B_pri'],
+                      1e3 * pr['B_sec']))
+    sh = sharing(V)
+    out.append('  current around the parallel bundles of a sub-winding: %.1f A '
+               'rms as laid, %.1f A not turned over, NS2a/NS2b %.1f A; each '
+               'bundle carries %.2f A (first order)'
+               % (sh['turned'], sh['not_turned'], sh['a_b'], sh['load']))
     return '\n'.join(out)
 
 

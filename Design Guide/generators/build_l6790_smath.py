@@ -43,9 +43,8 @@ VARIANTS = {
                   RBZ=680, CVCC=1000),
     #  ONE transformer, 15 : 2 on a single core (2026-09-22, user: the
     #  guide's example is one transformer).  Same tank as 7p5to1; N.aux =
-    #  1 * 2 = 2 turns.  The core is TDK ETD 49/25/16DG, A.e 211 mm2
-    #  - the PQ 40/40 of the three-unit build has no room for a 15-turn
-    #  primary (cores.winding, HISTORY.md 2026-09-22).
+    #  1 * 2 = 2 turns.  The core is cores.CHOSEN (E 60/22/16) - the
+    #  PQ 40/40 of the three-unit build has no room for a 15-turn primary.
     '7p5to1_x1': dict(nT=7.5, Cr=100, Lr=11.0, Lm=20.0, Nx=1, Np=15, Ns=2,
                       kaux=1, RzH=220, CT=470, label='7.5 : 1',
                       Ae=211.0),

@@ -40,33 +40,10 @@ CORES = {
         le=113.0, Ae=332.0, Amin=314.0, Ve=37630.0, mass=190.0,
         AN=340.0, lN=100.5,
         AL_ungapped=None, material='N95',
-        #  set totals: G2 and G3 are dimensions of ONE half (see ETD 49)
+        #  set totals: G2 and G3 are dimensions of ONE half, and a set
+        #  is two identical halves, so it carries 2 x (G2 + G3)
         AL_gaps={100: 2 * (1.67 + 0.85), 250: 2 * (0.62 + 0.23),
                  400: 2 * (0.31 + 0.18)}),
-    #  ETD 49/25/16DG - B66367 core (distributed gap, gapped only: A_L 100
-    #  / 250 nH stock), B66368 coil former, 20 pins.  October 2022,
-    #  received 2026-09-22 from the user.
-    'ETD 49/25/16DG': dict(
-        core='B66367', former='B66368',
-        le=114.0, Ae=211.0, Amin=209.0, Ve=24100.0, mass=124.0,
-        AN=269.4, lN=86.0,
-        AL_ungapped=None, material='N95',
-        #  stock A_L -> total centre-leg gap of the SET [mm], datasheet
-        #  page 2.  G2 and G3 are drawn on one half, and a set is two
-        #  identical halves (single units, one ordering code, A_L "per
-        #  set"), so the set carries 2 x (G2 + G3).  Taken as G2 + G3 it
-        #  put 0.54 mm against 250 nH, where mu0 Ae / A_L alone asks for
-        #  1.06 mm; the set total, 1.08 mm, matches it (round 63).
-        AL_gaps={100: 2 * (1.06 + 0.48), 250: 2 * (0.39 + 0.15)}),
-    #  ETD 54/28/19 - B66395 core (ungapped N87 4450 nH; gapped examples
-    #  g 1.0 / 1.5 / 2.0 mm -> 393 / 287 / 229 nH, K1 393 K2 -0.779 for
-    #  A_L(s) between 0.10 and 3.50 mm), B66396 coil former, 22 pins.
-    #  October 2022, received 2026-09-22 from the user.  No N95 listed.
-    'ETD 54/28/19': dict(
-        core='B66395', former='B66396',
-        le=127.0, Ae=280.0, Amin=280.0, Ve=35600.0, mass=180.0,
-        AN=315.6, lN=96.0,
-        AL_ungapped=4450.0, material='N87'),
     #  E 60/22/16 - Magnetics 0R46016EC (R material, the power ferrite
     #  with its loss minimum near 100 C), Magnetics "Ferrite Cores" 2022
     #  catalogue p. 30-31: l_e 110, A_e 248 (min 240), V_e 27200, 135 g
@@ -199,28 +176,6 @@ MECH = {
         tube_od=23.2, bore=20.8, wind_w=30.4, flange_h=35.2,
         former_w=45.72, former_d=51.0, flange_w=34.4, former_h=51.0,
         pitch_a=7.62, pitch_b=12.7, pins=12),
-    #  ETD 49/25/16DG, datasheet page 2 (core) and 3 (coil former).  The
-    #  outer legs' inner faces are the labelled "36.1 +1.8" of the plan
-    #  view; the window height is 2 x 17.7; the tube is "19.3 max", so
-    #  the radial room is a minimum: 18.05 - 9.65 = 8.40 mm.
-    'ETD 49/25/16DG': dict(
-        core='B66367', former='B66368',
-        W=48.5, H=49.8, d_centre=16.7, win_h=35.4,
-        r_win_out=18.05,
-        plan_w=48.5, plan_d=16.7,
-        tube_od=19.3, bore=17.0, wind_w=32.7, flange_h=35.4,
-        former_w=54.5, former_d=56.2, flange_w=35.9, former_h=40.9,
-        pitch_a=5.08, pitch_b=None, pins=20, rows=40.64),
-    #  ETD 54/28/19, datasheet page 2 and 4.  Legs' inner faces "40.1
-    #  +2.2", window height 2 x 19.8, tube "22 max": 20.05 - 11.0 = 9.05.
-    'ETD 54/28/19': dict(
-        core='B66395', former='B66396',
-        W=54.5, H=55.6, d_centre=19.3, win_h=39.6,
-        r_win_out=20.05,
-        plan_w=54.5, plan_d=19.3,
-        tube_od=22.0, bore=19.8, wind_w=36.8, flange_h=39.4,
-        former_w=61.6, former_d=61.4, flange_w=39.5, former_h=46.0,
-        pitch_a=5.08, pitch_b=None, pins=22, rows=45.72),
     #  E 60/22/16, Magnetics catalogue p. 31: A 59.99, B 22.3 (one half,
     #  so the set is 44.6 high), C 15.62 (depth), D 13.8 min (one half
     #  of the window height), E 44.0 min (between the outer legs), F
@@ -230,7 +185,7 @@ MECH = {
     #  The former is custom (none catalogued).  Its dimensions are the
     #  SPECIFICATION this note gives the bobbin maker, not a reading:
     #  tube 18.6 wide = F max 16.0 + 0.3 clearance + 2 x 1.15 wall (the
-    #  wall and clearance of TDK's ETD 49 former B66368); flanges at least
+    #  wall and clearance of TDK's catalogue coil formers); flanges at least
     #  FLANGE_MIN, made as thick as the winding leaves (winding()); pins as
     #  BOBBINS below.  'shape': 'E' tells the turn-length arithmetic that
     #  the leg is rectangular.
@@ -243,8 +198,8 @@ MECH = {
         pitch_a=5.08, pitch_b=None, pins=20, rows=40.64),
 }
 FLANGE_MIN = 1.35   # mm, thinnest flange of a custom former - the flange of
-                    # TDK's ETD 49 former (35.4 - 32.7) / 2, taken as the
-                    # moulding minimum; ASSUMED, the bobbin maker decides
+                    # TDK's catalogue coil formers, taken as the moulding
+                    # minimum; ASSUMED, the bobbin maker decides
 
 
 def turn(name):
@@ -278,21 +233,14 @@ for _n, _M in MECH.items():
 #  Everything downstream - the section figure, the pin figure, the tables
 #  of the note and the vendor specification - reads it from here.
 #
-#  2026-09-22: ONE transformer (the note's example is a single part), so
-#  the PQ 40/40 of the three-unit build gave way to ETD 49/25/16DG: the
-#  15-turn primary needs a window that is deep (7.1 mm radial for three
-#  layers) or wide (19 mm axial for two), and every PQ is shallow.  The
-#  comparison is winding() on each entry of CORES; HISTORY.md 2026-09-22.
-#
-#  2026-09-25: E 60/22/16 (Magnetics).  The section winding the user asked
+#  E 60/22/16 (Magnetics), 2026-09-25.  The section winding the user asked
 #  for (onsemi-style, no split primary, a partition, tape on every layer,
-#  no empty space in the former) leaks about 14 uH on ETD 49 against the
-#  11 uH the tank is built on.  A search over the Magnetics and TDK ranges
-#  (ETD, EER, ER, EC, E) found that a filled section winding reaches the
-#  tank's L_short only in a window that is DEEP and SHORT - leakage goes
-#  as the mean turn times the section widths over the depth - and E 60/22/16
-#  (14.2 mm deep, 27.6 mm high) is the one that does it at the current
-#  density this note allows.  HISTORY.md 2026-09-25.
+#  no empty space in the former) reaches the tank's L_short only in a
+#  window that is DEEP and SHORT - leakage goes as the mean turn times the
+#  section widths over the depth.  A search over the Magnetics and TDK
+#  ranges (EER, ER, EC, E and the rest) found E 60/22/16 (14.2 mm deep,
+#  27.6 mm high) the one that does it with both sections filling the depth.
+#  HISTORY.md 2026-09-25.
 CHOSEN = 'E 60/22/16'
 
 #  Terminals, per coil former.  'xy' is pin number -> (x, y) in mm in the
@@ -305,10 +253,9 @@ CHOSEN = 'E 60/22/16'
 #  between the inner pins of the groups, rows 38.1 apart, a "pin 1
 #  marking" at the bottom-left corner and NO other pin number.
 #
-#  ETD 49/25/16DG (B66368, page 3, "hole arrangement, view in mounting
-#  direction"): twenty terminals in two rows of ten, pitch 5.08 (9 x 5.08
-#  = 45.72), rows 40.64 apart, square 0.8 mm pins.  The drawing carries
-#  no pin numbers and no pin-1 marking at all.
+#  E 60/22/16, custom former: twenty terminals in two rows of ten, pitch
+#  5.08 (9 x 5.08 = 45.72), rows 40.64 apart, square 0.8 mm pins - this
+#  note's specification to the bobbin maker.
 #
 #  NUMBERING IS THEREFORE AN ASSUMPTION on both: 1 at one end of one row,
 #  counted along that row, then back along the other row so that the
@@ -325,43 +272,29 @@ CHOSEN = 'E 60/22/16'
 #  windings measurable one at a time; "start" is the end the polarity
 #  dot marks, and NS2 and NS3 are wound in the same sense so that joining
 #  NS2's finish to NS3's start makes the tap.  On the 20-pin former each
-#  secondary terminal takes TWO pins: one winding carries the whole
-#  secondary current (28 A rms): it is wound as two Litz bundles in
-#  parallel, and each bundle ends on its own pin (14 A rms a pin) - the
-#  vendor confirms the pin rating.
-_ETD49_XY = {}
+#  secondary terminal takes TWO pins, one per sub-winding (14 A rms a
+#  pin) - the vendor confirms the pin rating.
+_ROW20_XY = {}
 for _i in range(10):
     _x = -22.86 + 5.08 * _i
-    _ETD49_XY[1 + _i] = (_x, -20.32)          # front row, left to right
-    _ETD49_XY[20 - _i] = (_x, 20.32)          # back row, right to left
+    _ROW20_XY[1 + _i] = (_x, -20.32)          # front row, left to right
+    _ROW20_XY[20 - _i] = (_x, 20.32)          # back row, right to left
 _PQ40_XY = {}
 for _i, _y in enumerate((-17.78, -12.70, -7.62, 7.62, 12.70, 17.78)):
     _PQ40_XY[1 + _i] = (-19.05, _y)           # marked side, upwards
     _PQ40_XY[12 - _i] = (19.05, _y)           # other side, downwards
-#  E 60/22/16, CUSTOM former: the same 20-pin arrangement is SPECIFIED for
-#  it (two rows of ten, 5.08 pitch, rows 40.64 apart under the core,
-#  which is 44.6 high and 60 long), so that the terminal rating and the
-#  pin-to-pin creepage are those of a known former.  Each end of NS2 and
-#  NS3 takes two pins: a winding is two sub-windings of four Litz bundles
-#  in parallel (winding()), and each sub-winding ends on its own pin.
-#  NP1 is two TIW-Litz bundles in parallel, one to each pin of a pair.
+#  Each end of NS2 and NS3 takes two pins: a winding is two sub-windings
+#  of four Litz bundles in parallel (winding()), and each sub-winding ends
+#  on its own pin.  NP1 is two TIW-Litz bundles in parallel, one to each
+#  pin of a pair.
 BOBBINS = {
     'E 60/22/16': dict(
         former='custom two-section', pins=20, pin='square 0.8 mm',
-        xy=_ETD49_XY,
+        xy=_ROW20_XY,
         map={'NP1': ((1, 2), (4, 5)), 'NAUX': ((8,), (10,)),
              'NS2': ((11, 12), (14, 15)), 'NS3': ((16, 17), (19, 20))},
         rows=('front row 1-10', 'back row 11-20'),
         plan=dict(w=64.0, h=50.0, coil_w=44.0, coil_h=27.6, mark=None),
-        pitch=5.08, rows_apart=40.64),
-    'ETD 49/25/16DG': dict(
-        former='B66368', pins=20, pin='square 0.8 mm', xy=_ETD49_XY,
-        map={'NP1': ((1, 2), (4, 5)), 'NAUX': ((8,), (10,)),
-             'NS2': ((11, 12), (14, 15)), 'NS3': ((16, 17), (19, 20))},
-        rows=('front row 1-10', 'back row 11-20'),
-        #  outline of the mounting-direction view: 54.5 across the pins,
-        #  56.2 along the coil axis; the coil sits between the flanges
-        plan=dict(w=54.5, h=56.2, coil_w=35.9, coil_h=32.7, mark=None),
         pitch=5.08, rows_apart=40.64),
     'PQ 40/40': dict(
         former='B65884E', pins=12, pin='round 1.0 mm', xy=_PQ40_XY,
@@ -417,7 +350,7 @@ T_FOIL_INS = 0.05   # mm, interlayer insulation on each foil turn
 #  Margin tape, per flange, of the WITHDRAWN side-by-side layout
 #  (winding_v64, kept for the unported Korean edition).  There the core
 #  counted as PRIMARY: the primary fills the window almost to the outer legs (about
-#  1.3 mm of air on ETD 49), so the core cannot be held at a reinforced
+#  1.3 mm of air), so the core cannot be held at a reinforced
 #  distance from it.  The primary-to-core distance is then functional and
 #  the primary flange needs only enough tape to keep the Litz off it.
 #  The secondary flange is part of the reinforced secondary-to-core path.
@@ -439,9 +372,6 @@ def litz(area_mm2):
     a_strand = pi * D_STRAND ** 2 / 4.0
     n = int(area_mm2 / a_strand + 0.9999)
     return (4.0 * area_mm2 / (pi * K_LITZ)) ** 0.5, n
-
-
-V64_CORE = 'ETD 49/25/16DG'   # the core that withdrawn layout was drawn on
 
 
 def winding_v64(V, name=None):
@@ -467,7 +397,7 @@ def winding_v64(V, name=None):
     for appearance: if the copper does not fit, 'gap' comes out negative
     and 'fits' is False.
     """
-    name = name or V64_CORE
+    name = name or CHOSEN
     M = MECH[name]
     rows = copper(V)
     ap, asec = rows[0][3], rows[1][3]
@@ -534,16 +464,10 @@ def winding_v64(V, name=None):
 #
 #      flange | NP1, one section | PARTITION | NS2 + NS3 | tape | flange
 #
-#  TDK lists the B66368 former with ONE section only; a two-section former
-#  for ETD 49 has to come from another bobbin maker, and its partition
-#  thickness and position are not known here - G_NOM is the assumption.
-#  A split primary (12 + 3 around the secondary) was the other way; it put
-#  L_short on target (10.9 uH) and was withdrawn at the user's request.  The
-#  section winding leaks MORE than 11 uH on this core by leakage.py - about
-#  14 uH with the sections 1 mm apart, 12.5 uH touching - and that is left
-#  standing, recorded as an open item for the first samples (DESIGN.md
-#  4.2 13).  PRI_SPLIT = 1.0 is the plain winding; winding() still lays out
-#  a split one for any other value.
+#  No catalogue former has two sections; the former is custom, and its
+#  partition G_NOM is set by the leakage (leakage.py).  A split primary
+#  (part of NP1 on each side of the secondary) was the other way and was
+#  withdrawn at the user's request.
 TIW_LITZ_ADD = 0.2  # mm, triple insulation over the Litz bundle, on the
                     # diameter - assumed, the wire vendor's datasheet decides
 #  The layout (2026-09-25, E 60/22/16).  Both sections are as deep as the
@@ -554,7 +478,6 @@ TIW_LITZ_ADD = 0.2  # mm, triple insulation over the Litz bundle, on the
 #  was judged unwindable): the primary is two TIW-Litz bundles in parallel
 #  (bifilar), the secondary turn is eight thin bundles - two sub-windings of
 #  four, stacked, each sub-winding one layer per turn.
-PRI_SPLIT = 1.0     # share of NP1 turns in the first section: 1.0 = no split
 PRI_PAR = 2         # TIW-Litz bundles per primary turn, wound bifilar
 PRI_LAYERS = 6      # 30 bundle positions -> 5 a layer (2.5 turns)
 SEC_PAR = 8         # Litz bundles per secondary turn
