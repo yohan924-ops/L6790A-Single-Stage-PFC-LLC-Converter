@@ -2175,7 +2175,7 @@ def build(A):
               'Open 인덕턴스 / N<sub>p</sub>&sup2;; 코어 갭을 여기에 맞춘다']],
             widths=[CW * 0.24, CW * 0.30, CW * 0.46],
             key='trafo-built', split=True))
-    _w = _CORE.winding(V)
+    _w = _CORE.winding_v64(V)
     _B = _CORE.BOBBIN
     add(p('<b>핀.</b> %(chosen)s 코어의 %(former)s 보빈에는 핀이 두 줄 '
           '%(half)d 개씩 %(pins)d 개 있다. NP1 과 ZCD 보조 권선이 한 줄, NS2 와 '
@@ -2278,7 +2278,7 @@ def build(A):
 
     # ------------------------------------------------ 선정한 코어
     add(h2('코어와 권선'))
-    _w = _CORE.winding(V)
+    _w = _CORE.winding_v64(V)
     _R = _CORE.CORES[_CORE.CHOSEN]
     _cw = _CORE.window(V) / _CORE.K_U
     add(p('코어는 TDK <b>%(chosen)s</b>, %(mat)s (코어 %(core)s, 보빈 '

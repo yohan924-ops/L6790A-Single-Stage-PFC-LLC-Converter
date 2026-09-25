@@ -124,7 +124,7 @@ def spec_from_xlsx(path):
     return dict(
         Np=int(num(np_, 5)), Ns=int(num(ns_, 5)), Naux=int(num(na_, 5)),
         creep=num(ins, 5), clear=num(find('Clearance'), 5),
-        sep=num(find('Separation'), 5),
+        wire=find('NP1 wire')[5],
         Lopen=num(find('INDUCTANCE'), 5),
         Lshort=num(find('LEAKAGE INDUCTANCE'), 5),
         Isat=num(find('D.C OVERLAP'), 6),
@@ -136,9 +136,9 @@ def spec_from_xlsx(path):
 
 def main():
     import re as _re
-    global INS, SEP
+    global INS
     import insulation                   # 절연 요구치의 유일한 출처
-    INS, SEP = insulation.req(), insulation.separation_min()
+    INS = insulation.req()
     bad = 0
     for var in ('7p5to1', '7p5to1_x1', '8to1', '6to1'):
         smp = os.path.join(SMDIR, 'L6790A_%s.sm' % var)
@@ -164,7 +164,6 @@ def main():
                 ('Naux 보조 턴수/유닛',  spec['Naux'],   d['Naux'],   0.0),
                 ('연면거리 mm',          spec['creep'],  INS['creep'], 0.0),
                 ('공간거리 mm',          spec['clear'],  INS['clearance'], 0.0),
-                ('1-2차 간격 mm',        spec['sep'],    SEP, 0.0),
                 ('L.open  uH/개',       spec['Lopen'],  d['Lopen'],  0.005),
                 ('L.short uH/개',       spec['Lshort'], d['Lshort'], 0.005),
                 ('A.e  mm2 (B<=0.2T)',  spec['Ae'],     d['Ae'],     0.01)]:
@@ -204,6 +203,12 @@ def main():
         #  시험 전류가 탱크 피크보다 낮은 것은 정상이고 요구사항이 아니다 -
         #  개방시험은 전류 시험이 아니라 자속 시험이다.  판정해야 하는 것은
         #  "OVP2 에서의 자화전류를 덮는가" 이고, 그것이 이 설계의 근거다.
+        #  the reinforced insulation is carried by the primary wire since
+        #  2026-09-25 (insulation.checks): the spec must ask for it
+        ok = 'TIW' in spec['wire']
+        bad += 0 if ok else 1
+        print('  %-20s 사양서 %-12s %s' % ('NP1 선재', spec['wire'],
+                                        'same' if ok else '** TIW 요구 없음'))
         want = d['ILm_pk'] * d['kOVsat']
         ok = spec['Isat'] >= want - 0.5
         bad += 0 if ok else 1

@@ -189,66 +189,85 @@ def req():
 
 
 def separation_min():
-    """The separation between the primary and the secondary section IS the
-    reinforced insulation of a side-by-side winding: creepage along the
-    tube, clearance across the gap.  cores.winding() reads this."""
+    """What the separation between a primary and a secondary SECTION would
+    have to be if the distance carried the reinforced insulation (creepage
+    along the tube, clearance across the gap).  The winding of this note no
+    longer uses that route - the triple-insulated primary carries it - but
+    the number is what a side-by-side winding in plain wire must respect,
+    and the note quotes it (Section 6.17).  cores.winding_v64() reads it."""
     r = req()
     return max(r['creep'], r['clearance'])
 
 
-# ------------------------------------------------------- geometry checks
+# ------------------------------------------------------- what carries what
 def checks(V=None, name=None):
-    """What can be checked on the drawing.  Returns rows of
-    (path, what is there, what is required, ok, how it was measured)."""
+    """Every path between the primary circuit and the secondary circuit of
+    the winding cores.winding() lays out, and what carries its reinforced
+    insulation.  Returns rows of (path, carried by, requirement, status)
+    and the winding; status is 'ok' where the drawing or the design shows
+    it, 'open' where only the bobbin drawing, the wire vendor or the
+    certifier can."""
     import cores
     if V is None:
         import an_pdf
         V = an_pdf.V
     r = req()
     w = cores.winding(V, name)
-    M = w['M']
-    r_tube = M['tube_od'] / 2.0
-    top_s = r_tube + 2 * V['Ns'] * w['n_foil'] * (w['t_foil']
-                                                   + cores.T_FOIL_INS)
-    #  the flange's outer edge in the window: its outline (flange_w, from
-    #  the coil-former drawing), no further out than the outer legs.
-    #  flange_h is the former's AXIAL length and is not this.
-    fh = min(M['flange_w'] / 2.0, M['r_win_out'])
-    out = []
-    out.append(('primary to secondary, creepage along the tube',
-                w['gap'], r['creep'], w['gap'] >= r['creep'],
-                'the separation between the sections'))
-    out.append(('primary to secondary, clearance across the separation',
-                w['gap'], r['clearance'], w['gap'] >= r['clearance'],
-                'the separation between the sections'))
-    air = M['r_win_out'] - top_s
-    out.append(('secondary to the outer legs (core = primary), clearance',
-                air, r['clearance'], air >= r['clearance'],
-                'window radius minus the top of the foil'))
-    wall = (M['tube_od'] - M['bore']) / 2.0
-    out.append(('secondary to the centre leg, through the tube wall (DTI)',
-                wall, r['dti'], wall >= r['dti'],
-                'tube OD minus bore, halved; the bobbin material must be '
-                'rated for reinforced insulation'))
-    cr_fl = w['margin_s'] + (fh - top_s)
-    out.append(('secondary to the yoke over its flange, creepage',
-                cr_fl, r['creep'], cr_fl >= r['creep'],
-                'secondary margin + flange face from the foil top to the '
-                'flange edge; the flange thickness is not counted'))
-    cl_fl = sqrt(w['margin_s'] ** 2 + (fh - top_s) ** 2)
-    out.append(('secondary to the yoke over its flange, clearance',
-                cl_fl, r['clearance'], cl_fl >= r['clearance'],
-                'straight line from the foil corner to the flange rim'))
-    return out, w
+    B = cores.BOBBINS.get(w['name'])
+    tiw = ('triple-insulated wire, rated %d V rms against a working voltage '
+           'of %.0f V rms' % (TIW_VRMS, r['u_rms']))
+    rows = [
+        ('NP1 to NS2, NS3 and the core', 'the triple insulation of the '
+         'NP1 Litz, one wire from pin to pin (part A, the crossing over the '
+         'secondary, part B)', 'reinforced: ' + tiw,
+         'ok' if TIW_VRMS >= r['u_rms'] else 'FAIL'),
+        ('NAUX to NS2, NS3 and the core', 'the triple insulation of NAUX, '
+         'from pin to pin', 'reinforced: ' + tiw,
+         'ok' if TIW_VRMS >= r['u_rms'] else 'FAIL'),
+        ('the two gaps (%.1f mm nominal)' % w['gap'], 'nothing: they set '
+         'the leakage only', 'none', 'ok'),
+        ('NS2, NS3 to the core', 'the same side of the barrier: the core is '
+         'secondary here', 'functional', 'ok'),
+    ]
+    if B and B.get('rows_apart'):
+        pin = 0.8 if 'square 0.8' in B.get('pin', '') else 1.0
+        gap_pins = B['rows_apart'] - pin
+        rows.append(('primary pin row to secondary pin row, across the '
+                     'coil former', '%.1f mm between the rows (%.2f apart, '
+                     'less one pin)' % (gap_pins, B['rows_apart']),
+                     'creepage %.1f mm, clearance %.1f mm'
+                     % (r['creep'], r['clearance']),
+                     'ok' if gap_pins >= separation_min() else 'FAIL'))
+    rows.append(('primary pins and the stripped TIW ends to the core yoke '
+                 'and to secondary leads', 'the coil former and the lead '
+                 'dress, not this drawing',
+                 'creepage %.1f mm, clearance %.1f mm, or sleeving qualified '
+                 'as reinforced' % (r['creep'], r['clearance']), 'open'))
+    fsu = None
+    try:
+        import an_pdf
+        fsu = an_pdf.SH['f.SU'] * 1e3
+    except Exception:
+        fsu = None
+    rows.append(('the TIW approval against the frequencies it sees',
+                 'approved to %d kHz' % (TIW_FMAX / 1e3),
+                 'every switching frequency, start-up included (%s)'
+                 % ('%.0f kHz' % (fsu / 1e3) if fsu else 'f_SU'),
+                 'open' if fsu and fsu > TIW_FMAX else 'ok'))
+    return rows, w
 
 
 OPEN = [
     'The working voltage is an estimate (secondary and neutral taken as '
     'earth, C_r swing from the sweep); the certifier measures it.  The '
     'creepage row taken covers up to %d V rms.',
-    'Secondary leads and pins to the core yoke, and to primary pins: set by '
-    'the bobbin and the lead routing, not by this drawing.  Reinforced '
+    'Primary pins and the stripped ends of the TIW against the core yoke '
+    '(the core is secondary here) and against secondary leads: set by the '
+    'coil former and the lead dress, not by this drawing.  Reinforced '
     'distances, or sleeving qualified as reinforced insulation.',
+    'Triple-insulated LITZ of 309 x 0.10 mm for NP1: the approval quoted is '
+    'for the series; the size, its outer diameter (0.2 mm over the bare '
+    'bundle assumed) and its approval come from the wire vendor.',
     'Material group IIIb is assumed for the bobbin and the board; a bobbin '
     'with a higher CTI allows less creepage, not more.',
     'The electric strength test voltage is the value the TUV report applies '
@@ -261,8 +280,8 @@ OPEN = [
     'above that for the first milliseconds of safe start.  Ask the wire '
     'vendor.  The approval is Class B: the winding hot spot stays under '
     '130 C, which the thermal measurement has to show.',
-    'The separation also sets L_short: the vendor must reach L_short with '
-    'the separation at or above SEPARATION_MIN, never by narrowing it.',
+    'L_short is an estimate (leakage.py, a 2-D field solution); the gaps '
+    'are the vendor\'s trim, and the first samples decide them.',
 ]
 
 
@@ -279,14 +298,14 @@ def report():
              (r['cl_2000'], K_ALT, r['cl_2000'] * K_ALT, r['clearance']),
              '  solid      DTI >= %.1f mm, or >= %d tape layers each passing '
              'the reinforced test' % (r['dti'], r['layers']),
-             '  hipot      %d V ac 60 s (%d V dc), NP1+NAUX+core to NS2+NS3'
+             '  hipot      %d V ac 60 s (%d V dc), NP1+NAUX to NS2+NS3+core'
              % (r['hipot_ac'], r['hipot_dc']),
-             '  separation needed         %.2f mm' % separation_min(), '']
+             '  a plain-wire side-by-side winding would need a separation of %.2f mm (not used: the primary is TIW)' % separation_min(), '']
     rows, w = checks()
-    lines.append('GEOMETRY on %s' % w['name'])
-    for path, have, need, ok, how in rows:
-        lines.append('  %-58s %5.2f >= %4.2f  %s' % (path, have, need,
-                                                     'ok' if ok else '** FAIL'))
+    lines.append('WHAT CARRIES EACH PATH on %s' % w['name'])
+    for path, by, need, st in rows:
+        lines.append('  %-5s %s\n        by   %s\n        need %s'
+                     % (st, path, by, need))
     return '\n'.join(lines)
 
 

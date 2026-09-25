@@ -274,29 +274,33 @@ head(36, [('B', 'No'), ('C', 'Item'), ('D', 'Between'), ('E', 'Requirement'),
 PRI, SEC = 'primary', 'secondary'
 SAFE = [
     ('1', 'Insulation grade', '%s  |  %s' % (PRI, SEC), 'REINFORCED',
-     'Primary = NP1, NAUX and the CORE; secondary = NS2, NS3. Pollution '
+     'Primary = NP1, NAUX; secondary = NS2, NS3 and the CORE. Pollution '
      'degree 2, overvoltage category II, material group IIIb, 5000 m.', 30),
     ('2', 'Creepage', '%s  |  %s' % (PRI, SEC), '≥ %.1f mm' % _R['creep'],
-     'Everywhere: along the bobbin, over the flanges, at leads and pins '
-     '(%d V rms row, reinforced = 2 × basic).' % _R['row'], 30),
+     'Wherever the triple insulation ends: primary pins and stripped wire '
+     'ends to the core and to secondary leads and pins (%d V rms row, '
+     'reinforced = 2 × basic).' % _R['row'], 30),
     ('3', 'Clearance', '%s  |  %s' % (PRI, SEC), '≥ %.1f mm' % _R['clearance'],
      '%.1f mm at 2000 m × %.2f for 5000 m, rounded up.'
      % (_R['cl_2000'], INS.K_ALT), 22),
-    ('4', 'Separation', 'the two winding sections',
-     '≥ %.1f mm' % INS.separation_min(),
-     'It is also the leakage (item 3-2): reach L.short WITHOUT narrowing it.',
-     22),
+    ('4', 'NP1 wire', 'NP1  |  %s' % SEC, 'TIW-Litz, reinforced',
+     'Triple-insulated Litz approved as reinforced insulation to IEC '
+     '62368-1, one wire from pin to pin%s. The gaps between the sections '
+     'carry NO insulation: set them for item 3-2.'
+     % (' (split winding: part A, the crossing, part B)' if V['Nx'] == 1
+        else ''), 30),
     ('5', 'NAUX wire', 'NAUX  |  %s' % SEC, 'TIW, reinforced',
      'Triple-insulated wire approved as reinforced insulation to IEC 62368-1, '
      'wound OVER the secondary; leads stay insulated up to the primary-row '
      'pins. Its approved frequency must cover the start-up frequency.', 30),
     ('6', 'Solid insulation', '%s  |  %s' % (PRI, SEC),
      'DTI ≥ %.1f mm  or  ≥ %d tape layers' % (_R['dti'], _R['layers']),
-     'Bobbin rated for reinforced insulation; each tape layer passes the '
-     'reinforced test. Sleeve secondary leads that pass the core.', 30),
+     'Where tape or sleeving carries it: each tape layer passes the '
+     'reinforced test. Sleeve primary leads that leave the triple '
+     'insulation near the core.', 30),
     ('7', 'Electric strength', '%s  |  %s' % (PRI, SEC),
      '%d V ac 60 s  (%d V dc)' % (_R['hipot_ac'], _R['hipot_dc']),
-     'NP1 + NAUX + core joined against NS2 + NS3 joined. Type test, no '
+     'NP1 + NAUX joined against NS2 + NS3 + core joined. Type test, no '
      'breakdown. Routine test voltage and time as agreed with the certifier.',
      30),
 ]

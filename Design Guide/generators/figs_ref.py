@@ -1426,19 +1426,19 @@ def an_core_section(save, foot):
     THE AXES OF THE FIRST TWO PANELS ARE IN MILLIMETRES with equal aspect,
     and the scale comes from each panel's own size on the page (_mm_ax),
     so nothing there can be out of proportion without the core itself
-    coming out the wrong shape.  The third panel is a layer-by-layer
-    diagram of the secondary and says so: at true scale the twelve foil
-    layers are three millimetres and read as a single bar, which is what
-    the first version showed and what could not be read.
+    coming out the wrong shape.  The third panel is a diagram of the
+    secondary group, bundle by bundle, and says it is not to scale.
 
     Dimensions are from the TDK dimensional drawings of the chosen core
     and coil former (cores.MECH, with provenance per value).  The winding
-    is not decoration: cores.winding() lays it out from the design
-    current, the chosen current density and the skin depth, and this
-    function draws what comes back - Litz bundles as circles of the
-    computed bundle diameter at their real radius, foil at its computed
-    thickness and width.  If the copper did not fit, it would be seen
-    not to fit.
+    is not decoration: cores.winding() lays it out - NP1 as triple-
+    insulated Litz split into parts A and B around the secondary group,
+    the gaps at their nominal width - and this function draws what comes
+    back, every bundle a circle of its computed diameter at its real
+    radius.  A TIW bundle is drawn as its copper inside a ring of its
+    insulation.  Margin tape is drawn to the height of the section it
+    flanks, as it is wound (2026-09-25: the first version drew it to the
+    full window).
 
     Winding colours are the ones of the pin figure (an_xfmr_pins), so
     the two figures read together.
@@ -1450,15 +1450,25 @@ def an_core_section(save, foot):
     R = _C.CORES[NAME]
     w = _C.winding(V, NAME)
     M = w['M']
-    gp = _C.gap(V, R['Ae'])
-    d, tp = w['d_litz'], w['t_foil'] + _C.T_FOIL_INS
-    NF = w['n_foil']                     # foils in parallel per turn
-    NL = w['Ns'] * NF                    # foil layers per secondary winding
+    gp = _C.dg_gap(V, NAME)
+    dp, dl, ds = w['d_pri'], w['d_litz'], w['d_sec']
     COL = {'NP1': MAG, 'NS2': GRN, 'NS3': CYA}
     EDG = {'NP1': '#9c0055', 'NS2': '#2d7a4c', 'NS3': '#1f7fa6'}
+    TIWC = '#f3e3b0'                          # the triple insulation ring
 
-    def fcol(k):
-        return 'NS2' if k < NL else 'NS3'
+    def pri(ax, x, y):
+        ax.add_patch(Circle((x, y), dp / 2.0, fc=TIWC, ec=EDG['NP1'],
+                            lw=0.6, zorder=6))
+        ax.add_patch(Circle((x, y), dl / 2.0, fc=COL['NP1'], ec=EDG['NP1'],
+                            lw=0.4, alpha=0.55, zorder=7))
+
+    def sec(ax, x, y, who):
+        ax.add_patch(Circle((x, y), ds / 2.0, fc=COL[who], ec=EDG[who],
+                            lw=0.6, alpha=0.75, zorder=6))
+
+    def aux(ax, x, y):
+        ax.add_patch(Circle((x, y), w['tiw_od'] / 2.0, fc=PUR, ec=PUR,
+                            lw=0.5, zorder=7))
 
     #  The figure is drawn 15 % smaller than the page column it fills, so
     #  everything on it - core, winding and lettering - prints 15 % larger
@@ -1495,41 +1505,34 @@ def an_core_section(save, foot):
             xf = RT if sgn > 0 else -RF
             ax.add_patch(Rectangle((xf, yy), RF - RT, FH - WW, **bob))
 
-    yP1 = WW - w['margin_p']
-    yP0 = yP1 - w['w_pri']
-    yS1 = yP0 - w['gap']
-    yS0 = yS1 - w['w_foil']
-    for y0, y1 in ((yP1, WW), (-WW, -WW + w['margin_s'])):
-        for sgn in (-1, 1):
-            x0 = RT if sgn > 0 else -RF
-            ax.add_patch(Rectangle((x0, y0), RF - RT, y1 - y0, fc=TAPE,
-                                   ec='#b9a25e', lw=0.6, zorder=5))
-    for li, n in enumerate(w['rows_p']):
-        r = RT + d * (li + 0.5)
-        y0 = yP1 - d * 0.5 - (w['per_layer'] - n) * d * 0.5
-        for k in range(n):
-            for sgn in (-1, 1):
-                ax.add_patch(Circle((sgn * r, y0 - k * d), d / 2.0,
-                                    fc=COL['NP1'], ec=EDG['NP1'], lw=0.7,
-                                    alpha=0.45, zorder=6))
-    for k in range(2 * NL):
-        c = COL[fcol(k)]
-        for sgn in (-1, 1):
-            x0 = RT + k * tp if sgn > 0 else -(RT + k * tp + w['t_foil'])
-            ax.add_patch(Rectangle((x0, yS0), w['t_foil'], w['w_foil'],
-                                   fc=c, ec=c, lw=0.4, zorder=6))
+    def Y(yax):
+        """axial position from the part-A flange -> drawing y"""
+        return WW - yax
+    tape = ((0.0, w['yA'][0], w['h_A']), (w['yB'][1], M['wind_w'], w['h_B']))
+    hmax = max(w['h_A'], w['h_B'], w['h_S_aux'])
     for sgn in (-1, 1):
-        x0 = RT if sgn > 0 else -RF
-        ax.add_patch(Rectangle((x0, yS1), RF - RT, w['gap'], fc='none',
-                               ec=GOLD, lw=1.1, ls=(0, (3.5, 2.5)), zorder=7))
-    #  NAUX: one layer of triple-insulated wire over the foil stack
-    TW, NA = w['tiw_od'], w['n_aux']
-    ra = RT + 2 * NL * tp + TW / 2.0
-    for k in range(NA):
-        ya = yS0 + w['w_foil'] * (k + 0.5) / NA
-        for sgn in (-1, 1):
-            ax.add_patch(Circle((sgn * ra, ya), TW / 2.0, fc=PUR, ec=PUR,
-                                lw=0.5, zorder=7))
+        for y0, y1, h in tape:
+            x0 = RT if sgn > 0 else -(RT + h)
+            ax.add_patch(Rectangle((x0, Y(y1)), h, y1 - y0, fc=TAPE,
+                                   ec='#b9a25e', lw=0.6, zorder=5))
+        for g0, g1 in ((w['yA'][1], w['yS'][0]), (w['yS'][1], w['yB'][0])):
+            x0 = RT if sgn > 0 else -(RT + hmax)
+            ax.add_patch(Rectangle((x0, Y(g1)), hmax, g1 - g0, fc='none',
+                                   ec=GOLD, lw=1.1, ls=(0, (3.5, 2.5)),
+                                   zorder=7))
+        for part, y0 in (('A', w['yA'][0]), ('B', w['yB'][0])):
+            per = w['per_' + part]
+            for li, n in enumerate(w['rows_' + part]):
+                r = RT + dp * (li + 0.5)
+                for k in range(n):
+                    pri(ax, sgn * r, Y(y0 + dp * (k + 0.5)))
+        for li, row in enumerate(w['smap']):
+            r = RT + ds * (li + 0.5)
+            for c, who in enumerate(row):
+                sec(ax, sgn * r, Y(w['yS'][0] + ds * (c + 0.5)), who)
+        ra = RT + w['h_S'] + w['tiw_od'] / 2.0
+        for k in range(w['n_aux']):
+            aux(ax, sgn * ra, Y(w['yS'][0] + w['w_S'] * (k + 0.5) / w['n_aux']))
 
     _dimh(ax, -HW, HW, -HH - 10.5, '%.1f' % M['W'], ext=-HH)
     _dimh(ax, -RC, RC, -HH - 3.2, 'ø%.1f' % M['d_centre'], ext=-WH,
@@ -1541,151 +1544,139 @@ def an_core_section(save, foot):
     ax.text(0.0, -HH - 14.6, 'all dimensions in mm', ha='center', va='top',
             fontsize=8.5, color=GREY, zorder=8)
     #  balloons point into the LEFT window, so no leader crosses the part.
-    #  Numbers are the rows of the legend table beside the figure.
+    #  Numbers are the rows of the legend table beside the figure; parts A
+    #  and B are one winding and carry the same number, as do the gaps and
+    #  the two margin tapes.
     BX = -HW - 5.2
-    hs = NL * tp                               # radial build of one winding
-    _balloon(ax, 1, -(RT + d * 0.9), yP1 - d * 0.6, BX, yP1 - 0.8, EDG['NP1'])
-    _balloon(ax, 2, -(RT + hs * 0.5), yS0 + w['w_foil'] * 0.30, BX,
-             yS0 + w['w_foil'] * 0.30, EDG['NS2'])
-    _balloon(ax, 3, -(RT + hs * 1.5), yS0 + w['w_foil'] * 0.70, BX,
-             yS0 + w['w_foil'] * 0.70, EDG['NS3'])
-    _balloon(ax, 4, -(RT + 2.6), yS1 + w['gap'] * 0.5, BX,
-             yS1 + w['gap'] * 0.5, GOLD)
-    _balloon(ax, 5, -(RT + 2.6), -WW + w['margin_s'] * 0.5, BX,
-             -WW + w['margin_s'] * 0.5, GREY)
-    _balloon(ax, 8, -ra, yS0 + w['w_foil'] * (NA - 0.5) / NA, BX, yS1,
-             PUR)
+    yS0 = w['yS'][0]
+    c2 = w['smap'][0].index('NS2')
+    c3 = w['smap'][0].index('NS3')
+    marks = [
+        (5, -(RT + w['h_A'] * 0.5), Y(w['yA'][0] * 0.5), 0.6, GREY),
+        (1, -(RT + dp * 1.5), Y(w['yA'][0] + dp * 1.5), 5.4, EDG['NP1']),
+        (4, -(RT + hmax * 0.5), Y((w['yA'][1] + yS0) / 2), 12.0, GOLD),
+        (2, -(RT + ds * 0.5), Y(yS0 + ds * (c2 + 0.5)), 15.3, EDG['NS2']),
+        (8, -(RT + w['h_S'] + w['tiw_od'] / 2), Y(yS0 + w['w_S'] * 0.5 /
+                                                   max(w['n_aux'], 1)),
+         18.5, PUR),
+        (3, -(RT + ds * 0.5), Y(yS0 + ds * (c3 + 0.5)), 21.7, EDG['NS3']),
+        (4, -(RT + hmax * 0.5), Y((w['yS'][1] + w['yB'][0]) / 2), 24.9, GOLD),
+        (1, -(RT + dp * 1.5), Y(w['yB'][0] + dp * 0.5), 28.1, EDG['NP1']),
+        (5, -(RT + w['h_B'] * 0.5), Y((w['yB'][1] + M['wind_w']) / 2), 31.3,
+         GREY)]
+    for n, x, y, yt, c in marks:
+        _balloon(ax, n, x, y, BX, WW - yt, c)
     _balloon(ax, 6, 0.0, gp / 2.0, 0.0, HH + 4.4, GOLD)
-    _balloon(ax, 7, 10.5, WH - 2.2, 10.5, HH + 4.4, GREY)
+    #  the window: the air between part A and the outer leg, reached
+    #  straight down through the yoke so the leader crosses no winding
+    xw = (RT + w['h_A'] + RW) / 2.0
+    _balloon(ax, 7, xw, WH - 3.0, xw, HH + 4.4, GREY)
 
     #  ============================== DETAIL, the winding unrolled
     OX, OY = 2.0, -3.6
     L = M['wind_w']
     fl = (M['flange_h'] - M['wind_w']) / 2.0
-    BH = w['build_p'] + 1.1
+    BH = hmax + 1.1
     ax2.add_patch(Rectangle((OX - fl - 1.6, OY - 1.9), L + 2 * fl + 2.4, 1.9,
                             fc=FERR, ec=FERRE, lw=1.0, hatch='////', zorder=3))
     for x0 in (OX - fl, OX + L):
         ax2.add_patch(Rectangle((x0, OY), fl, BH, **bob))
-    for x0, mw in ((OX, w['margin_p']), (OX + L - w['margin_s'],
-                                         w['margin_s'])):
-        ax2.add_patch(Rectangle((x0, OY), mw, BH, fc=TAPE,
+    for y0, y1, h in tape:
+        ax2.add_patch(Rectangle((OX + y0, OY), y1 - y0, h, fc=TAPE,
                                 ec='#b9a25e', lw=0.6, zorder=4))
-    xP = OX + w['margin_p']
-    for li, n in enumerate(w['rows_p']):
-        y = OY + d * (li + 0.5)
-        x0 = xP + d * 0.5 + (w['per_layer'] - n) * d * 0.5
-        for k in range(n):
-            ax2.add_patch(Circle((x0 + k * d, y), d / 2.0, fc=COL['NP1'],
-                                 ec=EDG['NP1'], lw=0.7, alpha=0.45, zorder=6))
-    xG = xP + w['w_pri']
-    ax2.add_patch(Rectangle((xG, OY), w['gap'], BH, fc='none', ec=GOLD,
-                            lw=1.1, ls=(0, (3.5, 2.5)), zorder=7))
-    xS = xG + w['gap']
-    for k in range(2 * NL):
-        c = COL[fcol(k)]
-        ax2.add_patch(Rectangle((xS, OY + k * tp), w['w_foil'], w['t_foil'],
-                                fc=c, ec=c, lw=0.4, zorder=6))
-    for k in range(NA):
-        ax2.add_patch(Circle((xS + w['w_foil'] * (k + 0.5) / NA,
-                              OY + 2 * NL * tp + TW / 2.0), TW / 2.0,
-                             fc=PUR, ec=PUR, lw=0.5, zorder=7))
-    ax2.text(OX + L / 2.0, OY + BH + 5.4,
+    for g0, g1 in ((w['yA'][1], w['yS'][0]), (w['yS'][1], w['yB'][0])):
+        ax2.add_patch(Rectangle((OX + g0, OY), g1 - g0, hmax, fc='none',
+                                ec=GOLD, lw=1.1, ls=(0, (3.5, 2.5)), zorder=7))
+    for part in ('A', 'B'):
+        y0 = w['y' + part][0]
+        for li, n in enumerate(w['rows_' + part]):
+            for k in range(n):
+                pri(ax2, OX + y0 + dp * (k + 0.5), OY + dp * (li + 0.5))
+    for li, row in enumerate(w['smap']):
+        for c, who in enumerate(row):
+            sec(ax2, OX + yS0 + ds * (c + 0.5), OY + ds * (li + 0.5), who)
+    for k in range(w['n_aux']):
+        aux(ax2, OX + yS0 + w['w_S'] * (k + 0.5) / w['n_aux'],
+            OY + w['h_S'] + w['tiw_od'] / 2.0)
+    ax2.text(OX + L / 2.0, OY + BH + 5.6,
              'the winding unrolled along the bobbin', ha='center',
              va='bottom', fontsize=10.5, color=NAVY, zorder=8)
     _dimh(ax2, OX, OX + L, OY - 3.5, 'winding width  %.1f' % L,
           ext=OY - 1.9, side=-1)
-    for x0, x1, t, c in ((xP, xG, '%.2f' % w['w_pri'], EDG['NP1']),
-                         (xG, xS, '%.2f' % w['gap'], GOLD),
-                         (xS, xS + w['w_foil'], '%.2f' % w['w_foil'],
-                          EDG['NS2'])):
-        _dimh(ax2, x0, x1, OY + BH + 1.1, t, color=c)
-    for n, xb, c in ((1, (xP + xG) / 2, EDG['NP1']),
-                     (4, (xG + xS) / 2, GOLD),
-                     (2, xS + w['w_foil'] * 0.30, EDG['NS2']),
-                     (3, xS + w['w_foil'] * 0.70, EDG['NS3'])):
-        _balloon(ax2, n, 0, 0, xb, OY + BH + 3.1, c, r=0.62, lead=False)
-    _balloon(ax2, 5, OX + w['margin_p'] * 0.5, OY + BH * 0.62,
-             OX - 1.5, OY + BH + 3.1, GREY, r=0.62)
-    #  which windings the foil layers are, read at the stack itself
-    #  (the labels sit in the empty separation box, left of the stack)
-    for nm, k0 in (('NS2', 0), ('NS3', NL)):
-        yy = OY + (k0 + NL / 2.0) * tp
-        ax2.annotate(nm, xy=(xS, yy), xytext=(xS - 0.9, yy), fontsize=8.3,
-                     color=EDG[nm], ha='right', va='center', zorder=9,
-                     arrowprops=dict(arrowstyle='-', color=EDG[nm], lw=0.6,
-                                     shrinkA=1, shrinkB=1))
+    dims = [(w['yA'][0], w['yA'][1], '%.2f' % w['w_A'], EDG['NP1'], 1),
+            (w['yA'][1], w['yS'][0], '%.1f' % w['gap'], GOLD, 4),
+            (w['yS'][0], w['yS'][1], '%.2f' % w['w_S'], EDG['NS2'], None),
+            (w['yS'][1], w['yB'][0], '%.1f' % w['gap'], GOLD, 4)]
+    for x0, x1, t, c, n in dims:
+        _dimh(ax2, OX + x0, OX + x1, OY + BH + 1.1, t, color=c)
+        if n:
+            _balloon(ax2, n, 0, 0, OX + (x0 + x1) / 2, OY + BH + 3.3, c,
+                     r=0.62, lead=False)
+    xb = OX + (w['yB'][0] + w['yB'][1]) / 2
+    _balloon(ax2, 1, xb, OY + w['h_B'], xb + 1.2, OY + BH + 3.3,
+             EDG['NP1'], r=0.62)
+    for n, xx, c in ((2, yS0 + ds * (c2 + 0.5), EDG['NS2']),
+                     (3, yS0 + ds * (c3 + 0.5), EDG['NS3'])):
+        _balloon(ax2, n, 0, 0, OX + xx, OY + BH + 3.3, c, r=0.62, lead=False)
+    _balloon(ax2, 5, OX + w['yA'][0] * 0.5, OY + w['h_A'] * 0.7,
+             OX - 1.6, OY + BH + 3.3, GREY, r=0.62)
 
-    #  ===================== SECONDARY, LAYER BY LAYER (not to scale)
-    #  Twelve foil layers on the bobbin, grouped into the four turns:
-    #  NS2 first, NS3 on top of it.  Each turn is NF foils wound
-    #  together and connected in parallel at the pins.
-    X0, X1 = 3.6, 5.5                       # foil, left and right edge
-    HC, HI = 0.20, 0.07                     # copper and insulation, drawn
-    Y0 = 0.70
-    ax3.text(0.0, 4.72, 'the secondary, layer by layer  (not to scale)',
-             ha='left', va='center', fontsize=10.5, color=NAVY, zorder=8)
-    ax3.add_patch(Rectangle((X0 - 0.3, Y0 - 0.40), X1 - X0 + 0.6, 0.30,
-                            fc=PLAS, ec='#55606c', lw=0.9, zorder=3))
-    ax3.text((X0 + X1) / 2, Y0 - 0.25, 'bobbin', ha='center', va='center',
-             fontsize=8.3, color='#55606c', zorder=6)
-    for k in range(2 * NL):
-        c = COL[fcol(k)]
-        y = Y0 + k * (HC + HI)
-        ax3.add_patch(Rectangle((X0, y), X1 - X0, HC, fc=c, ec=c, lw=0.4,
-                                zorder=6))
-        if k < 2 * NL - 1:
-            ax3.add_patch(Rectangle((X0, y + HC), X1 - X0, HI, fc='#d9dde2',
-                                    ec='#b6bcc4', lw=0.3, zorder=6))
-    YT = Y0 + 2 * NL * (HC + HI) - HI          # top of the stack
-    #  turn ticks, left of the stack
-    for t in range(2 * w['Ns']):
-        ya = Y0 + t * NF * (HC + HI)
-        yb = ya + NF * (HC + HI) - HI
-        nm = 'NS2' if t < w['Ns'] else 'NS3'
-        ax3.plot([X0 - 0.15, X0 - 0.15], [ya, yb], color=EDG[nm], lw=1.0,
-                 zorder=7)
-        ax3.text(X0 - 0.25, (ya + yb) / 2, 'turn %d' % (t % w['Ns'] + 1),
-                 ha='right', va='center', fontsize=8.3, color=EDG[nm],
-                 zorder=8)
-    #  winding brackets with the pins, further left
-    for nm, k0 in (('NS2', 0), ('NS3', NL)):
-        ya = Y0 + k0 * (HC + HI)
-        yb = ya + NL * (HC + HI) - HI
-        ax3.plot([X0 - 1.15, X0 - 1.15], [ya, yb], color=EDG[nm], lw=1.3,
-                 zorder=7)
-        for yy in (ya, yb):
-            ax3.plot([X0 - 1.15, X0 - 1.0], [yy, yy], color=EDG[nm], lw=1.3,
-                     zorder=7)
-        ax3.text(X0 - 1.28, (ya + yb) / 2,
-                 '%s  %d T\npins %s' % (nm, w['Ns'], _C.pins(nm, '–')),
-                 ha='right', va='center', fontsize=8.3, color=EDG[nm],
-                 zorder=8, linespacing=1.3)
-    #  what one turn is, said once at the first turn
-    ym = Y0 + (NF // 2) * (HC + HI) + HC / 2
-    ax3.annotate('one turn = %d foils\n%.2f × %.1f mm, wound together,\n'
-                 'connected in parallel' % (NF, w['t_foil'], w['w_foil']),
-                 xy=(X1, ym), xytext=(X1 + 0.3, ym + 0.05),
-                 fontsize=8.3, color=EDG['NS2'], ha='left', va='center',
-                 zorder=9, linespacing=1.3,
-                 arrowprops=dict(arrowstyle='-', color=EDG['NS2'], lw=0.6,
-                                 shrinkA=1, shrinkB=1))
-    yi = Y0 + (NL + 1) * (HC + HI) - HI / 2
-    ax3.annotate('%.2f mm insulation between foils' % _C.T_FOIL_INS,
-                 xy=(X1, yi), xytext=(X1 + 0.3, yi + 0.55), fontsize=8.3,
-                 color=GREY, ha='left', va='center', zorder=9,
-                 arrowprops=dict(arrowstyle='-', color=GREY, lw=0.6,
-                                 shrinkA=1, shrinkB=1))
-    ax3.text(X1 + 0.3, YT + 0.02, 'radial build %.1f mm' % w['build_s'],
-             ha='left', va='center', fontsize=8.3, color=GREY, zorder=8)
+    #  ===================== THE SECONDARY GROUP (not to scale)
+    ax3.text(0.0, 4.72, 'the secondary group, bundle by bundle  '
+             '(not to scale)', ha='left', va='center', fontsize=10.5,
+             color=NAVY, zorder=8)
+    CX0, DX, RR = 2.35, 0.78, 0.34
+    LY = (1.45, 2.23)
+    ax3.add_patch(Rectangle((CX0 - 0.75, 0.66), DX * (w['per_layer_s'] - 1)
+                            + 1.5, 0.28, fc=PLAS, ec='#55606c', lw=0.9,
+                            zorder=3))
+    ax3.text(CX0 + DX * (w['per_layer_s'] - 1) / 2, 0.80, 'bobbin',
+             ha='center', va='center', fontsize=8.3, color='#55606c',
+             zorder=6)
+    for li, row in enumerate(w['smap']):
+        for c, who in enumerate(row):
+            xx, yy = CX0 + DX * c, LY[li]
+            ax3.add_patch(Circle((xx, yy), RR, fc=COL[who], ec=EDG[who],
+                                 lw=0.8, alpha=0.75, zorder=6))
+            ax3.text(xx, yy - 0.02, who[-1], ha='center', va='center',
+                     fontsize=8.3, color='white', zorder=7)
+        ax3.text(CX0 - 0.55, LY[li], 'turn %d' % (li + 1), ha='right',
+                 va='center', fontsize=8.3, color=GREY, zorder=7)
+    YA = LY[1] + RR + 0.20
+    for k in range(w['n_aux']):
+        xx = CX0 + DX * (w['per_layer_s'] - 1) * (k + 0.5) / w['n_aux']
+        ax3.add_patch(Circle((xx, YA), 0.14, fc=PUR, ec=PUR, lw=0.5,
+                             zorder=7))
+    ax3.text(CX0 - 0.55, YA, 'NAUX', ha='right', va='center', fontsize=8.3,
+             color=PUR, zorder=7)
+    xe = CX0 + DX * (w['per_layer_s'] - 1)
+    ax3.text(CX0 - 0.35, 0.36, u'\u2190 part A', ha='left', va='center',
+             fontsize=8.3, color=EDG['NP1'], zorder=7)
+    ax3.text(xe + 0.35, 0.36, u'part B \u2192', ha='right', va='center',
+             fontsize=8.3, color=EDG['NP1'], zorder=7)
+    XN = xe + 0.95
+    ax3.text(XN, 3.62, 'one circle = one Litz bundle,\n%d × ø%.2f mm, '
+             'ø%.2f mm; two per\nturn, in parallel, each to its own pin'
+             % (w['n_strand_s'], _C.D_STRAND, ds), ha='left', va='center',
+             fontsize=8.3, color=GREY, zorder=8, linespacing=1.3)
+    ax3.text(XN, 2.30, 'turned over at the layer change: each\n'
+             'winding sits next to part A in one turn\n'
+             'and next to part B in the other', ha='left', va='center',
+             fontsize=8.3, color=GREY, zorder=8, linespacing=1.3)
+    ax3.text(XN, 1.05, '2  NS2 %d T, pins %s\n3  NS3 %d T, pins %s\n'
+             'NAUX %d T of TIW over the group'
+             % (w['Ns'], _C.pins('NS2', '–'), w['Ns'], _C.pins('NS3', '–'),
+                w['n_aux']), ha='left', va='center', fontsize=8.3,
+             color=GREY, zorder=8, linespacing=1.3)
 
     foot(fig, 'Drawn to scale from the TDK %s datasheets, core %s and coil '
               'former %s; the third panel is not to scale. The winding is '
               'laid out by cores.winding() at J = %.1f A/mm2, Litz fill '
-              '%.2f, %.2f mm foil, %.1f / %.1f mm margin tape (primary / '
-              'secondary flange) and %.1f mm TIW for NAUX.'
+              '%.2f, %.1f mm of triple insulation on the NP1 bundle '
+              '(assumed), gaps of %.1f mm (nominal, trimmed for L_short), '
+              '%.1f mm margin tape at each flange and %.1f mm TIW for NAUX.'
               % (NAME, M['core'], M['former'], _C.J_CU, _C.K_LITZ,
-                 _C.T_FOIL, w['margin_p'], w['margin_s'], w['tiw_od']))
+                 w['tiw_add'], w['gap'], w['margin'], w['tiw_od']))
     save(fig, 'an_core_section')
 
 
@@ -2744,7 +2735,7 @@ def an_xfmr_read(save, foot):
                u'line-cycle rms at the HB edge: %.1f A \u2192 primary Cu'
                % V['Iprilc']))
     hs.append((Line2D([], [], color=MAG, lw=1.1, ls=(0, (1, 2))),
-               u'line-cycle rms at the HB edge: %.1f A \u2192 foil'
+               u'line-cycle rms at the HB edge: %.1f A \u2192 secondary Cu'
                % V['Isecx']))
     pmax = max(c[3].max() for c in curves)
     smax = max(c[4].max() for c in curves)
@@ -2783,8 +2774,10 @@ def an_xfmr_read(save, foot):
     c.fill_between([0, Is], 0, 0.9, color='#f3c9c9', lw=0, zorder=1)
     c.plot([0, Is], [0.9, 0.9], color=MAG, lw=1.6, zorder=3)
     c.plot([Is, Is], [0.0, 0.9], color=MAG, lw=1.6, zorder=3)
-    c.text(Is / 2, 0.33, 'L at NP1 must\nstay above', ha='center',
-           va='center', fontsize=9.4, color=MAG, zorder=4)
+    #  between the 0 and 10 A grid lines, so no line runs through it
+    c.text(5.0, 0.36, 'L at NP1\nmust stay\nabove', ha='center',
+           va='center', fontsize=9.4, color=MAG, zorder=4,
+           path_effects=HALO)             # it sits on the shaded region
     c.text(0.4, 1.02, 'L$_{open}$ initial', ha='left', va='bottom',
            fontsize=9.4, color=GREY)
     #  the test current is named ABOVE its own line, where nothing else is:
