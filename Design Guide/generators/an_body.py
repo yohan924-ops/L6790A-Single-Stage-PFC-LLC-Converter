@@ -479,8 +479,9 @@ def build(A):
     add(fig('an_flux_steps',
             'The flux built step by step. Left, a flyback in discontinuous '
             'conduction; right, an LLC below resonance, drawn from the '
-            'eight-interval model with this design&rsquo;s currents. '
-            'Compare the bottom row, the flux.'))
+            'eight-interval model with this design&rsquo;s currents and '
+            'numbered with its steps (Figure&nbsp;%s). '
+            'Compare the bottom row, the flux.' % FR('an_modes_wave')))
     ext(bullets([
         '<b>Flyback, 1.</b> The switch closes. V<sub>in</sub> sits on the '
         'primary, i<sub>p</sub> ramps at V<sub>in</sub>/L<sub>p</sub>, and '
@@ -510,9 +511,9 @@ def build(A):
         'joins the resonance with C<sub>r</sub>, i<sub>&mu;</sub> is nearly '
         'flat, and B holds at its peak. That peak was set by V<sub>out</sub> '
         'and T<sub>r</sub>/2 and by nothing else.',
-        '<b>LLC, 3.</b> Dead time. i<sub>&mu;</sub> swings the bridge node '
-        'to the other rail; the flux hardly moves.',
-        '<b>LLC, 4.</b> The other switch closes and the other rectifier '
+        '<b>LLC, 3 and 4.</b> Dead time. i<sub>&mu;</sub> swings the bridge '
+        'node to the other rail; the flux hardly moves.',
+        '<b>LLC, 5.</b> The other switch closes and the other rectifier '
         'clamps the secondary to &minus;V<sub>out</sub>; B ramps back down '
         'at the same slope to &minus;B<sub>pk</sub>.']))
     ext(tbl('The same two cores, compared.',
@@ -1619,12 +1620,18 @@ def build(A):
           'magnetising peak scaled by the voltage ratio, and the ratio of the '
           'two voltages is the whole margin. No arbitrary factor goes on top '
           'of it:'))
-    add(eq(r'I_{sat}\;=\;I_{eq}\;\frac{V_{OVP2}}{V_{o,eff}}',
+    #  V_out, not V_o,eff, below: the exact ratio is (V_OVP2 + N V_f) /
+    #  (V_out + N V_f), and only V_OVP2 / V_out sits above it, which is what
+    #  the next paragraph says and what the design example substitutes.
+    #  Printed with V_o,eff in round 61, it was the one ratio SMALLER than the
+    #  exact one (round 62).
+    add(eq(r'I_{sat}\;=\;I_{eq}\;\frac{V_{OVP2}}{V_{out}}',
            key='Isatspec'))
     add(p('With V<sub>f</sub> = 0 this is the exact flux ratio. With a '
           'rectifier drop the flux ratio is (V<sub>OVP2</sub> + '
-          'N<sub>rect</sub>V<sub>f</sub>)/V<sub>o,eff</sub>, a little '
-          'smaller, so Equation&nbsp;%s errs on the safe side.'
+          'N<sub>rect</sub>V<sub>f</sub>)/(V<sub>out</sub> + '
+          'N<sub>rect</sub>V<sub>f</sub>), a little smaller, so '
+          'Equation&nbsp;%s errs on the safe side.'
           % ER('Isatspec')))
     add(p('Overload, start-up, burst mode and the switching frequency do '
           'not raise the flux (Section&nbsp;%s); an output over-voltage '
@@ -2591,7 +2598,10 @@ def build(A):
     add(fig('an_tank_current',
             'The composite tank current at the HB edge, full '
             'load, and why its peak is not the sum of the two component '
-            'peaks: they occur at different instants.'))
+            'peaks: they occur at different instants. Drawn as the '
+            'calculation models it: the reflected load current a half sine '
+            'over the whole switching half period, the magnetising current '
+            'a linear ramp.'))
     ext(tbl('Currents at the HB edge (%.0f&nbsp;Vac, half bridge), full load. '
             % V['Veqlo'] +
             'Peaks and worst-cycle rms are taken in the switching cycle at '
@@ -2925,8 +2935,8 @@ def build(A):
     add(calc(r'i_{\mu,pk}=\frac{%.2f\times %.1f\ \mathrm{V}}'
              r'{4\times %.2f\ \mathrm{kHz}\times %.2f\ \mu\mathrm{H}}'
              r'=\mathbf{%.2f\ A}'
-             % (V['nT'], V['Vout'], V['fr'], V['Lmu'] / V['nser'],
-                V['nT'] * V['Vout'] / (4 * V['fr'] * 1e3
+             % (V['nT'], _SH['V.o_eff'], V['fr'], V['Lmu'] / V['nser'],
+                V['nT'] * _SH['V.o_eff'] / (4 * V['fr'] * 1e3
                                        * V['Lmu'] / V['nser'] * 1e-6))))
     add(p('<b>Saturation test current</b>, the magnetising peak at the '
           'OVP2 output voltage:'))
@@ -3564,7 +3574,7 @@ def build(A):
     add(h2('Burst mode: one resistor, read once at power-up'))
     add(eq(r'R_{BM}=16.7\,\frac{\mathrm{k}\Omega}{\mathrm{V}^{2}}'
            r'\,R_{CS}\,P_{in,BM}\,,\qquad '
-           r'V_{BM,eq}=\frac{R_{BM}}{100\,\mathrm{k}\Omega}+0.5\,\mathrm{V}', key='RBM'))
+           r'V_{BM,eq}=0.01\,\frac{\mathrm{V}}{\mathrm{k}\Omega}\,R_{BM}+0.5\,\mathrm{V}', key='RBM'))
     add(p('Burst starts at P<sub>in,BM</sub> = %(rBM).0f&nbsp;%% &times; '
           '%(Pin).1f&nbsp;W = %(PinBM).1f&nbsp;W:'
           % dict(V, rBM=100 * A.SH['r.BM'],
@@ -3572,7 +3582,7 @@ def build(A):
     add(calc(r'R_{BM}=16.7\cdot%(R).1f\times10^{-3}\cdot%(P).1f'
              r'=%(RB).1f\;\mathrm{k\Omega}\;\rightarrow\;'
              r'%(sel).0f\;\mathrm{k\Omega}\,,\qquad '
-             r'V_{BM,eq}=\frac{%(sel).0f}{100}+0.5=%(V).3f\;\mathrm{V}'
+             r'V_{BM,eq}=0.01\times %(sel).0f+0.5=%(V).3f\;\mathrm{V}'
              % dict(R=V['RCS'], P=A.SH['r.BM'] * V['Pin'], RB=A.SH['R.BM'],
                     sel=A.SH['R.BM_sel'], V=A.SH['V.BM_eq'])))
     add(p('Valid range 15 to 140&nbsp;k&Omega;; tied to ground, burst mode '

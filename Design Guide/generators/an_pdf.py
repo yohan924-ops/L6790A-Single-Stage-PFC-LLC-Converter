@@ -680,6 +680,11 @@ def _wrap_missing(t):
 
 # ============================================================== equations
 EQSIZE = 12.0      # mathtext points on the page; the body is 9.3 pt
+#  Equation strokes 10 % heavier (2026-09-26, user).  The STIX single-stem
+#  letters l, I, T measure 0.084 / 0.102 / 0.102 em, mean 0.096 em; a
+#  same-colour outline of width w adds w to every stroke, so w = 0.1 x
+#  0.096 em = 0.0096 x the point size.
+EQ_BOLD = 0.0096
 
 
 def eqpng(tex, size=EQSIZE):
@@ -691,12 +696,15 @@ def eqpng(tex, size=EQSIZE):
     #  \dfrac keeps display style at every level, so nothing shrinks
     #  but the sub- and superscripts.
     tex = re.sub(r'\\frac(?![a-zA-Z])', r'\\dfrac', tex)
-    key = hashlib.md5(('%s|%s' % (tex, size)).encode('utf-8')).hexdigest()[:14]
+    key = hashlib.md5(('%s|%s|%s' % (tex, size, EQ_BOLD)).encode('utf-8')).hexdigest()[:14]
     p = os.path.join(EQD, key + '.png')
     if not os.path.exists(p):
         plt.rcParams['mathtext.fontset'] = 'stix'
         fig = plt.figure(figsize=(0.02, 0.02))
-        fig.text(0, 0, '$%s$' % tex, fontsize=size)
+        import matplotlib.patheffects as _pe
+        fig.text(0, 0, '$%s$' % tex, fontsize=size, color='black',
+                 path_effects=[_pe.withStroke(linewidth=EQ_BOLD * size,
+                                              foreground='black')])
         fig.savefig(p, dpi=340, transparent=True, bbox_inches='tight',
                     pad_inches=0.03)
         plt.close(fig)

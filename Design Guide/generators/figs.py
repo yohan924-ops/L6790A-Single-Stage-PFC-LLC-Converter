@@ -531,23 +531,28 @@ def f12_two_divergences():
     Vac = R['Vin_min']
     Mreq = 2 * N * VOE / (sqrt(2) * Vac * np.sin(thr))
     Q = QPK * np.sin(thr) ** 2
-    ceil = np.array([gain_fn(FN0 * 1.0002, q, LAM) if q > 1e-7 else 300
+    #  The ceiling is the highest gain the tank gives while still inductive:
+    #  M at the ZVS edge for that load.  It was the gain AT f_o before, which
+    #  is the ceiling only as the load vanishes; with load the edge moves up
+    #  to 0.73 f_r, and the gain at f_o fell below the demand from about
+    #  79 deg - under a title saying the ceiling stays above (round 62).
+    ceil = np.array([gain_fn(zvs_edge(q, LAM), q, LAM) if q > 1e-7 else 300
                      for q in Q])
 
     a1.fill_between(deg, Mreq, ceil, color=GRN, alpha=0.22)
     a1.plot(deg, Mreq, color=MAG, lw=2.8, label='what the grid DEMANDS')
     a1.plot(deg, ceil, color=PUR, lw=2.4, ls='--',
-            label='what the tank can DELIVER')
+            label='what the tank can DELIVER\n(its gain at the ZVS edge)')
     a1.set_yscale('log')
     a1.set_xlim(0, 90)
     a1.set_ylim(0.8, 300)
     a1.set_xticks([0, 15, 30, 45, 60, 75, 90])
     a1.set_xlabel('line phase  $\\theta$  [deg]')
     a1.set_ylabel('gain   (log scale)')
-    a1.legend(loc='lower left', fontsize=9.5)
+    a1.legend(loc='upper right', fontsize=9.5)
     a1.set_title('1   both blow up \u2014 but the ceiling stays ABOVE',
                  fontsize=11, color=NAVY)
-    note(a1, 47, 40,
+    note(a1, 88, 42, va='top', ha='right', text=
          'The green gap is the margin. It never\ncloses, because the load '
          'vanishes as\nsin$^2\\theta$ and a vanishing load lifts the\n'
          'ceiling to infinity at f$_o$.', color=GRN, size=10)
@@ -609,7 +614,7 @@ def f13_morphing():
     aW.text(0, -2.72, 'FULL bridge - leg 2 switches too',
             color=MAG, fontsize=10.5, fontweight='bold', va='top')
     for y0, y1, c, lab in ((1.4, 2.4, NAVY, 'V$_{in}$'),
-                           (-2.4, -0.4, MAG, '2 x V$_{in}$')):
+                           (-2.4, -0.4, MAG, u'2 \u00d7 V$_{in}$')):
         aW.annotate('', xy=(2.28, y1), xytext=(2.28, y0),
                     arrowprops=dict(arrowstyle='<|-|>', color=c, lw=2.0))
         #  the axis runs to 3.05 so this label has room to the right of
@@ -648,11 +653,13 @@ def f13_morphing():
     #  (2026-09-24, user)
     note(aE, 268, 372, 'FB edge: %.0f Vac mains,\ntank sees 2 \u00d7 %.0f = %.0f Vac'
          % (BOH, BOH, HIq), color=MAG, size=9.8, ha='right', va='top')
-    note(aE, 120, 152, 'HB edge: %.0f Vac mains,\ntank sees %.0f Vac' % (LOq, LOq),
-         color=PUR, size=9.8, ha='center')
+    #  above the half-bridge branch: in the bottom-left corner it covered
+    #  the 150 tick of the y axis (round 62)
+    note(aE, 224, 292, 'HB edge: %.0f Vac mains,\ntank sees %.0f Vac' % (LOq, LOq),
+         color=PUR, size=9.8, ha='center', va='bottom')
     aE.annotate('', xy=(169, 335), xytext=(205, 352),
                 arrowprops=dict(arrowstyle='-|>', color=MAG, lw=1.5))
-    aE.annotate('', xy=(176, 172), xytext=(150, 158),
+    aE.annotate('', xy=(175, 178), xytext=(200, 288),
                 arrowprops=dict(arrowstyle='-|>', color=PUR, lw=1.5))
     foot(fig, 'Half bridge is entered at 245 V peak going up and full bridge '
               'returns at 235 V peak coming down - 10 V of hysteresis - and the '

@@ -978,8 +978,12 @@ S.row('- OVP2 the fitted divider really gives:', 'V.OVP2_act',
 #  current is simply the magnetizing peak there.  There is no arbitrary
 #  margin factor and there must not be one: a round number chosen by hand
 #  hides which circuit limit the part is actually being tested against.
+#  V.out, not V.o_eff, in the denominator: the exact flux ratio is
+#  (V.OVP2_act + N.rect*V.rect)/(V.out + N.rect*V.rect), and V.OVP2_act/V.out
+#  is the ratio that sits at or above it.  V.OVP2_act/V.o_eff sat below it
+#  whenever V.rect > 0 (equal here, V.rect = 0 with SR).  2026-09-25.
 S.row('- Output-voltage overshoot the core must survive:', 'k.OVsat',
-      'V.OVP2_act/V.o_eff', None, 4)
+      'V.OVP2_act/V.out', None, 4)
 S.row('- Test current on the vendor specification:', 'I.sat_spec',
       'I.sat_eq*k.OVsat', 'A', 2,
       note='rounded UP to a whole ampere on the specification sheet. It is '

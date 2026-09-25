@@ -1344,7 +1344,7 @@ def an_peakgain(save, foot):
     for sp in ('top', 'right'):
         ax.spines[sp].set_visible(False)
     _call(ax, (0.62, max(M(f, 0.62, 1.0 / (3.0 - 1.0)) for f in fn)),
-          (0.80, 1.66), 'pick a required peak gain and a Q,\n'
+          (0.90, 1.95), 'pick a required peak gain and a Q,\n'
           'and m is decided', rad=-0.2)
     foot(fig, 'm = L_p / L_r. A single-stage converter needs a wide gain '
               'range at a Q that is not small, which is what pushes m down '
@@ -2567,7 +2567,11 @@ def an_xfmr_read(save, foot):
     for x, nm, c, ha in ((e[1] / 2, 'power delivery', MAG, 'center'),
                          (e[2] - 0.004, 'freewheeling', CYA, 'right'),
                          (e[2] + 0.004, 'dead time', GREY, 'left')):
-        axs[0].text(x, 1.30, nm, ha=ha, va='bottom', fontsize=9.4, color=c)
+        #  on a white ground: the interval boundaries are dotted through
+        #  this height and ran across 'freewheeling' and 'dead time'
+        axs[0].text(x, 1.30, nm, ha=ha, va='bottom', fontsize=9.4, color=c,
+                    zorder=5, bbox=dict(boxstyle='square,pad=0.08',
+                                        fc='white', ec='none'))
     for a in axs:
         for x in (e[1], e[2], e[4], e[5], e[6]):
             a.axvline(x, color=GREY, lw=0.7, ls=(0, (2, 3)), zorder=0)
@@ -3042,7 +3046,8 @@ def an_flux_steps(save, foot):
         top = axes[0]
         for k, (a, b) in enumerate(zip(edges[:-1], edges[1:])):
             top.text(0.5 * (a + b), 1.30, names[k], ha='center',
-                     va='center', fontsize=9.8, color=NAVY,
+                     va='center', fontsize=9.8 if len(names[k]) < 2 else 9.4,
+                     color=NAVY,
                      fontweight='bold', path_effects=HALO, zorder=9)
 
     # ------------------------------------------------------ flyback, DCM
@@ -3115,8 +3120,11 @@ def an_flux_steps(save, foot):
     axr[0].text(0.5 + 0.5 * e[1], 0.45, 'S$_2$', ha='center', va='center',
                 fontsize=9.6, color=NAVY, path_effects=HALO, zorder=9)
     cap_(axr[0], 'the bridge; the rectifier conducts WHILE a switch is on')
-    #  bands: 1 power transfer (+), 2 freewheel, 3 dead time, 4 transfer (-)
-    bands(axr, [0.0, e[1], e[2], e[4], e[5], 1.0], ['1', '2', '3', '4', ''])
+    #  bands, numbered as the eight steps of Figures an_modes_12..an_modes_wave:
+    #  1 power transfer (+), 2 freewheel, 3-4 dead time, 5 transfer (-).
+    #  They read 1-4 before, so "4" meant the body-diode clamp in one figure
+    #  and the other half's power transfer in this one.
+    bands(axr, [0.0, e[1], e[2], e[4], e[5], 1.0], ['1', '2', '3,4', '5', ''])
 
     axr[1].set_ylim(-1.38, 1.38)
     axr[1].axvspan(e[0], e[1], color=GRN, alpha=0.10, lw=0)

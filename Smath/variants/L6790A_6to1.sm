@@ -13607,7 +13607,7 @@
       <input>
         <e type="operand">k.OVsat</e>
         <e type="operand">V.OVP2_act</e>
-        <e type="operand">V.o_eff</e>
+        <e type="operand">V.out</e>
         <e type="operator" args="2">/</e>
         <e type="operator" args="2">:</e>
       </input>

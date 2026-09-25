@@ -44,7 +44,7 @@ def an_above_below(save, foot, R, sweep, FR):
             color=NAVY, fontsize=10, ha='left', va='center',
             bbox=dict(boxstyle='round,pad=0.4', fc='white', ec=CYA, lw=1.2))
     ax.text(176, 0.40, 'BELOW resonance\ntank BOOSTS  \u00b7  M > 1\n'
-                       'secondary stops early, then a dead interval',
+                       'secondary stops early, then freewheels (steps 2, 6)',
             color=NAVY, fontsize=10, ha='right', va='center',
             bbox=dict(boxstyle='round,pad=0.4', fc='white', ec='#B8860B',
                       lw=1.2))

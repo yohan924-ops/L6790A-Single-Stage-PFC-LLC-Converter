@@ -238,7 +238,9 @@ LOUT2를 정적 High로 두어 2번 레그 로우사이드를 계속 도통시�
     *동작 자속을 재현하는* 전류이지 동작 전류가 아니다 — 15 A < 18.3 A 는 모순이 아니다.
     공진 아래에서 자화 도통 구간이 `T.r/2` 로 고정되므로 자화전류는 `f.sw` 와 무관하고
     출력 전압에만 비례하고, 최악 자속은 컨트롤러가 허용하는 최대 출력 = **OVP2** 에서 나온다:
-    `I.sat_spec = I.sat_eq × V.OVP2_act/V.o_eff`. **곱할 임의의 수가 없다.**
+    `I.sat_spec = I.sat_eq × V.OVP2_act/V.out`. **곱할 임의의 수가 없다.**
+    분모는 `V.out` 이다 — 정확한 자속비 `(V.OVP2_act+N.rect·V.rect)/(V.out+N.rect·V.rect)` 이상이 되는 쪽.
+    `V.o_eff` 로 나누면 `V.rect` > 0 일 때 그보다 작아진다(이 설계는 SR 이라 `V.rect` = 0, 값 같음. 62차).
     `I.sat_eq` 의 분모는 `L.mu_x` 다(`L.open_x` 가 아니다) — 개방시험에서 코어 중앙다리를 도는
     것은 `L.mu` 몫뿐이고, 그래서 `I.sat_eq` 는 `I.Lm_pk` 와 같아야 한다. `check_trans_spec.py` 가
     OVP2 대조를 한다. (되돌렸다 잡힌 경위는 `HISTORY.md` 2026-09-21)

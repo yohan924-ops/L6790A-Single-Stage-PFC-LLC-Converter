@@ -156,11 +156,13 @@ def an_pf_chain(save, foot, R, sweep):
     a.text(90, 1.45, u'required gain  M$_{req}$/M$_{pk}$ = 1/sinθ   '
            u'→ ∞', ha='center', va='bottom', fontsize=10.2,
            color=MAG, path_effects=HALO, zorder=9)
-    a2.text(90, 0.92, u'loading  Q/Q$_{pk}$ = sin$^2$θ   → 0',
-            ha='center', va='top', fontsize=10.2, color=CYA,
+    #  above the curve's crest: set under it at 0.92 it sat on the curve
+    #  itself from 70 to 110 deg (round 62)
+    a2.text(90, 1.05, u'loading  Q/Q$_{pk}$ = sin$^2$θ   → 0',
+            ha='center', va='bottom', fontsize=10.2, color=CYA,
             path_effects=HALO, zorder=9)
     #  'both diverge' was wrong for the loading, which goes to zero
-    a.text(60, 0.95, u'at the zero crossing: gain demand → ∞, load → 0;\n'
+    a.text(60, 0.80, u'at the zero crossing: gain demand → ∞, load → 0;\n'
            'a tank with no load has unlimited gain at f$_o$',
            ha='left', va='top', fontsize=9.8, color=GREY,
            path_effects=HALO, zorder=9)
