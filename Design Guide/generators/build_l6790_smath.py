@@ -31,6 +31,7 @@ import zedsheet as ZS                                              # noqa: E402
 #   그대로 쓰므로 3 이고, 8to1 만 2 다 - 코어 하나를 줄이는 대신 유닛당 1차가
 #   8턴이 된다.  N.x 가 2 면 N.s=2 에서 감을 수 있는 세트비가 1.0 단위가 된다
 #   (N.x=3 · N.s=2 는 1.5 단위라 8 을 못 잡는다).
+import cores as _CORES     # the x1 point's core area (cores.CHOSEN)
 VARIANTS = {
     #  9 : 1 (Np 3 · Ns 1 · L.m 24 uH) 은 2026-09-23 에 지웠다 - 정본이 7.5:1 이
     #  되면서 쓰는 곳이 없어졌다.  근거와 수치는 docs/HISTORY.md.
@@ -43,11 +44,12 @@ VARIANTS = {
                   RBZ=680, CVCC=1000),
     #  ONE transformer, 15 : 2 on a single core (2026-09-22, user: the
     #  guide's example is one transformer).  Same tank as 7p5to1; N.aux =
-    #  1 * 2 = 2 turns.  The core is cores.CHOSEN (E 60/22/16) - the
+    #  1 * 2 = 2 turns.  The core is cores.CHOSEN (E 60/22/16, TDK
+    #  PC47EE60-Z) and its A.e is read from there, not written here - the
     #  PQ 40/40 of the three-unit build has no room for a 15-turn primary.
     '7p5to1_x1': dict(nT=7.5, Cr=100, Lr=11.0, Lm=20.0, Nx=1, Np=15, Ns=2,
                       kaux=1, RzH=220, CT=470, label='7.5 : 1',
-                      Ae=211.0),
+                      Ae=_CORES.CORES[_CORES.CHOSEN]['Ae']),
 }
 #  2026-09-25: the auxiliary winding supplies VCC (no external rail), n.aux
 #  = 1.0 on every design point, so R.ZCD_H is 220 k on all of them.  RBZ and

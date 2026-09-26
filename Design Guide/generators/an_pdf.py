@@ -1177,12 +1177,12 @@ def legal():
                     'safety insulation of the transformer for household AV '
                     'equipment in the US, EU, Japan, Korea and China. The '
                     'transformer of the example rebuilt around its '
-                    'leakage: a leakage estimate added, a section winding on '
-                    'a two-section former with the primary in '
-                    'triple-insulated Litz beside a Litz secondary, moved to '
-                    'an E 60/22/16 core whose deep, short window takes that '
-                    'winding at the tank\'s leakage, with an allowance for '
-                    'the looseness of a real winding.',
+                    'leakage: a leakage estimate added, and a section '
+                    'winding, the primary in triple-insulated Litz beside a '
+                    'Litz secondary, the two sections touching, on a TDK '
+                    'E 60/22/16 core whose deep, short window takes it near '
+                    'the tank\'s leakage, with an allowance for the '
+                    'looseness of a real winding.',
                     S['tc'])]],
         colWidths=[70, 90, CW - 160],
         style=TableStyle([('BACKGROUND', (0, 0), (-1, 0), NAVY),

@@ -32,4 +32,4 @@ paths:
   도면 세 장(`bom_power_stage` · `bom_pin_config` · `comp_network_st`)을 빼면 전부 우리가 그린 것이다** — 그 세 장은
   캡션과 앞붙이에 출처를 적었다(50차). 가져온 그림을 더하면 캡션과 앞붙이 문장을 같이 고칠 것.
 - 코어 기하는 `cores.py` 한 곳(`CORES` 전자기 값 · `MECH` 치수 · `PINMAP` 핀 배정 · `winding()`), 그림·표·벤더 사양서가 같이 읽는다.
-  `J_CU` · `K_U` · `K_LITZ` · `TIW_LITZ_ADD` · `K_WIND` · `PRI_PAR` · `SEC_PAR` · `SEC_ORDER` · `G_NOM` · `FLANGE_MIN` · `MARGIN_F` · `TIW_OD` 가 가정·선정값이다. E 60/22/16 의 보빈은 주문품이라 그 치수(튜브 · 플랜지 · 핀)는 **우리 사양**이다. 절연은 TIW 선재가 맡고 간격은 누설 전용 — 간격을 바꾸면 `leakage.py` 로 L_short 를 다시 볼 것. **핀 번호 방향은 가정**이라 도면으로 확인할 것.
+  `J_CU` · `K_U` · `K_LITZ` · `TIW_LITZ_ADD` · `K_WIND` · `PRI_LAYERS` · `SEC_PAR` · `SEC_LAYERS` · `SEC_ORDER` · `FLANGE_MIN` · `MARGIN_F` · `T_TAPE` · `TIW_OD` 가 가정·선정값이다. E 60/22/16 의 보빈은 주문품이라 그 치수(튜브 · 플랜지 · 핀)는 **우리 사양**이다. 절연은 TIW 선재가 맡고 두 칸은 맞닿는다 — 배치를 바꾸면 `leakage.py` 로 L_short 와 반쪽값을 다시 볼 것. **핀 번호 방향은 가정**이라 도면으로 확인할 것.

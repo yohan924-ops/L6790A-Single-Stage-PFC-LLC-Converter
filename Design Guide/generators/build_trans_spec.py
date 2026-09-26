@@ -76,7 +76,7 @@ V.update(
 # 7.5:1 을 채택한다면 R.T 를 10 kohm 으로 내려 k.floor 를 1.117 로 올려야 한다.
 V['tol_open'] = V['tol_short'] = '±10 %'
 
-# 보빈과 핀 배정: 단일 코어 설계점은 cores.CHOSEN(E 60/22/16, 주문 제작 20핀), 3코어
+# 보빈과 핀 배정: 단일 코어 설계점은 cores.CHOSEN(E 60/22/16, 주문 제작 24핀), 3코어
 # 설계점은 PQ 40/40(12핀) 을 쓴다.  둘 다 cores.BOBBINS 한 곳에서 읽는다.
 BOB_NAME = CORES.CHOSEN if V['Nx'] == 1 else 'PQ 40/40'
 BOB = CORES.BOBBINS[BOB_NAME]
@@ -206,11 +206,11 @@ for i, (n, des, term, turns, cur) in enumerate(WIND):
 
 note(17, 'Centre tap is made on the PCB by joining pins %s — do NOT join '
          'them inside the transformer.%s'
-         % (tap_text(), '   Two pins per secondary terminal, one per '
-            'sub-winding: confirm the pin current rating.'
+         % (tap_text(), '   Three pins per secondary terminal, one per '
+            'Litz bundle: confirm the pin current rating.'
             if V['Nx'] == 1 else ''))
-note(18, ('Coil former %s for %s, %d pins, made to this specification.   '
-          % (BOB['former'], BOB_NAME, BOB['pins'])
+note(18, ('Custom coil former for %s, %d pins, made to this '
+          'specification.   ' % (BOB_NAME, BOB['pins'])
           if CORES.MECH.get(BOB_NAME, {}).get('custom') else
           'Coil former TDK %s (%s), %d pins.   '
           % (BOB['former'], BOB_NAME, BOB['pins'])) +
@@ -240,8 +240,9 @@ for i, (n, item, term, req, cond, h) in enumerate(REQ):
                                           wrap_text=True)
 
 note(25, 'Both measured at %s of ONE transformer.   ' % pins('NP1') +
-         ('Item 2 is set by the partition between the two sections of the '
-          'former: trim it on the first samples.' if V['Nx'] == 1 else
+         ('Item 2 is set by the window and the winding, the two sections '
+          'touching: measure it, and each half alone, on the first samples.'
+          if V['Nx'] == 1 else
           '%s in series give a total ratio of %s.' % (COUNT, V['label'])))
 note(26, 'Item 2 follows the existing production part 26OP-LM83W clause 4-2, '
          '"SECONDARY ALL SHORT" — same vendor, same centre-tapped construction.   '
@@ -289,8 +290,8 @@ SAFE = [
      % (_R['cl_2000'], INS.K_ALT), 22),
     ('4', 'NP1 wire', 'NP1  |  %s' % SEC, 'TIW-Litz, reinforced',
      'Triple-insulated Litz approved as reinforced insulation to IEC '
-     '62368-1, one wire from pin to pin. The partition between the '
-     'sections carries NO insulation; it sets item 3-2.', 30),
+     '62368-1, one wire from pin to pin. Where the two sections touch, '
+     'nothing else is between them.', 30),
     ('5', 'NAUX wire', 'NAUX  |  %s' % SEC, 'TIW, reinforced',
      'Triple-insulated wire approved as reinforced insulation to IEC 62368-1, '
      'wound OVER the secondary; leads stay insulated up to the primary-row '

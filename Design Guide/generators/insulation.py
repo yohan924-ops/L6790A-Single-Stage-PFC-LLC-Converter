@@ -218,16 +218,14 @@ def checks(V=None, name=None):
            'of %.0f V rms' % (TIW_VRMS, r['u_rms']))
     rows = [
         ('NP1 to NS2, NS3 and the core', 'the triple insulation of the '
-         'NP1 Litz, one wire from pin to pin'
-         + (' (part A, the crossing over the secondary, part B)'
-            if w['nB'] else ''), 'reinforced: ' + tiw,
+         'NP1 Litz, one wire from pin to pin', 'reinforced: ' + tiw,
          'ok' if TIW_VRMS >= r['u_rms'] else 'FAIL'),
         ('NAUX to NS2, NS3 and the core', 'the triple insulation of NAUX, '
          'from pin to pin', 'reinforced: ' + tiw,
          'ok' if TIW_VRMS >= r['u_rms'] else 'FAIL'),
-        (('the two gaps (%.1f mm nominal)' if w['nB'] else
-          'the partition between the sections (%.1f mm)') % w['gap'],
-         'nothing: it sets the leakage only', 'none', 'ok'),
+        ('the face where the two sections touch', 'the triple insulation '
+         'of NP1 (nothing else is between them)', 'reinforced: ' + tiw,
+         'ok' if TIW_VRMS >= r['u_rms'] else 'FAIL'),
         ('NS2, NS3 to the core', 'the same side of the barrier: the core is '
          'secondary here', 'functional', 'ok'),
     ]
@@ -267,9 +265,9 @@ OPEN = [
     '(the core is secondary here) and against secondary leads: set by the '
     'coil former and the lead dress, not by this drawing.  Reinforced '
     'distances, or sleeving qualified as reinforced insulation.',
-    'Triple-insulated LITZ for NP1, two bundles in parallel: the approval '
-    'quoted is for the series; the size, its outer diameter (0.2 mm over '
-    'the bare bundle assumed) and its approval come from the wire vendor.',
+    'Triple-insulated LITZ for NP1, one bundle: the approval quoted is for '
+    'the series; the size, its outer diameter (0.2 mm over the bare bundle '
+    'assumed) and its approval come from the wire vendor.',
     'Material group IIIb is assumed for the bobbin and the board; a bobbin '
     'with a higher CTI allows less creepage, not more.',
     'The electric strength test voltage is the value the TUV report applies '
@@ -283,11 +281,10 @@ OPEN = [
     'vendor.  The approval is Class B: the winding hot spot stays under '
     '130 C, which the thermal measurement has to show.',
     'L_short is an estimate (leakage.py, a 2-D field solution) at an '
-    'assumed winding pitch; the partition that sets it to the 11 uH the '
-    'tank asks is trimmed on the first samples.',
-    'The coil former of E 60/22/16 is custom: its partition, flanges, pins '
-    'and material are this note\'s specification to the bobbin maker, and '
-    'the distances around the pins are checked on its drawing.',
+    'assumed winding pitch; the first samples measure it.',
+    'The coil former of E 60/22/16 is custom: its tube, flanges, pins and '
+    'material are this note\'s specification to the bobbin maker, and the '
+    'distances around the pins are checked on its drawing.',
 ]
 
 
