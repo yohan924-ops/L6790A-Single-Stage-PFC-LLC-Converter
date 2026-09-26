@@ -1433,7 +1433,7 @@ def an_core_section(save, foot):
     from this note's specification of the custom coil former (cores.MECH,
     with provenance per value).  The winding is not decoration:
     cores.winding() lays it out - NP1, one triple-insulated Litz bundle, in
-    one section, NS2 and NS3 in the other, the sections touching - and this
+    one section, NS2 and NS3 in the other, the partition between - and this
     function draws what comes back, every bundle a circle of its computed
     diameter at its real radius.  A TIW bundle is drawn as its copper inside
     a ring of its insulation.  Margin tape is drawn to the height of the

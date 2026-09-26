@@ -80,7 +80,7 @@ def bad(doc, what):
 def find_anywhere(name):
     """the docs cite bare filenames; look for them anywhere under the project"""
     base = os.path.basename(name.rstrip('/'))
-    for d, _, files in os.walk(ROOT):
+    for d, _, files in os.walk(ROOT, followlinks=True):   # Lr14: links
         if base in files or os.path.basename(d) == base:
             return True
     return os.path.exists(os.path.join(ROOT, name))

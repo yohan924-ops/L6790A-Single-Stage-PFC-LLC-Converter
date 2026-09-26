@@ -210,7 +210,7 @@ for _n, _M in MECH.items():
 #  the depth) reaches the tank's L_short only in a window that is DEEP and
 #  SHORT: the leakage of a filled section goes as the mean turn times the
 #  section widths over the depth squared.  This window, 14.2 mm deep and
-#  27.6 mm high, does it with the two sections touching and the flux well
+#  27.6 mm high, does it with the partition filling what is left and the flux well
 #  inside its limit.  HISTORY.md 2026-09-26.
 CHOSEN = 'E 60/22/16'
 
