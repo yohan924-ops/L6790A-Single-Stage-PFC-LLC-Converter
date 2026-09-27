@@ -76,7 +76,8 @@ V.update(
 # 7.5:1 을 채택한다면 R.T 를 10 kohm 으로 내려 k.floor 를 1.117 로 올려야 한다.
 V['tol_open'] = V['tol_short'] = '±10 %'
 
-# 보빈과 핀 배정: 단일 코어 설계점은 cores.CHOSEN(E 60/22/16, 주문 제작 24핀), 3코어
+# 보빈과 핀 배정: 단일 코어 설계점은 cores.CHOSEN(ETD 54/28/19, 카탈로그 보빈 B66396W 22핀
+# + 칸막이 2.0 mm), 3코어
 # 설계점은 PQ 40/40(12핀) 을 쓴다.  둘 다 cores.BOBBINS 한 곳에서 읽는다.
 BOB_NAME = CORES.CHOSEN if V['Nx'] == 1 else 'PQ 40/40'
 BOB = CORES.BOBBINS[BOB_NAME]
@@ -89,7 +90,7 @@ def pins(w, dash='\u2013'):
 
 
 def tap_text():
-    t = [str(n) for n in _MAP['NS2'][1] + _MAP['NS3'][0]]
+    t = [str(n) for n in sorted(set(_MAP['NS2'][1] + _MAP['NS3'][0]))]
     return ', '.join(t[:-1]) + ' and ' + t[-1]
 
 
@@ -204,16 +205,27 @@ for i, (n, des, term, turns, cur) in enumerate(WIND):
                   ('E', turns, 'center'), ('F', cur, 'center')])
     ws['E%d' % (12 + i)].font = Font(name='Calibri', size=10, bold=True)
 
-note(17, 'Centre tap is made on the PCB by joining pins %s — do NOT join '
-         'them inside the transformer.%s'
-         % (tap_text(), '   Three pins per secondary terminal, one per '
-            'Litz bundle: confirm the pin current rating.'
-            if V['Nx'] == 1 else ''))
+_shared = set(_MAP['NS2'][1]) == set(_MAP['NS3'][0])
+if _shared:
+    note(17, 'Centre tap: NS2 finish and NS3 start share pins %s, one Litz '
+             'bundle of each on a pin.   At most two bundles on a pin: confirm '
+             'the pin current rating.   NP1: the %d bundles of a turn are '
+             'turned over as a group at each layer.'
+             % (tap_text(), CORES.PRI_PAR))
+else:
+    note(17, 'Centre tap is made on the PCB by joining pins %s — do NOT join '
+             'them inside the transformer.%s'
+             % (tap_text(), '   Three pins per secondary terminal, one per '
+                'Litz bundle: confirm the pin current rating.'
+                if V['Nx'] == 1 else ''))
 note(18, ('Custom coil former for %s, %d pins, made to this '
           'specification.   ' % (BOB_NAME, BOB['pins'])
           if CORES.MECH.get(BOB_NAME, {}).get('custom') else
-          'Coil former TDK %s (%s), %d pins.   '
-          % (BOB['former'], BOB_NAME, BOB['pins'])) +
+          'Coil former TDK %s (%s), %d pins%s.   '
+          % (BOB['former'], BOB_NAME, BOB['pins'],
+             ', with a %.1f mm partition added between the two sections'
+             % CORES.PARTITION
+             if CORES.MECH.get(BOB_NAME, {}).get('partition') else '')) +
          'Pin numbers count along one row from pin 1 and back along the other '
          '— confirm on the bobbin drawing before winding.')
 

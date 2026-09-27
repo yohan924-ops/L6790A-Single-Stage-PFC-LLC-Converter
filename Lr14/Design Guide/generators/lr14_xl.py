@@ -9,6 +9,9 @@ recalculates on open).  The variant workbook is the same file as the
 canonical one, so it is copied over afterwards.
 
     python lr14_xl.py
+
+SUPERSEDED 2026-09-27 by etd54_xl.py (the ETD 54/28/19 tank); kept as the
+record of that step.  Run now it stops at its check of the old values.
 """
 import os
 import re

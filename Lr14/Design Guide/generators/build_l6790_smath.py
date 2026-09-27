@@ -35,11 +35,13 @@ import cores as _CORES     # the x1 point's core area (cores.CHOSEN)
 VARIANTS = {
     #  9 : 1 (Np 3 · Ns 1 · L.m 24 uH) 은 2026-09-23 에 지웠다 - 정본이 7.5:1 이
     #  되면서 쓰는 곳이 없어졌다.  근거와 수치는 docs/HISTORY.md.
-    #  Lr14 copy (2026-09-26, user): the tank is L.r 14 uH, L.m 25.46 uH,
-    #  C.r 100 nF - lambda 0.55 as before, so n is unchanged; f.r falls to
-    #  134.5 kHz.  The example transformer then fills its window exactly
-    #  (docs/DESIGN.md of this copy).
-    '7p5to1': dict(nT=7.5, Cr=100, Lr=14.0, Lm=25.46, Nx=3, Np=5, Ns=2,
+    #  Lr14 copy (2026-09-27, user): the transformer is TDK ETD 54/28/19 on
+    #  its catalogue former with a 2.0 mm partition and nothing empty; its
+    #  leakage (leakage.py, 23.3 uH) sets the tank: L.r 23.4 uH, L.m 42.55 uH
+    #  - lambda 0.55 as before, so n is unchanged - and C.r 200 nF, which
+    #  keeps Q near 0.8.  f.r falls to 73.6 kHz, f.o to 43.8 kHz; R.T
+    #  follows (23.2 k).  docs/DESIGN.md of this copy.
+    '7p5to1': dict(nT=7.5, Cr=200, Lr=23.4, Lm=42.55, Nx=3, Np=5, Ns=2,
                   kaux=1, RzH=220, CT=470, label='7.5 : 1'),
     '8to1':   dict(nT=8.0, Cr=100, Lr=11.0, Lm=20.0, Nx=2, Np=8, Ns=2,
                   kaux=1, RzH=220, CT=470, label='8 : 1'),
@@ -48,10 +50,10 @@ VARIANTS = {
                   RBZ=680, CVCC=1000),
     #  ONE transformer, 15 : 2 on a single core (2026-09-22, user: the
     #  guide's example is one transformer).  Same tank as 7p5to1; N.aux =
-    #  1 * 2 = 2 turns.  The core is cores.CHOSEN (E 60/22/16, TDK
-    #  PC47EE60-Z) and its A.e is read from there, not written here - the
+    #  1 * 2 = 2 turns.  The core is cores.CHOSEN (ETD 54/28/19, TDK
+    #  B66395) and its A.e is read from there, not written here - the
     #  PQ 40/40 of the three-unit build has no room for a 15-turn primary.
-    '7p5to1_x1': dict(nT=7.5, Cr=100, Lr=14.0, Lm=25.46, Nx=1, Np=15, Ns=2,
+    '7p5to1_x1': dict(nT=7.5, Cr=200, Lr=23.4, Lm=42.55, Nx=1, Np=15, Ns=2,
                       kaux=1, RzH=220, CT=470, label='7.5 : 1',
                       Ae=_CORES.CORES[_CORES.CHOSEN]['Ae']),
 }
@@ -860,7 +862,7 @@ S.row('- C.T under its DESIGN limit (>1):', 'k.CTd', MIN('C.T_max/C.T', 'C.T/C.T
       note='the 270..1000 pF checks below are the DATASHEET range, a different limit.')
 S.row('- R.T that would put f.Min exactly on f.o:', 'R.T_ceil', "1/C.T*(1/(2*f.o)-T.idle)", 'ohm', 0)
 S.area_end()
-S.const('- SELECTED timing resistor:', 'R.T', "11*'kohm", 'kohm', 1,
+S.const('- SELECTED timing resistor:', 'R.T', "23.2*'kohm", 'kohm', 1,
         note='DS operating range 5 k to 30 k. A smaller R.T raises the VCO clamp.')
 S.row('- R.T under that ceiling (>1):', 'k.RTd', 'R.T_ceil/R.T', None, 3)
 S.row('- VCO minimum frequency:', 'f.Min', "1/(2*(C.T*R.T+T.idle))", 'kHz', 2)

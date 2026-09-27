@@ -282,9 +282,9 @@ OPEN = [
     '130 C, which the thermal measurement has to show.',
     'L_short is an estimate (leakage.py, a 2-D field solution) at an '
     'assumed winding pitch; the first samples measure it.',
-    'The coil former of E 60/22/16 is custom: its tube, partition, flanges, '
-    'pins and material are this note\'s specification to the bobbin maker, '
-    'and the distances around the pins are checked on its drawing.',
+    'The coil former is the catalogue part of the chosen core with a '
+    'partition added: the bobbin maker confirms the partition and the '
+    'distances around the pins on its drawing.',
 ]
 
 

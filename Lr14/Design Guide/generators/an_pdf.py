@@ -1179,12 +1179,14 @@ def legal():
                     'transformer of the example rebuilt around its '
                     'leakage: a leakage estimate added, and a section '
                     'winding, the primary in triple-insulated Litz beside a '
-                    'Litz secondary with a partition between them, on a TDK '
-                    'E 60/22/16 core, with an allowance for the looseness of '
-                    'a real winding. This edition: tank L<sub>r</sub> '
-                    '14&nbsp;&micro;H, L<sub>m</sub> 25.46&nbsp;&micro;H, '
-                    'C<sub>r</sub> 100&nbsp;nF, the value the full window of '
-                    'that transformer gives.',
+                    'Litz secondary with a partition between them, with an '
+                    'allowance for the looseness of a real winding. This '
+                    'edition: the transformer on a TDK %s core and its '
+                    'catalogue coil former with a partition added, nothing '
+                    'left empty; the tank follows its leakage, '
+                    'L<sub>r</sub> %g&nbsp;&micro;H, L<sub>m</sub> '
+                    '%g&nbsp;&micro;H, C<sub>r</sub> %.0f&nbsp;nF.'
+                    % (__import__('cores').CHOSEN, V['Lr'], V['Lm'], V['Cr']),
                     S['tc'])]],
         colWidths=[70, 90, CW - 160],
         style=TableStyle([('BACKGROUND', (0, 0), (-1, 0), NAVY),
