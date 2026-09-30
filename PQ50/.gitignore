@@ -1,0 +1,4 @@
+#  per-machine state written by guard.py and snapshot.py (as in the
+#  top-level .gitignore, which is anchored to the original tree)
+Design Guide/generators/.guard_stamp.json
+Design Guide/generators/.snapshot_prev.json

@@ -1,0 +1,822 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<?application progid="SMath Solver" version="1.5.0.9678"?>
+<worksheet xmlns="http://smath.info/schemas/worksheet/1.0">
+  <settings ppi="96">
+    <identity><id>9c1f7a30-4d21-4e6b-9f11-6b2a7c5d3e88</id><revision>1</revision></identity>
+    <metadata lang="eng"><author>L6790A project</author></metadata>
+    <calculation><precision>4</precision><exponentialThreshold>5</exponentialThreshold><trailingZeros>false</trailingZeros><significantDigitsMode>false</significantDigitsMode><mixedNumbers>false</mixedNumbers><roundingMode>0</roundingMode><approximateEqualAccuracy>3</approximateEqualAccuracy><fractions>decimal</fractions></calculation>
+    <pageModel active="true" viewMode="2" printGrid="false" printAreas="true" simpleEqualsOnly="false" printBackgroundImages="true" hideElementsHighlightings="false">
+      <paper id="63" orientation="Landscape" width="1752" height="1268" />
+      <margins left="19" right="19" top="19" bottom="19" />
+      <header alignment="Center" color="#a9a9a9">&amp;[DATE] &amp;[TIME] - &amp;[FILENAME]</header>
+      <footer alignment="Center" color="#a9a9a9">&amp;[PAGENUM] / &amp;[COUNT]</footer>
+      <backgrounds />
+    </pageModel>
+    <dependencies>
+      <assembly name="SMath Core" version="1.75.9678.0" guid="a37cba83-b69c-4c71-9992-55ff666763bd" />
+      <assembly name="MathRegion" version="1.75.9678.0" guid="02f1ab51-215b-466e-a74d-5d8b1cf85e8d" />
+      <assembly name="PictureRegion" version="1.75.9678.0" guid="06b5df04-393e-4be7-9107-305196fcb861" />
+      <assembly name="PlotRegion" version="1.75.9678.0" guid="c451c2b5-798b-4f08-b9ec-b90963d1ddaa" />
+      <assembly name="AreaRegion" version="1.75.9678.0" guid="4974b228-4974-44cf-8274-bf2936b4a766" />
+      <assembly name="SpecialFunctions" version="1.75.9678.0" guid="2814e667-4e12-48b1-8d51-194e480eabc5" />
+      <assembly name="TextRegion" version="1.75.9678.0" guid="485d28c5-349a-48b6-93be-12a35a1c1e39" />
+    </dependencies>
+  </settings>
+  <regions type="content">
+    <region left="20" top="30" width="1560" height="32" color="#000000" fontSize="15" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: bold; font-style: normal; font-size: 15px;">Can SMath draw an LLC gain curve?  -  a standalone check</p>
+      </content>
+    </text>
+    </region>
+    <region left="20" top="76" width="1560" height="51" color="#444444" fontSize="9" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">Separate from the design sheet on purpose: this only answers whether the plotting works, and the design sheet is large enough already. Everything below uses only sqrt and arithmetic, which this build of SMath is known to have. The one construct that has</p>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">never been tried here is sys() in G5.</p>
+      </content>
+    </text>
+    </region>
+    <region left="20" top="151" width="1560" height="27" color="#0f2a44" fontSize="12" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: bold; font-style: normal; font-size: 12px;">G1  the gain function and two checks that need no plot at all</p>
+      </content>
+    </text>
+    </region>
+    <region left="20" top="186" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">M(f_n, Q, lambda) = 1 / sqrt( (1 + lambda - lambda/f_n^2)^2 + Q^2 (f_n - 1/f_n)^2 ).   Two things are true whatever the tank, and if either fails here nothing below is worth looking at.</p>
+      </content>
+    </text>
+    </region>
+    <region left="20" top="217" width="470" height="25" color="#000000" fontSize="10" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">[PICK] lambda = L.r / L.m:</p>
+      </content>
+    </text>
+    </region>
+    <region left="510" top="217" width="1080" height="27" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <math>
+      <input>
+        <e type="operand">λ</e>
+        <e type="operand">0.55</e>
+        <e type="operator" args="2">:</e>
+      </input>
+    </math>
+    </region>
+    <region left="20" top="252" width="470" height="25" color="#000000" fontSize="10" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">[PICK] Q for curve a:</p>
+      </content>
+    </text>
+    </region>
+    <region left="510" top="252" width="1080" height="27" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <math>
+      <input>
+        <e type="operand">Q.a</e>
+        <e type="operand">0.2</e>
+        <e type="operator" args="2">:</e>
+      </input>
+    </math>
+    </region>
+    <region left="20" top="287" width="470" height="25" color="#000000" fontSize="10" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">[PICK] Q for curve b:</p>
+      </content>
+    </text>
+    </region>
+    <region left="510" top="287" width="1080" height="27" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <math>
+      <input>
+        <e type="operand">Q.b</e>
+        <e type="operand">0.4</e>
+        <e type="operator" args="2">:</e>
+      </input>
+    </math>
+    </region>
+    <region left="20" top="322" width="470" height="25" color="#000000" fontSize="10" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">[PICK] Q for curve c:</p>
+      </content>
+    </text>
+    </region>
+    <region left="510" top="322" width="1080" height="27" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <math>
+      <input>
+        <e type="operand">Q.c</e>
+        <e type="operand">0.766</e>
+        <e type="operator" args="2">:</e>
+      </input>
+    </math>
+    </region>
+    <region left="20" top="357" width="470" height="25" color="#000000" fontSize="10" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">[PICK] Q for curve d:</p>
+      </content>
+    </text>
+    </region>
+    <region left="510" top="357" width="1080" height="27" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <math>
+      <input>
+        <e type="operand">Q.d</e>
+        <e type="operand">1.5</e>
+        <e type="operator" args="2">:</e>
+      </input>
+    </math>
+    </region>
+    <region left="20" top="392" width="470" height="25" color="#000000" fontSize="10" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">- first test frequency, at resonance:</p>
+      </content>
+    </text>
+    </region>
+    <region left="510" top="392" width="1080" height="27" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <math>
+      <input>
+        <e type="operand">f.na</e>
+        <e type="operand">1</e>
+        <e type="operator" args="2">:</e>
+      </input>
+    </math>
+    </region>
+    <region left="20" top="427" width="470" height="25" color="#000000" fontSize="10" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">- M at f.n = 1 with the LIGHTEST load, must be 1.0000:</p>
+      </content>
+    </text>
+    </region>
+    <region left="510" top="427" width="1080" height="85" color="#000000" fontSize="8" isBreakable="false">
+    <math decimalPlaces="4">
+      <input>
+        <e type="operand">g.1a</e>
+        <e type="operand">1</e>
+        <e type="operand">1</e>
+        <e type="operand">λ</e>
+        <e type="operator" args="2">+</e>
+        <e type="operand">λ</e>
+        <e type="operand">f.na</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">-</e>
+        <e type="bracket">(</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operand">Q.a</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operand">f.na</e>
+        <e type="operand">1</e>
+        <e type="operand">f.na</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">-</e>
+        <e type="bracket">(</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operator" args="2">*</e>
+        <e type="operator" args="2">+</e>
+        <e type="function" args="1">sqrt</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">:</e>
+      </input>
+        <result action="numeric">
+          <e type="operand">1.0000</e>
+        </result>
+    </math>
+    </region>
+    <region left="20" top="520" width="470" height="25" color="#000000" fontSize="10" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">- M at f.n = 1 with the HEAVIEST load, must be 1.0000 too:</p>
+      </content>
+    </text>
+    </region>
+    <region left="510" top="520" width="1080" height="85" color="#000000" fontSize="8" isBreakable="false">
+    <math decimalPlaces="4">
+      <input>
+        <e type="operand">g.1b</e>
+        <e type="operand">1</e>
+        <e type="operand">1</e>
+        <e type="operand">λ</e>
+        <e type="operator" args="2">+</e>
+        <e type="operand">λ</e>
+        <e type="operand">f.na</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">-</e>
+        <e type="bracket">(</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operand">Q.d</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operand">f.na</e>
+        <e type="operand">1</e>
+        <e type="operand">f.na</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">-</e>
+        <e type="bracket">(</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operator" args="2">*</e>
+        <e type="operator" args="2">+</e>
+        <e type="function" args="1">sqrt</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">:</e>
+      </input>
+        <result action="numeric">
+          <e type="operand">1.0000</e>
+        </result>
+    </math>
+    </region>
+    <region left="20" top="613" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">That is the series resonance: the second term under the root vanishes and the first becomes 1, so every gain curve passes through the same point. It is also why f_n = 1 is a poor place to check a gain formula - a wrong one can still give 1 there.</p>
+      </content>
+    </text>
+    </region>
+    <region left="20" top="644" width="470" height="25" color="#000000" fontSize="10" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">- second test frequency, above resonance:</p>
+      </content>
+    </text>
+    </region>
+    <region left="510" top="644" width="1080" height="27" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <math>
+      <input>
+        <e type="operand">f.nb</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">:</e>
+      </input>
+    </math>
+    </region>
+    <region left="20" top="679" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">A SEPARATE name, not f.na reassigned. SMath would evaluate a reassignment in row order and get it right, but a reader - and any tool that re-reads the file - has to know that to follow it. Two names cost nothing.</p>
+      </content>
+    </text>
+    </region>
+    <region left="20" top="710" width="470" height="25" color="#000000" fontSize="10" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">- M at f.n = 2, no-load asymptote is 1/(1+lambda) = 0.6452:</p>
+      </content>
+    </text>
+    </region>
+    <region left="510" top="710" width="1080" height="85" color="#000000" fontSize="8" isBreakable="false">
+    <math decimalPlaces="4">
+      <input>
+        <e type="operand">g.1c</e>
+        <e type="operand">1</e>
+        <e type="operand">1</e>
+        <e type="operand">λ</e>
+        <e type="operator" args="2">+</e>
+        <e type="operand">λ</e>
+        <e type="operand">f.nb</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">-</e>
+        <e type="bracket">(</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operand">0</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operand">f.nb</e>
+        <e type="operand">1</e>
+        <e type="operand">f.nb</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">-</e>
+        <e type="bracket">(</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operator" args="2">*</e>
+        <e type="operator" args="2">+</e>
+        <e type="function" args="1">sqrt</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">:</e>
+      </input>
+        <result action="numeric">
+          <e type="operand">0.7080</e>
+        </result>
+    </math>
+    </region>
+    <region left="20" top="803" width="470" height="25" color="#000000" fontSize="10" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">- M at f.n = 2 at full load:</p>
+      </content>
+    </text>
+    </region>
+    <region left="510" top="803" width="1080" height="85" color="#000000" fontSize="8" isBreakable="false">
+    <math decimalPlaces="4">
+      <input>
+        <e type="operand">g.1d</e>
+        <e type="operand">1</e>
+        <e type="operand">1</e>
+        <e type="operand">λ</e>
+        <e type="operator" args="2">+</e>
+        <e type="operand">λ</e>
+        <e type="operand">f.nb</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">-</e>
+        <e type="bracket">(</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operand">Q.c</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operand">f.nb</e>
+        <e type="operand">1</e>
+        <e type="operand">f.nb</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">-</e>
+        <e type="bracket">(</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operator" args="2">*</e>
+        <e type="operator" args="2">+</e>
+        <e type="function" args="1">sqrt</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">:</e>
+      </input>
+        <result action="numeric">
+          <e type="operand">0.5492</e>
+        </result>
+    </math>
+    </region>
+    <region left="20" top="912" width="1560" height="27" color="#0f2a44" fontSize="12" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: bold; font-style: normal; font-size: 12px;">G2  fill the curves  -  one pass, four matrices</p>
+      </content>
+    </text>
+    </region>
+    <region left="20" top="947" width="470" height="25" color="#000000" fontSize="10" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">[PICK] sweep from f.n =</p>
+      </content>
+    </text>
+    </region>
+    <region left="510" top="947" width="1080" height="27" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <math>
+      <input>
+        <e type="operand">f.lo</e>
+        <e type="operand">0.55</e>
+        <e type="operator" args="2">:</e>
+      </input>
+    </math>
+    </region>
+    <region left="20" top="982" width="470" height="25" color="#000000" fontSize="10" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">[PICK] sweep to   f.n =</p>
+      </content>
+    </text>
+    </region>
+    <region left="510" top="982" width="1080" height="27" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <math>
+      <input>
+        <e type="operand">f.hi</e>
+        <e type="operand">2.2</e>
+        <e type="operator" args="2">:</e>
+      </input>
+    </math>
+    </region>
+    <region left="20" top="1017" width="470" height="25" color="#000000" fontSize="10" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">[PICK] points per curve:</p>
+      </content>
+    </text>
+    </region>
+    <region left="510" top="1017" width="1080" height="27" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <math>
+      <input>
+        <e type="operand">N.g</e>
+        <e type="operand">91</e>
+        <e type="operator" args="2">:</e>
+      </input>
+    </math>
+    </region>
+    <region left="20" top="1052" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">Each G.x is an N x 2 matrix: column 1 is f_n, column 2 is the gain. That is the shape section 16.6 of the design sheet builds for its Bode curves, and the only shape a 2D plot reads directly.</p>
+      </content>
+    </text>
+    </region>
+    <region left="20" top="1083" width="470" height="25" color="#000000" fontSize="10" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">- fill all four curves in one pass:</p>
+      </content>
+    </text>
+    </region>
+    <region left="510" top="1083" width="720" height="300" color="#000000" fontSize="8" isBreakable="false">
+    <math>
+      <input>
+        <e type="operand">k.g</e>
+        <e type="operand">1</e>
+        <e type="operand">N.g</e>
+        <e type="function" args="2">range</e>
+        <e type="operand">x.g</e>
+        <e type="operand">f.lo</e>
+        <e type="operand">k.g</e>
+        <e type="operand">1</e>
+        <e type="operator" args="2">-</e>
+        <e type="bracket">(</e>
+        <e type="operand">f.hi</e>
+        <e type="operand">f.lo</e>
+        <e type="operator" args="2">-</e>
+        <e type="bracket">(</e>
+        <e type="operator" args="2">*</e>
+        <e type="operand">N.g</e>
+        <e type="operand">1</e>
+        <e type="operator" args="2">-</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">+</e>
+        <e type="operator" args="2">:</e>
+        <e type="operand">G.a</e>
+        <e type="operand">k.g</e>
+        <e type="operand">1</e>
+        <e type="function" args="3">el</e>
+        <e type="operand">x.g</e>
+        <e type="operator" args="2">:</e>
+        <e type="operand">G.a</e>
+        <e type="operand">k.g</e>
+        <e type="operand">2</e>
+        <e type="function" args="3">el</e>
+        <e type="operand">1</e>
+        <e type="operand">1</e>
+        <e type="operand">λ</e>
+        <e type="operator" args="2">+</e>
+        <e type="operand">λ</e>
+        <e type="operand">x.g</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">-</e>
+        <e type="bracket">(</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operand">Q.a</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operand">x.g</e>
+        <e type="operand">1</e>
+        <e type="operand">x.g</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">-</e>
+        <e type="bracket">(</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operator" args="2">*</e>
+        <e type="operator" args="2">+</e>
+        <e type="function" args="1">sqrt</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">:</e>
+        <e type="operand">G.b</e>
+        <e type="operand">k.g</e>
+        <e type="operand">1</e>
+        <e type="function" args="3">el</e>
+        <e type="operand">x.g</e>
+        <e type="operator" args="2">:</e>
+        <e type="operand">G.b</e>
+        <e type="operand">k.g</e>
+        <e type="operand">2</e>
+        <e type="function" args="3">el</e>
+        <e type="operand">1</e>
+        <e type="operand">1</e>
+        <e type="operand">λ</e>
+        <e type="operator" args="2">+</e>
+        <e type="operand">λ</e>
+        <e type="operand">x.g</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">-</e>
+        <e type="bracket">(</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operand">Q.b</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operand">x.g</e>
+        <e type="operand">1</e>
+        <e type="operand">x.g</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">-</e>
+        <e type="bracket">(</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operator" args="2">*</e>
+        <e type="operator" args="2">+</e>
+        <e type="function" args="1">sqrt</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">:</e>
+        <e type="operand">G.c</e>
+        <e type="operand">k.g</e>
+        <e type="operand">1</e>
+        <e type="function" args="3">el</e>
+        <e type="operand">x.g</e>
+        <e type="operator" args="2">:</e>
+        <e type="operand">G.c</e>
+        <e type="operand">k.g</e>
+        <e type="operand">2</e>
+        <e type="function" args="3">el</e>
+        <e type="operand">1</e>
+        <e type="operand">1</e>
+        <e type="operand">λ</e>
+        <e type="operator" args="2">+</e>
+        <e type="operand">λ</e>
+        <e type="operand">x.g</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">-</e>
+        <e type="bracket">(</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operand">Q.c</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operand">x.g</e>
+        <e type="operand">1</e>
+        <e type="operand">x.g</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">-</e>
+        <e type="bracket">(</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operator" args="2">*</e>
+        <e type="operator" args="2">+</e>
+        <e type="function" args="1">sqrt</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">:</e>
+        <e type="operand">G.d</e>
+        <e type="operand">k.g</e>
+        <e type="operand">1</e>
+        <e type="function" args="3">el</e>
+        <e type="operand">x.g</e>
+        <e type="operator" args="2">:</e>
+        <e type="operand">G.d</e>
+        <e type="operand">k.g</e>
+        <e type="operand">2</e>
+        <e type="function" args="3">el</e>
+        <e type="operand">1</e>
+        <e type="operand">1</e>
+        <e type="operand">λ</e>
+        <e type="operator" args="2">+</e>
+        <e type="operand">λ</e>
+        <e type="operand">x.g</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">-</e>
+        <e type="bracket">(</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operand">Q.d</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operand">x.g</e>
+        <e type="operand">1</e>
+        <e type="operand">x.g</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">-</e>
+        <e type="bracket">(</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operator" args="2">*</e>
+        <e type="operator" args="2">+</e>
+        <e type="function" args="1">sqrt</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">:</e>
+        <e type="operand">9</e>
+        <e type="operand">1</e>
+        <e type="function" args="11">line</e>
+        <e type="function" args="3">for</e>
+      </input>
+    </math>
+    </region>
+    <region left="20" top="1391" width="470" height="25" color="#000000" fontSize="10" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">- spot check, G.c at the last point:</p>
+      </content>
+    </text>
+    </region>
+    <region left="510" top="1391" width="1080" height="29" color="#000000" fontSize="8" isBreakable="false">
+    <math decimalPlaces="4">
+      <input>
+        <e type="operand">g.2a</e>
+        <e type="operand">G.c</e>
+        <e type="operand">N.g</e>
+        <e type="operand">2</e>
+        <e type="function" args="3">el</e>
+        <e type="operator" args="2">:</e>
+      </input>
+        <result action="numeric">
+          <e type="operand">0.5096</e>
+        </result>
+    </math>
+    </region>
+    <region left="20" top="1428" width="470" height="25" color="#000000" fontSize="10" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">- and its f_n, must be 2.20:</p>
+      </content>
+    </text>
+    </region>
+    <region left="510" top="1428" width="1080" height="29" color="#000000" fontSize="8" isBreakable="false">
+    <math decimalPlaces="4">
+      <input>
+        <e type="operand">g.2b</e>
+        <e type="operand">G.c</e>
+        <e type="operand">N.g</e>
+        <e type="operand">1</e>
+        <e type="function" args="3">el</e>
+        <e type="operator" args="2">:</e>
+      </input>
+        <result action="numeric">
+          <e type="operand">2.2000</e>
+        </result>
+    </math>
+    </region>
+    <region left="20" top="1481" width="1560" height="27" color="#0f2a44" fontSize="12" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: bold; font-style: normal; font-size: 12px;">G2b  which grid division does this SMath use?   pick the frame that fits</p>
+      </content>
+    </text>
+    </region>
+    <region left="20" top="1516" width="1560" height="51" color="#444444" fontSize="9" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">All four frames below ask for the SAME window - f_n 0.50 to 2.25, gain 0 to 5 - and differ only in the pixels-per-division constant used to compute it. Exactly one of them should show the full-load curve filling the frame, rising to about 1.42 near f_n 0.69</p>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">and falling to about 0.51 at the right edge. The others will show it squeezed into a corner or not at all.</p>
+      </content>
+    </text>
+    </region>
+    <region left="20" top="1575" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">This block exists because the constant was wrong once and a comment in the code claimed it was right. A picture settles it; a comment does not.</p>
+      </content>
+    </text>
+    </region>
+    <region left="20" top="1606" width="540" height="260" color="#000000" fontSize="10" isBreakable="false">
+    <plot grid="true" axes="true" type="2d" render="lines" scale_x="0.064814815" scale_y="0.384615385" scale_z="1" rotate_x="0" rotate_y="0" rotate_z="0" transpose_x="-424" transpose_y="-130" transpose_z="0">
+      <input>
+        <e type="operand">G.c</e>
+      </input>
+    </plot>
+    </region>
+    <region left="580" top="1606" width="540" height="260" color="#000000" fontSize="10" isBreakable="false">
+    <plot grid="true" axes="true" type="2d" render="lines" scale_x="0.025925926" scale_y="0.153846154" scale_z="1" rotate_x="0" rotate_y="0" rotate_z="0" transpose_x="-424" transpose_y="-130" transpose_z="0">
+      <input>
+        <e type="operand">G.c</e>
+      </input>
+    </plot>
+    </region>
+    <region left="20" top="1898" width="540" height="260" color="#000000" fontSize="10" isBreakable="false">
+    <plot grid="true" axes="true" type="2d" render="lines" scale_x="0.012962963" scale_y="0.076923077" scale_z="1" rotate_x="0" rotate_y="0" rotate_z="0" transpose_x="-424" transpose_y="-130" transpose_z="0">
+      <input>
+        <e type="operand">G.c</e>
+      </input>
+    </plot>
+    </region>
+    <region left="580" top="1898" width="540" height="260" color="#000000" fontSize="10" isBreakable="false">
+    <plot grid="true" axes="true" type="2d" render="lines" scale_x="0.006481481" scale_y="0.038461538" scale_z="1" rotate_x="0" rotate_y="0" rotate_z="0" transpose_x="-424" transpose_y="-130" transpose_z="0">
+      <input>
+        <e type="operand">G.c</e>
+      </input>
+    </plot>
+    </region>
+    <region left="20" top="2190" width="1560" height="51" color="#444444" fontSize="9" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">- left to right, top row then bottom:  division = 20 px,  8 px,  4 px,  2 px. The sheet below is drawn with 4 px, which is what P19 of the probe sheet measured. If a different frame above is the right one, that number is what smsheet.Sheet.PLOT_DIV should</p>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">become.</p>
+      </content>
+    </text>
+    </region>
+    <region left="20" top="2265" width="1560" height="27" color="#0f2a44" fontSize="12" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: bold; font-style: normal; font-size: 12px;">G3  ONE curve in ONE frame        expected: full-load curve, peak about 1.42</p>
+      </content>
+    </text>
+    </region>
+    <region left="20" top="2300" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">x is f_n from 0.55 to 2.20, y is gain from 0 to 5, both fixed - SMath has no auto-scale, and a curve outside the window looks like an empty plot rather than an error. Mouse wheel zooms, dragging pans.</p>
+      </content>
+    </text>
+    </region>
+    <region left="20" top="2331" width="540" height="300" color="#000000" fontSize="10" isBreakable="false">
+    <plot grid="true" axes="true" type="2d" render="lines" scale_x="0.012962963" scale_y="0.066666667" scale_z="1" rotate_x="0" rotate_y="0" rotate_z="0" transpose_x="-424" transpose_y="-150" transpose_z="0">
+      <input>
+        <e type="operand">G.c</e>
+      </input>
+    </plot>
+    </region>
+    <region left="20" top="2679" width="1560" height="27" color="#0f2a44" fontSize="12" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: bold; font-style: normal; font-size: 12px;">G4  FOUR curves in FOUR frames                  expected: four separate curves</p>
+      </content>
+    </text>
+    </region>
+    <region left="20" top="2714" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">Q = 0.2, 0.4, 0.766, 1.5, left to right, top row then bottom. Lighter load gives the taller, more peaked curve. This is the fallback if G5 comes up empty, and it costs nothing but page area.</p>
+      </content>
+    </text>
+    </region>
+    <region left="20" top="2745" width="540" height="300" color="#000000" fontSize="10" isBreakable="false">
+    <plot grid="true" axes="true" type="2d" render="lines" scale_x="0.012962963" scale_y="0.066666667" scale_z="1" rotate_x="0" rotate_y="0" rotate_z="0" transpose_x="-424" transpose_y="-150" transpose_z="0">
+      <input>
+        <e type="operand">G.a</e>
+      </input>
+    </plot>
+    </region>
+    <region left="580" top="2745" width="540" height="300" color="#000000" fontSize="10" isBreakable="false">
+    <plot grid="true" axes="true" type="2d" render="lines" scale_x="0.012962963" scale_y="0.066666667" scale_z="1" rotate_x="0" rotate_y="0" rotate_z="0" transpose_x="-424" transpose_y="-150" transpose_z="0">
+      <input>
+        <e type="operand">G.b</e>
+      </input>
+    </plot>
+    </region>
+    <region left="20" top="3077" width="540" height="300" color="#000000" fontSize="10" isBreakable="false">
+    <plot grid="true" axes="true" type="2d" render="lines" scale_x="0.012962963" scale_y="0.066666667" scale_z="1" rotate_x="0" rotate_y="0" rotate_z="0" transpose_x="-424" transpose_y="-150" transpose_z="0">
+      <input>
+        <e type="operand">G.c</e>
+      </input>
+    </plot>
+    </region>
+    <region left="580" top="3077" width="540" height="300" color="#000000" fontSize="10" isBreakable="false">
+    <plot grid="true" axes="true" type="2d" render="lines" scale_x="0.012962963" scale_y="0.066666667" scale_z="1" rotate_x="0" rotate_y="0" rotate_z="0" transpose_x="-424" transpose_y="-150" transpose_z="0">
+      <input>
+        <e type="operand">G.d</e>
+      </input>
+    </plot>
+    </region>
+    <region left="20" top="3425" width="1560" height="27" color="#0f2a44" fontSize="12" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: bold; font-style: normal; font-size: 12px;">G5  FOUR curves in ONE frame                    THIS IS THE QUESTION</p>
+      </content>
+    </text>
+    </region>
+    <region left="20" top="3460" width="1560" height="51" color="#444444" fontSize="9" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">sys(G.a, G.b, G.c, G.d, 4, 1) stacks the four matrices into one plot input. The construct is taken from Project Admittance Copy.sm, which puts S1(x) and S2(x) in one frame the same way. If the frame below shows four curves the family plot is available; if</p>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">it is empty or red, use G4 instead. SMath prints no legend, so the curves would have to be named in text - lighter load is the taller curve.</p>
+      </content>
+    </text>
+    </region>
+    <region left="20" top="3519" width="1100" height="380" color="#000000" fontSize="10" isBreakable="false">
+    <plot grid="true" axes="true" type="2d" render="lines" scale_x="0.006363636" scale_y="0.052631579" scale_z="1" rotate_x="0" rotate_y="0" rotate_z="0" transpose_x="-864" transpose_y="-190" transpose_z="0">
+      <input>
+        <e type="operand">G.a</e>
+        <e type="operand">G.b</e>
+        <e type="operand">G.c</e>
+        <e type="operand">G.d</e>
+        <e type="operand">4</e>
+        <e type="operand">1</e>
+        <e type="function" preserve="true" args="6">sys</e>
+      </input>
+    </plot>
+    </region>
+    <region left="20" top="3931" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">What to report back: which of G3, G4, G5 drew, and whether any region is red.</p>
+      </content>
+    </text>
+    </region>
+  </regions>
+</worksheet>
