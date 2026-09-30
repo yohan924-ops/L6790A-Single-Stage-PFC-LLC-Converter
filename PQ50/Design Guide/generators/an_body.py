@@ -3002,8 +3002,7 @@ def build(A):
     _pdc = _dcl['P']
     _gl = _LF.gap_len(V)
     _g0 = _CORE.gap(V, _R['Ae'])
-    _z = _CORE.zones(_CORE.CHOSEN, _w['r_tube'] + _w['h_A'] / 2.0)
-    _zt = sum(_z)
+    _zp = _CORE.zone_pct(_CORE.CHOSEN, _w['r_tube'] + _w['h_A'] / 2.0)
     _rin = _w['r_tube'] + _w['d_sec'] * _w['k'] / 2.0
     _rout = _rin + _w['d_sec'] * _w['k'] + _w['t_tape']
     _wall = (_M['tube_od'] - _M['d_centre']) / 2.0
@@ -3114,9 +3113,15 @@ def build(A):
           'turn leaves the core (the centre leg alone), and every part of '
           'it is weighted with the length of turn at its radius that lies '
           'in each; the part under the plate alone is counted half in each.'
-          % dict(f=FR('an_core_section'), zl=100 * _z[0] / _zt,
-                 zy=100 * _z[1] / _zt, zo=100 * _z[2] / _zt,
+          % dict(f=FR('an_core_plan'), zl=_zp[0], zy=_zp[1], zo=_zp[2],
                  rr=100 * (_rout / _rin - 1))))
+    add(fig('an_core_plan',
+            'The core seen from above, to scale: the outer legs, the '
+            'bow-tie back plate and the centre leg, the whole of NP1 as a '
+            'pale ring under the plate, and the turn in the middle of it '
+            'coloured by what surrounds it. The leakage is solved for the '
+            'ferrite-surrounded and the open case and added in these '
+            'shares, radius by radius.'))
     add(p('<b>What the tank sees.</b> In service only one half of the '
           'centre tap conducts at a time. With NS2 shorted alone the field '
           'solution gives <b>%(h2).2f&nbsp;&micro;H</b>, with NS3 alone '
@@ -3290,10 +3295,8 @@ def build(A):
           'Table&nbsp;%(t)s names each item.'
           % dict(f=FR('an_core_section'), t=TR('legend42'))))
     add(fig('an_core_section',
-            'The core in section (left, to scale), the winding unrolled '
-            'along the coil former (top right, to scale) and the back plate '
-            'of the core seen from above with the three kinds of turn '
-            '(bottom right, to scale). NP1 in one section, NS2 and NS3 in '
+            'The core in section (left, to scale) and the winding unrolled '
+            'along the coil former (right, to scale). NP1 in one section, NS2 and NS3 in '
             'the other, a %(g).2f&nbsp;mm partition between them; the yellow '
             'lines are the layer tape. The circled numbers are the rows of '
             'Table&nbsp;%(t)s.'
@@ -3361,11 +3364,11 @@ def build(A):
     add(fig('an_xfmr_pins',
             'The schematic symbol with its pin numbers, and the same pins on '
             'the %(former)s coil former (%(pins)d pins, rows %(rows).2f&nbsp;mm '
-            'apart), its outline traced from the data sheet drawing: the side '
-            'view with the two directions of view, (A) from below, the pin '
-            'side, and (B) from above, the component side of the board, with '
-            'the pins hidden. A ring in a winding&rsquo;s colour marks its '
-            'pins. The dot end is the start of each winding. '
+            'apart), its outline traced from the data sheet drawing: (A) '
+            'from below, the pin side, as the data sheet draws it, and (B) '
+            'from above, the PCB footprint on the component side. A ring in '
+            'a winding&rsquo;s colour marks its pins. The dot end is the '
+            'start of each winding. '
             '%(note)s'
             % dict(former=_B['former'], pins=_B['pins'],
                    rows=_B['rows_apart'], note=_CORE.PIN_NOTE)))

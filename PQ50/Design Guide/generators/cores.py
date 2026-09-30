@@ -148,7 +148,11 @@ MECH = {
     #  it is the tip of the leg seen behind the section plane, drawn over
     #  the window), and the back plate between the legs and the post is a
     #  bow tie, not a rectangle - its edge runs from (4.80, 11.21) to
-    #  (16.02, 15.18) mm, the leg's arc reaches |y| = 14.94 mm.
+    #  (16.02, 15.18) mm, the leg's arc reaches |y| = 14.94 mm, and from
+    #  its inner end a short step runs to the post at `neck` (3.50, 9.33).
+    #  The 04/13 databook drawing (data/TDK_B65981A_core.pdf, FPK0457-U)
+    #  gives the same outline within 0.1 mm: (16.14, 15.30) - (5.17, 11.30),
+    #  a fillet, then (3.52, 9.41).
     #  Coil former B65982E (p. 3): tube 23.2 +-0.2 over a 20.8 +-0.2 bore,
     #  30.4 +-0.3 between the flanges at the tube, 35.2 +-0.3 over them,
     #  12 pins of 1.2 mm in two rows 45.72 +-0.3 apart, 7.62 +-0.2 between
@@ -163,7 +167,8 @@ MECH = {
         core='B65981A', former='B65982E', partition=True, shape='PQ',
         W=50.0, H=50.0, d_centre=20.0, win_h=36.1, r_win_out=22.0,
         r_win_min=21.65, plan_w=50.0, plan_d=32.0, plan_d_max=32.5,
-        wing=((4.80, 11.21), (16.02, 15.18)), leg_y=14.94,
+        wing=((4.80, 11.21), (16.02, 15.18)), neck=(3.50, 9.33),
+        leg_y=14.94,
         r_rim=(21.3, 21.6),
         tube_od=23.2, tube_max=23.4, bore=20.8, wind_w=30.4,
         flange_h=35.2, pitch_a=7.62, pitch_b=12.70, pins=12, rows=45.72),
@@ -191,6 +196,19 @@ def zones(name, rho):
     dl = rho * (pi / 2) / 4000 * 4
     return (float(dl * np.sum(leg & under)), float(dl * np.sum(~leg & under)),
             float(dl * np.sum(~under)))
+
+
+def zone_pct(name, rho):
+    """-> zones() as whole per cents that add up to 100 (largest remainder),
+    so a figure and the text that quote them agree and sum."""
+    z = zones(name, rho)
+    t = sum(z)
+    raw = [100.0 * v / t for v in z]
+    out = [int(v) for v in raw]
+    for i in sorted(range(3), key=lambda i: raw[i] - out[i],
+                    reverse=True)[:100 - sum(out)]:
+        out[i] += 1
+    return tuple(out)
 
 
 def turn(name, rho=None):
