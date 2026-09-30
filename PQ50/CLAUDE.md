@@ -2,7 +2,7 @@
 
 > **이 폴더(`PQ50/`)는 `Lr14/` 를 그대로 복사해 트랜스포머를 TDK PQ 50/50 한 개로 바꾼 복사본이다**(2026-09-30 사용자: "엑셀시트와 Smath 사본 만들어서 설계부터 다시 검증해"). 원본(저장소 최상위)과 `Lr14/` 는 건드리지 않는다. `Reference/` 등 입력 폴더는 원본 폴더로의 심볼릭 링크. 도구는 이 폴더 안에서 돌린다. Stop hook(`guard.py`)은 원본만 검사하므로 이 폴더의 검사는 손으로 돌린다.
 >
-> **이 복사본에서 바뀐 것은 시트 · 워크북 · 코어 데이터뿐이다.** AN PDF · 그림 · 벤더 사양서 · `cores.winding()` · `leakage.py` · `insulation.py` 는 아직 **Lr14 의 ETD 54 판 그대로**다(PDF 단계에서 바꾼다) — 그쪽 수치를 이 설계로 읽지 말 것.
+> **AN(영문) · 그림 · 벤더 사양서 · `cores.py` · `insulation.py` 도 PQ 50/50 판이다(73차).** 옛 코어(ETD 54 · E 60/22/16 · PC47)는 AN 에서 지웠다. 누설의 기준은 **`leakage_fem.py`(2D FEM, `fem2d.py` 풀이기 · scipy 필요)** 이고, `leakage.py`(1D 해석식)는 PQ 에서 반쪽 순서를 거꾸로 내므로 기준이 아니다. **한국어판 AN 은 이 복사본에서 뺐다** — ETD 54 판이었고, 영문판을 사용자가 확인한 뒤에 이식한다.
 
 ST **L6790A** 로 **단일단(Single-Stage) PF LLC** 를 설계한다. 90–264 Vac → **25 V / 26.3 A = 657.5 W**.
 2단(Boost PFC + LLC)의 400 V 벌크 커패시터와 승압단을 없애고, 그 대가로 출력에 **75 mF 뱅크**가 붙는다.
@@ -59,7 +59,7 @@ f_r 75.0 kHz · f_o 44.8 kHz · B_pk 125.5 mT(A_e 332) · A_L 311 nH · n 6.013(
 | `Calculation Excel Sheet/L6790_spreadsheet_r1_0_corrected_rev0_6.xlsx` | ST 툴 수정본, 7.5:1(`variants/…_7p5to1.xlsx` 와 같은 파일). `CHANGELOG_rev0_6` 에 변경 이력. **이 복사본은 `Res. Tank Design` F43 · F44 · F45 와 `Device Setting` F24 를 200 · 23.4 · 42.55 · 23.2 로(`etd54_xl.py`, 그 전 `lr14_xl.py`) — 의존 수식의 캐시는 Excel 에서 한 번 열었다 저장해야 맞는다** | rev 0.6 + ETD 54 탱크 |
 | `Calculation Excel Sheet/Uncryped_04092026_LGE_670W_L6790A_spread sheet.xlsx` | ST 원본(디크립트본, openpyxl 로 열림). 원본 `sheetN` ↔ 우리 `sheetN+1` | 읽기 전용 |
 | `Calculation Excel Sheet/variants/` | 워크북 2종(`7p5to1,6to1`) · 벤더 사양서 4종(`+7p5to1_x1,8to1`) | 8:1 · `_x1` 은 워크북 없음 |
-| `Design Guide/AN_L6790A_SingleStage_PFC_LLC_ApplicationNote_v1.3.pdf` · `…_KR_v1.3.pdf` | **배포용 AN** 영문 110쪽 · 한국어 95쪽(한국어판은 60–68차 미이식 — 영문 확인 뒤) · 목차 링크·북마크. `an_pdf.py`+`an_body.py` / `an_kr_pdf.py`+`an_kr_body.py`, 수치 전부 `l6790.py`·시트 | v1.3 · 최종 전수 검토(50차) |
+| `Design Guide/AN_L6790A_SingleStage_PFC_LLC_ApplicationNote_v1.3.pdf` | **배포용 AN** 영문 110쪽, 7장 예제 트랜스포머는 PQ 50/50 · 목차 링크·북마크. `an_pdf.py`+`an_body.py`, 수치 전부 `l6790.py`·시트·`cores.py`·`leakage_fem.py`. **한국어판 PDF 는 이 복사본에 없다**(`an_kr_body.py` 는 옛 판 그대로, 영문 확인 뒤 이식) | v1.3 · PQ 50/50 판(73차) |
 | `Design Guide/AN_L6790A_Design_Guide_rev2_1.md` | 한국어 본체 문서(7.5:1). **시트의 식 번호 [n] 의 출처** — `audit_sm` · `audit_guide` 가 읽는다. 9:1 판 rev 2.0 은 2026-09-23 삭제 | rev 2.0/2.1 |
 | `Design Guide/generators/` | 도구 체인 전부 — README 참조 | |
 | `Datasheet/` · `EVB Schematic/` · `LGE Material/` · `Reference/` | 입력 자료. DS 는 **DRAFT**(TBD · 내부 모순 있음). `Reference/Visio-LLC drawing.pdf` 가 본 설계 회로도(벡터) | 원본 |
@@ -104,7 +104,7 @@ python snapshot.py                 # docs/DESIGN.md §3 갱신 + 지난번 이�
 전량 검증 12종과 기대값은 README §9.1. 문서를 고쳤으면 `python audit_md.py`, AN 을 고쳤으면 `an_check.py` + `an_symbols.py`, 그림을 고쳤으면 **`figcheck.py` 를 인자 없이 전량** + `an_figtext.py`(그림 속 기호·손 입력 숫자, 53차).
 **설계값(시트)이 움직였으면 `figs.py --plain` 전량 재생성** — `figstamp.py` 가 낡은 그림을 찾는다(65차, Stop hook 6번째 검사).
 **Stop hook(`.claude/settings.json` → `guard.py`)이 추적 파일이 바뀐 턴 끝에 이것들을 돌리고, 실패하면 턴을 막는다.**
-Python 3.12 + `openpyxl` · `Pillow` · `numpy` · `matplotlib` · `reportlab`. 경로는 전부 스크립트 기준 상대경로.
+Python 3.12 + `openpyxl` · `Pillow` · `numpy` · `matplotlib` · `reportlab` · **`scipy`(`fem2d.py`)**. `leakage_fem.py` 는 풀이 결과를 `generators/.fem_cache.json`(무시 파일)에 저장한다. 경로는 전부 스크립트 기준 상대경로.
 
 ## 환경 메모
 

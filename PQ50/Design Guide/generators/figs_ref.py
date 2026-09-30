@@ -1494,10 +1494,8 @@ def an_core_section(save, foot):
     S2 = (w['wind_w'] + 2 * w['flange'] + 9.0) / (0.550 * 9.3 / 1.15)
     ax2 = _mm_ax(fig, [0.445, 0.515, 0.550, 0.470],
                  2.0 + w['wind_w'] / 2.0, 4.6, S2)
-    ax3 = fig.add_axes([0.445, 0.020, 0.550, 0.465])
-    ax3.set_xlim(0, 10)
-    ax3.set_ylim(0, 6)
-    ax3.axis('off')
+    S3 = 22.0                                 # mm per inch, the plan view
+    ax3 = _mm_ax(fig, [0.445, 0.020, 0.550, 0.465], 23.5, 0.0, S3)
 
     #  =================================================== SECTION, 1:1
     HW, HH = M['W'] / 2.0, M['H'] / 2.0
@@ -1642,83 +1640,79 @@ def an_core_section(save, foot):
             _balloon(ax2, n, 0, 0, OX + (x0 + x1) / 2, OY + BH + 3.3, c,
                      r=0.62, lead=False)
     for n, xx, c in ((2, yS0 + qs * 0.5, EDG['NS2']),
-                     (3, yS0 + qs * 2.5, EDG['NS3'])):
+                     (3, yS0 + qs * 1.5, EDG['NS3'])):
         _balloon(ax2, n, 0, 0, OX + xx, OY + BH + 3.3, c, r=0.62, lead=False)
     _dimh(ax2, OX + L, OX + L + fl, OY - 3.5, '%.2f' % fl, color=GREY,
           side=-1)
 
-    #  ===================== THE SECONDARY GROUP (not to scale)
-    ax3.text(0.0, 5.72, 'the secondary group, layer by layer  '
-             '(not to scale)', ha='left', va='center', fontsize=10.5,
-             color=NAVY, zorder=8)
-    CX0, RR = 2.40, 0.25
-    DX = min(0.62, 2.1 / max(w['sec_par'] - 1, 1))   # five bundles still fit
-    nl = w['sec_layers']
-    LY = [1.00 + 0.66 * q for q in range(nl)]
-    xe = CX0 + DX * (w['sec_par'] - 1)
-    ax3.add_patch(Rectangle((CX0 - 0.45, 0.42), xe - CX0 + 0.9, 0.22,
-                            fc=PLAS, ec='#55606c', lw=0.9, zorder=3))
-    ax3.text(xe + 0.60, 0.53, 'former tube', ha='left', va='center',
-             fontsize=8.3, color='#55606c', zorder=6)
-    for li, row in enumerate(w['smap']):
-        for c, who in enumerate(row):
-            ax3.add_patch(Circle((CX0 + DX * c, LY[li]), RR, fc=COL[who],
-                                 ec=EDG[who], lw=0.8, alpha=0.75, zorder=6))
-            ax3.text(CX0 + DX * c, LY[li], '%d' % w['bmap'][li][c],
-                     ha='center', va='center', fontsize=8.3, color='white',
-                     zorder=7)
-        who = row[0]
-        ax3.text(CX0 - 0.42, LY[li], '%s, turn %d' % (who, w['turn_of'][li]),
-                 ha='right', va='center', fontsize=8.3, color=EDG[who],
-                 zorder=7)
-        ax3.plot([CX0 - RR - 0.05, xe + RR + 0.05], [LY[li] + RR + 0.05] * 2,
-                 color=TAPEC, lw=1.4, zorder=7, solid_capstyle='butt')
-    YA = LY[-1] + RR + 0.26
-    for q in range(w['n_aux']):
-        ax3.add_patch(Circle((CX0 + (xe - CX0) * (q + 0.5) / w['n_aux'], YA),
-                             0.12, fc=PUR, ec=PUR, lw=0.5, zorder=7))
-    ax3.text(CX0 - 0.42, YA, 'NAUX', ha='right', va='center', fontsize=8.3,
-             color=PUR, zorder=7)
-    if w['n_aux']:
-        ax3.plot([CX0 - RR - 0.05, xe + RR + 0.05], [YA + 0.17] * 2,
-                 color=TAPEC, lw=1.4, zorder=7, solid_capstyle='butt')
-    ax3.text(CX0 - 0.45, 0.16, u'\u2190 NP1 side', ha='left', va='center',
-             fontsize=8.3, color=EDG['NP1'], zorder=7)
-    XN = xe + 0.75
-    ax3.text(XN, 4.35, ('one circle = one Litz bundle,\n%d × ø%.2f mm, '
-             'ø%.2f mm;\na layer = one turn of %d\nbundles side by side')
-             % (w['n_strand_s'], _C.D_STRAND, ds, w['sec_par']), ha='left',
-             va='center', fontsize=8.3, color=GREY, zorder=8,
-             linespacing=1.3)
-    ax3.text(XN, 2.85, ('the number is the bundle: the second\n'
-             'turn of each winding lays them in the\nreverse order; two '
-             'bundles end on\na pin, and the tap pins take both'),
-             ha='left', va='center', fontsize=8.3, color=GREY, zorder=8,
-             linespacing=1.3)
-    def span(pl):
-        pl = sorted(pl)
-        return ('%d–%d' % (pl[0], pl[-1]) if len(pl) > 2
-                and pl[-1] - pl[0] == len(pl) - 1 else '+'.join(map(str, pl)))
-    a2, b2 = _C.PINMAP['NS2']
-    a3, b3 = _C.PINMAP['NS3']
-    ax3.text(XN, 1.30, '2  NS2 %d T, pins %s – %s\n3  NS3 %d T, pins %s – %s\n'
-             '4  NAUX %d T of TIW over the group'
-             % (w['Ns'], span(a2), span(b2), w['Ns'], span(a3), span(b3),
-                w['n_aux']), ha='left', va='center', fontsize=8.3,
-             color=GREY, zorder=8, linespacing=1.3)
+    #  ===================== THE BACK PLATE, seen from above (to scale)
+    #  The outline is MECH's reading of the data sheet's plan view: the
+    #  outer legs beyond x = wing[1][0], their inside the arc of radius
+    #  r_win_out, the bow-tie plate between them and the post.  One turn at
+    #  the middle of NP1 is drawn in three colours: an outer leg beside it,
+    #  under the plate only, outside the core (cores.zones()).
+    (wx0, wy0), (wx1, wy1) = M['wing']
+    hd, hw2, R0 = M['plan_d'] / 2.0, M['W'] / 2.0, M['r_win_out']
+    top = [(-hw2, hd), (-wx1, hd), (-wx1, wy1), (-wx0, wy0), (-3.5, 9.33)]
+    arc = [(10.0 * np.cos(t), 10.0 * np.sin(t))
+           for t in np.linspace(np.arctan2(9.33, -3.5), np.arctan2(9.33, 3.5),
+                                12)]
+    outline = (top + arc + [(3.5, 9.33), (wx0, wy0), (wx1, wy1), (wx1, hd),
+                            (hw2, hd)])
+    outline = outline + [(x, -y) for x, y in outline[::-1]]
+    ax3.add_patch(Polygon(outline, closed=True, fc=FERR, ec=FERRE, lw=1.0,
+                          hatch='////', zorder=2))
+    ax3.add_patch(Circle((0, 0), RC, fc=FERR, ec=FERRE, lw=1.0, zorder=3))
+    for sgn in (-1, 1):                       # the inside of each outer leg
+        t = np.linspace(-np.arcsin(M['leg_y'] / R0), np.arcsin(M['leg_y'] / R0),
+                        40)
+        ax3.plot(sgn * R0 * np.cos(t), R0 * np.sin(t), color=FERRE, lw=1.0,
+                 zorder=4)
+    rho = RT + w['h_A'] / 2.0
+    th = np.linspace(0, 2 * np.pi, 721)
+    xx, yy = rho * np.cos(th), rho * np.sin(th)
+    ax_ = np.abs(xx)
+    edge = wy0 + (wy1 - wy0) / (wx1 - wx0) * (ax_ - wx0)
+    under = np.where(ax_ >= wx1, np.abs(yy) <= hd, np.abs(yy) <= edge)
+    legz = np.abs(np.sin(th)) <= M['leg_y'] / R0
+    kind = np.where(legz & under, 0, np.where(under, 1, 2))
+    ZC = (MAG, GOLD, GREY)
+    for kz in (0, 1, 2):
+        m = kind == kz
+        yy_ = np.where(m, yy, np.nan)
+        ax3.plot(xx, yy_, color=ZC[kz], lw=3.2, zorder=6,
+                 solid_capstyle='butt')
+    zl, zy, zo = _C.zones(NAME, rho)
+    zt = zl + zy + zo
+    XT = hw2 + 4.0
+    ax3.text(-hw2, hd + 4.2, 'the core from above: back plate and one turn',
+             ha='left', va='bottom', fontsize=10.5, color=NAVY, zorder=8)
+    for q, (kz, t) in enumerate(((0, 'outer leg beside it  %.0f %%'
+                                  % (100 * zl / zt)),
+                                 (1, 'under the plate only  %.0f %%'
+                                  % (100 * zy / zt)),
+                                 (2, 'outside the core  %.0f %%'
+                                  % (100 * zo / zt)))):
+        yq = 9.0 - 6.5 * q
+        ax3.plot([XT, XT + 4.0], [yq, yq], color=ZC[kz], lw=3.2,
+                 solid_capstyle='butt', zorder=6)
+        ax3.text(XT + 5.2, yq, t, ha='left', va='center', fontsize=8.8,
+                 color=GREY, zorder=8)
+    ax3.text(XT, -12.0, u'turn at the middle of NP1, r = %.1f mm' % rho,
+             ha='left', va='center', fontsize=8.8, color=GREY, zorder=8)
 
     foot(fig, 'Core %s and coil former %s drawn to scale from the TDK '
               'data sheets, with a %.1f mm partition added to the former; the '
-              'third panel is not to scale. The winding is laid out by '
-              'cores.winding(): both sections fill the radial room at a pitch '
-              'of %.2f × the bundle layer to layer and %.3f along the layer, '
-              'so the window is full (the small gaps of a real winding, '
-              'assumed), NP1 as %d triple-insulated Litz bundles a turn '
-              '(%.1f mm of insulation assumed), %.1f mm TIW for NAUX, and a '
-              'wrap of %.2f mm layer tape over every layer (the yellow lines, '
-              'not to scale).'
-              % (NAME, M['former'], w['sep'], kp, w['k_ax'], w['pri_par'],
-                 w['tiw_add'], w['tiw_od'], w['t_tape']))
+              'plan view of the back plate is read from the vector drawing '
+              'of the core data sheet. The winding is laid out by '
+              'cores.winding(): %.2f × the conductor layer to layer and %.3f '
+              'along the layer, so the width is full (the small gaps of a '
+              'real winding, assumed), NP1 one triple-insulated Litz bundle '
+              'a turn (%.1f mm of insulation assumed), %.1f mm TIW for NAUX, '
+              'and a wrap of %.2f mm layer tape over every layer (the yellow '
+              'lines, not to scale).'
+              % (NAME, M['former'], w['sep'], kp, w['k_ax'], w['tiw_add'],
+                 w['tiw_od'], w['t_tape']))
     save(fig, 'an_core_section')
 
 
@@ -3078,11 +3072,11 @@ def an_xfmr_pins(save, foot):
             'free', size=9.4, color=GREY)
 
     foot(fig, 'The transformer: the schematic symbol with its pin numbers, '
-              'and the same pins on the %s coil former (pin positions from '
-              'its data sheet, numbering assumed from the pin 1 mark). '
-              'Primary and auxiliary share one row, the two secondaries the '
-              'other; at most two bundles end on a pin, and the centre tap '
-              'is pins %s, which carry NS2\'s finish and NS3\'s start.'
+              'and the same pins on the %s coil former (pin positions and '
+              'the numbers 1, 6, 7 and 12 from its data sheet, the others '
+              'counted). Primary and auxiliary share one row, the two '
+              'secondaries the other; one conductor ends on a pin, and the '
+              'centre tap joins pins %s on the board.'
               % (B['former'], C.tap_text()))
     save(fig, 'an_xfmr_pins')
 

@@ -76,8 +76,8 @@ V.update(
 # 7.5:1 을 채택한다면 R.T 를 10 kohm 으로 내려 k.floor 를 1.117 로 올려야 한다.
 V['tol_open'] = V['tol_short'] = '±10 %'
 
-# 보빈과 핀 배정: 단일 코어 설계점은 cores.CHOSEN(ETD 54/28/19, 카탈로그 보빈 B66396W 22핀
-# + 칸막이 2.0 mm), 3코어
+# 보빈과 핀 배정: 단일 코어 설계점은 cores.CHOSEN(PQ 50/50, 카탈로그 보빈 B65982E 12핀
+# + 칸막이 3.0 mm), 3코어
 # 설계점은 PQ 40/40(12핀) 을 쓴다.  둘 다 cores.BOBBINS 한 곳에서 읽는다.
 BOB_NAME = CORES.CHOSEN if V['Nx'] == 1 else 'PQ 40/40'
 BOB = CORES.BOBBINS[BOB_NAME]
@@ -215,8 +215,9 @@ if _shared:
 else:
     note(17, 'Centre tap is made on the PCB by joining pins %s — do NOT join '
              'them inside the transformer.%s'
-             % (tap_text(), '   Three pins per secondary terminal, one per '
-                'Litz bundle: confirm the pin current rating.'
+             % (tap_text(), '   One conductor per pin; a secondary pin '
+                'carries its whole winding current: confirm the pin current '
+                'rating, or bring the secondary ends straight out.'
                 if V['Nx'] == 1 else ''))
 note(18, ('Custom coil former for %s, %d pins, made to this '
           'specification.   ' % (BOB_NAME, BOB['pins'])
@@ -226,8 +227,9 @@ note(18, ('Custom coil former for %s, %d pins, made to this '
              ', with a %.1f mm partition added between the two sections'
              % CORES.PARTITION
              if CORES.MECH.get(BOB_NAME, {}).get('partition') else '')) +
-         'Pin numbers count along one row from pin 1 and back along the other '
-         '— confirm on the bobbin drawing before winding.')
+         (CORES.PIN_NOTE if BOB_NAME == CORES.CHOSEN else
+          'Pin numbers count along one row from pin 1 and back along the '
+          'other — confirm on the bobbin drawing before winding.'))
 
 # ------------------------------------------------- 3. 전기 요구사양
 section(19, '3.    ELECTRICAL  REQUIREMENTS',
@@ -238,8 +240,11 @@ REQ = [
     ('1', 'INDUCTANCE', pins('NP1'), '%.2f µH    %s' % (V['Lopen'], V['tol_open']),
      'All other windings OPEN.   L.mag + L.leak, not L.mag alone.', 18),
     ('2', 'LEAKAGE INDUCTANCE', pins('NP1'), '%.2f µH    %s' % (V['Lshort'], V['tol_short']),
-     'SECONDARY ALL SHORT (NS2 + NS3).   NAUX open.   '
-     'Resonant inductor — a target, not a maximum.', 22),
+     ('EACH HALF: NS2 short alone, then NS3 short alone; the other half and '
+      'NAUX open.   Both must pass.   Resonant inductor — a target, not a '
+      'maximum.' if V['Nx'] == 1 else
+      'SECONDARY ALL SHORT (NS2 + NS3).   NAUX open.   '
+      'Resonant inductor — a target, not a maximum.'), 30 if V['Nx'] == 1 else 22),
     ('3', 'D.C OVERLAP', pins('NP1'), '≥ 90 % of initial inductance',
      'Test current %d A, normal temperature' % V['Isat'], 18),
 ]
@@ -257,7 +262,13 @@ note(25, 'Both measured at %s of ONE transformer.   ' % pins('NP1') +
           'a thinner partition lowers it.'
           if V['Nx'] == 1 else
           '%s in series give a total ratio of %s.' % (COUNT, V['label'])))
-note(26, 'Item 2 follows the existing production part 26OP-LM83W clause 4-2, '
+note(26, ('Item 2, each half: in service only one half conducts at a time, '
+          'and the two halves lie in different layers.   With NS2 and NS3 '
+          'both shorted the reading is lower (about %.1f µH estimated): '
+          'record it, do not hold it to item 2.   The auxiliary is NOT shorted.'
+          % __import__('leakage_fem').estimate(__import__('an_pdf').V))
+         if V['Nx'] == 1 else
+         'Item 2 follows the existing production part 26OP-LM83W clause 4-2, '
          '"SECONDARY ALL SHORT" — same vendor, same centre-tapped construction.   '
          'The auxiliary is NOT shorted.')
 

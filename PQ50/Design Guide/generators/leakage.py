@@ -30,6 +30,14 @@ module says what L_short that gives, how it moves with the looseness of
 the winding and with the partition, what each half of
 the centre tap sees, and what the leakage field costs in the Litz.
 
+On the PQ 50/50 of this copy (2026-09-30) this module is NOT the reference:
+it weights every conductor with the one l_N, and on a deep winding round a
+PQ leg an outer turn is some 30 % longer than an inner one - the two
+halves of the centre tap come out in the wrong order and L_short about
+10 % low.  leakage_fem.py solves the same layout with the turn length at
+each radius and the bow-tie back plate; the note quotes that.  This module
+stays for its closed-form checks and the one-dimensional estimate one_d().
+
     python leakage.py            L_short of the chosen core's winding, what
                                  moves it, each half of the centre tap on its
                                  own, and the losses the field adds
@@ -264,6 +272,8 @@ def sharing(V, name=None):
     pc = w['d_sec'] * w['k_ax']                     # along the layer
     y0 = fl + w['yS'][0]
     per = w['sec_par']
+    if per < 2:                          # one conductor a turn: no loop
+        return {'turned': 0.0, 'not_turned': 0.0, 'load': V['Idio']}
 
     def loop(dy_mm):
         dy = dy_mm * 1e-3
@@ -373,12 +383,16 @@ def sweep(V, name=None, step=0.1, dmax=0.5):
 
 
 def orders(V, name=None):
-    """{order: (L NS2 alone, L NS3 alone)} for the ways the four secondary
+    """{order: (L NS2 alone, L NS3 alone)} for the ways the secondary
     layers can be stacked - what each half of the centre tap sees."""
     import cores
     out = {}
-    for o in (('NS2', 'NS2', 'NS3', 'NS3'), ('NS2', 'NS3', 'NS2', 'NS3'),
-              ('NS2', 'NS3', 'NS3', 'NS2')):
+    if cores.SEC_LAYERS == 2:
+        orders_ = (('NS2', 'NS3'), ('NS3', 'NS2'))
+    else:
+        orders_ = (('NS2', 'NS2', 'NS3', 'NS3'), ('NS2', 'NS3', 'NS2', 'NS3'),
+                   ('NS2', 'NS3', 'NS3', 'NS2'))
+    for o in orders_:
         out[o] = tuple(estimate(V, name, only=h, order=o)['L']
                        for h in ('NS2', 'NS3'))
     return out
