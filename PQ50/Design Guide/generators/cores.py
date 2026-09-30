@@ -226,14 +226,19 @@ def turn(name, rho=None):
 CHOSEN = 'PQ 50/50'
 
 #  Terminals, per coil former.  'xy' is pin number -> (x, y) in mm in the
-#  datasheet's plan view; 'map' is winding -> (start pins, finish pins);
+#  datasheet's numbered view (for B65982E the bottom view, below); 'map' is winding -> (start pins, finish pins);
 #  'plan' is the outline drawn under the pins.  One conductor to a pin.
 #
-#  PQ 50/50 (B65982E, page 3, plan view FPK0433): twelve pins, six per
-#  row in two groups of three, 7.62 within a group, 12.7 between the
-#  groups, rows 45.72 apart.  The drawing prints 1, 6, 7 and 12 and marks
-#  pin 1 (bottom left): 1 to 6 up the left row, 7 to 12 down the right.
-#  The numbers between are counted.
+#  PQ 50/50 (B65982E, databook 04/13 p. 287, drawing FPK0433-H): twelve
+#  pins, six per row in two groups of three, 7.62 within a group, 12.7
+#  between the groups, rows 45.72 apart.  The numbered view is the BOTTOM
+#  view, from the pin side: it is the one that shows the pin ends, placed
+#  above the front view (first-angle projection); the view below the front
+#  view, from the winding side, shows no pins (bobbin_outline.py).  In it
+#  the drawing prints 1, 6, 7 and 12 and marks pin 1 with the chamfered
+#  corner (bottom left): 1 to 6 up the left row, 7 to 12 down the right.
+#  The numbers between are counted.  So these x, y are AS SEEN FROM BELOW;
+#  from the component side of the board x changes sign.
 #
 #  PQ 40/40 (B65884E, page 3, plan view FPK0430): twelve terminals, six
 #  per side in two groups of three, pitch 5.08 within a group, 15.24
@@ -278,10 +283,16 @@ BOBBIN = BOBBINS[CHOSEN]
 PIN_XY = BOBBIN['xy']
 PINMAP = BOBBIN['map']
 CENTRE_TAP = tuple(sorted(set(PINMAP['NS2'][1] + PINMAP['NS3'][0])))
-PIN_NOTE = ('The data sheet numbers pins 1, 6, 7 and 12 and marks pin 1; '
-            'the pins between are counted from them.')
-PIN_NOTE_KR = ('데이터시트는 핀 1, 6, 7, 12 에 번호를 적고 핀 1 을 표시한다. '
-               '그 사이 핀 번호는 거기서 센 것이다.')
+PIN_NOTE = ('Pin numbers as the data sheet gives them in its view from '
+            'below, the pin side: pin 1 at the chamfered corner, 1 to 6 in '
+            'one row and 7 to 12 in the other, 6 facing 7 and 1 facing 12. '
+            'The data sheet prints 1, 6, 7 and 12; the pins between are '
+            'counted. Seen from the component side of the board, left and '
+            'right are exchanged.')
+PIN_NOTE_KR = ('핀 번호는 데이터시트의 밑면도(핀 쪽에서 본 그림) 그대로다: 모따기한 '
+               '모서리가 핀 1, 한 줄에 1–6, 다른 줄에 7–12, 6 과 7 · 1 과 12 가 '
+               '마주 본다. 데이터시트는 1, 6, 7, 12 만 적고 그 사이는 센 것이다. '
+               'PCB 부품면에서 보면 좌우가 바뀐다.')
 
 
 def _plus(t):

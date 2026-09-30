@@ -3338,7 +3338,12 @@ def build(A):
           'of %(half)d, rows %(rows).2f&nbsp;mm apart; in a row they are two '
           'groups of three, %(pitch).2f&nbsp;mm apart within a group and '
           '%(pb).1f&nbsp;mm between the groups. The data sheet numbers pins '
-          '1, 6, 7 and 12. NP1 and the auxiliary NAUX take the pin-1 row, '
+          '1, 6, 7 and 12 in its view <b>from below</b>, the pin side; its '
+          'drawing does not say so, but that is the view that shows the pin '
+          'ends, and the view from above shows none. From the component '
+          'side of the board, where the footprint is drawn, left and right '
+          'are exchanged: Figure&nbsp;%(fig)s draws both. NP1 and the '
+          'auxiliary NAUX take the pin-1 row, '
           'NS2 and NS3 the other. Every winding is one conductor, one pin '
           'an end. <b>The centre tap is made on the board</b>, joining '
           'NS2&rsquo;s finish (pin %(t2)d) and NS3&rsquo;s start (pin '
@@ -3349,14 +3354,18 @@ def build(A):
           'and secondary leads pass the primary section on their way to '
           'the pins; NP1 carries the insulation there.'
           % dict(former=_B['former'], pins=_B['pins'], half=_B['pins'] // 2,
+                 fig=FR('an_xfmr_pins'),
                  pitch=_B['pitch'], pb=_B['pitch_b'], rows=_B['rows_apart'],
                  t2=_CORE.PINMAP['NS2'][1][0], t3=_CORE.PINMAP['NS3'][0][0],
                  ip=V['Idio'])))
     add(fig('an_xfmr_pins',
             'The schematic symbol with its pin numbers, and the same pins on '
             'the %(former)s coil former (%(pins)d pins, rows %(rows).2f&nbsp;mm '
-            'apart). A ring in a winding&rsquo;s colour marks its pins; grey '
-            'pins are free. The dot end is the start of each winding. '
+            'apart), its outline traced from the data sheet drawing: the side '
+            'view with the two directions of view, (A) from below, the pin '
+            'side, and (B) from above, the component side of the board, with '
+            'the pins hidden. A ring in a winding&rsquo;s colour marks its '
+            'pins. The dot end is the start of each winding. '
             '%(note)s'
             % dict(former=_B['former'], pins=_B['pins'],
                    rows=_B['rows_apart'], note=_CORE.PIN_NOTE)))

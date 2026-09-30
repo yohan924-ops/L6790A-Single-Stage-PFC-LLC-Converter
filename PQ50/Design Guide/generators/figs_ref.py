@@ -2854,9 +2854,14 @@ def an_xfmr_pins(save, foot):
     Left: the schematic symbol of the transformer with every terminal
     carrying its pin numbers - primary NP1, the ZCD auxiliary NAUX, and
     the two secondary windings NS2 / NS3 that make the centre tap.
-    Right: the coil former in the mounting-direction view, every pin at
-    its specified position, each ringed in the colour of the winding it
-    carries.
+    Right: the coil former drawn from its data sheet (bobbin_outline.py
+    reads the vector drawing): the side view with the two directions of
+    view marked, then (A) the BOTTOM view from the pin side - the view the
+    data sheet numbers its pins in - and (B) the TOP view from the winding
+    side, which is how the footprint is seen on the component side of the
+    board.  Every pin at its specified position, ringed in the colour of
+    the winding it carries; in the top view the pins are hidden, so their
+    rings are dashed.
 
     Numbers, positions and the assignment all come from cores.BOBBIN -
     the same source the vendor specification and the tables in the note
@@ -2869,10 +2874,10 @@ def an_xfmr_pins(save, foot):
     V = _A.V
     B = C.BOBBIN
     COL = {'NP1': MAG, 'NAUX': PUR, 'NS2': GRN, 'NS3': CYA}
-    fig = plt.figure(figsize=(9.35, 6.3))
+    fig = plt.figure(figsize=(9.35, 8.1))
 
     # ---------------------------------------------------------- symbol
-    ax = fig.add_axes([0.010, 0.060, 0.455, 0.860])
+    ax = fig.add_axes([0.010, 0.585, 0.455, 0.400])
     S.frame(ax, -0.6, 16.9, -0.3, 10.9)
     S.label(ax, 7.6, 10.45, 'THE TRANSFORMER, SCHEMATIC', size=11.5,
             color=NAVY, weight='bold')
@@ -2963,32 +2968,10 @@ def an_xfmr_pins(save, foot):
             size=9.6, color=GREY)
 
     # ---------------------------------------------------- coil former
-    P = B['plan']
-    bx = fig.add_axes([0.485, 0.060, 0.505, 0.860])
-    hw, hh = P['w'] / 2.0, P['h'] / 2.0
-    S.frame(bx, -hw - 13.0, hw + 13.0, -hh - 17.0, hh + 16.0)
-    S.label(bx, 0.0, hh + 14.2, '%s COIL FORMER, VIEW IN MOUNTING DIRECTION'
-            % ('CUSTOM' if 'custom' in B['former'] else B['former']),
-            size=11.0, color=NAVY, weight='bold')
-    bx.add_patch(Rectangle((-hw, -hh), P['w'], P['h'], fc='#f3f4f6',
-                           ec=GREY, lw=1.2, zorder=1))
-    if P['coil_w']:
-        #  the coil between the flanges, seen edge-on from below
-        bx.add_patch(Rectangle((-P['coil_w'] / 2.0, -P['coil_h'] / 2.0),
-                               P['coil_w'], P['coil_h'], fc='#e4e7ec',
-                               ec=GREY, lw=0.8, hatch='////', zorder=1.5))
-        bx.text(0, 0, 'coil\n(between the flanges)', fontsize=9.4,
-                color=GREY, ha='center', va='center', zorder=2,
-                bbox=dict(boxstyle='round,pad=0.25', fc='white', ec='none'))
-    if P['mark']:
-        mx, my = P['mark']
-        bx.add_patch(Polygon([(mx, my), (mx - 2.6, my), (mx, my + 2.6)],
-                             closed=True, fc=GREY, ec=GREY, zorder=2))
-        bx.annotate('pin 1 marking', xy=(mx - 1.6, my + 0.7),
-                    xytext=(-hw - 12.0, -hh - 4.6), fontsize=9.6,
-                    color=GREY, ha='left',
-                    arrowprops=dict(arrowstyle='-|>', color=GREY, lw=1.0),
-                    zorder=9)
+    #  the outline is the data sheet's own drawing (bobbin_outline.py); the
+    #  pins sit at their dimensioned positions (cores.PIN_XY, bottom view)
+    import bobbin_outline as BO
+    OUT = BO.load()['views']
     by_pin = {}
     for w, (a, b) in C.PINMAP.items():
         for n in a + b:
@@ -2997,87 +2980,104 @@ def an_xfmr_pins(save, foot):
     COL['TAP'] = NAVY
     for n in tap:
         by_pin[n] = 'TAP'
-    #  pins run along rows (custom) or columns (PQ): number them on the side
-    #  away from the coil
-    for n, (x, y) in C.PIN_XY.items():
-        w = by_pin.get(n)
-        c = COL[w] if w else '#9aa0a8'
-        bx.add_patch(Circle((x, y), 1.85, fc='white', ec=c, lw=1.6,
-                            zorder=3))
-        bx.add_patch(Circle((x, y), 0.45, fc=c if w else GREY, ec='none',
-                            zorder=4))
-        if B['pins'] > 12:                              # rows top/bottom
-            S.label(bx, x, y + (3.4 if y > 0 else -3.4), str(n), size=9.4,
-                    color=c, weight='bold')
-        else:
-            S.label(bx, x + (3.0 if x < 0 else -3.0), y, str(n), size=9.6,
-                    color=c, weight='bold',
-                    ha='left' if x < 0 else 'right')
-    #  winding name beside its group of pins
-    def grp(w, pl=None, text=None, col=None):
-        if pl is None:
-            a, b = C.PINMAP[w]
-            pl = a + b
-        xs = [C.PIN_XY[n][0] for n in pl]
-        ys = [C.PIN_XY[n][1] for n in pl]
-        x, y = sum(xs) / len(xs), sum(ys) / len(ys)
-        text = text or '%s\n%s' % (w, C.pins(w))
-        col = col or COL[w]
-        if B['pins'] > 12:
-            S.label(bx, x, (hh + 5.0) if y > 0 else -(hh + 5.0),
-                    text, size=9.6, color=col, weight='bold')
-        else:
-            S.label(bx, x + (-3.4 if x < 0 else 3.4), y,
-                    text, size=10.0, color=col,
+    INK = '#3c4350'
+
+    def outline(bx, view, flip=False):
+        """the drawing's lines; flip turns the view half a turn (x, y -> -x, -y)"""
+        k = -1.0 if flip else 1.0
+        for pl in view['outline']:
+            xs, ys = zip(*pl)
+            #  zorder below 2: a drawing, not wiring (figcheck reads z 2)
+            bx.plot([k * x for x in xs], [k * y for y in ys], color=INK,
+                    lw=1.1, zorder=1.6, solid_joinstyle='round')
+        for pl in view['hidden']:
+            xs, ys = zip(*pl)
+            bx.plot([k * x for x in xs], [k * y for y in ys], color=INK,
+                    lw=0.8, ls=(0, (3, 2)), zorder=1.6)
+
+    def pinview(bx, mirror, title, sub):
+        """pins, numbers and winding names; mirror = the top view"""
+        hidden = mirror
+        S.frame(bx, -47.0, 47.0, -41.0, 38.0)
+        S.label(bx, 0.0, 35.4, title, size=11.0, color=NAVY, weight='bold')
+        S.label(bx, 0.0, 31.4, sub, size=9.4, color=GREY)
+        outline(bx, OUT['top'] if mirror else OUT['bottom'], flip=mirror)
+        k = -1.0 if mirror else 1.0
+        for n, (x, y) in C.PIN_XY.items():
+            x = k * x
+            w = by_pin.get(n)
+            c = COL[w] if w else '#9aa0a8'
+            bx.add_patch(Circle((x, y), 1.75, fc='white', ec=c, lw=1.6,
+                                ls='--' if hidden else '-', zorder=3))
+            bx.add_patch(Circle((x, y), 0.6, fc=c if w else GREY, ec='none',
+                                zorder=4))
+            out = -1.0 if x < 0 else 1.0            # outside the row
+            S.label(bx, x + out * 4.6, y, str(n), size=9.6, color=c,
                     weight='bold', ha='right' if x < 0 else 'left')
-    for w in ('NP1', 'NAUX'):
-        grp(w)
-    if tap:
-        a2, a3 = C.PINMAP['NS2'][0], C.PINMAP['NS3'][1]
-        tp = tuple(sorted(tap))
-        grp('NS2', a2, 'NS2 start\n%s' % C._plus(a2))
-        grp('TAP', tp, 'tap\n%d to %d' % (tp[0], tp[-1]), NAVY)
-        grp('NS3', a3, 'NS3 finish\n%s' % C._plus(a3))
-    else:
-        grp('NS2')
-        grp('NS3')
-    if B['pins'] > 12:
-        ylo = min(y for _, y in C.PIN_XY.values())
-        yhi = max(y for _, y in C.PIN_XY.values())
-        S.label(bx, -hw - 3.0, ylo, 'primary\nside', size=9.4,
-                color=NAVY, ha='right')
-        S.label(bx, -hw - 3.0, yhi, 'secondary\nside', size=9.4,
-                color=NAVY, ha='right')
-        #  the two datasheet numbers that place the pins
-        #  the pitch between two neighbouring free pins, clear of the labels
-        fr = C.free_pins()
-        f1, f2 = next((p, q) for p, q in zip(fr, fr[1:])
-                      if abs(abs(C.PIN_XY[q][0] - C.PIN_XY[p][0])
-                             - B['pitch']) < 0.01
-                      and C.PIN_XY[q][1] == C.PIN_XY[p][1])
-        bx.annotate('', xy=(C.PIN_XY[f2][0], -hh - 8.0),
-                    xytext=(C.PIN_XY[f1][0], -hh - 8.0), zorder=1,
-                    arrowprops=dict(arrowstyle='<->', color=GREY, lw=0.8,
-                                    shrinkA=0, shrinkB=0))
-        bx.text((C.PIN_XY[f1][0] + C.PIN_XY[f2][0]) / 2, -hh - 10.6,
-                '%.2f' % B['pitch'], fontsize=9.4, color=GREY, ha='center',
-                va='center', zorder=1)
-        bx.annotate('', xy=(hw + 5.0, yhi), xytext=(hw + 5.0, ylo),
-                    zorder=1,
-                    arrowprops=dict(arrowstyle='<->', color=GREY, lw=0.8,
-                                    shrinkA=0, shrinkB=0))
-        bx.text(hw + 7.2, 0.0, '%.2f' % B['rows_apart'], fontsize=9.4,
-                color=GREY, ha='center', va='center', rotation=90, zorder=1)
-    S.label(bx, 0.0, -hh - 14.6, 'ring = winding on that pin;  grey pins are '
-            'free', size=9.4, color=GREY)
+
+        def grp(w, pl=None, text=None, col=None):
+            if pl is None:
+                a, b = C.PINMAP[w]
+                pl = a + b
+            xs = [k * C.PIN_XY[n][0] for n in pl]
+            ys = [C.PIN_XY[n][1] for n in pl]
+            x, y = sum(xs) / len(xs), sum(ys) / len(ys)
+            text = text or '%s\n%s' % (w, C.pins(w))
+            out = -1.0 if x < 0 else 1.0
+            S.label(bx, x + out * 9.4, y, text, size=9.8, color=col or COL[w],
+                    weight='bold', ha='right' if x < 0 else 'left')
+        for w in ('NP1', 'NAUX', 'NS2', 'NS3'):
+            grp(w)
+        #  the chamfered corner: bottom left from below, bottom right from above
+        cx = 25.0 * (1.0 if mirror else -1.0)
+        bx.annotate('pin 1 marking (chamfer)', xy=(cx, -24.4),
+                    xytext=(0.0, -35.0), fontsize=9.4, color=GREY,
+                    ha='center', va='center', zorder=9,
+                    arrowprops=dict(arrowstyle='-|>', color=GREY, lw=1.0,
+                                    shrinkA=4, shrinkB=1))
+
+    #  side view: the two directions of view
+    sx = fig.add_axes([0.475, 0.575, 0.520, 0.415])
+    S.frame(sx, -34.0, 104.0, -27.0, 72.0)
+    S.label(sx, 35.0, 69.0, '%s COIL FORMER, SIDE VIEW' % B['former'],
+            size=11.0, color=NAVY, weight='bold')
+    sx.add_patch(Rectangle((-33.0, -1.6), 66.0, 1.6, fc='#dfe8d5',
+                           ec='#8fa07c', lw=0.8, zorder=1))
+    S.label(sx, 35.0, -0.8, 'PCB', size=9.4, color='#5f7050', ha='left')
+    outline(sx, OUT['front'])
+    for pl in OUT['front']['pin']:
+        xs, ys = zip(*pl)
+        sx.plot(xs, ys, color=INK, lw=1.0, zorder=3)
+    S.label(sx, 30.0, 36.0, 'winding\nside', size=9.4, color=GREY,
+            ha='left')
+    S.label(sx, 30.0, 6.5, 'pin\nside', size=9.4, color=GREY, ha='left')
+    for y0, y1, tag, txt in (
+            (-24.5, -11.0, 'A', 'BOTTOM VIEW: looking up at\nthe pin ends, from the board'),
+            (67.0, 55.5, 'B', 'TOP VIEW: looking down on\nthe winding side')):
+        sx.add_patch(FancyArrowPatch((0.0, y0), (0.0, y1),
+                                     arrowstyle='-|>,head_length=5,'
+                                     'head_width=3.2', color=NAVY, lw=1.8,
+                                     zorder=6))
+        S.label(sx, 3.2, (y0 + y1) / 2.0, tag, size=12.0, color=NAVY,
+                weight='bold', ha='left')
+        S.label(sx, 40.0, (y0 + y1) / 2.0, txt, size=9.6, color=NAVY,
+                ha='left')
+
+    ax_a = fig.add_axes([0.005, 0.025, 0.490, 0.530])
+    pinview(ax_a, False, 'A  BOTTOM VIEW (pin side)',
+            'as drawn on the data sheet; pins toward you')
+    ax_b = fig.add_axes([0.505, 0.025, 0.490, 0.530])
+    pinview(ax_b, True, 'B  TOP VIEW (winding side)',
+            'component side of the PCB; pins hidden (dashed)')
 
     foot(fig, 'The transformer: the schematic symbol with its pin numbers, '
-              'and the same pins on the %s coil former (pin positions and '
-              'the numbers 1, 6, 7 and 12 from its data sheet, the others '
-              'counted). Primary and auxiliary share one row, the two '
-              'secondaries the other; one conductor ends on a pin, and the '
-              'centre tap joins pins %s on the board.'
-              % (B['former'], C.tap_text()))
+              'and the %s coil former traced from its data sheet drawing: '
+              'side view, (A) from below, the pin side, as the data sheet '
+              'numbers it (pin positions and the numbers 1, 6, 7 and 12 from '
+              'the data sheet, the others counted), and (B) from above, the '
+              'component side of the board, left and right exchanged. One '
+              'conductor ends on a pin; the centre tap joins pins %s on the '
+              'board.' % (B['former'], C.tap_text()))
     save(fig, 'an_xfmr_pins')
 
 
