@@ -474,7 +474,7 @@ def build(A):
             'i<sub>s</sub> is taken into the dot in the flyback and out of it '
             'in the LLC, so the flyback&rsquo;s ampere-turns add. '
             'Bottom row: dashed, what each winding would drive alone; solid, '
-            'their sum; shaded, what the secondary removed.'
+            'their sum; shaded, the difference the secondary makes.'
             % FR('an_flux_steps')))
     add(p('Figure&nbsp;%s follows one period of each converter interval by '
           'interval: which winding conducts, what voltage it holds, and so '
@@ -598,7 +598,7 @@ def build(A):
         'it over.',
         '<b>B<sub>pk</sub> is fixed, so core loss follows frequency.</b> '
         'The flux is the same at every point of the line cycle below '
-        'resonance, and the loss per cycle at that flux rises with '
+        'resonance, and the core loss at that flux rises with '
         'f<sub>sw</sub>. Above resonance the flux falls as 1/f<sub>sw</sub> and the '
         'loss falls with it, so the worst core loss is near f<sub>r</sub>.',
         '<b>The flyback habit that costs the most</b> is asking the '
@@ -655,7 +655,7 @@ def build(A):
           'voltage. <b>Displacement</b> (the phase) is what a motor gets '
           'wrong; <b>distortion</b> (the harmonic share of the rms) is what '
           'a rectifier gets wrong. The current above is roughly in phase '
-          'and still scores about 0.6.'))
+          'and still has a power factor of only about 0.6.'))
     add(p('Total harmonic distortion, THD, is the harmonic content as a '
           'fraction of the fundamental:'))
     add(eq(r'THD=\frac{\sqrt{I_{ac}^{2}-I_{1,rms}^{2}}}{I_{1,rms}}'
@@ -1205,13 +1205,13 @@ def build(A):
           'Three rules matter more than the arithmetic:'
           % dict(q=ER('Qdef'), e=ER('fr'))))
     ext(bullets([
-        'The three calculated figures are not one tank. L<sub>r</sub> is '
-        'whatever pairs with the <b>selected</b> C<sub>r</sub>, and the '
-        'L<sub>m</sub> figure is L<sub>r</sub> over the &lambda; that '
-        '<i>no load at the high corner</i> asks for, a condition a design '
-        'may knowingly not meet (Section&nbsp;'
+        'The three calculated values are not one tank. L<sub>r</sub> '
+        'follows from the <b>selected</b> C<sub>r</sub>, not the calculated '
+        'one. The calculated L<sub>m</sub> is L<sub>r</sub> divided by the '
+        '&lambda; that <i>no load at the high corner</i> asks for. A design '
+        'may knowingly miss that condition (Section&nbsp;'
         + SR('The other bound on &lambda;, and where it has no solution')
-        + '). It is not a value to round towards.',
+        + '), so do not round towards that L<sub>m</sub>.',
         '<b>A larger L<sub>m</sub> costs ZVS margin.</b> It lowers '
         '&lambda; and the magnetising current that swings the node. '
         'C<sub>r</sub> above and L<sub>m</sub> below their calculated values '
@@ -1260,8 +1260,8 @@ def build(A):
         'magnetising current. Its peak is neither the sum nor the larger of '
         'the two peaks, because they occur at different instants.',
         'Below resonance the secondary conducts for d of each half period. '
-        'The rms is the pulse peak times &radic;d; omitting d '
-        'over-estimates it, and the loss by its square. '
+        'The rms scales with &radic;d; omitting d over-estimates it, and '
+        'the loss by its square. '
         'Section&nbsp;' + SR('The currents this design has to carry')
         + ' draws the composite current of this design.']))
     add(h2('The transformer'))
@@ -1376,8 +1376,12 @@ def build(A):
            r'L_{short}=L_{L1}+\frac{L_{\mu}\,n_{T}^{2}L_{L2}}'
            r'{L_{\mu}+n_{T}^{2}L_{L2}}=L_{r}', key='Lopen'))
     add(p('Both are read across the primary. L<sub>open</sub>: every other '
-          'winding open. L<sub>short</sub>: every secondary shorted (on a '
-          'centre-tapped part both halves), the auxiliary open. <b>Specify '
+          'winding open. L<sub>short</sub>: the secondary shorted, the '
+          'auxiliary open. On a centre-tapped part short <b>one half at a '
+          'time</b>: in service only one half conducts, so each half is what '
+          'the tank sees. Both halves shorted read lower when the two halves '
+          'do not lie in the same place; record that value, do not hold it '
+          'to L<sub>r</sub>. <b>Specify '
           'those two and the turns, never L<sub>&mu;</sub></b>: no terminal '
           'pair exposes it. State the turns as numbers, because with one or '
           'two secondary turns the lead-out loop dominates that '
@@ -1529,9 +1533,9 @@ def build(A):
         'the sections of a side-by-side or split winding the field crosses '
         'the window, straight through the face of the foil, and drives '
         'eddy currents across its whole width. There the secondary is Litz '
-        'too.',
-        'The ac resistance heats the winding; the dc resistance is a floor, '
-        'not an answer.']))
+        'too.']))
+    add(p('Either way the ac resistance heats the winding; the dc resistance '
+          'is a floor, not an answer.'))
     add(p('<b>Litz.</b> Pick a standard strand at or below 2&delta;; the '
           'strand count is the copper needed over what one strand gives:'))
     add(eq(r'a_{s}=\frac{\pi d_{s}^{2}}{4}\,,\qquad '
@@ -1580,7 +1584,8 @@ def build(A):
         'triple-insulated wire (made as Litz too) carries the reinforced '
         'insulation itself, and the gaps are free to be whatever the leakage '
         'asks.' % ER('leak'),
-        '<b>The core counts as the side it cannot be kept away from.</b> '
+        '<b>Treat the core as part of the side that sits closest to '
+        'it.</b> '
         'With plain wire the primary fills the window almost to the outer '
         'legs, so the core is primary, and the secondary needs reinforced '
         'distances to it: through the tube wall, over the flange, to the '
@@ -1751,10 +1756,13 @@ def build(A):
              'margin covers the fall, a part that meets &plusmn;10&nbsp;%% '
              'can hard switch. Section&nbsp;' % {}
              + SR('Controller network') + ' gives the check.'))
-    add(p('Core, bobbin, wire and winding order are the supplier&rsquo;s '
-          'choice, inside the insulation of Section&nbsp;'
+    add(p('Core, bobbin, wire and winding order can be left to the '
+          'supplier as long as L<sub>open</sub>, L<sub>short</sub> and the '
+          'insulation of Section&nbsp;'
           + SR('Safety insulation: what the winding has to carry')
-          + '. Everything above is measurable at the terminals.'))
+          + ' are met, because all of those are measurable at the terminals. '
+            'The design example fixes them anyway: its L<sub>r</sub> is the '
+            'leakage of one particular winding.'))
 
     add(h2('If one transformer is not practical'))
     add(p('At low voltage and high current the secondary is one heavy turn '
@@ -1882,10 +1890,11 @@ def build(A):
           % SR('Frequency modulation is the power factor correction')))
 
     add(h2('Supplying V<sub>CC</sub> from the auxiliary winding'))
-    add(p('The winding charges a capacitor through a diode, and an NPN '
-          'emitter follower whose base a Zener holds passes it on to the pin '
-          'through the bypass diode the datasheet asks for, which keeps the '
-          'start-up current out of the regulator. The pin then sits at '
+    add(p('The winding charges a capacitor through a diode. An NPN '
+          'emitter follower, its base held by a Zener, passes that voltage '
+          'on to the pin. Between them sits the bypass diode the datasheet '
+          'asks for; it keeps the start-up current out of the regulator. '
+          'The pin then sits at '
           'V<sub>CC,reg</sub>, the Zener voltage V<sub>DZ</sub> less the '
           'base-emitter drop V<sub>BE</sub> and the diode drop V<sub>D</sub>:'))
     add(eq(r'V_{CC,reg}=V_{DZ}-V_{BE}-V_{D}', key='vccreg'))
@@ -2270,7 +2279,9 @@ def build(A):
               'halves the rectifier conduction loss; doubles the device '
               'reverse voltage'],
              ['Target series resonance', 'f<sub>r</sub>', '%(frt).0f kHz' % V,
-              'chosen', 'sets the magnetics size'],
+              'chosen', 'the starting point; the leakage of the transformer '
+              'sets the final f<sub>r</sub>, %(fr).1f kHz (Section&nbsp;%(s)s)'
+              % dict(V, s=SR('Following the numbers through'))],
              ['Specified maximum f<sub>sw</sub>', 'f<sub>sw,max</sub>',
               '%(fswspec).0f kHz (%(fx).1f f<sub>r</sub>)' % dict(V, fx=V['fswspec'] / V['frt']), 'chosen',
               'an input to &lambda;, Section&nbsp;'
@@ -2288,8 +2299,8 @@ def build(A):
               'about %.0f %%; nothing downstream is sensitive' % (100 * (V['etaHB'] / 95.0 - 1))],
              ['Oscillator idle time', 'T<sub>idle</sub>',
               '%(Tidle).0f ns' % V, 'assumed',
-              'the draft datasheet also implies 350 and 700 ns; 700 ns would '
-              'close the floor margin &mdash; the first thing to measure'],
+              'the draft datasheet also implies 350 and 700 ns; %s '
+              '&mdash; the first thing to measure' % _idle700_text(V)],
              ['R<sub>DS(on)</sub> temperature factor', 'k<sub>T</sub>',
               '%(Rdpk).1f / %(Rdsk).1f' % V, 'assumed',
               'primary / secondary, read off the datasheet curves at '
@@ -2426,13 +2437,14 @@ def build(A):
              'against a %(b).0f&nbsp;W budget; no single 600&nbsp;V device meets '
              'that budget in the standing position, so the design goes ahead '
              'and the heatsink question is settled by measurement '
-             '(Section&nbsp;%(ref)s). k<sub>RBZ</sub> = %(krbz).3f is the '
-             'thinnest that passes, but every input to it is already a worst '
-             'case (the Zener at the top of its tolerance, the least current '
-             'gain, the end of hold-up). k<sub>floor</sub> = %(kfloor).3f '
-             'rests on unknowns: the transformer tolerance and the idle time '
-             'both move it, and neither is measured yet.'
+             '(Section&nbsp;%(ref)s). %(thin)s k<sub>RBZ</sub> = %(krbz).3f '
+             'is small too, but every input to it is already a worst case '
+             '(the Zener at the top of its tolerance, the least current gain, '
+             'the end of hold-up). k<sub>floor</sub> = %(kfloor).3f rests on '
+             'unknowns: the transformer tolerance and the idle time both move '
+             'it, and neither is measured yet.'
              % dict(V, a=A.SH['P.mos_dc'], b=_kb, krbz=A.SH['k.RBZ'],
+                    thin=_thinnest_text(V, A),
                     ref=SR('What to measure first on hardware'))))
 
     # ------------------------------------------------ the chain, step by step
@@ -2504,8 +2516,11 @@ def build(A):
              % (V['QZVS'], V['Rac'], V['QZVS'], V['Z0'])))
     # -- Cr, Lr
     add(p('<b>Step 7 &mdash; C<sub>r</sub> and L<sub>r</sub>.</b> '
-          'C<sub>r</sub> is taken <b>up</b> on purpose for Q margin; '
-          'L<sub>r</sub> pairs with the <i>selected</i> C<sub>r</sub>:'))
+          'C<sub>r</sub> is taken <b>up</b> on purpose for Q margin. The '
+          'L<sub>r</sub> that pairs with the <i>selected</i> C<sub>r</sub> '
+          'at the target f<sub>r</sub> is computed below; the L<sub>r</sub> '
+          'fitted is the leakage of the transformer (Section&nbsp;%s), and '
+          'f<sub>r</sub> follows it:' % SR('Choosing the core')))
     add(eqagain('fr'))
     add(calc(r'C_{r}=\frac{1}{2\pi f_{r}Z_{0,design}}'
              r'=\frac{1}{2\pi\times %.0f\ \mathrm{kHz}\times %.2f\ \Omega}'
@@ -3008,14 +3023,15 @@ def build(A):
     _wall = (_M['tube_od'] - _M['d_centre']) / 2.0
     _mid = _w['wind_w'] / 2.0                    # the gap, from the NP1 flange
     add(p('<b>The arrangement.</b> L<sub>short</sub> must come out at '
-          '%(Ls).1f&nbsp;&micro;H. Side by side, with the gap as the '
-          'reinforced insulation, the gap is at least the %(sep).1f&nbsp;mm '
-          'creepage (Section&nbsp;%(ins)s). On the window chosen below '
-          '(depth h<sub>w</sub> = %(hw).2f&nbsp;mm, mean turn '
-          'l<sub>N</sub> = %(ln).0f&nbsp;mm), Equation&nbsp;%(e)s with '
-          'N<sub>B</sub>&nbsp;=&nbsp;0, the primary as one plain Litz bundle '
-          'in three layers (w<sub>A</sub> = %(wa).2f&nbsp;mm) and the '
-          'secondary group (w<sub>S</sub> = %(ws).2f&nbsp;mm) gives'
+          '%(Ls).1f&nbsp;&micro;H. First try plain wire, side by side, with '
+          'the gap between the sections carrying the reinforced insulation: '
+          'the gap is then at least the %(sep).1f&nbsp;mm creepage '
+          '(Section&nbsp;%(ins)s). Take the window chosen below (depth '
+          'h<sub>w</sub> = %(hw).2f&nbsp;mm, mean turn l<sub>N</sub> = '
+          '%(ln).0f&nbsp;mm), the primary as one plain Litz bundle in three '
+          'layers (w<sub>A</sub> = %(wa).2f&nbsp;mm) and the secondary group '
+          '(w<sub>S</sub> = %(ws).2f&nbsp;mm). Equation&nbsp;%(e)s with '
+          'N<sub>B</sub>&nbsp;=&nbsp;0 gives'
           % dict(Ls=V['Lshort'], sep=_sep, e=ER('leak'), wa=_wsb,
                  ws=_w['w_S'], hw=_hw, ln=_R['lN'],
                  ins=SR('Safety insulation of this transformer'))))
@@ -3126,8 +3142,9 @@ def build(A):
           'centre tap conducts at a time. With NS2 shorted alone the field '
           'solution gives <b>%(h2).2f&nbsp;&micro;H</b>, with NS3 alone '
           '<b>%(h3).2f&nbsp;&micro;H</b>: NS3 lies further out, where the '
-          'turns are longer. Their mean, %(hm).2f&nbsp;&micro;H, is the '
-          'tank&rsquo;s L<sub>r</sub> of %(Ls).1f&nbsp;&micro;H; counting the '
+          'turns are longer. Their mean, %(hm).2f&nbsp;&micro;H, is within '
+          '%(dm).0f&nbsp;%% of the tank&rsquo;s L<sub>r</sub> of '
+          '%(Ls).1f&nbsp;&micro;H; counting the '
           'part under the plate fully out, or fully in, moves the halves '
           'to %(h2a).2f and %(h3a).2f&nbsp;&micro;H at the extremes. The '
           'higher half is %(hp).1f&nbsp;%% over L<sub>r</sub>, %(inout)s the '
@@ -3140,12 +3157,14 @@ def build(A):
           'secondary ampere-turns. It is recorded, not held to '
           'L<sub>r</sub>.'
           % dict(h2=_h2, h3=_h3, hm=_hm, Ls=V['Lshort'], h2a=_h2a, h3a=_h3a,
+                 dm=max(1.0, -(-100 * abs(_hm / V['Lshort'] - 1) // 1)),
                  hp=100 * (_hmax / V['Lshort'] - 1),
                  inout='inside' if _hmax <= _Lmax else 'outside',
                  df=100 * (1 - (min(_h2, _h3) / _hmax) ** 0.5),
                  Lf=_ef, L0=_ef0, L1=_ef1)))
     add(p('<b>The partition is the knob after the first samples, in one '
-          'direction.</b> %(g).1f&nbsp;mm is the most this note allows; '
+          'direction.</b> The %(g).1f&nbsp;mm wall can be moulded thinner, '
+          'which lowers the leakage, but not usefully thicker; '
           '%(g5).1f&nbsp;mm lowers the both-shorted figure to '
           '%(l5).2f&nbsp;&micro;H, and the pitch along the layer takes up '
           'the width. Wound tight (k<sub>w</sub>&nbsp;=&nbsp;1) the same '
@@ -3777,7 +3796,12 @@ def build(A):
              ['<b>Itemised total</b>', '<b>%(t).2f W</b>'
               % dict(t=A.SH['P.pri_tot'] + A.SH['P.SR']
                      + A.SH['P.RCS'] + A.SH['P.Cout'] + A.SH['P.Qpass_nom']),
-              'and the magnetics are not in it']],
+              'devices only: the transformer windings add %.1f to %.1f W '
+              '(dc and strand loss, Section&nbsp;%s); the core loss is not '
+              'computed here'
+              % (_pdc + _pa['P_pri'] + _pa['P_sec'],
+                 _pdc + _pb['P_pri'] + _pb['P_sec'],
+                 SR('Choosing the core'))]],
             widths=[CW * 0.34, CW * 0.14, CW * 0.52], key='loss', split=True))
     add(p('<b>The standing primary device</b>, the low-side switch of the '
           'idle leg in half-bridge morphing, carries the whole line-cycle '
@@ -4103,19 +4127,22 @@ def build(A):
           'because it sets the <i>span</i>, R<sub>T</sub> after it because it '
           'sets the <i>floor</i>:'))
     add(eq(r'C_{T,max}=\frac{I_{EA,max}}{2V_{ref}}\cdot'
-           r'\frac{(1-2T_{idle}f_{sw,max,op})(1-2T_{idle}f_{sw,min})}'
-           r'{f_{sw,max,op}-f_{sw,min}}\,,\qquad '
+           r'\frac{(1-2T_{idle}f_{sw,des})(1-2T_{idle}f_{sw,min})}'
+           r'{f_{sw,des}-f_{sw,min}}\,,\qquad '
            r'C_{T,min}=\frac{1}{R_{T,max}}'
            r'\left(\frac{1}{2f_{sw,min}}-T_{idle}\right)', key='CT'))
     add(eq(r'R_{T,ceil}=\frac{1}{C_{T}}'
            r'\left(\frac{1}{2f_{sw,min}}-T_{idle}\right)', key='RTceil'))
     add(p('with f<sub>sw,min</sub> = f<sub>o</sub>&nbsp;=&nbsp;'
-          '%(fo).1f&nbsp;kHz; f<sub>sw,max,op</sub>&nbsp;=&nbsp;'
-          '%(fop).1f&nbsp;kHz, the highest frequency the converter actually '
-          'runs at (the full-bridge edge at the line peak), not the '
-          '%(fswspec).0f&nbsp;kHz specification; I<sub>EA,max</sub>&nbsp;=&nbsp;'
+          '%(fo).1f&nbsp;kHz; f<sub>sw,des</sub>&nbsp;=&nbsp;'
+          '%(fop).1f&nbsp;kHz, the frequency the oscillator span is designed '
+          'to: 1.5 times the highest frequency the converter runs at, '
+          '%(fmx).1f&nbsp;kHz (the full-bridge edge at the line peak), and '
+          'no more than the %(fswspec).0f&nbsp;kHz specification; '
+          'I<sub>EA,max</sub>&nbsp;=&nbsp;'
           '400&nbsp;&micro;A, V<sub>ref</sub>&nbsp;=&nbsp;1.5&nbsp;V and '
-          'T<sub>idle</sub>&nbsp;=&nbsp;%(Tidle).0f&nbsp;ns:' % dict(V, fop=A.SH['f.sw_max_des'])))
+          'T<sub>idle</sub>&nbsp;=&nbsp;%(Tidle).0f&nbsp;ns:'
+          % dict(V, fop=A.SH['f.sw_max_des'], fmx=V['fswmaxop'])))
     add(calc(r'C_{T,max}=\frac{400\times10^{-6}}{2\cdot1.5}\cdot'
              r'\frac{(1-2\cdot%(t).0f\!\times\!10^{-9}\cdot'
              r'%(fmx).1f\!\times\!10^{3})'
@@ -4179,11 +4206,13 @@ def build(A):
              'expression, and its Table&nbsp;2 back-solves to about '
              '250&nbsp;ns; this design uses '
              '%(Tidle).0f&nbsp;ns. At 700&nbsp;ns f<sub>Min</sub> would be '
-             '%(a).1f&nbsp;kHz, below f<sub>o</sub>, and f<sub>Max</sub> '
-             '%(b).1f&nbsp;kHz against the %(c).1f&nbsp;kHz the FB edge '
-             'needs. Measure it first.'
+             '%(a).1f&nbsp;kHz, %(side)s f<sub>o</sub> = %(fo).1f&nbsp;kHz, '
+             'and f<sub>Max</sub> %(b).1f&nbsp;kHz against the '
+             '%(c).1f&nbsp;kHz the FB edge needs. Measure it first.'
              % dict(V, a=_f_idle(V, 700.0)[0], b=_f_idle(V, 700.0)[1],
-                    c=V['fswmaxop'])))
+                    c=V['fswmaxop'],
+                    side='below' if _f_idle(V, 700.0)[0] < V['fo'] else
+                    'only just above')))
 
     add(h2('The current-sense resistor, which sets three things at once'))
     add(p('Two conditions, the smaller wins:'))
@@ -4415,11 +4444,13 @@ def build(A):
     add(note('t<sub>hand</sub> assumes the set holds its load off until the '
              'rail is up, as a TV sequences its panel. Any load during '
              'start-up stretches it, and C<sub>VCC</sub> with it.'))
+    add(p('Two wiring rules for the start-up path:'))
     ext(bullets([
         '<b>HVSU connects ahead of the bridge</b>, on the ac side, through '
         'one 1000&nbsp;V diode per line; behind the bridge X-capacitor '
         'discharge and brown-out detection both stop working.',
-        '100&nbsp;nF at the pin, beside C<sub>VCC</sub>.']))
+        '<b>100&nbsp;nF at the V<sub>CC</sub> pin</b>, beside '
+        'C<sub>VCC</sub>.']))
 
     # =============================================================== 7
     add(h2('Controller pin rules'))
@@ -4530,17 +4561,21 @@ def build(A):
     add(p('In order; the first four decide whether the design is sound.'))
     ext(bullets([
         '<b>f<sub>sw</sub>(&theta;) over a line half cycle.</b> It settles '
-        'T<sub>idle</sub> and both oscillator clamps, the thinnest margin in '
-        'the design.',
+        'T<sub>idle</sub>, the unknown behind both oscillator clamps.',
         '<b>Cold start into the full %(Cout).1f&nbsp;mF bank.</b> The '
         'start-up window is finite and this risk is new to the '
         'architecture.' % V,
-        '<b>ZVS at the half-bridge edge</b> (245&nbsp;V<sub>pk</sub>, full '
-        'load): calculated %(cTzc).0f&nbsp;ns against %(tD).0f&nbsp;ns. '
-        'Then the worst point of the sweep, %(zLoad).0f&nbsp;%% load, '
-        '%(zAt)s, %(zTzc).0f&nbsp;ns, which is the '
-        'figure this design is held to.'
-        % dict(V, zAt=_where(ZVS_WORST['zVin'], A.R), **ZVS_WORST),
+        ('<b>ZVS at the half-bridge edge</b> (245&nbsp;V<sub>pk</sub>, full '
+         'load), which is also the worst point of the sweep: calculated '
+         '%(zTzc).0f&nbsp;ns against %(tD).0f&nbsp;ns.'
+         % dict(V, **ZVS_WORST)
+         if round(ZVS_WORST['cTzc']) == round(ZVS_WORST['zTzc']) else
+         '<b>ZVS at the half-bridge edge</b> (245&nbsp;V<sub>pk</sub>, full '
+         'load): calculated %(cTzc).0f&nbsp;ns against %(tD).0f&nbsp;ns. '
+         'Then the worst point of the sweep, %(zLoad).0f&nbsp;%% load, '
+         '%(zAt)s, %(zTzc).0f&nbsp;ns, which is the '
+         'figure this design is held to.'
+         % dict(V, zAt=_where(ZVS_WORST['zVin'], A.R), **ZVS_WORST)),
         '<b>Switching frequency at the full-bridge edge</b> '
         '(235&nbsp;V<sub>pk</sub>, full load): calculated %(fswB).1f&nbsp;kHz; '
         'it must not hit the VCO ceiling.' % V,
@@ -4576,7 +4611,7 @@ def build(A):
         ('f<sub>r</sub>, f<sub>o</sub>', 'series resonance, and the lower resonance with L<sub>m</sub> included'),
         ('f<sub>sw</sub>, f<sub>n</sub>', 'switching frequency, and the same normalised to f<sub>r</sub>'),
         ('f<sub>sw,max</sub>, f<sub>sw,min</sub>', 'the specified maximum switching frequency, an input to &lambda;; and the lowest frequency the oscillator must reach, f<sub>o</sub> in this design'),
-        ('f<sub>sw,max,op</sub>', 'the highest switching frequency the converter actually runs at (the full-bridge edge at the line peak); the oscillator span is sized to it'),
+        ('f<sub>sw,des</sub>', 'the frequency the oscillator span is designed to: 1.5 times the highest switching frequency the converter runs at, capped by the specified maximum'),
         ('T<sub>sw</sub>, T<sub>r</sub>', 'switching period 1/f<sub>sw</sub>, and the resonant period 1/f<sub>r</sub>'),
         ('&lambda;, m', 'L<sub>r</sub>/L<sub>m</sub>, and (L<sub>r</sub>+L<sub>m</sub>)/L<sub>r</sub> = 1 + 1/&lambda;'),
         ('&lambda;<sub>act</sub>, &lambda;<sub>req</sub>', 'the &lambda; of the selected parts, and the &lambda; the design asked for'),
@@ -4653,7 +4688,7 @@ def build(A):
         ('N<sub>s1</sub>, N<sub>s2</sub>', 'the upper and lower halves of the centre-tapped secondary (NS2 and NS3 in the design example)'),
         ('i<sub>NS</sub>, i<sub>NS2</sub>, i<sub>NS3</sub>, v<sub>NS</sub>', 'in the design example: the current of a secondary winding, named by its winding, and the voltage across one'),
         ('N<sub>aux</sub>, n<sub>aux</sub>/n<sub>sec</sub>', 'auxiliary winding turns, and its turns ratio to one secondary'),
-        ('L<sub>open</sub>, L<sub>short</sub>', 'inductance across the primary with every other winding open; and with every secondary shorted and the auxiliary open'),
+        ('L<sub>open</sub>, L<sub>short</sub>', 'inductance across the primary with every other winding open; and with the secondary shorted, on a centre tap one half at a time, the auxiliary open'),
         ('I<sub>dc</sub>', 'the dc current the DC-overlap test overlaps on the LCR signal'),
         ('I<sub>p,pk</sub>, L<sub>p</sub>', 'in the flyback comparison only: the primary peak current and the primary inductance of a flyback'),
         ('&Phi;, &Phi;<sub>p</sub>, &Phi;<sub>s</sub>', 'in the flyback comparison: the core flux, and the flux the primary and the secondary ampere-turns would set up alone'),
@@ -4677,10 +4712,8 @@ def build(A):
         ('g<sub>1</sub>, g<sub>2</sub>', 'the gaps between the winding sections'),
         ('h<sub>w</sub>, l<sub>N</sub>', 'depth of the winding window, across which the leakage field runs, and the mean turn length'),
         ('h<sub>r</sub>, k<sub>w</sub>', 'radial room between the coil-former tube and the rim of its flanges (or the outer legs, whichever is closer), and the pitch from layer to layer over the bundle diameter (the looseness of a real winding)'),
-        ('d<sub>b,p</sub>, d<sub>b,s</sub>', 'outside diameter of one primary bundle (triple insulation included) and of one secondary bundle, as built'),
         ('h<sub>A</sub>, h<sub>S</sub>', 'radial build of the primary section and of the secondary section with NAUX'),
         ('k<sub>ax</sub>', 'pitch along a layer over the bundle diameter, spread so that the two sections and the partition fill the winding width'),
-        ('K<sub>1</sub>, K<sub>2</sub>, s', 'constants of the catalogue relation A<sub>L</sub> = K<sub>1</sub>s<sup>K<sub>2</sub></sup> between the gap s in mm and A<sub>L</sub> in nH'),
         ('J<sub>p</sub>, J<sub>s</sub>', 'current density in the primary and in each secondary winding, as built'),
 
         ('<b>Semiconductors</b>', ''),
@@ -4812,8 +4845,8 @@ def build(A):
               '350 ns in the C<sub>T,max</sub> expression; Table 2 (recommended '
               'operating range) back-solves to about 250 ns',
               '<b>%(Tidle).0f ns.</b> The two clamps bracket the operating '
-              'range at 250 ns and stop doing so at 700 ns, so this is a '
-              'measurement, not a rounding' % V],
+              'range at 250 ns; %(t7)s, so this is a measurement, not a '
+              'rounding' % dict(V, t7=_idle700_text(V))],
              ['Brown-out expression',
               'V<sub>BO</sub> = min(60 V, R<sub>CFG</sub>&middot;4 V/k&Omega;) '
               '&mdash; read literally this is 60 V for every resistor, which '
@@ -5068,6 +5101,31 @@ def _minus(x, fmt):
     """a number with a typographic minus, not a hyphen"""
     s = fmt % x
     return s.replace('-', '&minus;')
+
+
+def _idle700_text(V):
+    """what 700 ns of idle time would do to the two clamps, read from the
+    numbers rather than written once for one tank"""
+    fmin, fmax = _f_idle(V, 700.0)
+    if fmin < V['fo'] or fmax < V['fswmaxop']:
+        return 'at 700 ns they no longer do'
+    return ('at 700 ns they still do, but the floor margin falls to '
+            '%.3f' % (fmin / V['fo']))
+
+
+def _thinnest_text(V, A):
+    """the smallest verification margin that passes, named by its row"""
+    rows = [('ZVS at the worst point of the sweep', ZVS_WORST['zk']),
+            ('the oscillator floor', V['kfloor']),
+            ('the oscillator ceiling', V['kceil']),
+            ('the over-current threshold', V['kOCP']),
+            ('hold-up', V['khold']),
+            ('the secondary loss per rectifier leg', V['kPSR']),
+            ('V<sub>CC</sub> above the start-up threshold', A.SH['k.VCClo']),
+            ('the Zener feed', A.SH['k.RBZ']),
+            ('C<sub>VCC</sub> at the start-up hand-over', A.SH['k.CVCC'])]
+    name, k = min(((n, k) for n, k in rows if k > 1.0), key=lambda r: r[1])
+    return 'The thinnest margin that passes is %s, k = %.3f.' % (name, k)
 
 
 def _f_idle(V, tidle_ns):

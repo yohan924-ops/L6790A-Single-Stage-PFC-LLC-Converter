@@ -580,9 +580,10 @@ def f12_two_divergences():
                  fontsize=11, color=NAVY)
     note(a2, 4, 130, '$\\theta$ = 90\u00b0, the line peak:\nmost power '
          '\u2192 highest frequency', color=NAVY, size=10, ha='left')
-    note(a2, 86, FO / 1e3 + 7,
-         'f$_o$ = %.1f kHz\nthe frequency FLOOR' % (FO / 1e3), color=PUR,
-         ha='right', size=10)
+    #  above the curve: at f_o + 7 the box hid the curve from 60 to 90 deg
+    note(a2, 86, 95,
+         'dashed: f$_o$ = %.1f kHz,\nthe frequency FLOOR' % (FO / 1e3),
+         color=PUR, ha='right', size=10)
     a2.text(45, FO / 1e3 - 4.5, 'capacitive \u2014 never go here', color=MAG,
             fontsize=9.5, ha='center', va='center')
     foot(fig, 'Near theta = 0 the converter delivers almost no power, and it '

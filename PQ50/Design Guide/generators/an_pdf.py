@@ -1167,25 +1167,17 @@ def legal():
                     'names the equation it comes from and shows the numbers '
                     'put into it.', S['tc'])],
          [Paragraph('V1.3', S['tc']), Paragraph('September 2026', S['tc']),
-          Paragraph('Design example on one transformer with '
-                    'the winding and pin assignment drawn. Compensator chapter '
-                    'rewritten with the loop equations, the op-amp equivalent '
-                    'of the TL431 network and a worked loop design. Text '
-                    'shortened throughout. Korean edition published with it. '
-                    'Later in September: V<sub>CC</sub> supplied by the '
-                    'auxiliary winding through a Zener regulator, and the '
-                    'safety insulation of the transformer for household AV '
-                    'equipment in the US, EU, Japan, Korea and China. The '
-                    'transformer of the example rebuilt around its '
-                    'leakage: a leakage estimate added, and a section '
-                    'winding, the primary in triple-insulated Litz beside a '
-                    'Litz secondary with a partition between them, with an '
-                    'allowance for the looseness of a real winding. This '
-                    'edition: the transformer on a TDK %s core and its '
-                    'catalogue coil former with a partition added, nothing '
-                    'left empty; the tank follows its leakage, '
-                    'L<sub>r</sub> %g&nbsp;&micro;H, L<sub>m</sub> '
-                    '%g&nbsp;&micro;H, C<sub>r</sub> %.0f&nbsp;nF.'
+          Paragraph('Design example on one transformer, a TDK %s core on '
+                    'its catalogue coil former with a partition added; the '
+                    'winding, its leakage and the pins drawn, and the tank '
+                    'set by that leakage: L<sub>r</sub> %g&nbsp;&micro;H, '
+                    'L<sub>m</sub> %g&nbsp;&micro;H, C<sub>r</sub> '
+                    '%.0f&nbsp;nF. Compensator chapter rewritten with the loop '
+                    'equations, the op-amp equivalent of the TL431 network and '
+                    'a worked loop design. V<sub>CC</sub> from the auxiliary '
+                    'winding through a Zener regulator. Safety insulation of '
+                    'the transformer for household AV equipment in the US, '
+                    'EU, Japan, Korea and China. Text shortened throughout.'
                     % (__import__('cores').CHOSEN, V['Lr'], V['Lm'], V['Cr']),
                     S['tc'])]],
         colWidths=[70, 90, CW - 160],
@@ -1215,9 +1207,9 @@ def legal():
         'N<sub>rect</sub>V<sub>f</sub>, with <b>N<sub>rect</sub></b> the '
         'number of rectifier drops in the conduction path: 1 for a centre '
         'tap, 2 for a full bridge.',
-        '<b>n</b> is the model turns ratio in the gain equation; '
-        '<b>n<sub>T</sub></b> the wound ratio with the leakage in '
-        'L<sub>r</sub>.',
+        '<b>n</b> is the turns ratio of the gain model; '
+        '<b>n<sub>T</sub></b>&nbsp;=&nbsp;N<sub>p</sub>/N<sub>s</sub> is the '
+        'ratio actually wound.',
         '&lambda;&nbsp;=&nbsp;L<sub>r</sub>/L<sub>m</sub>; older literature '
         'uses m&nbsp;=&nbsp;1&nbsp;+&nbsp;1/&lambda;.',
         '&theta; is the line phase angle, zero at the mains zero crossing. '

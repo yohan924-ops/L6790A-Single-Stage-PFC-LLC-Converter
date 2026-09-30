@@ -484,9 +484,9 @@ def an_pfc_boost(save, foot):
 
     for k, (rect, on, ttl) in enumerate((
             ([0.03, 0.10, 0.455, 0.80], True,
-             'switch ON - the reactor charges from the line'),
+             'switch ON - the inductor charges from the line'),
             ([0.525, 0.10, 0.455, 0.80], False,
-             'switch OFF - the reactor delivers to C, in series with the '
+             'switch OFF - the inductor delivers to C, in series with the '
              'line'))):
         ax = _ax(fig, rect, -1.8, 14.6, -3.0, 6.2)
         S.label(ax, 6.4, 5.80, ttl, size=11, color=MAG if on else GRN)
@@ -532,7 +532,7 @@ def an_pfc_boost(save, foot):
                    heads=((1, 0.08), (2, 0.80), (4, 0.45)))
         X.register()
 
-    foot(fig, 'The switch is modulated so the average reactor current '
+    foot(fig, 'The switch is modulated so the average inductor current '
               'follows the rectified line, which is what makes the converter '
               'look resistive. Because it is a boost, the bus has to sit '
               'above the line crest - that is where the 400 V comes from, '
@@ -562,7 +562,7 @@ def an_pfc_ccm(save, foot):
     rip = 0.30 * vin * d
     cur = avg + rip * (tri - 0.5) * 2.0
     ax.plot(t, vin, color=NAVY, lw=2.0, label='line voltage')
-    ax.plot(t, cur, color=MAG, lw=1.2, label='reactor current')
+    ax.plot(t, cur, color=MAG, lw=1.2, label='inductor current')
     ax.plot(t, avg, color=GRN, lw=2.2, ls=(0, (5, 2.6)),
             label='its average - the line current')
     ax.set_xlim(0, 1)
@@ -576,7 +576,7 @@ def an_pfc_ccm(save, foot):
     _call(ax, (0.30, cur[int(0.30 * len(t))]), (0.10, 1.18),
           'the switching ripple never reaches zero -\ncontinuous conduction',
           size=10)
-    foot(fig, 'Continuous conduction mode: the reactor current never falls '
+    foot(fig, 'Continuous conduction mode: the inductor current never falls '
               'to zero inside a switching period, so its average is the '
               'quantity the control loop shapes.')
     save(fig, 'an_pfc_ccm')
@@ -2430,7 +2430,7 @@ def an_flyback_llc(save, foot):
                     arrowprops=dict(arrowstyle='-|>', color=GREY, lw=1.2,
                                     connectionstyle='arc3,rad=0.16'),
                     path_effects=HALO, zorder=9)
-    cap_(axl[3], 'own $\\Phi$ dashed, the sum solid, the gap shaded')
+    cap_(axl[3], 'own $\\Phi$ dashed, the sum solid, the difference shaded')
 
     #  ---- LLC, the eight-interval model with the design's own currents
     tc, e, ilm, ilr, io, _ = _cycle(0.70, V['lam'], V['Icomp'], V['ILm'])
@@ -2482,7 +2482,7 @@ def an_flyback_llc(save, foot):
                     arrowprops=dict(arrowstyle='-|>', color=GREY, lw=1.2,
                                     connectionstyle='arc3,rad=-0.18'),
                     path_effects=HALO, zorder=9)
-    cap_(axr[3], 'own $\\Phi$ dashed, the sum solid, the gap shaded')
+    cap_(axr[3], 'own $\\Phi$ dashed, the sum solid, the difference shaded')
 
     #  Short on purpose.  The document caption under this figure carries
     #  the reading instructions; repeating them here gave the page two

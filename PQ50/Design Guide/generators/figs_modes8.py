@@ -611,7 +611,7 @@ def waveforms(axes, lam, fsw_over_fr, ilr_pk, ilm_pk, td_draw=0.045):
         ag.annotate('', xy=(e[a - 1], 1.60), xytext=(e[b], 1.60),
                     arrowprops=dict(arrowstyle='-', color=GREY, lw=1.3))
         if a == 3:          # saying it twice just runs off the right edge
-            ag.text(xm, 1.16, 'dead time\n(b) is the ZVS window',
+            ag.text(xm, 1.16, 'dead time\n4 is the ZVS window',
                     ha='center', va='center', fontsize=8.8, color=GREY,
                     linespacing=1.3)
 
