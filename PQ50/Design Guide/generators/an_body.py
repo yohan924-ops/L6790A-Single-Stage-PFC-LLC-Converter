@@ -2352,10 +2352,10 @@ def build(A):
             [['Block', 'Values'],
              ['Tank', 'C<sub>r</sub> %(Cr).0f nF, L<sub>r</sub> %(Lr)g '
               '&micro;H, L<sub>m</sub> %(Lm)g &micro;H, '
-              '&lambda; %(lam).2f, f<sub>r</sub> %(fr).1f kHz, '
+              '&lambda; %(lam).3f, f<sub>r</sub> %(fr).1f kHz, '
               'f<sub>o</sub> %(fo).1f kHz' % V],
              ['Transformer', 'N<sub>p</sub>:N<sub>s</sub> '
-              '%(NpSet)d:%(Ns)d, n %(n).2f, n<sub>T</sub> %(nT).2f, '
+              '%(NpSet)d:%(Ns)d, n %(n).3f, n<sub>T</sub> %(nT).2f, '
               'L<sub>open</sub> %(Lopen).1f &micro;H, '
               'L<sub>short</sub> %(Lshort).1f &micro;H, '
               'A<sub>e</sub> &ge; %(Aereq).0f mm&sup2; at '
@@ -2370,7 +2370,7 @@ def build(A):
               'R<sub>CFG</sub> %(RCFG).0f k&Omega;, '
               'R<sub>BM</sub> %(RBM).0f k&Omega;' % V],
              ['Loop', 'f<sub>c</sub> %(fcross).2f Hz, '
-              '&Phi;<sub>M</sub> %(PM).2f&deg;, '
+              '&Phi;<sub>M</sub> %(PM).1f&deg;, '
               'third harmonic %(D3).2f %%' % V],
              ['V<sub>CC</sub>', 'N<sub>aux</sub> %d T, Zener %.0f V, '
               'R<sub>BZ</sub> %.0f &Omega;, C<sub>VCC</sub> %.0f &micro;F, '
@@ -3028,14 +3028,14 @@ def build(A):
           'the gap is then at least the %(sep).1f&nbsp;mm creepage '
           '(Section&nbsp;%(ins)s). Take the window chosen below (depth '
           'h<sub>w</sub> = %(hw).2f&nbsp;mm, mean turn l<sub>N</sub> = '
-          '%(ln).0f&nbsp;mm), the primary as one plain Litz bundle in three '
+          '%(ln).1f&nbsp;mm), the primary as one plain Litz bundle in three '
           'layers (w<sub>A</sub> = %(wa).2f&nbsp;mm) and the secondary group '
           '(w<sub>S</sub> = %(ws).2f&nbsp;mm). Equation&nbsp;%(e)s with '
           'N<sub>B</sub>&nbsp;=&nbsp;0 gives'
           % dict(Ls=V['Lshort'], sep=_sep, e=ER('leak'), wa=_wsb,
                  ws=_w['w_S'], hw=_hw, ln=_R['lN'],
                  ins=SR('Safety insulation of this transformer'))))
-    add(calc(r'L_{short}\approx\frac{4\pi\times10^{-7}\times %(ln).0f\ '
+    add(calc(r'L_{short}\approx\frac{4\pi\times10^{-7}\times %(ln).1f\ '
              r'\mathrm{mm}}{%(hw).2f\ \mathrm{mm}}\times %(np)d^{2}\left('
              r'\frac{%(wa).2f}{3}+%(g).1f+\frac{%(ws).2f}{3}\right)\ \mathrm{mm}'
              r'=\mathbf{%(L).0f\ \mu H}'
@@ -3672,7 +3672,7 @@ def build(A):
              ['Switching frequency', '%(fswA).0f to %(fswB).0f kHz' % V,
               'at the line peak, full load, from the HB edge to the FB edge; '
               'near the zero crossings it falls towards f<sub>o</sub> = '
-              '%(fo).0f kHz' % V],
+              '%(fo).1f kHz' % V],
              ['Insulation', 'reinforced, NP1 + NAUX to NS2 + NS3 and the '
               'core: by the triple-insulated wire; at the pins clearance '
               '&ge; %.1f mm, creepage &ge; %.1f mm'
@@ -4112,7 +4112,7 @@ def build(A):
               '%(CFo).0f nF / %(CF).0f nF / %(RF).0f k&Omega; / %(Cfx).2f nF'
               % V,
               'f<sub>c</sub> %(fcross).2f Hz, &Phi;<sub>M</sub> '
-              '%(PM).2f&deg;' % V]],
+              '%(PM).1f&deg;' % V]],
             widths=[CW * 0.20, CW * 0.34, CW * 0.46], split=True))
 
     add(h2('The oscillator: C<sub>T</sub> first, then R<sub>T</sub>'))

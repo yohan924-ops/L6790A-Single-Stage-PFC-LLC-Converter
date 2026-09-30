@@ -194,7 +194,7 @@ section(10, '2.    WINDING')
 head(11, [('B', 'No'), ('C', 'Winding'), ('D', 'Terminal'), ('E', 'Turns'),
           ('F', 'Winding current           rms   /   peak')])
 WIND = [
-    ('1', 'NP1     Primary', pins('NP1'), '%d Ts' % V['Np'], V['Ipri']),
+    ('1', 'NP1     Primary', pins('NP1'), '%d T' % V['Np'], V['Ipri']),
     ('2', 'NS2     Secondary A', pins('NS2'), '%d T' % V['Ns'], V['Isec']),
     ('3', 'NS3     Secondary B', pins('NS3'), '%d T' % V['Ns'], V['Isec']),
     ('4', 'NAUX   Auxiliary (VCC, ZCD)', pins('NAUX'), '%d T' % V['Naux'],
@@ -289,7 +289,10 @@ for i, (item, val, tail) in enumerate(COND):
         put('F%d' % row, tail, size=9, italic=True, color=MUTED)
     ws.row_dimensions[row].height = 16
 
-note(32, 'Core, bobbin, wire and winding arrangement are the supplier’s choice, '
+note(32, 'The core, coil former and winding arrangement of the reference design '
+         'set item 3-2. Another construction is acceptable only when sections 3 '
+         'and 5 are met and the first samples are approved.' if V['Nx'] == 1 else
+         'Core, bobbin, wire and winding arrangement are the supplier’s choice, '
          'provided sections 3 and 5 are met.')
 
 # --------------------------------------------------- 5. 안전 절연 (insulation.py)
