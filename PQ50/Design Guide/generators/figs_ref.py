@@ -2924,13 +2924,14 @@ def an_xfmr_pins(save, foot):
     Left: the schematic symbol of the transformer with every terminal
     carrying its pin numbers - primary NP1, the ZCD auxiliary NAUX, and
     the two secondary windings NS2 / NS3 that make the centre tap.
-    Right: how to read the two views, in words.  Below: the coil former
+    Below: the coil former
     drawn from its data sheet (bobbin_outline.py reads the vector
     drawing), (A) from below, the pin side - the view the data sheet
     numbers its pins in - and (B) from above, which is the PCB footprint
     on the component side.  Every pin at its specified position, ringed in
-    the colour of the winding it carries.  (A side view with arrows was
-    tried first and dropped: it did not make the direction plainer.)
+    the colour of the winding it carries.  (A side view with arrows, then
+    a paragraph on how to read A and B, were tried and dropped: the two
+    view titles say it - user, 2026-09-30.)
 
     Numbers, positions and the assignment all come from cores.BOBBIN -
     the same source the vendor specification and the tables in the note
@@ -2946,7 +2947,7 @@ def an_xfmr_pins(save, foot):
     fig = plt.figure(figsize=(9.35, 8.1))
 
     # ---------------------------------------------------------- symbol
-    ax = fig.add_axes([0.010, 0.585, 0.455, 0.400])
+    ax = fig.add_axes([0.272, 0.585, 0.455, 0.400])
     S.frame(ax, -0.6, 16.9, -0.3, 10.9)
     S.label(ax, 7.6, 10.45, 'THE TRANSFORMER, SCHEMATIC', size=11.5,
             color=NAVY, weight='bold')
@@ -3106,36 +3107,11 @@ def an_xfmr_pins(save, foot):
                     arrowprops=dict(arrowstyle='-|>', color=GREY, lw=1.0,
                                     shrinkA=4, shrinkB=1))
 
-    #  how to read A and B, in words (the side view said it less plainly)
-    gx = fig.add_axes([0.490, 0.585, 0.505, 0.400])
-    S.frame(gx, 0.0, 100.0, 0.0, 80.0)
-    S.label(gx, 2.0, 72.0, 'HOW TO READ A AND B BELOW', size=11.5,
-            color=NAVY, weight='bold', ha='left')
-    free = C.free_pins()
-    rows = [(60.0, 'A', 'From below: the pin ends face you.'),
-            (53.0, '', 'This is how the TDK data sheet draws'),
-            (46.5, '', 'the former and numbers its pins.'),
-            (35.0, 'B', 'From above: the former as it sits on'),
-            (28.5, '', 'the board. Lay out the PCB footprint'),
-            (22.0, '', 'from this one. Left and right are'),
-            (15.5, '', 'swapped against A.'),
-            (4.0, '', 'Pin 1 is the chamfered corner in both.')]
-    for y, tag, t in rows:
-        if tag:
-            S.label(gx, 2.0, y, tag, size=12.0, color=NAVY, weight='bold',
-                    ha='left')
-        S.label(gx, 9.0 if y > 10 else 2.0, y, t, size=10.0, color=NAVY,
-                ha='left')
-    if free:
-        S.label(gx, 2.0, -3.0, 'Grey pins (%s) are not connected.'
-                % ', '.join(str(n) for n in free), size=10.0, color=GREY,
-                ha='left')
-
     ax_a = fig.add_axes([0.005, 0.025, 0.490, 0.530])
-    pinview(ax_a, False, 'A  FROM BELOW (pin side)',
+    pinview(ax_a, False, 'A  BOTTOM VIEW (pin side)',
             'as the TDK data sheet draws it')
     ax_b = fig.add_axes([0.505, 0.025, 0.490, 0.530])
-    pinview(ax_b, True, 'B  FROM ABOVE = PCB FOOTPRINT',
+    pinview(ax_b, True, 'B  TOP VIEW = PCB FOOTPRINT',
             'component side; left and right swapped against A')
 
     foot(fig, 'The transformer: the schematic symbol with its pin numbers, '
