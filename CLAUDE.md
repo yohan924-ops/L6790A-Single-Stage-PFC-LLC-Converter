@@ -53,6 +53,7 @@ ST **L6790A** 로 **단일단(Single-Stage) PF LLC** 를 설계한다. 90–264 
 | `Design Guide/AN_L6790A_Design_Guide_rev2_1.md` | 한국어 본체 문서(7.5:1). **시트의 식 번호 [n] 의 출처** — `audit_sm` · `audit_guide` 가 읽는다. 9:1 판 rev 2.0 은 2026-09-23 삭제 | rev 2.0/2.1 |
 | `Design Guide/generators/` | 도구 체인 전부 — README 참조 | |
 | `Datasheet/` · `EVB Schematic/` · `LGE Material/` · `Reference/` | 입력 자료. DS 는 **DRAFT**(TBD · 내부 모순 있음). `Reference/Visio-LLC drawing.pdf` 가 본 설계 회로도(벡터) | 원본 |
+| `archive/PQ50/` · `archive/Lr14/` | **정본 아님** — 프로젝트 전체를 복사해 다른 코어·탱크를 검토한 사본 둘(PQ 50/50 · L_r 25 µH / ETD54 · L_r 23.4 µH). 루트와 독립, `archive/README.md` 참조. 루트 작업에서 건드리지 않는다 | 보관 |
 
 ## 지금 상태와 다음 할 일
 
