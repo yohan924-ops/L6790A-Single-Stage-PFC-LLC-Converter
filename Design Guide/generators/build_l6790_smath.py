@@ -30,7 +30,7 @@ import zedsheet as ZS                                              # noqa: E402
 #    n.T = N.x*N.p/N.s ;  n = n.T/sqrt(1+lambda), lambda = L.r/L.m.
 #  The other design points (6:1, 8:1, 7.5:1 on three cores, 9:1) and the
 #  earlier cores (E 60/22/16, ETD 54) were removed on 2026-10-01 when this
-#  design became the only one; they are in git tag archive/before-pq50-root.
+#  design became the only one; they are in commit 0821491 of this branch.
 #  Since 2026-09-25 the auxiliary winding supplies VCC (no external rail),
 #  n.aux = 1.0, so R.ZCD_H is 220 k.
 import cores as _CORES
