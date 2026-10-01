@@ -36,7 +36,7 @@ MACHINERY = re.compile(r'^(a[0-2]|w|q|r|p|u|x|ang|ph|θ|λ|Q|M|f\.n|f\.ss|f\.sc|
                        r'I\.(lm|tr|sp|oi)|A|Aa|Ma|Ta|wa|S|P\.a)[.\d]')
 # values whose purpose is to be read by a person, not by another formula
 TERMINAL = {'k.', 'GM', 'Φ.act', 'V.out_act', 'B.pk', 'A.L', 'P.', 'R.dson_req',
-            'C.oss_max', 'I.pri_rating', 'I.sec_rating', 'V.DS', 'R.N', 'T.res',
+            'I.pri_rating', 'I.sec_rating', 'V.DS', 'R.N', 'T.res',
             'L.open', 'L.short', 'n.T_act', 'I.OCP', 'ΔV.', 't.hold', 'f.180'}
 
 

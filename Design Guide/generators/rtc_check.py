@@ -42,7 +42,7 @@ XL = os.path.join(ROOT, 'Calculation Excel Sheet',
 if os.environ.get('XL_OVERRIDE'):          # a variant instead of the canonical workbook
     XL = os.environ['XL_OVERRIDE']
 sys.path.insert(0, HERE)
-from l6790 import design, solve_fn                                    # noqa: E402
+from l6790 import design, solve_fn, PRI_FET                                  # noqa: E402
 
 TOL = 0.5          # percent; one grid step is 1/69 of f_r, about 1.5 %
 THETA = [(pi / 2, 'pi/2'), (5 * pi / 12, '5pi/12'), (pi / 3, 'pi/3'),
@@ -184,7 +184,7 @@ def main():
 
     R = design(Vout=25., Pout=657.5, Vo_min=19., dv_out=0.05, Thold=12e-3,
                Nrect=1, fr_t=150e3, fsw_max_spec=225e3, fsw_min_spec=50e3,
-               c_HB=800e-12, tD=220e-9, n_sel=_XL_N,
+               **PRI_FET, tD=220e-9, n_sel=_XL_N,
                Cr_sel=_XL_CR, Lr_sel=_XL_LR, Lm_sel=_XL_LM)
     n, Voe, lam = R['n'], R['Vo_eff'], R['lam_a']
     fr, fn0, Qpk = R['fr'], R['fn0'], R['Qpk']

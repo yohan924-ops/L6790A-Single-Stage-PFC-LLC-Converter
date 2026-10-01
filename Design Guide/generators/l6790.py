@@ -52,12 +52,19 @@ def zvs_edge(Q, lam):
     return sqrt(u)
 
 
+# The primary MOSFET of the worked design: STO60N045DM9 (DS14711 Rev 4),
+# C_oss eq. time-related 897 pF over 0..400 V.  Callers pass **PRI_FET so the
+# sheet, the note and the figures build c_HB from the same datasheet line.
+PRI_FET = dict(Coss_tr=897e-12, V_oss_tr=400., C_par=100e-12)
+
+
 def design(Vac_min=90., Vac_max=264., fl=50., fl_min=47.,
            Vout=60., Pout=240., Vo_min=50., dv_out=0.10, Thold=10e-3,
            eta_HB=0.98, fr_t=150e3, fsw_max_spec=225e3, fsw_min_spec=50e3,
            Nrect=2, Vrect=0.0, c_HB=500e-12, tD=220e-9, m_ZVS=0.15,
            d_res=0.05, Vin_nom=225., R_EMI=0.15, Vf_BR=0.08, Rd=0.04,
-           Cr_sel=None, Lr_sel=None, Lm_sel=None, n_sel=None, label=""):
+           Cr_sel=None, Lr_sel=None, Lm_sel=None, n_sel=None, label="",
+           Coss_tr=None, V_oss_tr=400., C_par=100e-12):
     V_BOH, V_BIH = 235., 245.
     # --- 3.2 power budget [6]-[17]
     Iout = Pout / Vout                                                   # [6]
@@ -99,6 +106,12 @@ def design(Vac_min=90., Vac_max=264., fl=50., fl_min=47.,
     Rac = 4 / pi ** 2 * n ** 2 * Vo_eff ** 2 / Pin_LLC                   # [31]
     Qz1 = (lam / MVmin * sqrt(1 / lam + MVmin ** 2 / (MVmin ** 2 - 1))
            if MVmin > 1 else float('inf'))                               # [32]
+    # c_HB from a MOSFET datasheet when one is given: the 0..V_oss_tr charge
+    # of two devices (C_oss time-related x V_oss_tr, an upper bound below
+    # V_oss_tr) over the corner bus, plus the layout.  Otherwise the c_HB
+    # argument stands, as in the 240 W validation example.
+    if Coss_tr:
+        c_HB = 2 * Coss_tr * V_oss_tr / (sqrt(2) * Vin_min) + C_par       # [116]
     Qz2 = 2 / pi * lam * tD / (Rac * c_HB)                               # [33]
     Qz = min(Qz1, Qz2) / (1 + m_ZVS)                                     # [34]
     Z0 = Rac * Qz                                                        # [35]

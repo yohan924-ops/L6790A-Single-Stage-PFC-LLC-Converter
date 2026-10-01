@@ -36,7 +36,7 @@ import numpy as np                                                   # noqa: E40
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-from l6790 import design, sweep, zvs_edge, M as gain_fn              # noqa: E402
+from l6790 import design, sweep, zvs_edge, M as gain_fn, PRI_FET             # noqa: E402
 
 OUT = os.path.normpath(os.path.join(HERE, '..', 'figures'))
 
@@ -108,7 +108,7 @@ def _sheet_point():
 _N, _CR, _LR, _LM = _sheet_point()
 R = design(Vout=25., Pout=657.5, Vo_min=19., dv_out=0.05, Thold=12e-3,
            Nrect=1, fr_t=150e3, fsw_max_spec=225e3, fsw_min_spec=50e3,
-           c_HB=800e-12, tD=220e-9, n_sel=_N,
+           **PRI_FET, tD=220e-9, n_sel=_N,
            Cr_sel=_CR, Lr_sel=_LR, Lm_sel=_LM)
 LAM, FR, FO, FN0 = R['lam_a'], R['fr'], R['fo'], R['fn0']
 QPK, N, VOE, POUT = R['Qpk'], R['n'], R['Vo_eff'], R['Pout']

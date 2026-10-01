@@ -17,7 +17,7 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from smsheet import Sheet                                          # noqa: E402
-from l6790 import design, sweep                                    # noqa: E402
+from l6790 import design, sweep, PRI_FET                                  # noqa: E402
 import zedsheet as ZS                                              # noqa: E402
 
 #  The design point.  ONE TDK PQ 50/50 (N97, B65981A) on the catalogue
@@ -132,7 +132,16 @@ S.const('[TOOL] Specified minimum switching frequency:', 'f.sw_min_spec', "50*'k
 S.const('[PICK] Equivalent input for resonant operation:', 'V.eq_ACnom', "225*'V", 'V', 1)
 S.const('[TOOL] Above-resonance modulation depth:', 'δ.res', '0.05', None, 3)
 S.const('[TOOL] ZVS margin:', 'm.ZVS', '0.15', None, 3)
-S.const('[PICK] HB midpoint capacitance (2*Coss + Cpar):', 'c.HB', "800*'pF", 'pF', 0)
+#   c.HB was a [PICK] of 800 pF until 2026-10-01, when the user supplied the
+#   primary MOSFET datasheet (STO60N045DM9, DS14711 Rev 4).  The midpoint
+#   capacitance is now built from that datasheet in section 3, next to Q.ZVS2.
+S.const('[DS] Primary MOSFET C.oss eq., time-related, 0 .. V.oss_tr:', 'C.oss_tr',
+        "897*'pF", 'pF', 0,
+        note='STO60N045DM9 (DS14711 Rev 4) Table 5: the constant capacitance that '
+             'charges in the same time as C.oss from 0 to 400 V. It is a CHARGE '
+             'figure - C.oss_tr*V.oss_tr is the charge one device moves.')
+S.const('[DS] - the voltage that figure is quoted to:', 'V.oss_tr', "400*'V", 'V', 0)
+S.const('[PICK] Layout parasitic at the midpoint:', 'C.par', "100*'pF", 'pF', 0)
 S.const('[PICK] Design dead time:', 't.D', "220*'ns", 'ns', 0)
 S.const('[TOOL] EMI filter equivalent resistance:', 'R.EMI', "0.15*'ohm", 'ohm', 3)
 S.note('   INPUT BRIDGE: s.br = 1 selects the synchronous bridge, 0 the diode bridge. The '
@@ -244,6 +253,12 @@ S.row('- Equivalent load resistance:', 'R.ac', "4/π^2*n^2*V.o_eff^2/P.in_LLC", 
 S.area_begin('the two ZVS quality factors - collapsed, the smaller one binds')
 S.row('- ZVS quality factor, gain-peak limit:', 'Q.ZVS1',
       "λ/M.HBmin*sqrt(1/λ+M.HBmin^2/(M.HBmin^2-1))", None, 4)
+S.row('- Midpoint capacitance at the ZVS corner:', 'c.HB',
+      "2*C.oss_tr*V.oss_tr/(sqrt(2)*V.eq_min)+C.par", 'pF', 0,
+      note='[116]  the charge of two devices, taken as the full 0..400 V charge '
+           '(an upper bound - the corner bus sqrt(2)*V.eq_min is lower), divided '
+           'by the bus voltage it has to swing, plus the layout. Two devices '
+           'because the off-going and the on-coming switch of a leg swing together.')
 S.row('- ZVS quality factor, dead-time limit:', 'Q.ZVS2', "2/π*λ*t.D/(R.ac*c.HB)", None, 4)
 S.row('- Binding ZVS quality factor:', 'Q.mn', MIN('Q.ZVS1', 'Q.ZVS2'), None, 4)
 S.area_end()
@@ -745,14 +760,16 @@ S.row('- Required RDSon per position, switching:', 'R.dson_req_sw',
       "P.mos_budget/I.D_rms_sw^2", 'mohm', 1)
 S.row('- Required RDSon per position, static (BINDING):', 'R.dson_req_dc',
       "P.mos_budget/I.D_rms_dc^2", 'mohm', 1)
-S.const('[PICK] RDSon rise from 25 C to Tj,max:', 'K.Tpri', '1.8', None, 2)
+S.const('[DS] RDSon rise from 25 C to Tj,max:', 'K.Tpri', '1.9', None, 2,
+        note='STO60N045DM9 Fig. 10, normalized RDSon at Tj = 125 C, VGS = 10 V: '
+             '1.898, read from the vector curve of DS14711 Rev 4 (2026-10-01). '
+             'Was 1.8, read by eye from an earlier revision.')
 S.row('- Required RDSon per DEVICE at Tj,max:', 'R.dson_req_dev_p',
       "n.par*R.dson_req_dc", 'mohm', 1)
 S.row('- The same as a 25 C datasheet number (SOURCE AGAINST THIS):',
       'R.dson_req_25_p', "R.dson_req_dev_p/K.Tpri", 'mohm', 1)
-S.const('[PICK] Layout parasitic at the midpoint:', 'C.par', "100*'pF", 'pF', 0)
-S.row('- Largest admissible Coss per device:', 'C.oss_max', "(c.HB-C.par)/2", 'pF', 1,
-      note='[116]  c.HB = 2*Coss + Cpar. Above this, put the real Coss into c.HB in section 2 and press F9.')
+S.note('C.oss and the layout parasitic are inputs in section 2; c.HB is built '
+       'from them in section 3, so the ZVS rows above already use this MOSFET.')
 
 S.h2('13.1b  Body diode requirement - the parameter that decides survival')
 S.row('- Bus voltage across the recovering diode:', 'V.bd_rr', "sqrt(2)*V.AC_max", 'V', 1)
@@ -799,6 +816,16 @@ S.row('- loss in ONE device of the STATIC position (worst):', 'P.mos_dev',
 S.row('- Budget margin on the binding device (>1):', 'k.Ploss',
       "P.mos_budget/P.mos_dc", None, 3,
       note='13.1 states the budget, 13.3 spends it; this row is the comparison.')
+S.const('[DS] Primary MOSFET junction-to-case [C/W]:', 'R.thJC', '0.4', None, 1)
+S.const('[DS] the same on 40 x 40 mm of 2 oz FR-4 copper, junction-ambient [C/W]:',
+        'R.thJA_pcb', '22', None, 0)
+S.const('[ASSUMED] Ambient, as the workbook thermal row [C]:', 'T.amb', '25',
+        None, 0)
+S.row('- Rise on that copper alone at P.mos_dc [C]:', 'ΔT.pcb',
+      "P.mos_dc/'W*R.thJA_pcb", None, 0,
+      note='far past 125 C: the exposed pad has to reach a heatsink.')
+S.row('- Case-to-ambient allowed for Tj = 125 C [C/W]:', 'R.thCA_max',
+      "(125-T.amb)/(P.mos_dc/'W)-R.thJC", None, 2)
 S.row('- Total primary conduction loss (either mode):', 'P.pri_tot',
       "N.mos/2*R.dson_p*I.pri_lc^2", 'W', 2)
 S.const('[PICK] Secondary SR RDSon max per device, 25 C at VGS = 10 V:', 'R.dson_s25', "3.7*'mohm",
@@ -1035,24 +1062,160 @@ S.row('- lowest VCC above the HVSU threshold (>1):', 'k.VCClo',
            'above it so the run supply never depends on the answer.')
 S.row('- highest VCC under the 25 V operating limit (>1):', 'k.VCC',
       'V.CC_opmax/V.CC_reg_max', None, 3)
+S.h2('14c.1  Gate drivers - two L6498LD (SO-14), one per bridge leg')
+S.note('The L6790A has no gate driver of its own: HOUTx and LOUTx are 5 V logic '
+       'outputs. Each leg gets one L6498LD (pin 1 HIN <- HOUTx, 2 LIN <- LOUTx, '
+       '3 SGND, 5 PGND, 6 LVG, 7 VCC, 11 OUT, 12 HVG, 13 BOOT; 4, 8, 9, 10, 14 '
+       'not connected). Both run from the regulated VCC above. The L6498 has no '
+       'enable pin, so DRV_EN stays open (DS: no capacitor on it). '
+       'Sources: L6498 DocID030318 Rev 3, STO60N045DM9 DS14711 Rev 4.')
+S.const('- Gate drivers:', 'N.drv', '2', None, 0)
+S.const('[DS] L6498 VCC quiescent current, max.:', 'I.QCC', "480*'μA", 'μA', 0)
+S.const('[DS] L6498 floating-section quiescent current, max.:', 'I.QBO',
+        "120*'μA", 'μA', 0)
+S.row('- Quiescent load of both drivers on VCC:', 'I.drv_q',
+      'N.drv*(I.QCC+I.QBO)', 'mA', 2,
+      note='the floating section is fed from VCC through the bootstrap, so '
+           'it is a VCC load too.')
+S.note('GATE CHARGE. The datasheet quotes 90 nC from 0 to 10 V. Past the '
+       'Miller plateau (6.3 V, 60 nC) the curve of Fig. 5 is a straight line '
+       '- the drain is already down and the gate sees a fixed capacitance - '
+       'so the charge at the real drive voltage is that line extended.')
+S.const('[DS] Primary MOSFET gate charge, 0..10 V, typ.:', 'Q.g10',
+        "90*10^(-9)*'A*'s", None, 1,
+        note='STO60N045DM9 Table 5: VDD = 400 V, ID = 28 A. Hard switching - '
+             'with ZVS the Miller share (Qgd 33 nC) is not drawn, so this '
+             'over-states run and covers the hard-switched start.')
+S.const('[DS] the same, 0..12 V, typ.:', 'Q.g12', "105*10^(-9)*'A*'s", None, 1,
+        note='Fig. 5 at VGS = 12 V, read from the vector curve (105.0 nC); the '
+             '10 V point of the same curve reads 89.9 nC.')
+S.row('- Gate capacitance above the plateau:', 'C.g_hi',
+      "(Q.g12-Q.g10)/(2*'V)", 'nF', 2)
+S.row('- Gate charge at the highest regulated VCC [nC]:', 'Q.g_run',
+      "(Q.g10+C.g_hi*(V.CC_reg_max-10*'V))/(10^(-9)*'A*'s)", None, 1,
+      note='the low-side gate swings to VCC, the high-side a diode drop less: '
+           'VCC bounds both.')
+S.row('- Gate charge at V.CC_on, start of switching [nC]:', 'Q.g_SU',
+      "(Q.g10+C.g_hi*(V.CC_on-10*'V))/(10^(-9)*'A*'s)", None, 1)
+S.note('      Q.g_run and Q.g_SU are plain numbers in nC; the rows below put '
+       "10^-9 A*s back on.")
+S.note('BOOTSTRAP. The L6498 replaces the bootstrap diode with a DMOS of '
+       'about 175 ohm that conducts while LVG is on. Its drop is Q.g*R/T.charge '
+       '(DS eq. 3); at the shortest low-side on-time that is most of VCC, so an '
+       'external fast diode from VCC to BOOT is fitted (DS Fig. 9). Its '
+       'reverse voltage is the bus, so it is rated like the MOSFETs.')
+S.const('[DS] Integrated bootstrap DMOS resistance, typ.:', 'R.BS', "175*'ohm",
+        'ohm', 0)
+S.row('- Shortest low-side on-time (charge window) at f.Max:', 'T.chg',
+      '1/(2*f.Max)-t.D', 'ns', 0)
+S.row('- Drop across the integrated DMOS alone:', 'V.drop_int',
+      "Q.g_run*10^(-9)*'A*'s*R.BS/T.chg", 'V', 2,
+      note='compare with V.CC_reg: the DMOS alone cannot hold the high side - '
+           'hence the external diode.')
+S.const('[ASSUMED] External bootstrap diode forward drop:', 'V.F_bs', "1.0*'V",
+        'V', 2, note='replace with the chosen diode at its charging current.')
+S.const('[PICK] Bootstrap capacitor C.BOOT:', 'C.BOOT', "470*'nF", 'nF', 0)
+S.row('- Longest high-side on-time, at f.Min:', 'T.on_max', '1/(2*f.Min)',
+      'μs', 2)
+S.row('- Ripple on C.BOOT per cycle (gate charge + quiescent):', 'ΔV.boot',
+      "(Q.g_SU*10^(-9)*'A*'s+I.QBO*T.on_max)/C.BOOT", 'V', 3,
+      note='DS: C.BOOT >> Q.g/V.gate; here it is about 50 x.')
+S.const('[DS] L6498 floating supply, recommended minimum:', 'V.BO_rec',
+        "9.3*'V", 'V', 1,
+        note='DS Table 4. The UVLO turn-off is lower (8.5 V max) - the '
+             'recommended range is the one the timing is guaranteed in.')
+S.row('- High-side supply at the lowest regulated VCC:', 'V.BO_run',
+      'V.CC_reg_min-V.F_bs-ΔV.boot', 'V', 2)
+S.row('- floating supply inside its range (>1):', 'k.VBO', 'V.BO_run/V.BO_rec',
+      None, 3)
+S.row('- VCC that keeps the floating supply in range:', 'V.BO_need',
+      'V.BO_rec+V.F_bs+ΔV.boot', 'V', 2)
+S.const('[DS] L6498 VCC, recommended range low end:', 'V.CCd_lo', "10*'V",
+        'V', 1)
+S.const('[DS] L6498 VCC, recommended range high end:', 'V.CCd_hi', "20*'V",
+        'V', 1)
+S.row('- driver VCC range against V.CC_on (>1):', 'k.VCCdrv',
+      'V.CCd_hi/V.CC_on', None, 3,
+      note='the HVSU takes VCC to V.CC_on before the first pulse.')
+S.row('- Lowest VCC the bridge may see - the start-up floor:', 'V.CC_floor',
+      MAX(MAX('V.CC_off', 'V.CCd_lo', 'V'), 'V.BO_need', 'V'), 'V', 2,
+      note='the largest of the L6790A UVLO, the L6498 VCC range and the '
+           'floating-supply range. Below it the drivers leave their '
+           'recommended range before the controller stops.')
+S.note('DISSIPATION. Each driver moves the gate charge of two switches per '
+       'period. The gate power Q.g*V*f splits between the driver output, R.G '
+       'and the MOSFET internal gate resistance; the driver output is taken as '
+       'VCC over its short-circuit current at the full-temperature minimum.')
+S.const('[DS] L6498 source short-circuit current, full temp., min.:', 'I.so',
+        "1.4*'A", 'A', 2)
+S.const('[DS] L6498 sink short-circuit current, full temp., min.:', 'I.si',
+        "1.55*'A", 'A', 2)
+S.row('- Driver source resistance, VCC 15 V / I.so:', 'R.so', "15*'V/I.so",
+      'ohm', 2, note='[ASSUMED] linear output - an upper bound on its share.')
+S.row('- Driver sink resistance, VCC 15 V / I.si:', 'R.si', "15*'V/I.si",
+      'ohm', 2)
+S.const('[DS] MOSFET internal gate resistance:', 'R.g_int', "4.5*'ohm", 'ohm', 1)
+S.const('[PICK] External gate resistor, one per switch:', 'R.G', "4.7*'ohm",
+        'ohm', 1, note='the switching-time test value of the MOSFET datasheet.')
+S.row('- Driver share of the gate power:', 's.drv',
+      '(R.so/(R.so+R.G+R.g_int)+R.si/(R.si+R.G+R.g_int))/2', None, 3)
+S.row('- Dissipation in ONE driver, at f.Max and V.CC_reg_max:', 'P.drv',
+      "2*Q.g_run*10^(-9)*'A*'s*V.CC_reg_max*f.Max*s.drv+(I.QCC+I.QBO)*V.CC_reg_max",
+      'W', 3)
+S.const('[DS] L6498 SO-14 total dissipation, TA = 25 C:', 'P.drv_max', "1*'W",
+        'W', 1)
+S.row('- driver dissipation under its rating (>1):', 'k.Pdrv',
+      'P.drv_max/P.drv', None, 3)
+S.const('[DS] L6498 SO-14 thermal resistance, junction-ambient [C/W]:',
+        'R.th_drv', '120', None, 0)
+S.row('- Junction rise above ambient [C]:', 'ΔT.drv', "P.drv/'W*R.th_drv",
+      None, 1)
+S.note('TIMING AND LOGIC. The dead time the L6790A sets at HOUTx/LOUTx '
+       'reaches the gates shortened by the driver delay mismatch.')
+S.const('[DS] L6498 delay matching, max.:', 'MT.drv', "30*'ns", 'ns', 0)
+S.row('- dead time covers the transition after MT (>1):', 'k.TTd',
+      '(t.D-MT.drv)/T.T', None, 3)
+S.const('[DS] L6498 OUT, recommended DC maximum:', 'V.OUT_drv', "480*'V",
+        'V', 0, note='600 V transient for under 1 ms (DS Table 4).')
+S.row('- floating section above the bus peak (>1):', 'k.OUTdrv',
+      'V.OUT_drv/V.bd_rr', None, 3)
+S.const('[DS] MOSFET C.oss at 400 V:', 'C.oss_400', "86*'pF", 'pF', 0)
+S.row('- Fastest midpoint slope [V/ns], I.Lm_pk into the top-of-swing C.oss:',
+      'dv.dt', "I.Lm_pk/(2*C.oss_400+C.par)/('V/'ns)", None, 1,
+      note='I.Lm_pk is the commutation current 13.1b uses; above '
+           'resonance the switched current can be larger - measure.')
+S.const('[DS] L6498 allowed OUT slew rate [V/ns]:', 'dv.max', '50', None, 0)
+S.row('- midpoint slope under the driver limit (>1):', 'k.dvdt',
+      'dv.max/dv.dt', None, 3)
+S.const('[DS] L6790A output high, min.:', 'V.OH', "4*'V", 'V', 1)
+S.const('[DS] L6790A output low, max.:', 'V.OL', "0.4*'V", 'V', 1)
+S.const('[DS] L6498 input high threshold, max.:', 'V.ih', "2.5*'V", 'V', 2)
+S.const('[DS] L6498 input low threshold, min.:', 'V.il', "0.95*'V", 'V', 2)
+S.row('- logic high reaches the driver (>1):', 'k.VIH', 'V.OH/V.ih', None, 3)
+S.row('- logic low reaches the driver (>1):', 'k.VIL', 'V.il/V.OL', None, 3)
+S.const('[DS] L6498 input pull-down, min.:', 'R.PD', "58*'kohm", 'kohm', 0)
+S.const('[DS] L6790A LOUT2 sensing current at start-up:', 'I.HBFB',
+        "300*'μA", 'μA', 0)
+S.const('[DS] L6790A LOUT2 HB/FB threshold:', 'V.HBFB', "2.5*'V", 'V', 1)
+S.row('- LOUT2 still reads OPEN through the LIN pull-down (>1):', 'k.LOUT2',
+      'R.PD*I.HBFB/V.HBFB', None, 3,
+      note='a pull-down that holds LOUT2 under 2.5 V at 300 uA reads as '
+           'fixed half bridge and morphing is lost (DS Table 6).')
+
+S.h2('14c.2  VCC load, the regulator and the start-up hand-over')
 S.note('The load on this rail is the IC and the gate drivers. The driver share '
        'is the gate charge of every switch position, once per period.')
-S.const('[CANDIDATE] Primary MOSFET gate charge, typ.:', 'Q.g',
-        "78.6*10^(-9)*'A*'s", None, 1,
-        note='STO60N045DM9, the candidate primary MOSFET, as listed by '
-             'DiscoverEE; confirm it on the ST datasheet. 78.6 nC.')
 S.const('- Switch positions driven in full bridge:', 'N.sw', '4', None, 0)
 S.row('- Supply current in run, bound at f.Max:', 'I.VCC',
-      'I.CC+N.sw*n.par*Q.g*f.Max', 'mA', 1,
-      note='Q.g holds at the datasheet test condition; a gate driven harder '
-           'takes more charge. f.Max is the highest run frequency.')
+      "I.CC+I.drv_q+N.sw*n.par*Q.g_run*10^(-9)*'A*'s*f.Max", 'mA', 1,
+      note='f.Max is the highest run frequency; Q.g_run is at the highest VCC.')
 S.const('[PICK] Pass transistor current gain at I.VCC, min.:', 'β.min',
         '50', None, 0)
 S.const('[PICK] Minimum Zener bias current:', 'I.DZ_min', "1*'mA", 'mA', 1)
 S.row('- Largest R.BZ that still regulates at the end of hold-up:', 'R.BZ_max',
       '(V.Caux_hold-V.DZ_max)/(I.VCC/β.min+I.DZ_min)', 'ohm', 0)
 S.const('[PICK] SELECTED Zener feed resistor R.BZ:', 'R.BZ_sel',
-        "%g*'ohm" % V.get('RBZ', 820),
+        "%g*'ohm" % V.get('RBZ', 560),
         'ohm', 0)
 S.row('- R.BZ margin (>1):', 'k.RBZ', 'R.BZ_max/R.BZ_sel', None, 3)
 S.row('- Zener dissipation, no load, C.aux at OVP1 (rating to buy):', 'P.DZ',
@@ -1064,14 +1227,28 @@ S.row('- the same at the nominal output (goes in the loss account):',
       'P.Qpass_nom', '(V.Caux-(V.DZ_sel-V.F_j))*I.VCC', 'W', 2)
 S.note('START-UP. The HVSU charges C.VCC to V.CC_on and switching begins. '
        'Until the output is high enough for the winding to carry VCC, C.VCC '
-       'supplies the drivers alone from V.CC_on down to V.CC_HVSUon, and with '
-       'the HVSU charge current helping from there down to V.CC_off (DS: the '
-       'charge current turns on below V.CC_HVSUon). The worst case is the full '
-       'bridge (low line, 13 mA) at the start-up frequency.')
-S.row('- Supply current during start-up (full bridge at f.SU):', 'I.VCC_SU',
-      'I.CC+N.sw*n.par*Q.g*f.SU', 'mA', 1)
-S.row('- Output voltage at which the winding holds VCC at V.CC_off:',
-      'V.out_UV', '(V.CC_off+3*V.F_j+I.VCC_SU/β.min*R.BZ_sel)/n.aux', 'V', 2)
+       'supplies the controller and the drivers alone from V.CC_on down to '
+       'V.CC_HVSUon, and with the HVSU charge current helping from there down '
+       'to the floor V.CC_floor (DS: the charge current turns on below '
+       'V.CC_HVSUon). The worst case is the full bridge at low line (13 mA). '
+       'The oscillator runs at f.SU only for T.OSC_SU (16 steps, DS); after '
+       'that it is held under f.Max.')
+S.const('[DS] Oscillator start-up duration:', 'T.OSC_SU', "1*'ms", 'ms', 1)
+S.row('- Drive current per volt of VCC [mA/V]:',
+      'B.SU', "N.sw*n.par*C.g_hi*f.Max/('mA/'V)", None, 3,
+      note='The gate charge grows with VCC along the Fig. 5 line, so '
+           'the supply current falls as C.VCC runs down.')
+S.row('- Supply current at V.CC_on, f.Max:', 'I.VCC_SU',
+      "I.CC+I.drv_q+N.sw*n.par*Q.g_SU*10^(-9)*'A*'s*f.Max", 'mA', 1)
+S.row('- the same at V.CC_HVSUon:', 'I.VCC_hv',
+      "I.VCC_SU-B.SU*'mA/'V*(V.CC_on-V.CC_HVSUon)", 'mA', 1)
+S.row('- the same at V.CC_floor:', 'I.VCC_fl',
+      "I.VCC_SU-B.SU*'mA/'V*(V.CC_on-V.CC_floor)", 'mA', 1)
+S.row('- Extra charge of the first T.OSC_SU at f.SU [uC]:', 'ΔQ.OSC',
+      "T.OSC_SU*N.sw*n.par*Q.g_SU*10^(-3)*(f.SU-f.Max)", None, 1,
+      note='nC x ms x Hz / 1000 = uC; spent at the top, where the current is I.VCC_SU.')
+S.row('- Output voltage at which the winding holds VCC at the floor:',
+      'V.out_UV', '(V.CC_floor+3*V.F_j+I.VCC_SU/β.min*R.BZ_sel)/n.aux', 'V', 2)
 S.row('- Time to get there, rated current into C.out and NO load:', 't.hand',
       'C.out*V.out_UV/I.out', 'ms', 1,
       note='[ASSUMED] the load is held off until the rail is up, as a TV '
@@ -1079,9 +1256,11 @@ S.row('- Time to get there, rated current into C.out and NO load:', 't.hand',
 S.row('- hand-over inside the HVSU window (>1):', 'k.thand', 't.HVSU/t.hand',
       None, 3)
 S.row('- C.VCC that bridges the hand-over:', 'C.VCC_req',
-      't.hand/((V.CC_on-V.CC_HVSUon)/I.VCC_SU'
-      '+(V.CC_HVSUon-V.CC_off)/(I.VCC_SU-I.HVSU_lo))', 'μF', 0)
-S.const('[PICK] SELECTED C.VCC:', 'C.VCC_sel', "%g*'μF" % V.get('CVCC', 680),
+      "(t.hand+ΔQ.OSC*10^(-6)*'A*'s/I.VCC_SU)*B.SU*'mA/'V/(ln(I.VCC_SU/I.VCC_hv)"
+      '+ln((I.VCC_hv-I.HVSU_lo)/(I.VCC_fl-I.HVSU_lo)))', 'μF', 0,
+      note='C*dV/dt = -(I0 + B.SU*V) integrated from V.CC_on to V.CC_floor, '
+           'the HVSU current taken off below V.CC_HVSUon.')
+S.const('[PICK] SELECTED C.VCC:', 'C.VCC_sel', "%g*'μF" % V.get('CVCC', 1000),
         'μF', 0)
 S.row('- C.VCC margin (>1):', 'k.CVCC', 'C.VCC_sel/C.VCC_req', None, 3)
 S.row('- Delay before the first switching, 230 Vac:', 't.VCCchg',
@@ -1089,6 +1268,29 @@ S.row('- Delay before the first switching, 230 Vac:', 't.VCCchg',
       note='the price of C.VCC: the HVSU fills it at 9 mA from the line. '
            'Check the HVSU temperature on the prototype (DS: HVSU over-'
            'temperature protection).')
+
+S.h2('14c.3  Synchronous rectifier controller - TEA2095TE (connection checks only)')
+S.note('One NXP TEA2095TE (HSO8) drives both centre-tap legs: GDA/GDB to the '
+       'gates of the n.SR paralleled SR MOSFETs of each leg, DSA/DSB and '
+       'SSA/SSB as Kelvin sense lines to their drains and sources (never on '
+       'the power ground track), VCC from the output with its own decoupling '
+       'capacitor at the pin. Its gate drive, regulation and timing are the '
+       'IC\'s own and are not designed here. Source: TEA2095TE Rev. 1.3.')
+S.const('[DS] TEA2095TE VCC, maximum:', 'V.SRcc_max', "38*'V", 'V', 0)
+S.row('- SR controller VCC above the OVP2 output (>1):', 'k.SRVCC',
+      'V.SRcc_max/V.OVP2_act', None, 3,
+      note='the controller is fed from V.out, which OVP2 is the last to stop.')
+S.const('[DS] TEA2095TE drain-sense voltage, maximum:', 'V.DSsense', "120*'V",
+        'V', 0)
+S.row('- drain sense above the SR drain rating asked for (>1):', 'k.DSsense',
+      'V.DSsense/V.DS_sec_rec', None, 3)
+S.const('[DS] TEA2095TE gate drive, VCC >= 12 V, min.:', 'V.G_SR', "10.4*'V",
+        'V', 1, note='10.4 V at VCC = 12 V and 10.7 V at 38 V: V.out sits in between.')
+S.row('- SR gate drive reaches the RDSon test voltage 10 V (>1):', 'k.VGSR',
+      "V.G_SR/(10*'V)", None, 3,
+      note='R.dson_s25 above is quoted at VGS = 10 V.')
+S.const('[DS] TEA2095TE start voltage, max.:', 'V.SRstart', "4.75*'V", 'V', 2,
+        note='below this output voltage the body diodes rectify alone.')
 
 S.h2('14b. Datasheet Operating Limits - every ratio below must be greater than 1')
 S.note('DS Table 2 (recommended operating range) and DS section 5.3.2. These are hard silicon '
@@ -1669,6 +1871,23 @@ for lbl, var in [('V.AC_min / V.BO_act       smaller R.CFG', 'k.BO'),
                   'k.OVP1')]:
     S.show('- ' + lbl, var, None, 3)
 
+S.h2('       gate drivers and SR controller')
+for lbl, var in [('V.BO_run / 9.3 V          larger C.BOOT, lower-drop diode',
+                  'k.VBO'),
+                 ('20 V / V.CC_on            DS driver VCC range', 'k.VCCdrv'),
+                 ('480 V / bus peak          driver floating section',
+                  'k.OUTdrv'),
+                 ('1 W / P.drv               larger R.G', 'k.Pdrv'),
+                 ('(t.D - MT) / T.T          raise t.D', 'k.TTd'),
+                 ('50 V/ns / dv.dt           more C.par', 'k.dvdt'),
+                 ('V.OH / V.ih               logic high', 'k.VIH'),
+                 ('V.il / V.OL               logic low', 'k.VIL'),
+                 ('R.PD*I.HBFB / 2.5 V       LOUT2 reads open', 'k.LOUT2'),
+                 ('38 V / V.OVP2_act         SR controller VCC', 'k.SRVCC'),
+                 ('120 V / V.DS_sec_rec      SR drain sense', 'k.DSsense'),
+                 ('V.G_SR / 10 V             SR gate drive', 'k.VGSR')]:
+    S.show('- ' + lbl, var, None, 3)
+
 S.h2('       control loop')
 for lbl, var in [('Phi.act / Phi.M           45 deg or more passes', 'k.PM'),
                  ('GM / GM.t                 gain margin', 'k.GM'),
@@ -1742,18 +1961,24 @@ S.show('- Zener tolerance grade:', 'tol.DZ', None, 3)
 S.show('- Zener feed resistor, SELECTED:', 'R.BZ_sel', 'ohm', 0)
 S.show('- Zener power rating, at least:', 'P.DZ', 'mW', 0)
 S.show('- VCC capacitor, SELECTED:', 'C.VCC_sel', 'μF', 0)
+S.show('- Bootstrap capacitor, per leg:', 'C.BOOT', 'nF', 0)
+S.show('- Gate resistor, per switch:', 'R.G', 'ohm', 1)
 
 S.h2('19.6  Semiconductors - the REQUIREMENT each part has to meet')
 S.table(['function', 'designator', 'device class and count'],
         [['HVSU connecting diodes', '-', '2 x, 1000 V, low leakage'],
          ['Input bridge rectifier', '-', '1 x, see 19.4 for Vf and rd'],
          ['Primary switches', 'HVG1 HVG2 LVG1 LVG2',
-          '4 positions x n.par, superjunction'],
+          '4 positions x n.par, STO60N045DM9'],
          ['Centre-tap rectifiers', 'D1 D2', '2 legs x n.SR, SR MOSFET'],
          ['VCC rectifier and bypass diodes', 'D.aux D.byp',
           '2 x, rated above V.Caux_OVP2'],
          ['VCC pass transistor', 'Q.VCC',
           '1 x NPN, beta >= beta.min, P >= P.Qpass'],
+         ['Gate drivers', 'U.HB1 U.HB2', '2 x L6498LD, SO-14 - 14c.1'],
+         ['Bootstrap diodes', 'D.BS1 D.BS2',
+          '2 x fast, rated like the primary switches'],
+         ['SR controller', 'U.SR', '1 x TEA2095TE, HSO8 - 14c.3'],
          ['Feedback optocoupler', '-', '1 x, CTR binned - see 16.5'],
          ['External error amplifier', '-', '1 x, 2.5 V shunt regulator']],
         widths=[430, 260, 230])
@@ -1766,7 +1991,7 @@ S.show('- Primary: required RDSon per DEVICE at Tj,max:', 'R.dson_req_dev_p',
        'mohm', 1)
 S.show('- Primary: the same, as a 25 C datasheet number:', 'R.dson_req_25_p',
        'mohm', 1)
-S.show('- Primary: largest admissible Coss:', 'C.oss_max', 'pF', 0)
+S.show('- Primary: midpoint capacitance used for ZVS:', 'c.HB', 'pF', 0)
 S.show('- Secondary: devices in parallel per leg:', 'n.SR', None, 0)
 S.show('- Secondary: recommended drain-source voltage:', 'V.DS_sec_rec', 'V', 1)
 S.show('- Secondary: peak current rating per LEG:', 'I.sec_rating', 'A', 1)
@@ -1805,14 +2030,15 @@ print(f'written {OUT}\n  {nbytes} bytes, {ybottom} px tall, '
 print('\n--- cross-check against the reference implementation (l6790.py) ---')
 R = design(Vout=25., Pout=657.5, Vo_min=19., dv_out=0.05, Thold=12e-3, Nrect=1,
            fr_t=150e3, fsw_max_spec=225e3, fsw_min_spec=50e3,
-           c_HB=800e-12, tD=220e-9, n_sel=V['n'],
+           **PRI_FET, tD=220e-9, n_sel=V['n'],
            Cr_sel=V['Cr'] * 1e-9, Lr_sel=V['Lr'] * 1e-6, Lm_sel=V['Lm'] * 1e-6)
 _, Sa = sweep(R, R['Vin_min'])
 _, Sb = sweep(R, R['Vin_FBmax'])
 checks = [
     ('P.in', R['Pin'], 'W'), ('V.eq_min', R['Vin_min'], 'V'),
     ('M.HBmin', R['MVmin'], '-'), ('λ', R['lam'], '-'), ('R.ac', R['Rac'], 'ohm'),
-    ('Q.ZVS', R['Qz'], '-'), ('λ.act', R['lam_a'], '-'), ('n.T', R['nT'], '-'),
+    ('Q.ZVS', R['Qz'], '-'), ('c.HB', R['c_HB'], 'F'), ('Q.ZVS2', R['Qz2'], '-'),
+    ('λ.act', R['lam_a'], '-'), ('n.T', R['nT'], '-'),
     ('f.r', R['fr'], 'Hz'), ('f.o', R['fo'], 'Hz'), ('Q.pk', R['Qpk'], '-'),
     ('f.sw.a', Sa['fsw_max'], 'Hz'), ('f.sw.b', Sb['fsw_max'], 'Hz'),
     ('T.ZC.a', Sa['Tzc_min'], 's'), ('I.sec_pk', Sa['Isec_pk'], 'A'),

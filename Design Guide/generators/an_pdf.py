@@ -112,7 +112,7 @@ R = l6790.design(Vout=25., Pout=657.5, Vo_min=19., Thold=12e-3, dv_out=0.05,
                  Cr_sel=_sheet_early('C.r') * 1e-9,
                  Lr_sel=_sheet_early('L.r') * 1e-6,
                  Lm_sel=_sheet_early('L.m') * 1e-6,
-                 n_sel=_sheet_early('n'), c_HB=800e-12, tD=220e-9)
+                 n_sel=_sheet_early('n'), **l6790.PRI_FET, tD=220e-9)
 _, SA = l6790.sweep(R, R['Vin_min'], 1.0)          # HB corner, full load
 _, SB = l6790.sweep(R, R['Vin_FBmax'], 1.0)      # FB corner, full load
 
@@ -172,7 +172,7 @@ V = dict(
     Icout1=SH['I.Cout_each'], Ccer=SH['C.ceramic'],
     Crip=SH['C.ripple'], Chold=SH['C.hold_req'],
     VDS=SH['V.DS_pri'], VDSs=SH['V.DS_sec_rec'],
-    Rdreq=SH['R.dson_req_dev_p'], Rdp=45.0, Rdpk=1.8, Rds=3.7, Rdsk=1.9,
+    Rdreq=SH['R.dson_req_dev_p'], Rdp=45.0, Rds=3.7, Rdsk=1.9,
     nSR=2, npar=1,
     RT=SH['R.T'], CT=SH['C.T'], fMin=SH['f.Min'], fMax=SH['f.Max'],
     RCS=SH['R.CS'], RCS1=SH['R.CS_single'], RCFG=30.0, VBO=SH['V.BO_act'],
@@ -358,7 +358,7 @@ def _sig2(x):
 #  ratios the sheet prints rather than from the builder's source line.
 V.update(
     DZ=_builder_const('V.DZ_sel'), tolDZ=_builder_const('tol.DZ'),
-    VFj=_builder_const('V.F_j'), Qg=_builder_const('Q.g'),      # nC
+    VFj=_builder_const('V.F_j'),
     bmin=_builder_const('β.min'), IDZmin=_builder_const('I.DZ_min'),
     ICC=_builder_const('I.CC'), IHVlo=_builder_const('I.HVSU_lo'),
     IHVhi=_builder_const('I.HVSU_hi'), VCCon=_builder_const('V.CC_on'),
@@ -367,6 +367,33 @@ V.update(
     Nsw=_builder_const('N.sw'),
     RBZ=_sig2(SH['R.BZ_max'] / SH['k.RBZ']),
     CVCC=_sig2(SH['C.VCC_req'] * SH['k.CVCC']),
+)
+
+#  the primary MOSFET, the gate drivers and the SR controller (sheet 13.1,
+#  14c.1 - 14c.3, 2026-10-01): datasheet lines and picks, read from the
+#  builder so that no number is typed twice.  Units as the S.const line.
+V.update(
+    Rdpk=_builder_const('K.Tpri'),
+    Cosstr=_builder_const('C.oss_tr'), Vosstr=_builder_const('V.oss_tr'),
+    Cpar=_builder_const('C.par'), Coss400=_builder_const('C.oss_400'),
+    Qg10=_builder_const('Q.g10'), Qg12=_builder_const('Q.g12'),      # nC
+    Ndrv=_builder_const('N.drv'), IQCC=_builder_const('I.QCC'),      # uA
+    IQBO=_builder_const('I.QBO'), RBS=_builder_const('R.BS'),
+    VFbs=_builder_const('V.F_bs'), CBOOT=_builder_const('C.BOOT'),  # nF
+    VBOrec=_builder_const('V.BO_rec'), VCCdlo=_builder_const('V.CCd_lo'),
+    VCCdhi=_builder_const('V.CCd_hi'), Iso=_builder_const('I.so'),
+    Isi=_builder_const('I.si'), Rgint=_builder_const('R.g_int'),
+    RG=_builder_const('R.G'), Pdrvmax=_builder_const('P.drv_max'),
+    Rthdrv=_builder_const('R.th_drv'), MT=_builder_const('MT.drv'),
+    dvmax=_builder_const('dv.max'), VOH=_builder_const('V.OH'),
+    VOL=_builder_const('V.OL'), Vih=_builder_const('V.ih'),
+    Vil=_builder_const('V.il'), RPD=_builder_const('R.PD'),
+    IHBFB=_builder_const('I.HBFB'), VHBFB=_builder_const('V.HBFB'),
+    TOSC=_builder_const('T.OSC_SU'),                                 # ms
+    RthJC=_builder_const('R.thJC'), RthJApcb=_builder_const('R.thJA_pcb'),
+    Tamb=_builder_const('T.amb'), VOUTdrv=_builder_const('V.OUT_drv'),
+    SRcc=_builder_const('V.SRcc_max'), DSsense=_builder_const('V.DSsense'),
+    VGSR=_builder_const('V.G_SR'), SRstart=_builder_const('V.SRstart'),
 )
 
 # Two oscillator inputs the sheet does not echo as results, recovered from
@@ -1177,7 +1204,11 @@ def legal():
                     'a worked loop design. V<sub>CC</sub> from the auxiliary '
                     'winding through a Zener regulator. Safety insulation of '
                     'the transformer for household AV equipment in the US, '
-                    'EU, Japan, Korea and China. Text shortened throughout.'
+                    'EU, Japan, Korea and China. Text shortened throughout. '
+                    'Parts fitted: STO60N045DM9 primary switches, two L6498LD '
+                    'gate drivers with external bootstrap diodes and a '
+                    'TEA2095TE SR controller, with the V<sub>CC</sub> start-up '
+                    're-sized for them.'
                     % (__import__('cores').CHOSEN, V['Lr'], V['Lm'], V['Cr']),
                     S['tc'])]],
         colWidths=[70, 90, CW - 160],

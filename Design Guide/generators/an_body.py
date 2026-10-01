@@ -1848,6 +1848,52 @@ def build(A):
              'carries the whole tank current; Section&nbsp;'
              + SR('Where the power goes') + ' shows what that cost here.'))
 
+    add(h2('Driving the bridge: external gate drivers'))
+    add(p('The controller&rsquo;s HOUTx and LOUTx are logic outputs. Each '
+          'leg needs a half-bridge driver, which brings four checks of its '
+          'own.'))
+    add(p('<b>The high side lives on a bootstrap.</b> Its capacitor '
+          'C<sub>BOOT</sub> is recharged from V<sub>CC</sub> while the low '
+          'side of the same leg is on, for T<sub>charge</sub>. A driver that '
+          'does this through an integrated switch of resistance '
+          'R<sub>BS</sub> loses'))
+    add(eq(r'V_{drop}=\frac{Q_{g}\,R_{BS}}{T_{charge}}', key='bsdrop'))
+    add(p('which grows with frequency; when it is a large part of '
+          'V<sub>CC</sub>, an external fast diode from V<sub>CC</sub> to BOOT '
+          'replaces it. The high-side supply then sits a diode drop '
+          'V<sub>F</sub> and the per-cycle ripple below the rail; the '
+          'ripple is the gate charge plus what the floating section draws, '
+          'I<sub>QBO</sub>, over the longest high-side pulse '
+          'T<sub>on,max</sub>:'))
+    add(eq([r'\Delta V_{boot}=\frac{Q_{g}+I_{QBO}\,T_{on,max}}{C_{BOOT}}',
+            r'V_{BO}=V_{CC}-V_{F}-\Delta V_{boot}'], key='vbo'))
+    add(p('<b>The driver sets a floor on V<sub>CC</sub>.</b> Both its own '
+          'supply and the floating one have a recommended minimum; below '
+          'them the driver may still switch, but nothing in its datasheet '
+          'is guaranteed. The start-up sizing therefore uses'))
+    add(eq(r'V_{CC,floor}=\max\left(V_{CCoff},\;V_{CC,drv,min},\;'
+           r'V_{BO,min}+V_{F}+\Delta V_{boot}\right)', key='vccfloor'))
+    add(p('<b>The gate power is shared.</b> Each driver moves the charge of '
+          'two switches per period. The power Q<sub>g</sub>V<sub>CC</sub>f '
+          'splits between the driver output R<sub>drv</sub>, the gate '
+          'resistor R<sub>G</sub> and the MOSFET&rsquo;s internal '
+          'R<sub>g,int</sub>, so the driver keeps'))
+    add(eq([r's_{drv}=\frac{1}{2}\left(\frac{R_{so}}{R_{so}+R_{G}+R_{g,int}}'
+            r'+\frac{R_{si}}{R_{si}+R_{G}+R_{g,int}}\right)',
+            r'P_{drv}=2\,Q_{g}V_{CC}f_{sw}\,s_{drv}+(I_{QCC}+I_{QBO})\,V_{CC}'],
+           key='pdrv'))
+    add(p('with R<sub>so</sub> and R<sub>si</sub> the source and sink '
+          'resistances of the output, taken as V<sub>CC</sub> over the '
+          'short-circuit currents when the datasheet gives nothing better, '
+          'and I<sub>QCC</sub>, I<sub>QBO</sub> the quiescent currents of the '
+          'low and floating sections.'))
+    add(p('<b>Timing.</b> The dead time reaches the gates shortened by the '
+          'driver&rsquo;s delay mismatch MT, so (t<sub>D</sub> &minus; MT) '
+          'must still cover the swing T<sub>T</sub>. And the midpoint slope '
+          'S<sub>mid</sub> during the swing, the commutation current over the '
+          'output capacitance at the top of the swing, must stay under the '
+          'driver&rsquo;s allowed OUT slew rate S<sub>OUT,max</sub>.'))
+
     add(h2('Controller network'))
     add(fig('bom_pin_config',
             'The controller and its passive network. HVSU is fed from the AC '
@@ -1904,10 +1950,18 @@ def build(A):
           'does not say whether it still does after its start-up timeout, '
           'and above that level the question never arises. The top must stay '
           'under the pin&rsquo;s operating limit. The load I<sub>VCC</sub> is '
-          'the controller&rsquo;s own I<sub>CC</sub> and the gate drivers, '
-          'whose share is the gate charge Q<sub>g</sub> of each of the '
-          'N<sub>sw</sub> switch positions, once per period:'))
-    add(eq(r'I_{VCC}=I_{CC}+N_{sw}\,Q_{g}\,f_{sw}', key='ivcc'))
+          'the controller&rsquo;s own I<sub>CC</sub>, the quiescent current '
+          'of the gate drivers I<sub>drv,q</sub>, and the gate charge '
+          'Q<sub>g</sub> of each of the N<sub>sw</sub> switch positions, once '
+          'per period:'))
+    add(eq(r'I_{VCC}=I_{CC}+I_{drv,q}+N_{sw}\,Q_{g}\,f_{sw}', key='ivcc'))
+    add(p('Q<sub>g</sub> is the charge at the voltage the driver really '
+          'applies, the rail itself, not the 10&nbsp;V of the datasheet '
+          'headline. Past the Miller plateau the drain is already down and '
+          'the gate sees a fixed capacitance, so the gate-charge curve is a '
+          'straight line there and two points on it give the charge at any '
+          'drive voltage:'))
+    add(eq(r'Q_{g}(V)=Q_{g,10}+C_{g}\,(V-10\;\mathrm{V})', key='qgv'))
     add(p('<b>The winding ratio has a floor and a cost.</b> At the end of '
           'hold-up, output V<sub>o,min</sub>, the winding must still lift the '
           'base above the highest Zener voltage V<sub>DZ,max</sub> with enough '
@@ -1923,18 +1977,27 @@ def build(A):
     add(p('<b>Start-up is the other sizing case.</b> The start-up unit fills '
           'C<sub>VCC</sub> to V<sub>CCon</sub>; switching begins, and until the '
           'output is high enough for the winding to hold the pin, '
-          'C<sub>VCC</sub> feeds the drivers: alone down to '
-          'V<sub>CC,HVSUon</sub>, then helped by the start-up charge current '
-          'I<sub>HVSU</sub> down to V<sub>CCoff</sub>. That has to last '
+          'C<sub>VCC</sub> feeds the controller and the drivers: alone down '
+          'to V<sub>CC,HVSUon</sub>, then helped by the start-up charge '
+          'current I<sub>HVSU</sub> down to V<sub>CC,floor</sub>. The floor '
+          'is not the controller&rsquo;s V<sub>CCoff</sub> but the highest '
+          'of it and the lowest supply the gate drivers are specified at '
+          '(Equation&nbsp;' + ER('vccfloor') + '). That has to last '
           't<sub>hand</sub>, until the output reaches V<sub>out,UV</sub>, '
-          'the level at which the winding holds the pin at '
-          'V<sub>CCoff</sub>. With the output bank charged at rated current '
-          'and no load, and I<sub>VCC,SU</sub> the supply current at the '
-          'start-up frequency,'))
+          'the level at which the winding holds the pin at the floor. The '
+          'drive current falls as the rail does, '
+          'I<sub>VCC</sub>(V) = I<sub>VCC,SU</sub> &minus; B(V<sub>CCon</sub> &minus; V) with '
+          'B = N<sub>sw</sub>C<sub>g</sub>f<sub>sw</sub> (Equation&nbsp;'
+          + ER('qgv') + '), and an oscillator that starts above its run '
+          'range spends an extra charge &Delta;Q<sub>OSC</sub> at the top. '
+          'With the output bank charged at rated current and no load, '
+          'integrating C<sub>VCC</sub>dV/dt = &minus;I<sub>VCC</sub>(V) over the two '
+          'stretches gives'))
     add(eq([r't_{hand}=\frac{C_{out}V_{out,UV}}{I_{out}}',
-            r'C_{VCC}\geq\frac{t_{hand}}'
-            r'{\dfrac{V_{CCon}-V_{CC,HVSUon}}{I_{VCC,SU}}'
-            r'+\dfrac{V_{CC,HVSUon}-V_{CCoff}}{I_{VCC,SU}-I_{HVSU}}}'],
+            r'C_{VCC}\geq\frac{B\left(t_{hand}+\Delta Q_{OSC}/I_{VCC,SU}'
+            r'\right)}{\ln\dfrac{I_{VCC}(V_{CCon})}{I_{VCC}(V_{CC,HVSUon})}'
+            r'+\ln\dfrac{I_{VCC}(V_{CC,HVSUon})-I_{HVSU}}'
+            r'{I_{VCC}(V_{CC,floor})-I_{HVSU}}}'],
            key='cvcc'))
     add(p('A larger C<sub>VCC</sub> is paid for in the delay before the first '
           'pulse, C<sub>VCC</sub>V<sub>CCon</sub>/I<sub>HVSU</sub>.'))
@@ -2253,8 +2316,9 @@ def build(A):
 
     add(h2('The specification, sorted by what kind of number it is'))
     add(p('Each number is <b>given</b> by the load and the mains, '
-          '<b>chosen</b> by the designer, or <b>assumed</b> in place of a '
-          'measurement not yet made.'))
+          '<b>chosen</b> by the designer, read from a part&rsquo;s '
+          '<b>datasheet</b>, or <b>assumed</b> in place of a measurement not '
+          'yet made.'))
     ext(tbl('The specification. Everything else in this chapter is computed '
             'from these.',
             [['Item', 'Symbol', 'Value', 'Kind', 'Note'],
@@ -2302,19 +2366,35 @@ def build(A):
               'the draft datasheet also implies 350 and 700 ns; %s '
               '&mdash; the first thing to measure' % _idle700_text(V)],
              ['R<sub>DS(on)</sub> temperature factor', 'k<sub>T</sub>',
-              '%(Rdpk).1f / %(Rdsk).1f' % V, 'assumed',
-              'primary / secondary, read off the datasheet curves at '
-              'T<sub>j,max</sub>'],
+              '%(Rdpk).1f / %(Rdsk).1f' % V, 'datasheet',
+              'primary / secondary at T<sub>j</sub> = 125&nbsp;&deg;C; the '
+              'primary from the vector curve of its datasheet, the secondary '
+              'carried from the earlier SR selection'],
              ['Burst entry point', 'r<sub>BM</sub>',
               '%(rBM).0f %% of P<sub>in</sub> (%(PinBM).0f W)'
               % dict(V, rBM=A.SH['r.BM'] * 100), 'assumed',
               'sets R<sub>BM</sub>, then checked against the feedback '
               'ripple'],
-             ['Primary MOSFET gate charge', 'Q<sub>g</sub>',
-              '%(Qg).1f nC' % V, 'assumed',
-              'the candidate part, typical, from a parameter listing; sets '
-              'the V<sub>CC</sub> load (Section&nbsp;%s)'
-              % SR('V<sub>CC</sub> from the auxiliary winding, as built')],
+             ['Primary switches', '&mdash;',
+              'STO60N045DM9, one per position, four in all', 'chosen',
+              '600&nbsp;V superjunction with a fast-recovery body diode '
+              '(Section&nbsp;%s)' % SR('The primary switches: STO60N045DM9')],
+             ['Primary gate and output charge', 'Q<sub>g,10</sub>, '
+              'C<sub>o(tr)</sub>',
+              '%(Qg10).0f nC (0&ndash;10 V), %(Cosstr).0f pF (0&ndash;%(Vosstr).0f V)'
+              % V, 'datasheet',
+              'Q<sub>g</sub> sets the V<sub>CC</sub> load, C<sub>o(tr)</sub> '
+              'the swing the dead time must cover'],
+             ['Gate drivers', '&mdash;',
+              '2 &times; L6498LD (SO-14), one per leg, external bootstrap '
+              'diodes', 'chosen',
+              'the controller has no driver of its own (Section&nbsp;%s)'
+              % SR('The gate drivers: two L6498LD')],
+             ['Synchronous rectifier', '&mdash;',
+              'TEA2095TE, %(nSR).0f MOSFETs per leg' % V, 'chosen',
+              'connection and limits only; the SR MOSFET datasheet is not '
+              'part of this revision (Section&nbsp;%s)'
+              % SR('Synchronous rectification: TEA2095TE')],
              ['Regulator parts', 'V<sub>BE</sub>, V<sub>D</sub>, '
               '&beta;<sub>min</sub>, I<sub>Z,min</sub>',
               '%(VFj).1f V, %(VFj).1f V, %(bmin).0f, %(IDZmin).0f mA' % V,
@@ -2372,6 +2452,10 @@ def build(A):
              ['Loop', 'f<sub>c</sub> %(fcross).2f Hz, '
               '&Phi;<sub>M</sub> %(PM).1f&deg;, '
               'third harmonic %(D3).2f %%' % V],
+             ['Switches', 'STO60N045DM9 &times; 4; 2 &times; L6498LD, '
+              'R<sub>G</sub> %(RG).1f &Omega;, C<sub>BOOT</sub> %(CBOOT).0f nF '
+              'with an external diode; TEA2095TE, %(nSR).0f SR MOSFETs per leg'
+              % V],
              ['V<sub>CC</sub>', 'N<sub>aux</sub> %d T, Zener %.0f V, '
               'R<sub>BZ</sub> %.0f &Omega;, C<sub>VCC</sub> %.0f &micro;F, '
               'V<sub>CC,reg</sub> %.2f V'
@@ -2425,25 +2509,46 @@ def build(A):
              ['The Zener feed still regulates at the end of hold-up',
               'R<sub>BZ,max</sub> / R<sub>BZ</sub>',
               '%.0f &Omega; / %.0f &Omega;' % (A.SH['R.BZ_max'], V['RBZ']),
-              '<b>%.3f</b>' % A.SH['k.RBZ']],
+              '%.3f' % A.SH['k.RBZ']],
              ['C<sub>VCC</sub> bridges the start-up hand-over',
               'C<sub>VCC</sub> / C<sub>VCC,req</sub>',
               '%.0f &micro;F / %.0f &micro;F' % (V['CVCC'], A.SH['C.VCC_req']),
-              '%.3f' % A.SH['k.CVCC']]],
+              '%.3f' % A.SH['k.CVCC']],
+             ['The high-side driver supply stays in its range',
+              'V<sub>BO</sub> / V<sub>BO,min</sub>',
+              '%.2f V / %.1f V' % (A.SH['V.BO_run'], V['VBOrec']),
+              '%.3f' % A.SH['k.VBO']],
+             ['The dead time at the gates covers the swing',
+              '(t<sub>D</sub> &minus; MT) / T<sub>T</sub>',
+              '%.0f ns / %.0f ns' % (V['tD'] - V['MT'], A.SH['T.T']),
+              '%.3f' % A.SH['k.TTd']],
+             ['The midpoint slope stays under the driver limit',
+              'S<sub>OUT,max</sub> / S<sub>mid</sub>',
+              '%.0f V/ns / %.1f V/ns' % (V['dvmax'], A.SH['dv.dt']),
+              '%.3f' % A.SH['k.dvdt']],
+             ['Gate driver dissipation against its rating',
+              'P<sub>drv,max</sub> / P<sub>drv</sub>',
+              '%.0f W / %.3f W' % (V['Pdrvmax'], A.SH['P.drv']),
+              '%.3f' % A.SH['k.Pdrv']],
+             ['The SR gate drive reaches the R<sub>DS(on)</sub> test voltage',
+              'V<sub>G,SR</sub> / 10 V',
+              '%.1f V / 10 V' % V['VGSR'],
+              '<b>%.3f</b>' % A.SH['k.VGSR']]],
             widths=[CW * 0.34, CW * 0.18, CW * 0.26, CW * 0.10],
             key='margins', split=True))
     add(note('k<sub>Ploss</sub> = %(kPloss).3f is a result, not a failed '
              'calculation: the standing primary device spends %(a).2f&nbsp;W '
              'against a %(b).0f&nbsp;W budget; no single 600&nbsp;V device meets '
              'that budget in the standing position, so the design goes ahead '
-             'and the heatsink question is settled by measurement '
-             '(Section&nbsp;%(ref)s). %(thin)s k<sub>RBZ</sub> = %(krbz).3f '
-             'is small too, but every input to it is already a worst case '
-             '(the Zener at the top of its tolerance, the least current gain, '
-             'the end of hold-up). k<sub>floor</sub> = %(kfloor).3f rests on '
+             'on a heatsink (Section&nbsp;%(hs)s) and the rest is settled by '
+             'measurement (Section&nbsp;%(ref)s). %(thin)s It is thin by construction: '
+             'the SR controller clamps its gate drive at %(vg).1f&nbsp;V and '
+             'the SR R<sub>DS(on)</sub> is quoted at 10&nbsp;V, so the clamp '
+             'only has to clear the test voltage. k<sub>floor</sub> = %(kfloor).3f rests on '
              'unknowns: the transformer tolerance and the idle time both move '
              'it, and neither is measured yet.'
-             % dict(V, a=A.SH['P.mos_dc'], b=_kb, krbz=A.SH['k.RBZ'],
+             % dict(V, a=A.SH['P.mos_dc'], b=_kb, vg=V['VGSR'],
+                    hs=SR('The primary switches: STO60N045DM9'),
                     thin=_thinnest_text(V, A),
                     ref=SR('What to measure first on hardware'))))
 
@@ -3835,8 +3940,10 @@ def build(A):
 
     # ------------------------------------------------ the loop as built
     add(h2('What the semiconductors have to be'))
-    add(p('Requirements, not part numbers (Section&nbsp;'
-          + SR('Semiconductor requirements') + ').'))
+    add(p('The requirements of Section&nbsp;'
+          + SR('Semiconductor requirements') + ' with this design&rsquo;s '
+          'numbers; the three sections after it check the parts fitted '
+          'against them.'))
     ext(tbl('Semiconductor requirements for the worked design.',
             [['Item', 'Requirement'],
              ['Primary drain-source voltage',
@@ -3851,7 +3958,10 @@ def build(A):
               % V],
              ['Primary C<sub>o(tr)</sub>',
               'small enough that the tank can swing the node inside '
-              '%(tD).0f ns' % V],
+              '%(tD).0f ns less the driver mismatch' % V],
+             ['Gate drivers',
+              'one half-bridge driver per leg, floating side above the bus '
+              'peak; bootstrap diode rated like the primary switches'],
              ['Secondary drain-source voltage',
               '&ge; %(VDSs).0f V including the centre-tap doubling' % V],
              ['Secondary rectifier current',
@@ -3870,6 +3980,260 @@ def build(A):
               'reverse rating above %.1f V plus the winding spike'
               % A.SH['V.Caux_OVP2']]],
             widths=[CW * 0.36, CW * 0.64], split=True))
+    # ------------------------------------------------ the parts fitted
+    _sh = A.SH
+    _Pdc = _sh['P.mos_dc']
+    add(h2('The primary switches: STO60N045DM9'))
+    add(p('One ST STO60N045DM9 per position, four in the full bridge: '
+          '600&nbsp;V, %(Rdp).0f&nbsp;m&Omega; maximum at 25&nbsp;&deg;C and '
+          'V<sub>GS</sub> = 10&nbsp;V, a fast-recovery body diode, and a TO-LL '
+          'package with a separate driver-source pin, which keeps the gate '
+          'loop out of the power source lead [STO]. Three of its datasheet '
+          'lines enter the design.' % V))
+    add(p('<b>R<sub>DS(on)</sub> hot.</b> The normalised curve, read from '
+          'the vector drawing of the datasheet, gives k<sub>T</sub> = '
+          '%(Rdpk).1f at 125&nbsp;&deg;C, and the standing device spends '
+          '%(P).2f&nbsp;W (Section&nbsp;%(ref)s). That is a heatsink '
+          'question: junction to case is %(rjc).1f&nbsp;&deg;C/W, but the same '
+          'part on 40&nbsp;&times;&nbsp;40&nbsp;mm of 2&nbsp;oz copper is '
+          'quoted at %(rja).0f&nbsp;&deg;C/W, a %(dT).0f&nbsp;&deg;C rise at '
+          'this loss. With the junction at 125&nbsp;&deg;C and '
+          '%(ta).0f&nbsp;&deg;C ambient, as the workbook takes it, the '
+          'case-to-ambient path may have %(rca).1f&nbsp;&deg;C/W, and every '
+          '10&nbsp;&deg;C of real ambient takes %(d10).2f&nbsp;&deg;C/W off '
+          'it: the exposed pad has to reach a heatsink.'
+          % dict(V, P=_Pdc, rjc=V['RthJC'], rja=V['RthJApcb'],
+                 dT=_sh['ΔT.pcb'], ta=V['Tamb'], rca=_sh['R.thCA_max'],
+                 d10=10.0 / _Pdc, ref=SR('Where the power goes'))))
+    add(p('<b>Output charge.</b> C<sub>o(tr)</sub> = %(C).0f&nbsp;pF is the '
+          'constant capacitance that charges in the same time as '
+          'C<sub>oss</sub> from 0 to %(Vt).0f&nbsp;V, so it stands for a '
+          'charge of %(Q).0f&nbsp;nC per device. The ZVS corner swings only '
+          '%(Vb).0f&nbsp;V, but C<sub>oss</sub> is at least %(C4).0f&nbsp;pF '
+          'above it, so the full charge over-states the corner by a few per '
+          'cent and is taken as it is. Two devices swing together, so the '
+          'midpoint sees'
+          % dict(C=V['Cosstr'], Vt=V['Vosstr'], Q=V['Cosstr'] * V['Vosstr'] / 1e3,
+                 Vb=2 ** 0.5 * V['Veqlo'], C4=V['Coss400'])))
+    add(calc(r'c_{HB}=\frac{2\cdot%(C).0f\,\mathrm{pF}\cdot%(Vt).0f}'
+             r'{\sqrt{2}\cdot%(Vm).2f}+%(Cp).0f\,\mathrm{pF}'
+             r'=%(c).0f\;\mathrm{pF}'
+             % dict(C=V['Cosstr'], Vt=V['Vosstr'], Vm=V['Veqlo'],
+                    Cp=V['Cpar'], c=_sh['c.HB'])))
+    add(p('in place of the %(old).0f&nbsp;pF assumed before the part was '
+          'chosen. The dead-time limit on Q moves to Q<sub>ZVS2</sub> = '
+          '%(q2).2f, still above the gain-peak limit %(q1).3f, so the tank '
+          'does not change; the swing takes T<sub>T</sub> = %(tt).0f&nbsp;ns '
+          'of the %(tD).0f&nbsp;ns dead time.'
+          % dict(V, old=800, q2=_sh['Q.ZVS2'], q1=_sh['Q.ZVS1'],
+                 tt=_sh['T.T'])))
+    add(p('<b>Gate charge.</b> The datasheet gives %(q10).0f&nbsp;nC from 0 '
+          'to 10&nbsp;V and its curve %(q12).0f&nbsp;nC at 12&nbsp;V; between '
+          'them it is the straight line of Equation&nbsp;%(e)s, '
+          'C<sub>g</sub> = %(cg).1f&nbsp;nF. At the highest regulated rail '
+          'and at V<sub>CCon</sub>, where start-up begins, the charges '
+          'Q<sub>g,run</sub> and Q<sub>g,SU</sub> are'
+          % dict(q10=V['Qg10'], q12=V['Qg12'], cg=_sh['C.g_hi'],
+                 e=ER('qgv'))))
+    add(calc(r'Q_{g,run}=%(q10).0f+%(cg).1f\,(%(vm).2f-10)=%(qr).1f\;\mathrm{nC}'
+             r'\,,\qquad Q_{g,SU}=%(q10).0f+%(cg).1f\,(%(von).0f-10)'
+             r'=%(qs).1f\;\mathrm{nC}'
+             % dict(q10=V['Qg10'], cg=_sh['C.g_hi'], vm=_sh['V.CC_reg_max'],
+                    von=V['VCCon'], qr=_sh['Q.g_run'], qs=_sh['Q.g_SU'])))
+    add(note('Both figures are measured at V<sub>DD</sub> = 400&nbsp;V, hard '
+             'switched. Under ZVS the Miller share (33&nbsp;nC) is not '
+             'drawn, so they over-state the run current; they are kept '
+             'because the first pulses of a start are hard switched.'))
+
+    add(h2('The gate drivers: two L6498LD'))
+    add(p('The L6790A drives no gate. Each leg gets one L6498LD, the SO-14 '
+          'version of the ST L6498 high-voltage half-bridge gate driver '
+          '[L6498], fed from the regulated V<sub>CC</sub>.'))
+    add(tbl('L6498LD connections, one per leg (x = 1, 2).',
+            [['Pin', 'Name', 'Connection'],
+             ['1', 'HIN', 'HOUTx of the L6790A'],
+             ['2', 'LIN', 'LOUTx of the L6790A'],
+             ['3', 'SGND', 'controller ground'],
+             ['5', 'PGND', 'driver-source pin of the low-side switch; up to '
+              '&plusmn;5&nbsp;V from SGND is allowed, which covers the '
+              'sense-resistor drop'],
+             ['6', 'LVG', 'low-side gate, through R<sub>G</sub>'],
+             ['7', 'VCC', 'the regulated V<sub>CC</sub>, with a local ceramic '
+              'capacitor several times C<sub>BOOT</sub>: each bootstrap '
+              'recharge is drawn from it'],
+             ['11', 'OUT', 'leg midpoint, at the driver-source pin of the '
+              'high-side switch'],
+             ['12', 'HVG', 'high-side gate, through R<sub>G</sub>'],
+             ['13', 'BOOT', 'C<sub>BOOT</sub> to OUT; external fast diode '
+              'from VCC'],
+             ['4, 8, 9, 10, 14', 'NC', 'not connected']],
+            widths=[CW * 0.16, CW * 0.12, CW * 0.72], key='l6498pins'))
+    add(p('<b>Logic.</b> The controller outputs reach at least '
+          '%(oh).0f&nbsp;V high and at most %(ol).1f&nbsp;V low; the driver '
+          'reads high above %(ih).1f&nbsp;V and low below %(il).2f&nbsp;V '
+          '(k = %(k1).2f and %(k2).2f). Both inputs high gives both outputs '
+          'low. The L6498 has no enable input, so DRV_EN stays open. One '
+          'connection needs a second look: at start-up the L6790A drives '
+          '%(i).0f&nbsp;&micro;A into LOUT2 and reads it against '
+          '%(vt).1f&nbsp;V to tell a fixed half bridge from morphing. The LIN '
+          'pull-down is at least %(r).0f&nbsp;k&Omega;, which would take '
+          '%(vx).1f&nbsp;V, so LOUT2 still reads open (k<sub>LOUT2</sub> = '
+          '%(k3).2f).'
+          % dict(oh=V['VOH'], ol=V['VOL'], ih=V['Vih'], il=V['Vil'],
+                 k1=_sh['k.VIH'], k2=_sh['k.VIL'], i=V['IHBFB'],
+                 vt=V['VHBFB'], r=V['RPD'], vx=V['RPD'] * V['IHBFB'] / 1e3,
+                 k3=_sh['k.LOUT2'])))
+    add(p('<b>Floating side.</b> OUT is rated %(vo).0f&nbsp;V dc '
+          '(600&nbsp;V for under 1&nbsp;ms); the bus peaks at %(vb).0f&nbsp;V '
+          '(k = %(k).3f).'
+          % dict(vo=V['VOUTdrv'], vb=_sh['V.bd_rr'], k=_sh['k.OUTdrv'])))
+    add(p('<b>Supply.</b> The driver is specified from %(lo).0f to '
+          '%(hi).0f&nbsp;V. The regulated band, %(a).2f to %(b).2f&nbsp;V, '
+          'is inside it, and so is V<sub>CCon</sub> = %(on).0f&nbsp;V, the '
+          'highest the start-up unit takes the rail (k = %(k).3f). The two '
+          'drivers draw %(iq).2f&nbsp;mA quiescent, the floating sections '
+          'included, since they are fed from V<sub>CC</sub> through the '
+          'bootstrap.'
+          % dict(lo=V['VCCdlo'], hi=V['VCCdhi'], a=_sh['V.CC_reg_min'],
+                 b=_sh['V.CC_reg_max'], on=V['VCCon'], k=_sh['k.VCCdrv'],
+                 iq=_sh['I.drv_q'])))
+    add(p('<b>Bootstrap.</b> The L6498 replaces the bootstrap diode with an '
+          'integrated switch of about %(r).0f&nbsp;&Omega;. At f<sub>Max</sub> '
+          'the low side is on for T<sub>charge</sub> = 1/(2f<sub>Max</sub>) '
+          '&minus; t<sub>D</sub> = %(tc).0f&nbsp;ns, and Equation&nbsp;%(e)s '
+          'gives'
+          % dict(r=V['RBS'], tc=_sh['T.chg'], e=ER('bsdrop'))))
+    add(calc(r'V_{drop}=\frac{%(q).1f\,\mathrm{nC}\cdot%(r).0f\,\Omega}'
+             r'{%(tc).0f\,\mathrm{ns}}=%(vd).1f\;\mathrm{V}'
+             % dict(q=_sh['Q.g_run'], r=V['RBS'], tc=_sh['T.chg'],
+                    vd=_sh['V.drop_int'])))
+    add(p('nearly the whole rail, so an external fast diode from VCC to BOOT '
+          'does the charging, as the driver datasheet allows. It blocks the '
+          'bus and is rated like the primary switches. With its drop taken '
+          'as %(vf).1f&nbsp;V, C<sub>BOOT</sub> = %(cb).0f&nbsp;nF and the '
+          'longest high-side pulse 1/(2f<sub>Min</sub>) = %(ton).2f&nbsp;'
+          '&micro;s, Equation&nbsp;%(e)s gives'
+          % dict(vf=V['VFbs'], cb=V['CBOOT'], ton=_sh['T.on_max'],
+                 e=ER('vbo'))))
+    add(calc(r'\Delta V_{boot}=\frac{%(q).1f\,\mathrm{nC}+%(i).0f\,\mathrm{\mu A}'
+             r'\cdot%(ton).2f\,\mathrm{\mu s}}{%(cb).0f\,\mathrm{nF}}'
+             r'=%(dv).2f\;\mathrm{V}\,,\qquad V_{BO}=%(vl).2f-%(vf).1f-%(dv).2f'
+             r'=%(vbo).2f\;\mathrm{V}'
+             % dict(q=_sh['Q.g_SU'], i=V['IQBO'], ton=_sh['T.on_max'],
+                    cb=V['CBOOT'], dv=_sh['ΔV.boot'], vl=_sh['V.CC_reg_min'],
+                    vf=V['VFbs'], vbo=_sh['V.BO_run'])))
+    add(p('against a recommended %(m).1f&nbsp;V minimum (k = %(k).3f). In '
+          'half-bridge morphing the idle leg holds its low side on, so its '
+          'bootstrap stays charged; after a burst pause the controller '
+          'restarts with a pattern that recharges both.'
+          % dict(m=V['VBOrec'], k=_sh['k.VBO'])))
+    add(p('<b>The floor the drivers put under V<sub>CC</sub></b> follows '
+          'from Equation&nbsp;%(e)s:' % dict(e=ER('vccfloor'))))
+    add(calc(r'V_{CC,floor}=\max\left(%(off).0f,\;%(lo).0f,\;%(bo).1f+%(vf).1f'
+             r'+%(dv).2f\right)=%(fl).2f\;\mathrm{V}'
+             % dict(off=V['VCCoff'], lo=V['VCCdlo'], bo=V['VBOrec'],
+                    vf=V['VFbs'], dv=_sh['ΔV.boot'], fl=_sh['V.CC_floor'])))
+    add(p('The high-side supply, not the controller&rsquo;s %(off).0f&nbsp;V '
+          'lockout, decides how far C<sub>VCC</sub> may run down at start-up '
+          '(Section&nbsp;%(ref)s).'
+          % dict(off=V['VCCoff'],
+                 ref=SR('V<sub>CC</sub> from the auxiliary winding, as built'))))
+    _rso, _rsi = _sh['R.so'], _sh['R.si']
+    add(p('<b>Dissipation.</b> The datasheet gives the output only as '
+          'short-circuit currents, at least %(so).1f&nbsp;A source and '
+          '%(si).2f&nbsp;A sink over temperature at 15&nbsp;V, so the output '
+          'is taken as %(rso).1f and %(rsi).1f&nbsp;&Omega;. With '
+          'R<sub>G</sub> = %(rg).1f&nbsp;&Omega; and the MOSFET&rsquo;s own '
+          '%(rgi).1f&nbsp;&Omega;, the driver keeps s<sub>drv</sub> = '
+          '%(sh).3f of the gate power, and at f<sub>Max</sub> and the top of '
+          'the rail (Equation&nbsp;%(e)s)'
+          % dict(so=V['Iso'], si=V['Isi'], rso=_rso, rsi=_rsi, rg=V['RG'],
+                 rgi=V['Rgint'], sh=_sh['s.drv'], e=ER('pdrv'))))
+    add(calc(r'P_{drv}=2\cdot%(q).1f\,\mathrm{nC}\cdot%(v).2f\cdot%(f).1f'
+             r'\,\mathrm{kHz}\cdot%(sh).3f+%(iq).0f\,\mathrm{\mu A}\cdot%(v).2f'
+             r'=%(p).3f\;\mathrm{W}'
+             % dict(q=_sh['Q.g_run'], v=_sh['V.CC_reg_max'], f=_sh['f.Max'],
+                    sh=_sh['s.drv'], iq=V['IQCC'] + V['IQBO'],
+                    p=_sh['P.drv'])))
+    add(p('per driver, against %(pm).0f&nbsp;W for the SO-14 (k = %(k).3f), '
+          'a %(dt).0f&nbsp;&deg;C rise at %(rth).0f&nbsp;&deg;C/W. f<sub>Max</sub> '
+          'is reached only at light load; the bound is deliberately high.'
+          % dict(pm=V['Pdrvmax'], k=_sh['k.Pdrv'], dt=_sh['ΔT.drv'],
+                 rth=V['Rthdrv'])))
+    add(p('<b>Timing.</b> The driver&rsquo;s delay mismatch is at most '
+          '%(mt).0f&nbsp;ns, so the dead time at the gates covers the swing '
+          'with (t<sub>D</sub> &minus; MT)/T<sub>T</sub> = %(k).3f. This '
+          'ratio falls as L<sub>r</sub> does: with C<sub>r</sub>, '
+          'L<sub>m</sub> and R<sub>T</sub> held, it reaches 1 at '
+          'L<sub>r</sub> &asymp; %(lr).1f&nbsp;&micro;H, just above the low '
+          'end of the leakage the field solution allows (Section&nbsp;%(ref)s). '
+          'c<sub>HB</sub> is an upper bound and the controller adapts its '
+          'dead time between 40 and 420&nbsp;ns, but if the first samples '
+          'come in low, t<sub>D</sub> is the first thing to raise. The '
+          'MOSFET&rsquo;s own turn-off and turn-on delays (%(toff).0f and '
+          '%(ton).0f&nbsp;ns) are quoted for hard switching at 28&nbsp;A and do '
+          'not apply under ZVS; measure the gate-to-midpoint timing.'
+          % dict(mt=V['MT'], k=_sh['k.TTd'], lr=_ttd_lr_edge(V, A),
+                 toff=109, ton=38, ref=SR('Choosing the core'))))
+    add(p('<b>Slope.</b> The driver&rsquo;s OUT may slew at most '
+          '%(dm).0f&nbsp;V/ns. Near the top of the swing C<sub>oss</sub> is '
+          'only %(c4).0f&nbsp;pF, so the commutation current '
+          'I<sub>Lm,pk</sub> = %(il).2f&nbsp;A gives the slope'
+          % dict(dm=V['dvmax'], c4=V['Coss400'], il=_sh['I.Lm_pk'])))
+    add(calc(r'S_{mid}=\frac{%(il).2f\,\mathrm{A}}{2\cdot%(c4).0f'
+             r'+%(cp).0f\,\mathrm{pF}}=%(dv).1f\;\mathrm{V/ns}'
+             % dict(il=_sh['I.Lm_pk'], c4=V['Coss400'], cp=V['Cpar'],
+                    dv=_sh['dv.dt'])))
+    add(p('(k = %(k).3f). Above resonance the switched current can exceed '
+          'I<sub>Lm,pk</sub>; a small capacitor across each switch is the '
+          'remedy if the measurement asks for it, paid for in T<sub>T</sub>.'
+          % dict(k=_sh['k.dvdt'])))
+
+    add(h2('Synchronous rectification: TEA2095TE'))
+    add(p('One NXP TEA2095TE drives both centre-tap legs, each leg %(nSR).0f '
+          'MOSFETs in parallel [TEA]. It needs no design here beyond its '
+          'connection and its limits; its gate drive, regulation and timing '
+          'are its own.' % V))
+    add(tbl('TEA2095TE connections (HSO8).',
+            [['Pin', 'Name', 'Connection'],
+             ['1, 8', 'GDB, GDA', 'gates of the leg B and leg A pairs'],
+             ['2', 'GND', 'secondary ground at the SR sources'],
+             ['3, 6', 'DSB, DSA', 'drain sense, a separate trace to the '
+              'drains of each pair'],
+             ['4, 5', 'SSB, SSA', 'source sense, a separate trace to the '
+              'sources of each pair, never along the power ground'],
+             ['7', 'VCC', 'the output, with its own decoupling capacitor at '
+              'the pin']],
+            widths=[CW * 0.12, CW * 0.18, CW * 0.70], key='tea2095pins'))
+    add(p('It is fed from the output, which reaches %(o2).2f&nbsp;V before '
+          'OVP2 stops the converter, against a %(m).0f&nbsp;V maximum '
+          '(k = %(k1).3f). Its drain-sense inputs take %(ds).0f&nbsp;V, above '
+          'the %(vr).0f&nbsp;V asked of the SR MOSFETs (k = %(k2).2f). Its '
+          'gate drive is limited to between %(vg).1f and 11.2&nbsp;V once its '
+          'supply is 12&nbsp;V or more, which clears the 10&nbsp;V at which '
+          'the SR R<sub>DS(on)</sub> is quoted (k = %(k3).3f). Below %(st).2f&nbsp;V '
+          'of output it is off and the body diodes rectify.'
+          % dict(o2=_sh['V.OVP2_act'], m=V['SRcc'], k1=_sh['k.SRVCC'],
+                 ds=V['DSsense'], vr=V['VDSs'], k2=_sh['k.DSsense'],
+                 vg=V['VGSR'], k3=_sh['k.VGSR'], st=V['SRstart'])))
+    add(p('Two of its features meet this design. Each gate pin drives two '
+          'MOSFETs, twice the charge of one, while the datasheet '
+          'characterises the driver into 10&nbsp;nF; check the turn-on and '
+          'turn-off times on the prototype. And after 1.4&nbsp;s (at least '
+          '1.1&nbsp;s) without rectifier activity it discharges the output '
+          'at a constant 0.4&nbsp;W: after a mains disconnect the '
+          '%(co).1f&nbsp;mF bank, %(e).1f&nbsp;J at %(vo).0f&nbsp;V, is '
+          'emptied in about %(t).0f&nbsp;s, but a deep-burst pause longer '
+          'than 1.1&nbsp;s at no load would trip it too and add 0.4&nbsp;W to '
+          'standby. Measure the longest burst-off time at no load.'
+          % dict(V, co=V['Cout'], e=0.5 * V['Cout'] * 1e-3 * V['Vout'] ** 2,
+                 vo=V['Vout'],
+                 t=0.5 * V['Cout'] * 1e-3 * V['Vout'] ** 2 / 0.4)))
+    add(note('The SR MOSFET datasheet is not part of this revision: '
+             'R<sub>DS(on)</sub> = %(Rds).1f&nbsp;m&Omega; and k<sub>T</sub> = '
+             '%(Rdsk).1f are carried from the earlier selection, and its gate '
+             'charge, the controller&rsquo;s load, is not in this note.' % V))
+
     add(h2('The voltage loop, as built'))
     from math import atan, degrees, sqrt, pi
     _at = lambda w, w0: degrees(atan(w / w0))
@@ -4386,15 +4750,20 @@ def build(A):
     add(p('The bottom of the band clears V<sub>CC,HVSUon</sub> = '
           '%(hv).0f&nbsp;V by %(k1).3f; the top stays under '
           'the %(mx).0f&nbsp;V operating limit by %(k2).3f. The load is the '
-          'controller, %(ICC).0f&nbsp;mA, and %(Nsw).0f switch positions at '
-          'the gate charge of the candidate MOSFET, %(Qg).1f&nbsp;nC typical, '
-          'bounded at f<sub>Max</sub> (Equation&nbsp;%(e)s):'
+          'controller, %(ICC).0f&nbsp;mA, the two drivers, %(iq).2f&nbsp;mA, '
+          'and %(Nsw).0f switch positions at Q<sub>g,run</sub> = '
+          '%(qr).1f&nbsp;nC (Section&nbsp;%(s)s), bounded at f<sub>Max</sub> '
+          '(Equation&nbsp;%(e)s):'
           % dict(V, hv=V['VCCHV'], mx=V['VCCmax'], k1=A.SH['k.VCClo'],
-                 k2=A.SH['k.VCC'], e=ER('ivcc'))))
-    add(calc(r'I_{VCC}=%(ICC).0f\,\mathrm{mA}+%(Nsw).0f\cdot%(Qg).1f'
+                 k2=A.SH['k.VCC'], e=ER('ivcc'), iq=A.SH['I.drv_q'],
+                 qr=A.SH['Q.g_run'],
+                 s=SR('The primary switches: STO60N045DM9'))))
+    add(calc(r'I_{VCC}=%(ICC).0f\,\mathrm{mA}+%(iq).2f\,\mathrm{mA}'
+             r'+%(Nsw).0f\cdot%(qr).1f'
              r'\,\mathrm{nC}\cdot%(fk).1f\,\mathrm{kHz}'
              r'=%(I).1f\;\mathrm{mA}'
-             % dict(V, fk=A.SH['f.Max'], I=A.SH['I.VCC'])))
+             % dict(V, fk=A.SH['f.Max'], I=A.SH['I.VCC'],
+                    iq=A.SH['I.drv_q'], qr=A.SH['Q.g_run'])))
     add(p('The feed resistor comes from Equation&nbsp;%(e)s at the end of '
           'hold-up, with &beta;<sub>min</sub> = %(b).0f and '
           'I<sub>Z,min</sub> = %(iz).0f&nbsp;mA set as requirements on the '
@@ -4415,27 +4784,50 @@ def build(A):
           'gives.' % dict(c1=A.SH['V.Caux_OVP1'], pz=A.SH['P.DZ'],
                           pq=A.SH['P.Qpass'], c2=A.SH['V.Caux_OVP2'],
                           pn=A.SH['P.Qpass_nom'])))
-    add(p('<b>Start-up.</b> In full bridge at the start-up frequency the '
-          'drivers take'))
-    add(calc(r'I_{VCC,SU}=%(ICC).0f\,\mathrm{mA}+%(Nsw).0f\cdot%(Qg).1f'
+    add(p('<b>Start-up.</b> In full bridge the oscillator runs at '
+          'f<sub>SU</sub> = %(fs).1f&nbsp;kHz for its first %(to).0f&nbsp;ms '
+          'only and then stays under f<sub>Max</sub>. With the gate charge '
+          'at V<sub>CCon</sub> the drivers take, and lose B per volt as '
+          'C<sub>VCC</sub> runs down,'
+          % dict(fs=A.SH['f.SU'], to=V['TOSC'])))
+    add(calc(r'I_{VCC,SU}=%(ICC).0f+%(iq).2f+%(Nsw).0f\cdot%(qs).1f'
              r'\,\mathrm{nC}\cdot%(fk).1f\,\mathrm{kHz}'
              r'=%(I).1f\;\mathrm{mA}'
-             % dict(V, fk=A.SH['f.SU'], I=A.SH['I.VCC_SU'])))
-    add(p('and the winding can hold the pin at V<sub>CCoff</sub> once the '
-          'output reaches (V<sub>CCoff</sub> + 3V<sub>D</sub> + '
+             % dict(V, fk=A.SH['f.Max'], I=A.SH['I.VCC_SU'],
+                    iq=A.SH['I.drv_q'], qs=A.SH['Q.g_SU'])))
+    add(calc(r'B=%(Nsw).0f\cdot%(cg).1f\,\mathrm{nF}\cdot%(fk).1f'
+             r'\,\mathrm{kHz}=%(b).2f\;\mathrm{mA/V}'
+             % dict(V, fk=A.SH['f.Max'], cg=A.SH['C.g_hi'], b=A.SH['B.SU'])))
+    add(p('so %(ih).1f&nbsp;mA at V<sub>CC,HVSUon</sub> and %(if).1f&nbsp;mA '
+          'at the floor V<sub>CC,floor</sub> = %(fl).2f&nbsp;V, which the '
+          'high-side driver supply sets (Section&nbsp;%(s)s). The first '
+          'millisecond at f<sub>SU</sub> costs &Delta;Q<sub>OSC</sub> = '
+          '%(to).0f&nbsp;ms &middot; %(Nsw).0f &middot; %(qs).1f&nbsp;nC '
+          '&middot; (%(fs).1f &minus; %(fk).1f)&nbsp;kHz = %(dq).1f&nbsp;'
+          '&micro;C. The winding holds the pin at the floor once the output '
+          'reaches (V<sub>CC,floor</sub> + 3V<sub>D</sub> + '
           'I<sub>VCC,SU</sub>R<sub>BZ</sub>/&beta;<sub>min</sub>)/'
           'n<sub>aux</sub> = %(uv).2f&nbsp;V. Equation&nbsp;%(e)s then gives'
-          % dict(uv=A.SH['V.out_UV'], e=ER('cvcc'))))
+          % dict(V, ih=A.SH['I.VCC_hv'], fl=A.SH['V.CC_floor'],
+                 to=V['TOSC'], qs=A.SH['Q.g_SU'], fs=A.SH['f.SU'],
+                 fk=A.SH['f.Max'], dq=A.SH['ΔQ.OSC'],
+                 uv=A.SH['V.out_UV'], e=ER('cvcc'),
+                 s=SR('The gate drivers: two L6498LD'),
+                 **{'if': A.SH['I.VCC_fl']})))
     add(calc(r't_{hand}=\frac{%(co).1f\cdot%(uv).2f}{%(Iout).1f}'
              r'=%(th).1f\;\mathrm{ms}'
              % dict(V, co=A.SH['C.out'], uv=A.SH['V.out_UV'],
                     th=A.SH['t.hand'])))
-    add(calc(r'C_{VCC}\geq\frac{%(th).1f}{\dfrac{%(VCCon).0f-%(VCCHV).0f}'
-             r'{%(I).1f}+\dfrac{%(VCCHV).0f-%(VCCoff).0f}{%(I).1f-%(IHVlo).0f}}'
+    add(calc(r'C_{VCC}\geq\frac{%(b).2f\cdot(%(th).1f+%(dq).1f/%(I).1f)}'
+             r'{\ln\dfrac{%(I).1f}{%(ih).1f}'
+             r'+\ln\dfrac{%(ih).1f-%(IHVlo).0f}{%(if).1f-%(IHVlo).0f}}'
              r'=%(cr).0f\;\mathrm{\mu F}\;\rightarrow\;%(CVCC).0f\;'
              r'\mathrm{\mu F}'
              % dict(V, th=A.SH['t.hand'], I=A.SH['I.VCC_SU'],
-                    cr=A.SH['C.VCC_req'])))
+                    b=A.SH['B.SU'], dq=A.SH['ΔQ.OSC'], ih=A.SH['I.VCC_hv'],
+                    cr=A.SH['C.VCC_req'], **{'if': A.SH['I.VCC_fl']})))
+    add(note('Units: mA/V times ms, over a pure number, is &micro;F; '
+             '&micro;C over mA is ms.'))
     add(p('The hand-over falls well inside the %(t).0f&nbsp;ms the start-up '
           'unit stays available. The price is the delay before the first '
           'pulse, %(d).2f&nbsp;s at 230&nbsp;Vac, during which the start-up '
@@ -4461,17 +4853,20 @@ def build(A):
              ['CFG, BM', 'No capacitor. Both are strapped at power-up. An '
               'out-of-range CFG resistor latches the controller off.'],
              ['DRV_EN, RT', 'No capacitor. Both are sampled briefly every few '
-              'milliseconds and a capacitor is read as a fault.'],
+              'milliseconds and a capacitor is read as a fault. DRV_EN stays '
+              'open here: the L6498 has no enable input.'],
              ['LOUT2', 'No pull-down if morphing is used. A few kilohms to '
-              'ground reads as a fixed half bridge.'],
+              'ground reads as a fixed half bridge; the driver input&rsquo;s '
+              'own %(r).0f&nbsp;k&Omega; is far enough above that.' % dict(r=V['RPD'])],
              ['HVSU', 'Connect ahead of the input bridge, on the ac side. '
               'Behind the bridge, both X-capacitor discharge and brown-out '
               'detection stop working.'],
              ['ZCD', 'Auxiliary winding polarity must make ZCD positive when '
               'the low side of leg 1 is on. Reversed, the bridge hard '
               'switches.'],
-             ['HOUTx, LOUTx', 'Logic-level outputs, not gate drivers. '
-              'External half-bridge drivers are required.']],
+             ['HOUTx, LOUTx', 'Logic-level outputs, not gate drivers: each '
+              'pair drives one L6498LD (Section&nbsp;%s).'
+              % SR('The gate drivers: two L6498LD')]],
             widths=[CW * 0.16, CW * 0.84], split=True))
 
     add(h2('Protections, and where each threshold is set'))
@@ -4595,6 +4990,12 @@ def build(A):
         'at no load, at full load and through a cold start: whether the '
         'winding follows the output, and when it takes over from '
         'C<sub>VCC</sub>.',
+        '<b>Gate and midpoint timing</b> at both legs: the dead time left at '
+        'the gates, V<sub>BO</sub> through a cold start (it must stay above '
+        '%(VBOrec).1f&nbsp;V), and the midpoint dv/dt against %(dvmax).0f&nbsp;V/ns.'
+        % V,
+        '<b>The SR gate waveforms</b> with two MOSFETs per gate pin, and the '
+        'longest burst-off time at no load.',
         '<b>The transformer&rsquo;s working voltage and an electric-strength '
         'test</b> on the first samples, before they go to the certifying '
         'body.']))
@@ -4742,8 +5143,19 @@ def build(A):
         ('V<sub>CC,HVSUon</sub>', 'the V<sub>CC</sub> level below which the start-up unit turns its charge current on'),
         ('V<sub>DZ</sub>, V<sub>DZ,max</sub>, V<sub>BE</sub>, V<sub>D</sub>', 'regulator Zener voltage and its top of tolerance, the pass transistor base-emitter drop, and a silicon diode forward drop'),
         ('R<sub>BZ</sub>, R<sub>BZ,max</sub>, &beta;<sub>min</sub>, I<sub>Z,min</sub>', 'Zener feed resistor and the largest that still regulates, the least current gain of the pass transistor, and the least Zener bias'),
-        ('I<sub>VCC</sub>, I<sub>VCC,SU</sub>, I<sub>CC</sub>', 'current the V<sub>CC</sub> rail supplies in run and at the start-up frequency, and the controller&rsquo;s own share'),
-        ('N<sub>sw</sub>, Q<sub>g</sub>', 'switch positions driven, and the gate charge of one primary MOSFET'),
+        ('I<sub>VCC</sub>, I<sub>VCC,SU</sub>, I<sub>CC</sub>, I<sub>drv,q</sub>', 'current the V<sub>CC</sub> rail supplies in run and at the start of switching, the controller&rsquo;s own share, and the quiescent current of the gate drivers'),
+        ('N<sub>sw</sub>, Q<sub>g</sub>, Q<sub>g,10</sub>, C<sub>g</sub>', 'switch positions driven; the gate charge of one primary MOSFET at the drive voltage, at 10&nbsp;V, and the slope of its curve past the Miller plateau'),
+        ('B, &Delta;Q<sub>OSC</sub>, V<sub>CC,floor</sub>, I<sub>VCC</sub>(V)', 'drive current lost per volt of V<sub>CC</sub>; extra charge of the start-up oscillator interval; the lowest V<sub>CC</sub> the controller and drivers are specified at; the supply current at rail voltage V'),
+        ('C<sub>BOOT</sub>, V<sub>BO</sub>, &Delta;V<sub>boot</sub>, V<sub>drop</sub>, R<sub>BS</sub>', 'bootstrap capacitor, the high-side driver supply and its per-cycle ripple, the drop across an integrated bootstrap switch of resistance R<sub>BS</sub>'),
+        ('T<sub>charge</sub>, T<sub>on,max</sub>, I<sub>QCC</sub>, I<sub>QBO</sub>', 'low-side on-time that recharges the bootstrap, the longest high-side on-time, and the quiescent currents of the low and floating driver sections'),
+        ('R<sub>G</sub>, R<sub>g,int</sub>, R<sub>so</sub>, R<sub>si</sub>, s<sub>drv</sub>, P<sub>drv</sub>', 'external and internal gate resistance, driver source and sink resistance, the driver&rsquo;s share of the gate power, and its dissipation'),
+        ('MT', 'delay mismatch of the gate driver between its channels'),
+        ('Q<sub>g,run</sub>, Q<sub>g,SU</sub>', 'the gate charge at the highest regulated V<sub>CC</sub>, and at V<sub>CCon</sub> where start-up begins'),
+        ('V<sub>BO,min</sub>, V<sub>CC,drv,min</sub>, P<sub>drv,max</sub>, R<sub>drv</sub>', 'the lowest recommended floating and low-side driver supplies, the dissipation the driver package allows, and its output resistance'),
+        ('S<sub>mid</sub>, S<sub>OUT,max</sub>', 'slope of the bridge midpoint during the swing, and the slew rate the driver&rsquo;s OUT pin allows'),
+        ('c<sub>HB</sub>, Q<sub>ZVS2</sub>', 'the capacitance the bridge midpoint swings, two devices and the layout; the dead-time limit on the quality factor it sets'),
+        ('V<sub>GS</sub>, V<sub>DD</sub>, V<sub>G,SR</sub>', 'gate-source voltage; the drain supply of a datasheet test circuit; the gate drive of the SR controller'),
+        ('k<sub>LOUT2</sub>', 'how far the driver input pull-down keeps LOUT2 above the level that reads as a fixed half bridge'),
         ('I<sub>HVSU</sub>, t<sub>hand</sub>, V<sub>out,UV</sub>', 'start-up unit charge current; time from the first pulse until the auxiliary winding holds V<sub>CC</sub>, and the output voltage at which it does'),
 
         ('<b>The voltage loop</b>', ''),
@@ -4826,8 +5238,14 @@ def build(A):
         '(foreword and scope).',
         '[TIW] Furukawa Electric, <i>TEX-E triple-insulated wire, safety '
         'approvals</i>.',
-        'DiscoverEE, STO60N045DM9 parameter listing (gate charge of the '
-        'candidate primary MOSFET; confirm on the ST datasheet).']))
+        '[STO] STMicroelectronics, <i>STO60N045DM9, N-channel 600 V, '
+        '35 m&Omega; typ., 56 A MDmesh DM9 Power MOSFET in a TO-LL '
+        'package</i>, DS14711 Rev&nbsp;4, June 2026.',
+        '[L6498] STMicroelectronics, <i>L6498, high voltage high and '
+        'low-side 2 A gate driver</i>, DocID030318 Rev&nbsp;3, September 2017.',
+        '[TEA] NXP Semiconductors, <i>TEA2095TE, GreenChip dual synchronous '
+        'rectifier controller</i>, product data sheet Rev.&nbsp;1.3, '
+        '20&nbsp;October 2025.']))
 
     # =============================================================== 10
     add(h1('Errata and open items'))
@@ -4958,7 +5376,12 @@ def build(A):
                kv=__import__('math').tan(__import__('math').radians(45 + _PMT / 2))),
         'The <b>16.8 &Omega;&middot;W</b> maximum-power constant follows '
         'from the feedback span and the multiplier gain (2.8&nbsp;V / 0.167); '
-        'it is listed because those gains are draft values.']))
+        'it is listed because those gains are draft values.',
+        'The <b>gate driver output resistance</b>, taken as 15&nbsp;V over the '
+        'short-circuit current at the full-temperature minimum. The L6498 '
+        'datasheet gives no output resistance; a real output is not a '
+        'resistor, and this choice puts the larger share of the gate power '
+        'in the driver.']))
 
     add(h2('Open items in this design'))
     ext(tbl('What is not settled, and what would settle it.',
@@ -4969,8 +5392,12 @@ def build(A):
               '%(kPloss).3f against the budget &mdash; <b>not met, and '
               'accepted</b>' % V,
               'No single 600 V device meets a %.0f W budget in the standing '
-              'position. Whether it needs a heatsink is a thermal '
-              'measurement, not a calculation' % _kb],
+              'position. On board copper alone it would rise %.0f&nbsp;&deg;C, '
+              'so it needs a heatsink of %.1f&nbsp;&deg;C/W or better from '
+              'case to ambient at %.0f&nbsp;&deg;C (Section&nbsp;%s); the '
+              'rest is a thermal measurement'
+              % (_kb, A.SH['ΔT.pcb'], A.SH['R.thCA_max'], V['Tamb'],
+                 SR('The primary switches: STO60N045DM9'))],
              ['Secondary loss budget',
               '%(kPSR).3f &mdash; essentially exhausted' % V,
               'One more device in parallel per leg recovers it; the decision '
@@ -5004,10 +5431,32 @@ def build(A):
               'Optimistic. Taking 95 %% instead moves R<sub>CS</sub> and '
               'R<sub>ac</sub> by about %.0f %%, so nothing downstream is '
               'sensitive &mdash; but it should be replaced by a measurement' % (100 * (V['etaHB'] / 95.0 - 1))],
-             ['Gate charge Q<sub>g</sub>',
-              '%(Qg).1f nC typical, from a parameter listing' % V,
-              'Read it from the datasheet of the part fitted; I<sub>VCC</sub>, '
-              'R<sub>BZ</sub> and C<sub>VCC</sub> scale with it'],
+             ['SR MOSFET datasheet',
+              'not part of this revision; %(Rds).1f m&Omega; and k<sub>T</sub> '
+              '%(Rdsk).1f carried over' % V,
+              'Fit its datasheet; its gate charge loads the TEA2095TE and the '
+              'output, and two per gate pin set the SR switching times'],
+             ['Bootstrap diode',
+              'V<sub>F</sub> = %(VFbs).1f V assumed, part not chosen' % V,
+              'Choose a fast diode rated like the primary switches and put its '
+              'V<sub>F</sub> at the charging current into the sheet; '
+              'V<sub>CC,floor</sub> and C<sub>VCC</sub> follow'],
+             ['Dead time at the gates',
+              '(t<sub>D</sub> &minus; MT)/T<sub>T</sub> = %.3f; 1 at '
+              'L<sub>r</sub> &asymp; %.1f &micro;H'
+              % (A.SH['k.TTd'], _ttd_lr_edge(V, A)),
+              'Measure L<sub>r</sub> on the first samples and the '
+              'gate-to-midpoint timing on the prototype; raise t<sub>D</sub> '
+              'if L<sub>r</sub> comes in low'],
+             ['Midpoint slope above resonance',
+              '%.1f V/ns at I<sub>Lm,pk</sub>; the switched current can be '
+              'higher' % A.SH['dv.dt'],
+              'Measure dv/dt at the OUT pins against the driver&rsquo;s '
+              '%(dvmax).0f V/ns' % V],
+             ['SR discharge function and burst',
+              'trips after 1.1 to 1.7 s without rectifier activity',
+              'Measure the longest burst-off time at no load; a longer pause '
+              'adds 0.4 W to standby'],
              ['Start-up hand-over',
               't<sub>hand</sub> %.1f ms assumes no load until the rail is up'
               % A.SH['t.hand'],
@@ -5123,9 +5572,46 @@ def _thinnest_text(V, A):
             ('the secondary loss per rectifier leg', V['kPSR']),
             ('V<sub>CC</sub> above the start-up threshold', A.SH['k.VCClo']),
             ('the Zener feed', A.SH['k.RBZ']),
-            ('C<sub>VCC</sub> at the start-up hand-over', A.SH['k.CVCC'])]
+            ('C<sub>VCC</sub> at the start-up hand-over', A.SH['k.CVCC']),
+            ('the high-side driver supply', A.SH['k.VBO']),
+            ('the dead time at the gates', A.SH['k.TTd']),
+            ('the midpoint slope', A.SH['k.dvdt']),
+            ('the gate driver dissipation', A.SH['k.Pdrv']),
+            ('the SR gate drive', A.SH['k.VGSR'])]
     name, k = min(((n, k) for n, k in rows if k > 1.0), key=lambda r: r[1])
     return 'The thinnest margin that passes is %s, k = %.3f.' % (name, k)
+
+
+def _ttd_lr_edge(V, A):
+    """L_r (uH) at which (t_D - MT)/T_T falls to 1, C_r, L_m and R_T held.
+
+    T_T = c_HB sqrt(2) V_eq,min / I_R0 and I_R0 = I_R1,pk sin(ph) at the
+    line peak of the HB corner (sheet 8.3, [41]); l6790 gives the phase.
+    The effective turns ratio follows L_r, n = n_T / sqrt(1 + L_r/L_m).
+    Checked against the sheet at the design L_r before it is used.
+    """
+    import inspect
+    from math import sqrt, pi, tan
+    import l6790
+    keys = inspect.signature(l6790.design).parameters
+    base = {k: A.R[k] for k in keys if k in A.R}
+    base.update(l6790.PRI_FET)
+
+    def k_ttd(lr):
+        kw = dict(base, Lr_sel=lr * 1e-6,
+                  n_sel=V['nT'] / sqrt(1 + lr / V['Lm']))
+        R = l6790.design(**kw)
+        r = l6790.sweep(R, R['Vin_min'])[0][-1]           # theta = pi/2
+        ph = l6790.phase(r['fn'], r['Q'], R['lam_a'])
+        ir0 = 2 * pi * R['Pout'] / (sqrt(2) * R['eta_HB'] * R['Vin_min']) * tan(ph)
+        tt = R['c_HB'] * sqrt(2) * R['Vin_min'] / ir0
+        return (V['tD'] - V['MT']) * 1e-9 / tt
+    assert abs(k_ttd(V['Lr']) / A.SH['k.TTd'] - 1) < 0.005, k_ttd(V['Lr'])
+    lo, hi = 0.5 * V['Lr'], V['Lr']
+    for _ in range(40):
+        mid = 0.5 * (lo + hi)
+        lo, hi = (mid, hi) if k_ttd(mid) < 1 else (lo, mid)
+    return 0.5 * (lo + hi)
 
 
 def _f_idle(V, tidle_ns):
