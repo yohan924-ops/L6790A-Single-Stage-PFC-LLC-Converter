@@ -2,7 +2,7 @@
 
 > **정본은 이 설계 하나다(2026-10-01 사용자: "PQ50을 정본으로 유지하고 옛날 것들은 지워. Variant 안에 PQ50용만").** 예전 루트 설계(E 60/22/16 · L_r 11 µH, 코어 3개 7.5:1 · 6:1 · 8:1 변형)와 `Lr14/`(ETD 54) 복사본은 지웠다 — 지우기 직전 상태는 이 브랜치의 커밋 **`0821491`** 에 있다(`git checkout 0821491` — 태그로 남기려 했으나 이 환경은 브랜치 밖으로 push 할 수 없다).
 >
-> 누설의 기준은 **`leakage_fem.py`(2D FEM, `fem2d.py` 풀이기 · scipy 필요)** 이고, `leakage.py`(1D 해석식)는 PQ 에서 반쪽 순서를 거꾸로 내므로 기준이 아니다. **한국어판 AN PDF 는 없다** — `an_kr_body.py` 는 옛 판 그대로이고, 영문판을 사용자가 확인한 뒤에 이식한다.
+> 누설의 기준은 **`leakage_fem.py`(2D FEM, `fem2d.py` 풀이기 · scipy 필요)** 이고, `leakage.py`(1D 해석식)는 PQ 에서 반쪽 순서를 거꾸로 내므로 기준이 아니다. **한국어판 AN 은 영문판 V1.3(최종 검토 2회 뒤)을 이식했다(80차)** — 영문판을 고치면 `an_kr_body.py` 도 같은 절을 고친다.
 
 ST **L6790A** 로 **단일단(Single-Stage) PF LLC** 를 설계한다. 90–264 Vac → **25 V / 26.3 A = 657.5 W**.
 2단(Boost PFC + LLC)의 400 V 벌크 커패시터와 승압단을 없애고, 그 대가로 출력에 **75 mF 뱅크**가 붙는다.
@@ -57,7 +57,7 @@ f_r 75.0 kHz · f_o 44.8 kHz · B_pk 125.5 mT(A_e 332) · A_L 311 nH · n 6.013(
 | `Calculation Excel Sheet/L6790_spreadsheet_r1_0_corrected_rev0_6.xlsx` | ST 툴 수정본, 7.5:1(`variants/L6790_workbook_7p5to1_x1.xlsx` 와 같은 파일). `CHANGELOG_rev0_6` 에 변경 이력. **`Res. Tank Design` F43 · F44 · F45 · F9 와 `Device Setting` F24 를 180 · 25 · 45 · 6.0134 · 21.5 로(`pq50_xl.py`) — 의존 수식의 캐시는 Excel 에서 한 번 열었다 저장해야 맞는다** | rev 0.6 + PQ 50/50 탱크 |
 | `Calculation Excel Sheet/Uncryped_04092026_LGE_670W_L6790A_spread sheet.xlsx` | ST 원본(디크립트본, openpyxl 로 열림). 원본 `sheetN` ↔ 우리 `sheetN+1` | 읽기 전용 |
 | `Calculation Excel Sheet/variants/` | 워크북 `L6790_workbook_7p5to1_x1.xlsx`(정본 워크북과 같은 파일) · 벤더 사양서 `Transformer_Spec_7p5to1_x1.xlsx` | PQ 50/50 만 |
-| `Design Guide/AN_L6790A_SingleStage_PFC_LLC_ApplicationNote_v1.3.pdf` | **배포용 AN** 영문 111쪽, 7장 예제 트랜스포머는 PQ 50/50 · 목차 링크·북마크. `an_pdf.py`+`an_body.py`, 수치 전부 `l6790.py`·시트·`cores.py`·`leakage_fem.py`. **한국어판 PDF 는 없다**(`an_kr_body.py` 는 옛 판 그대로, 영문 확인 뒤 이식) | v1.3 · 최종 검토 2회(76·77차) |
+| `Design Guide/AN_L6790A_SingleStage_PFC_LLC_ApplicationNote_v1.3.pdf` | **배포용 AN** 영문 111쪽, 7장 예제 트랜스포머는 PQ 50/50 · 목차 링크·북마크. `an_pdf.py`+`an_body.py`, 수치 전부 `l6790.py`·시트·`cores.py`·`leakage_fem.py`. **한국어판** `…_KR_v1.3.pdf` 111쪽(`an_kr_pdf.py`+`an_kr_body.py`, 영문판과 그림·표·식 호출 285개가 같은 순서) | v1.3 · 최종 검토 2회(76·77차) · 한국어판 80차 |
 | `Design Guide/AN_L6790A_Design_Guide_rev2_1.md` | 한국어 본체 문서(7.5:1). **시트의 식 번호 [n] 의 출처** — `audit_sm` · `audit_guide` 가 읽는다. 9:1 판 rev 2.0 은 2026-09-23 삭제 | rev 2.0/2.1 |
 | `Design Guide/figures/` | **`an/`** = AN 이 읽는 그림(`figs.py --plain` 이 쓴다). 루트에는 쓰이는 것만: 한국어 본체 문서(`…rev2_1.md`) 그림 19장 · SMath 시트 그림 3장(`comp_network_st` · `bom_*`) · `figedit.py` 원본 4장(`*_raw`). `figs.py` 를 `--plain` 없이 돌리면 제목 붙은 사본이 루트에 다시 생긴다 — 커밋하지 않는다 | 2026-10-01 정리 |
 | `Design Guide/generators/` | 도구 체인 전부 — README 참조 | |
