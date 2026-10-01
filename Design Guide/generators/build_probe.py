@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Builds  Smath/L6790A_probe.sm  -  a 2-page diagnostic sheet.
+"""Builds  Smath/tools/L6790A_probe.sm  -  a 2-page diagnostic sheet.
 
 If the full design guide sheet refuses to open or shows red regions, open this
 one instead: each numbered probe uses exactly ONE construct, so the first probe
@@ -40,7 +40,7 @@ def TAN(x):
     return "sin(%s)/cos(%s)" % (x, x)
 
 
-OUT = os.path.normpath(os.path.join(HERE, '..', '..', 'Smath', 'L6790A_probe.sm'))
+OUT = os.path.normpath(os.path.join(HERE, '..', '..', 'Smath', 'tools', 'L6790A_probe.sm'))
 S = Sheet('L6790A probe', 'L6790A project', 'construct-by-construct diagnostic')
 
 S.h1('L6790A worksheet probes  -  the first red region names the cause')

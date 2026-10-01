@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Builds  Smath/L6790A_gainzed.sm  -  LLC gain curves in a ZedGraph pane.
+"""Builds  Smath/tools/L6790A_gainzed.sm  -  LLC gain curves in a ZedGraph pane.
 
 Everything here comes from two places and nothing from guesswork: the
 ZedGraph 5.1 source in Reference/Smath Bode Plot Example/Zedgraph, and the
@@ -64,7 +64,7 @@ from smsheet import Sheet                                          # noqa: E402
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 REF = os.path.join(ROOT, 'Reference', 'Smath Bode Plot Example',
                    'SMPS_Input_Filter_Design_TI_APP_Note.sm')
-OUT = os.path.join(ROOT, 'Smath', 'L6790A_gainzed.sm')
+OUT = os.path.join(ROOT, 'Smath', 'tools', 'L6790A_gainzed.sm')
 
 ZED_ASM = ('      <assembly name="ZedGraph Region (ZedGraph)" '
            'version="0.1.7806.5613" '

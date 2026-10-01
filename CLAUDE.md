@@ -52,13 +52,14 @@ f_r 75.0 kHz · f_o 44.8 kHz · B_pk 125.5 mT(A_e 332) · A_L 311 nH · n 6.013(
 | :--- | :--- | :--- |
 | `Smath/L6790A_SingleStage_PF_LLC_Design_Guide.sm` | **정본 시트** — 19절 · 노란 입력 셀 130개 · ZedGraph 판 7장 · A3 가로 47쪽 | rev 1 · F9 확인됨 — **시트 §14c(2026-09-25 신설)는 아직 F9 미확인** |
 | `Smath/variants/L6790A_7p5to1_x1.sm` | 정본과 같은 바이트. `L6790_VARIANT=7p5to1_x1` 로 `build_l6790_smath.py` 가 만든다 — AN · 벤더 사양서가 읽는다 | 검사 통과 |
-| `Smath/L6790A_probe.sm` · `L6790A_ruler.sm` | 진단 프로브 P1–P29 · 쪽 경계 자 | 큰 시트가 안 열리면 프로브부터 |
-| `Smath/L6790A_gainzed.sm` · `L6790A_gainladder.sm` · `L6790A_gainplot.sm` | 게인 곡선을 SMath 로 그릴 수 있는가 — 확인용 3종 | **아직 아무도 안 열었다** |
+| `Smath/tools/L6790A_probe.sm` · `L6790A_ruler.sm` | 진단 프로브 P1–P29 · 쪽 경계 자 | 큰 시트가 안 열리면 프로브부터 |
+| `Smath/tools/L6790A_gainzed.sm` · `L6790A_gainladder.sm` · `L6790A_gainplot.sm` | 게인 곡선을 SMath 로 그릴 수 있는가 — 확인용 3종 | **아직 아무도 안 열었다** |
 | `Calculation Excel Sheet/L6790_spreadsheet_r1_0_corrected_rev0_6.xlsx` | ST 툴 수정본, 7.5:1(`variants/L6790_workbook_7p5to1_x1.xlsx` 와 같은 파일). `CHANGELOG_rev0_6` 에 변경 이력. **`Res. Tank Design` F43 · F44 · F45 · F9 와 `Device Setting` F24 를 180 · 25 · 45 · 6.0134 · 21.5 로(`pq50_xl.py`) — 의존 수식의 캐시는 Excel 에서 한 번 열었다 저장해야 맞는다** | rev 0.6 + PQ 50/50 탱크 |
 | `Calculation Excel Sheet/Uncryped_04092026_LGE_670W_L6790A_spread sheet.xlsx` | ST 원본(디크립트본, openpyxl 로 열림). 원본 `sheetN` ↔ 우리 `sheetN+1` | 읽기 전용 |
 | `Calculation Excel Sheet/variants/` | 워크북 `L6790_workbook_7p5to1_x1.xlsx`(정본 워크북과 같은 파일) · 벤더 사양서 `Transformer_Spec_7p5to1_x1.xlsx` | PQ 50/50 만 |
 | `Design Guide/AN_L6790A_SingleStage_PFC_LLC_ApplicationNote_v1.3.pdf` | **배포용 AN** 영문 111쪽, 7장 예제 트랜스포머는 PQ 50/50 · 목차 링크·북마크. `an_pdf.py`+`an_body.py`, 수치 전부 `l6790.py`·시트·`cores.py`·`leakage_fem.py`. **한국어판 PDF 는 없다**(`an_kr_body.py` 는 옛 판 그대로, 영문 확인 뒤 이식) | v1.3 · 최종 검토 2회(76·77차) |
 | `Design Guide/AN_L6790A_Design_Guide_rev2_1.md` | 한국어 본체 문서(7.5:1). **시트의 식 번호 [n] 의 출처** — `audit_sm` · `audit_guide` 가 읽는다. 9:1 판 rev 2.0 은 2026-09-23 삭제 | rev 2.0/2.1 |
+| `Design Guide/figures/` | **`an/`** = AN 이 읽는 그림(`figs.py --plain` 이 쓴다). 루트에는 쓰이는 것만: 한국어 본체 문서(`…rev2_1.md`) 그림 19장 · SMath 시트 그림 3장(`comp_network_st` · `bom_*`) · `figedit.py` 원본 4장(`*_raw`). `figs.py` 를 `--plain` 없이 돌리면 제목 붙은 사본이 루트에 다시 생긴다 — 커밋하지 않는다 | 2026-10-01 정리 |
 | `Design Guide/generators/` | 도구 체인 전부 — README 참조 | |
 | `Design Guide/generators/data/` | TDK B65982E 보빈 데이터시트 한 쪽(databook 04/13 p. 287)과 거기서 벡터로 읽은 윤곽 `B65982E_outline.json`(`bobbin_outline.py`). **핀 번호가 적힌 뷰는 밑면도(핀 쪽)** — 핀 끝이 보이는 뷰가 정면도 위에 있다(제1각법). `cores.PIN_XY` 도 밑면도 좌표 | 입력 자료 사본 |
 | `Datasheet/` · `EVB Schematic/` · `LGE Material/` · `Reference/` | 입력 자료. DS 는 **DRAFT**(TBD · 내부 모순 있음). `Reference/Visio-LLC drawing.pdf` 가 본 설계 회로도(벡터) | 원본 |

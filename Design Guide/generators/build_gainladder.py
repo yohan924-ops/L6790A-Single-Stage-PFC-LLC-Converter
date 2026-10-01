@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Builds  Smath/L6790A_gainladder.sm  -  why does P19 draw and the gain sheet not?
+"""Builds  Smath/tools/L6790A_gainladder.sm  -  why does P19 draw and the gain sheet not?
 
 P19 of the probe sheet draws a line. The gain sheet draws nothing, at any
 of four calibrations. Both are built by the same code and their token
@@ -37,7 +37,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from smsheet import Sheet                                          # noqa: E402
 
-OUT = os.path.normpath(os.path.join(HERE, '..', '..', 'Smath',
+OUT = os.path.normpath(os.path.join(HERE, '..', '..', 'Smath', 'tools',
                                     'L6790A_gainladder.sm'))
 
 LAM = 0.55

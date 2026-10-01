@@ -77,6 +77,8 @@ ABSENT_OK = {
     # per-machine state, git-ignored: guard.py writes it only after a clean
     # pass, so on a fresh clone it does not exist yet (found 2026-10-01)
     '.guard_stamp.json', 'Design Guide/generators/.guard_stamp.json',
+    # deleted on purpose 2026-10-01 with the other unused figures/ files (79차)
+    'gain_vs_m.png',
 }
 
 problems = []

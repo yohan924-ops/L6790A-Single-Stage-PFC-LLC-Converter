@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Builds  Smath/L6790A_gainplot.sm  -  can SMath draw an LLC gain curve?
+"""Builds  Smath/tools/L6790A_gainplot.sm  -  can SMath draw an LLC gain curve?
 
 A separate, small sheet on purpose. The design guide sheet is already 31.8
 A3+ pages and this question does not belong in it until the answer is known.
@@ -36,7 +36,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from smsheet import Sheet                                          # noqa: E402
 
-OUT = os.path.normpath(os.path.join(HERE, '..', '..', 'Smath',
+OUT = os.path.normpath(os.path.join(HERE, '..', '..', 'Smath', 'tools',
                                     'L6790A_gainplot.sm'))
 
 # the 7.5:1 design point, so the curves are the ones the AN prints

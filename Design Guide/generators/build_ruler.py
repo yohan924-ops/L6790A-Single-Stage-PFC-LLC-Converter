@@ -22,7 +22,7 @@ top of the next names it to within its own height. Eight pages give seven
 independent readings, which settles the page height and whether the first
 page is offset from the rest.
 
-    python build_ruler.py          -> Smath/L6790A_ruler.sm
+    python build_ruler.py          -> Smath/tools/L6790A_ruler.sm
 """
 import io
 import os
@@ -34,7 +34,7 @@ HEIGHT = 20
 PAGES = 8
 
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                   '..', '..', 'Smath', 'L6790A_ruler.sm')
+                   '..', '..', 'Smath', 'tools', 'L6790A_ruler.sm')
 
 S = SM.Sheet('L6790A page-break ruler', author='', desc='')
 
