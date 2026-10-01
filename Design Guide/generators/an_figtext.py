@@ -142,6 +142,10 @@ def fig_symbols(texts):
         s = t.replace('$', '')
         for m in _SUB.finditer(t):
             base, sub = m.group(1), m.group(2).strip('{}')
+            #  outside mathtext matplotlib draws '_' as itself: an upper-case
+            #  pin name such as DRV_EN is a name, not a subscript
+            if '$' not in t and base.isupper() and len(base) > 1:
+                continue
             if base.startswith('\\') and base[1:] in SY.NOTSYM:
                 continue
             #  a subscripted WORD is a label, not a symbol ('rms_x')

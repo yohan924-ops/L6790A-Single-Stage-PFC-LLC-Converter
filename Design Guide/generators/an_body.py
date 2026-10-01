@@ -4048,7 +4048,16 @@ def build(A):
     add(h2('The gate drivers: two L6498LD'))
     add(p('The L6790A drives no gate. Each leg gets one L6498LD, the SO-14 '
           'version of the ST L6498 high-voltage half-bridge gate driver '
-          '[L6498], fed from the regulated V<sub>CC</sub>.'))
+          '[L6498], fed from the regulated V<sub>CC</sub> '
+          '(Figure&nbsp;%s).' % FR('an_gate_drive')))
+    add(fig('an_gate_drive',
+            'One leg as built. Pin numbers are the L6790A&rsquo;s, as ST&rsquo;s '
+            'EVL6790_670W control board numbers them, and the L6498LD&rsquo;s '
+            'in SO-14. Leg 2 (S3, S4) is the same circuit on HOUT2 and LOUT2. '
+            'The bridge return is the controller ground: R<sub>CS</sub> sits '
+            'between it and the input rectifier&rsquo;s negative, where ISEN '
+            'reads it (L6790A datasheet, block diagram). D<sub>BS</sub> is the '
+            'external bootstrap diode.'))
     add(tbl('L6498LD connections, one per leg (x = 1, 2).',
             [['Pin', 'Name', 'Connection'],
              ['1', 'HIN', 'HOUTx of the L6790A'],
@@ -4188,12 +4197,31 @@ def build(A):
           'I<sub>Lm,pk</sub>; a small capacitor across each switch is the '
           'remedy if the measurement asks for it, paid for in T<sub>T</sub>.'
           % dict(k=_sh['k.dvdt'])))
+    add(note('<b>What ST&rsquo;s EVL6790_670W does differently.</b> Three '
+             'things on its schematics are worth copying where they apply. '
+             'It switches the drivers&rsquo; supply from DRV_EN through a '
+             'P-MOSFET (BSS84, level-shifted by a 2N7002), so the drivers '
+             'draw nothing in idle. Its half-bridge boards feed the bootstrap '
+             'through 3.3&nbsp;&Omega; in series with the diode (STTH1R06), '
+             'which limits the first charging current. And it puts '
+             '10&nbsp;k&Omega; from each gate to its source: the L6498 holds '
+             'its outputs low only once its own V<sub>CC</sub> is above '
+             '3&nbsp;V, and the resistor covers the time before that.'))
 
     add(h2('Synchronous rectification: TEA2095TE'))
     add(p('One NXP TEA2095TE drives both centre-tap legs, each leg %(nSR).0f '
-          'MOSFETs in parallel [TEA]. It needs no design here beyond its '
-          'connection and its limits; its gate drive, regulation and timing '
-          'are its own.' % V))
+          'MOSFETs in parallel [TEA] (Figure&nbsp;%(f)s). It needs no design '
+          'here beyond its connection and its limits; its gate drive, '
+          'regulation and timing are its own.'
+          % dict(V, f=FR('an_sr_ctrl'))))
+    add(fig('an_sr_ctrl',
+            'The synchronous rectifier as built: Q<sub>A1</sub>, Q<sub>A2</sub> '
+            'on leg A and Q<sub>B1</sub>, Q<sub>B2</sub> on leg B. Each MOSFET '
+            'has its own gate '
+            'resistor; DSx and SSx are separate sense lines to the drains and '
+            'the sources of their pair, never along the power ground. '
+            'Transformer pins as in Figure&nbsp;%s; the centre tap is the '
+            'output.' % FR('an_xfmr_pins')))
     add(tbl('TEA2095TE connections (HSO8).',
             [['Pin', 'Name', 'Connection'],
              ['1, 8', 'GDB, GDA', 'gates of the leg B and leg A pairs'],
@@ -4229,6 +4257,18 @@ def build(A):
           % dict(V, co=V['Cout'], e=0.5 * V['Cout'] * 1e-3 * V['Vout'] ** 2,
                  vo=V['Vout'],
                  t=0.5 * V['Cout'] * 1e-3 * V['Vout'] ** 2 / 0.4)))
+    add(p('Fed straight from the %(vo).0f&nbsp;V output, the controller drops '
+          'the difference to its own gate-drive supply of about 11&nbsp;V, so '
+          'it dissipates the SR gate charge times the switching frequency '
+          'times that difference. That needs the SR MOSFET&rsquo;s gate '
+          'charge, which this revision does not have; check the IC '
+          'temperature, or feed it from a lower rail as ST&rsquo;s board '
+          'does.' % dict(vo=V['Vout'])))
+    add(note('<b>ST&rsquo;s EVL6790_670W SR board</b> uses a TEA2096, on the '
+             'same pinout, with two ISC079N15NM6 per leg: a 0&nbsp;&Omega; '
+             'position for each gate, 220&nbsp;&Omega; in series with each '
+             'drain-sense line, and V<sub>CC</sub> from an auxiliary rail '
+             'through 10&nbsp;&Omega; with 10&nbsp;&micro;F at the pin.'))
     add(note('The SR MOSFET datasheet is not part of this revision: '
              'R<sub>DS(on)</sub> = %(Rds).1f&nbsp;m&Omega; and k<sub>T</sub> = '
              '%(Rdsk).1f are carried from the earlier selection, and its gate '
@@ -5150,6 +5190,7 @@ def build(A):
         ('T<sub>charge</sub>, T<sub>on,max</sub>, I<sub>QCC</sub>, I<sub>QBO</sub>', 'low-side on-time that recharges the bootstrap, the longest high-side on-time, and the quiescent currents of the low and floating driver sections'),
         ('R<sub>G</sub>, R<sub>g,int</sub>, R<sub>so</sub>, R<sub>si</sub>, s<sub>drv</sub>, P<sub>drv</sub>', 'external and internal gate resistance, driver source and sink resistance, the driver&rsquo;s share of the gate power, and its dissipation'),
         ('MT', 'delay mismatch of the gate driver between its channels'),
+        ('D<sub>BS</sub>, Q<sub>A1</sub>, Q<sub>A2</sub>, Q<sub>B1</sub>, Q<sub>B2</sub>', 'the external bootstrap diode; the SR MOSFETs, two per centre-tap leg'),
         ('Q<sub>g,run</sub>, Q<sub>g,SU</sub>', 'the gate charge at the highest regulated V<sub>CC</sub>, and at V<sub>CCon</sub> where start-up begins'),
         ('V<sub>BO,min</sub>, V<sub>CC,drv,min</sub>, P<sub>drv,max</sub>, R<sub>drv</sub>', 'the lowest recommended floating and low-side driver supplies, the dissipation the driver package allows, and its output resistance'),
         ('S<sub>mid</sub>, S<sub>OUT,max</sub>', 'slope of the bridge midpoint during the swing, and the slew rate the driver&rsquo;s OUT pin allows'),
