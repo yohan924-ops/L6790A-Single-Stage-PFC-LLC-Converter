@@ -68,6 +68,15 @@ ABSENT_OK = {
     'AN_L6790A_Design_Guide_rev2_0.md',
     # CLAUDE.md 9.1b names this file while saying it is not installed here
     '.claude/settings.json',
+    # deleted on purpose 2026-10-01: the PQ 50/50 design (7p5to1_x1) became
+    # the only design point; the three-core 7.5:1 sheet and the one-off
+    # workbook scripts of the earlier designs went with it (HISTORY.md 78차)
+    'Smath/variants/L6790A_7p5to1.sm', 'variants/L6790A_7p5to1.sm',
+    'variants/L6790_workbook_7p5to1.xlsx',
+    'etd54_xl.py', 'lr14_xl.py', 'fix_xl_aux2t.py', 'fix_xl_suend.py',
+    # per-machine state, git-ignored: guard.py writes it only after a clean
+    # pass, so on a fresh clone it does not exist yet (found 2026-10-01)
+    '.guard_stamp.json', 'Design Guide/generators/.guard_stamp.json',
 }
 
 problems = []
@@ -80,7 +89,7 @@ def bad(doc, what):
 def find_anywhere(name):
     """the docs cite bare filenames; look for them anywhere under the project"""
     base = os.path.basename(name.rstrip('/'))
-    for d, _, files in os.walk(ROOT):
+    for d, _, files in os.walk(ROOT, followlinks=True):   # Lr14: links
         if base in files or os.path.basename(d) == base:
             return True
     return os.path.exists(os.path.join(ROOT, name))

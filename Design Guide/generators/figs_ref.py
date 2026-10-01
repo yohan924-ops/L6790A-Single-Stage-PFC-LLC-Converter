@@ -484,9 +484,9 @@ def an_pfc_boost(save, foot):
 
     for k, (rect, on, ttl) in enumerate((
             ([0.03, 0.10, 0.455, 0.80], True,
-             'switch ON - the reactor charges from the line'),
+             'switch ON - the inductor charges from the line'),
             ([0.525, 0.10, 0.455, 0.80], False,
-             'switch OFF - the reactor delivers to C, in series with the '
+             'switch OFF - the inductor delivers to C, in series with the '
              'line'))):
         ax = _ax(fig, rect, -1.8, 14.6, -3.0, 6.2)
         S.label(ax, 6.4, 5.80, ttl, size=11, color=MAG if on else GRN)
@@ -532,7 +532,7 @@ def an_pfc_boost(save, foot):
                    heads=((1, 0.08), (2, 0.80), (4, 0.45)))
         X.register()
 
-    foot(fig, 'The switch is modulated so the average reactor current '
+    foot(fig, 'The switch is modulated so the average inductor current '
               'follows the rectified line, which is what makes the converter '
               'look resistive. Because it is a boost, the bus has to sit '
               'above the line crest - that is where the 400 V comes from, '
@@ -562,7 +562,7 @@ def an_pfc_ccm(save, foot):
     rip = 0.30 * vin * d
     cur = avg + rip * (tri - 0.5) * 2.0
     ax.plot(t, vin, color=NAVY, lw=2.0, label='line voltage')
-    ax.plot(t, cur, color=MAG, lw=1.2, label='reactor current')
+    ax.plot(t, cur, color=MAG, lw=1.2, label='inductor current')
     ax.plot(t, avg, color=GRN, lw=2.2, ls=(0, (5, 2.6)),
             label='its average - the line current')
     ax.set_xlim(0, 1)
@@ -576,7 +576,7 @@ def an_pfc_ccm(save, foot):
     _call(ax, (0.30, cur[int(0.30 * len(t))]), (0.10, 1.18),
           'the switching ripple never reaches zero -\ncontinuous conduction',
           size=10)
-    foot(fig, 'Continuous conduction mode: the reactor current never falls '
+    foot(fig, 'Continuous conduction mode: the inductor current never falls '
               'to zero inside a switching period, so its average is the '
               'quantity the control loop shapes.')
     save(fig, 'an_pfc_ccm')
@@ -1426,18 +1426,18 @@ def an_core_section(save, foot):
     THE AXES OF THE FIRST TWO PANELS ARE IN MILLIMETRES with equal aspect,
     and the scale comes from each panel's own size on the page (_mm_ax),
     so nothing there can be out of proportion without the core itself
-    coming out the wrong shape.  The third panel is a diagram of the
-    secondary group, bundle by bundle, and says it is not to scale.
+    coming out the wrong shape.  The core seen from above, which the
+    leakage needs, is the next figure (an_core_plan).
 
-    Dimensions are from the TDK catalogue drawing of the chosen core and
-    from this note's specification of the custom coil former (cores.MECH,
+    Dimensions are from the TDK data sheets of the chosen core and its
+    catalogue coil former, with the partition this note adds (cores.MECH,
     with provenance per value).  The winding is not decoration:
-    cores.winding() lays it out - NP1, one triple-insulated Litz bundle, in
-    one section, NS2 and NS3 in the other, the sections touching - and this
-    function draws what comes back, every bundle a circle of its computed
-    diameter at its real radius.  A TIW bundle is drawn as its copper inside
-    a ring of its insulation.  Margin tape is drawn to the height of the
-    section it flanks, as it is wound.
+    cores.winding() lays it out - NP1, triple-insulated Litz bundles side by
+    side a turn, in one section, NS2 and NS3 in the other, the partition
+    between - and this function draws what comes back, every bundle a
+    circle of its computed diameter at its real radius.  A TIW bundle is
+    drawn as its copper inside a ring of its insulation.  Margin tape, when
+    there is any, is drawn to the height of the section it flanks.
 
     Winding colours are the ones of the pin figure (an_xfmr_pins), so
     the two figures read together.
@@ -1489,11 +1489,12 @@ def an_core_section(save, foot):
     fig = plt.figure(figsize=(9.3 / 1.15, 6.6 / 1.15))
     S1, S2 = 22.5, 9.4                        # mm per inch on the two scaled panels
     ax = _mm_ax(fig, [0.006, 0.030, 0.430, 0.940], 1.6, -2.0, S1)
-    ax2 = _mm_ax(fig, [0.445, 0.515, 0.550, 0.470], 11.6, 4.6, S2)
-    ax3 = fig.add_axes([0.445, 0.020, 0.550, 0.465])
-    ax3.set_xlim(0, 10)
-    ax3.set_ylim(0, 6)
-    ax3.axis('off')
+    #  the unrolled winding: its scale and centre follow the winding width,
+    #  so a wider former is not cut off at the panel edge
+    S2 = (w['wind_w'] + 2 * w['flange'] + 9.0) / (0.550 * 9.3 / 1.15)
+    ax2 = _mm_ax(fig, [0.445, 0.265, 0.550, 0.470],
+                 2.0 + w['wind_w'] / 2.0, 4.6, S2)
+    #  (the core seen from above is its own figure now, an_core_plan)
 
     #  =================================================== SECTION, 1:1
     HW, HH = M['W'] / 2.0, M['H'] / 2.0
@@ -1509,7 +1510,7 @@ def an_core_section(save, foot):
 
     RB, RT = M['bore'] / 2.0, M['tube_od'] / 2.0
     FH, WW = M['flange_h'] / 2.0, w['wind_w'] / 2.0
-    RF = RW - 0.15
+    RF = M.get('r_room', RW - 0.15)
     bob = dict(fc=PLAS, ec='#55606c', lw=0.9, zorder=4)
     for sgn in (-1, 1):
         xt = RB if sgn > 0 else -RT
@@ -1523,24 +1524,33 @@ def an_core_section(save, foot):
         return WW - yax
     tape = ((0.0, w['yA'][0], w['h_A']),
             (w['yS'][1], w['wind_w'], w['h_S_aux']))
+    tape = tuple(t for t in tape if t[1] - t[0] > 1e-6)
+    gaps = [(w['yA'][1], w['yS'][0])] if w.get('sep', 0) > 0 else []
     hmax = max(w['h_A'], w['h_S_aux'])
-    pa, ps = dp * kp, ds * kp                 # pitch along a layer
+    ka = w['k_ax']
+    pa, ps = dp * kp, ds * kp                 # layer to layer
+    qa, qs = dp * ka, ds * ka                 # along a layer
+    npp = w['pri_par']
     for sgn in (-1, 1):
         for y0, y1, h in tape:
             x0 = RT if sgn > 0 else -(RT + h)
             ax.add_patch(Rectangle((x0, Y(y1)), h, y1 - y0, fc=TAPE,
                                    ec='#b9a25e', lw=0.6, zorder=5))
+        for g0, g1 in gaps:                   # the partition, a wall
+            xg = RT if sgn > 0 else -RF
+            ax.add_patch(Rectangle((xg, Y(g1)), RF - RT, g1 - g0, **bob))
         y0, y1 = w['yA']
         for li, n in enumerate(w['rows_A']):
             r0 = RT + (pa + tt) * li
-            for q in range(n):                # a short layer is spread
-                pri(ax, sgn * (r0 + pa / 2.0), Y(y0 + w['w_A'] * (q + 0.5) / n))
+            for q in range(n * npp):          # a short layer is spread
+                pri(ax, sgn * (r0 + pa / 2.0),
+                    Y(y0 + w['w_A'] * (q + 0.5) / (n * npp)))
             layer_tape(ax, sgn * (r0 + pa + tt / 2.0), Y(y0), Y(y1),
                        vertical=True)
         for li, row in enumerate(w['smap']):
             r0 = RT + (ps + tt) * li
             for c, who in enumerate(row):
-                sec(ax, sgn * (r0 + ps / 2.0), Y(w['yS'][0] + ps * (c + 0.5)),
+                sec(ax, sgn * (r0 + ps / 2.0), Y(w['yS'][0] + qs * (c + 0.5)),
                     who)
             layer_tape(ax, sgn * (r0 + ps + tt / 2.0), Y(w['yS'][0]),
                        Y(w['yS'][1]), vertical=True)
@@ -1562,29 +1572,27 @@ def an_core_section(save, foot):
     ax.text(0.0, -HH - 16.5, 'all dimensions in mm', ha='center', va='top',
             fontsize=8.5, color=GREY, zorder=8)
     #  balloons point into the LEFT window, so no leader crosses the part.
-    #  Numbers are the rows of the legend table beside the figure; the two
-    #  margin tapes carry the same number.  They are spaced evenly down the
-    #  side of the core, in the order of the parts along the axis.
+    #  Numbers are the rows of the legend table beside the figure.  They are
+    #  spaced evenly down the side of the core, in the order of the parts
+    #  along the axis.
     BX = -HW - 5.6
     yS0 = w['yS'][0]
     l2 = w['order'].index('NS2')
     l3 = w['order'].index('NS3')
     parts = [
-        (5, -(RT + w['h_A'] * 0.5), Y(w['yA'][0] * 0.5), GREY),
-        (1, -(RT + pa * 1.5 + tt), Y(w['yA'][0] + pa * 1.5), EDG['NP1']),
-        (2, -(RT + (ps + tt) * l2 + ps / 2), Y(yS0 + ps * 0.5),
+        (1, -(RT + pa * 1.5 + tt), Y(w['yA'][0] + qa * 1.5), EDG['NP1']),
+        (7, -(RT + RF) / 2.0, Y((w['yA'][1] + yS0) / 2), '#55606c'),
+        (2, -(RT + (ps + tt) * l2 + ps / 2), Y(yS0 + qs * 0.5),
          EDG['NS2']),
-        (3, -(RT + (ps + tt) * l3 + ps / 2), Y(yS0 + ps * 1.5),
+        (3, -(RT + (ps + tt) * l3 + ps / 2), Y(yS0 + qs * 1.5),
          EDG['NS3']),
         (4, -(RT + w['h_S'] + w['tiw_od'] * kp / 2),
          Y(yS0 + w['w_S'] * 0.5 / max(w['n_aux'], 1)), PUR),
-        (5, -(RT + tape[1][2] * 0.5), Y((w['yS'][1] + w['wind_w']) / 2),
-         GREY),
-        (7, -(RT + RF) / 2.0, -(WW + FH) / 2.0, '#55606c')]
+        (6, -(RT + RF) / 2.0, -(WW + FH) / 2.0, '#55606c')]
     top, bot = WH + 3.0, -WH - 3.0
     for q, (n, x, y, c) in enumerate(parts):
         _balloon(ax, n, x, y, BX, top + (bot - top) * q / (len(parts) - 1), c)
-    _balloon(ax, 6, 0.0, gp / 2.0, 0.0, HH + 5.0, GOLD)
+    _balloon(ax, 5, 0.0, gp / 2.0, 0.0, HH + 5.0, GOLD)
 
     #  ============================== DETAIL, the winding unrolled
     OX, OY = 2.0, -3.6
@@ -1598,16 +1606,18 @@ def an_core_section(save, foot):
     for y0, y1, h in tape:
         ax2.add_patch(Rectangle((OX + y0, OY), y1 - y0, h, fc=TAPE,
                                 ec='#b9a25e', lw=0.6, zorder=4))
+    for g0, g1 in gaps:
+        ax2.add_patch(Rectangle((OX + g0, OY), g1 - g0, BH, **bob))
     y0, y1 = w['yA']
     for li, n in enumerate(w['rows_A']):
         yl = OY + (pa + tt) * li
-        for q in range(n):
-            pri(ax2, OX + y0 + w['w_A'] * (q + 0.5) / n, yl + pa / 2.0)
+        for q in range(n * npp):
+            pri(ax2, OX + y0 + w['w_A'] * (q + 0.5) / (n * npp), yl + pa / 2.0)
         layer_tape(ax2, yl + pa + tt / 2.0, OX + y0, OX + y1)
     for li, row in enumerate(w['smap']):
         yl = OY + (ps + tt) * li
         for c, who in enumerate(row):
-            sec(ax2, OX + yS0 + ps * (c + 0.5), yl + ps / 2.0, who)
+            sec(ax2, OX + yS0 + qs * (c + 0.5), yl + ps / 2.0, who)
         layer_tape(ax2, yl + ps + tt / 2.0, OX + yS0, OX + w['yS'][1])
     for q in range(w['n_aux']):
         aux(ax2, OX + yS0 + w['w_S'] * (q + 0.5) / w['n_aux'],
@@ -1621,89 +1631,159 @@ def an_core_section(save, foot):
     _dimh(ax2, OX, OX + L, OY - 3.5, 'winding width  %.1f' % L,
           ext=OY - 1.9, side=-1)
     dims = [(w['yA'][0], w['yA'][1], '%.2f' % w['w_A'], EDG['NP1'], 1),
+            (w['yA'][1], w['yS'][0], '%.2f' % w['sep'], '#55606c', 7),
             (w['yS'][0], w['yS'][1], '%.2f' % w['w_S'], EDG['NS2'], None)]
     for x0, x1, t, c, n in dims:
         _dimh(ax2, OX + x0, OX + x1, OY + BH + 1.1, t, color=c)
         if n:
             _balloon(ax2, n, 0, 0, OX + (x0 + x1) / 2, OY + BH + 3.3, c,
                      r=0.62, lead=False)
-    xt = OX + (w['yS'][1] + L) / 2
-    _balloon(ax2, 5, xt, OY + tape[1][2] * 0.7, xt + 1.4, OY + BH + 3.3,
-             GREY, r=0.62)
-    for n, xx, c in ((2, yS0 + ps * 0.5, EDG['NS2']),
-                     (3, yS0 + ps * 2.5, EDG['NS3'])):
+    for n, xx, c in ((2, yS0 + qs * 0.5, EDG['NS2']),
+                     (3, yS0 + qs * 1.5, EDG['NS3'])):
         _balloon(ax2, n, 0, 0, OX + xx, OY + BH + 3.3, c, r=0.62, lead=False)
-    _balloon(ax2, 5, OX + w['yA'][0] * 0.5, OY + w['h_A'] * 0.7,
-             OX - fl - 0.4, OY + BH + 3.3, GREY, r=0.62)
     _dimh(ax2, OX + L, OX + L + fl, OY - 3.5, '%.2f' % fl, color=GREY,
           side=-1)
 
-    #  ===================== THE SECONDARY GROUP (not to scale)
-    ax3.text(0.0, 5.72, 'the secondary group, layer by layer  '
-             '(not to scale)', ha='left', va='center', fontsize=10.5,
-             color=NAVY, zorder=8)
-    CX0, DX, RR = 2.40, 0.62, 0.25
-    nl = w['sec_layers']
-    LY = [1.00 + 0.66 * q for q in range(nl)]
-    xe = CX0 + DX * (w['sec_par'] - 1)
-    ax3.add_patch(Rectangle((CX0 - 0.45, 0.42), xe - CX0 + 0.9, 0.22,
-                            fc=PLAS, ec='#55606c', lw=0.9, zorder=3))
-    ax3.text(xe + 0.60, 0.53, 'former tube', ha='left', va='center',
-             fontsize=8.3, color='#55606c', zorder=6)
-    for li, row in enumerate(w['smap']):
-        for c, who in enumerate(row):
-            ax3.add_patch(Circle((CX0 + DX * c, LY[li]), RR, fc=COL[who],
-                                 ec=EDG[who], lw=0.8, alpha=0.75, zorder=6))
-            ax3.text(CX0 + DX * c, LY[li], '%d' % w['bmap'][li][c],
-                     ha='center', va='center', fontsize=8.3, color='white',
-                     zorder=7)
-        who = row[0]
-        ax3.text(CX0 - 0.42, LY[li], '%s, turn %d' % (who, w['turn_of'][li]),
-                 ha='right', va='center', fontsize=8.3, color=EDG[who],
-                 zorder=7)
-        ax3.plot([CX0 - RR - 0.05, xe + RR + 0.05], [LY[li] + RR + 0.05] * 2,
-                 color=TAPEC, lw=1.4, zorder=7, solid_capstyle='butt')
-    YA = LY[-1] + RR + 0.26
-    for q in range(w['n_aux']):
-        ax3.add_patch(Circle((CX0 + (xe - CX0) * (q + 0.5) / w['n_aux'], YA),
-                             0.12, fc=PUR, ec=PUR, lw=0.5, zorder=7))
-    ax3.text(CX0 - 0.42, YA, 'NAUX', ha='right', va='center', fontsize=8.3,
-             color=PUR, zorder=7)
-    if w['n_aux']:
-        ax3.plot([CX0 - RR - 0.05, xe + RR + 0.05], [YA + 0.17] * 2,
-                 color=TAPEC, lw=1.4, zorder=7, solid_capstyle='butt')
-    ax3.text(CX0 - 0.45, 0.16, u'\u2190 NP1 side', ha='left', va='center',
-             fontsize=8.3, color=EDG['NP1'], zorder=7)
-    XN = xe + 0.75
-    ax3.text(XN, 4.35, ('one circle = one Litz bundle of\n%d × ø%.2f mm, '
-             'ø%.2f mm; a layer = one\nturn of %d bundles side by side')
-             % (w['n_strand_s'], _C.D_STRAND, ds, w['sec_par']), ha='left',
-             va='center', fontsize=8.3, color=GREY, zorder=8,
-             linespacing=1.3)
-    ax3.text(XN, 2.85, ('the number is the bundle: the second\n'
-             'turn of each winding lays them in the\nreverse order, and '
-             'each bundle ends\non its own pin'),
-             ha='left', va='center', fontsize=8.3, color=GREY, zorder=8,
-             linespacing=1.3)
-    ax3.text(XN, 1.30, '2  NS2 %d T, pins %s\n3  NS3 %d T, pins %s\n'
-             '4  NAUX %d T of TIW over the group'
-             % (w['Ns'], _C.pins('NS2', '–'), w['Ns'], _C.pins('NS3', '–'),
-                w['n_aux']), ha='left', va='center', fontsize=8.3,
-             color=GREY, zorder=8, linespacing=1.3)
-
-    foot(fig, 'Core %s drawn to scale from the TDK catalogue (%s); the '
-              'coil former is custom and drawn to this note\'s specification; '
-              'the third panel is not to scale. The winding is laid out by '
-              'cores.winding(): both sections fill the radial room at a pitch '
-              'of %.2f × the bundle (the small gaps of a real winding, '
-              'assumed), NP1 as one triple-insulated Litz bundle (%.1f mm of '
-              'insulation assumed), the two sections touching, %.1f mm margin '
-              'tape at each flange, %.1f mm TIW for NAUX, and a wrap of '
-              '%.2f mm layer tape over every layer (the yellow lines, not to '
-              'scale).'
-              % (NAME, M['core'], kp, w['tiw_add'], w['margin'], w['tiw_od'],
-                 w['t_tape']))
+    foot(fig, 'Core %s and coil former %s drawn to scale from the TDK '
+              'data sheets, with a %.1f mm partition added to the former. '
+              'The winding is laid out by '
+              'cores.winding(): %.2f × the conductor layer to layer and %.3f '
+              'along the layer, so the width is full (the small gaps of a '
+              'real winding, assumed), NP1 one triple-insulated Litz bundle '
+              'a turn (%.1f mm of insulation assumed), %.1f mm TIW for NAUX, '
+              'and a wrap of %.2f mm layer tape over every layer (the yellow '
+              'lines, not to scale).'
+              % (NAME, M['former'], w['sep'], kp, w['k_ax'], w['tiw_add'],
+                 w['tiw_od'], w['t_tape']))
     save(fig, 'an_core_section')
+
+
+def an_core_plan(save, foot):
+    """The core from above, and how much of one turn the ferrite surrounds.
+
+    Why it is drawn: the tank's L_r IS the leakage of the transformer, and
+    the leakage field between NP1 and NS2/NS3 is not the same where the
+    ferrite surrounds the winding as where the winding is out in the air.
+    leakage_fem.py solves the two cases and adds them in the proportion of
+    turn length in each, radius by radius (cores.zones()).  This figure
+    shows that proportion for the turn in the middle of NP1.
+
+    Left, to scale (cores.MECH, read from the TDK drawing): the outer legs,
+    the bow-tie back plate, the centre leg, the whole winding as a pale
+    ring under the plate, and the one turn in three colours.  Right: what
+    the colours mean and why the split matters, in words.  The middle
+    colour - under the plate but with no outer leg beside it - is counted
+    half in each case (cores.YOKE_SHARE, an assumption); it says so.
+    """
+    import cores as _C
+    import an_pdf as _A
+    V = _A.V
+    NAME = _C.CHOSEN
+    w = _C.winding(V, NAME)
+    M = w['M']
+    fig = plt.figure(figsize=(9.35, 4.75))
+    ax = _mm_ax(fig, [0.005, 0.015, 0.500, 0.970], 0.0, -1.0, 15.2)
+
+    (wx0, wy0), (wx1, wy1) = M['wing']
+    nx, ny = M['neck']
+    hd, hw2, R0 = M['plan_d'] / 2.0, M['W'] / 2.0, M['r_win_out']
+    RC, RT = M['d_centre'] / 2.0, M['tube_od'] / 2.0
+    top = [(-hw2, hd), (-wx1, hd), (-wx1, wy1), (-wx0, wy0), (-nx, ny)]
+    arc = [(RC * np.cos(t), RC * np.sin(t))
+           for t in np.linspace(np.arctan2(ny, -nx), np.arctan2(ny, nx), 12)]
+    outline = (top + arc + [(nx, ny), (wx0, wy0), (wx1, wy1), (wx1, hd),
+                            (hw2, hd)])
+    outline = outline + [(x, -y) for x, y in outline[::-1]]
+
+    #  the whole winding, NP1's section, as a pale ring: under the plate it
+    #  is seen through the hatching
+    rb = RT + w['h_A']
+    th = np.linspace(0, 2 * np.pi, 361)
+    ring = ([(rb * np.cos(t), rb * np.sin(t)) for t in th] +
+            [(RT * np.cos(t), RT * np.sin(t)) for t in th[::-1]])
+    ax.add_patch(Polygon(ring, closed=True, fc='#efdcc6', ec='none',
+                         zorder=1.2))
+    ax.add_patch(Polygon(outline, closed=True, fc=FERR, ec=FERRE, lw=1.0,
+                         hatch='////', alpha=0.80, zorder=1.4))
+    ax.add_patch(Circle((0, 0), RC, fc=FERR, ec=FERRE, lw=1.0, zorder=1.5))
+    for sgn in (-1, 1):                       # the inside of each outer leg
+        t = np.linspace(-np.arcsin(M['leg_y'] / R0), np.arcsin(M['leg_y'] / R0),
+                        40)
+        ax.plot(sgn * R0 * np.cos(t), R0 * np.sin(t), color=FERRE, lw=1.0,
+                zorder=1.5)
+
+    box = dict(boxstyle='round,pad=0.18', fc='white', ec='none', alpha=0.9)
+    rho = RT + w['h_A'] / 2.0
+    th = np.linspace(0, 2 * np.pi, 1441)
+    xx, yy = rho * np.cos(th), rho * np.sin(th)
+    ax_ = np.abs(xx)
+    edge = wy0 + (wy1 - wy0) / (wx1 - wx0) * (ax_ - wx0)
+    under = np.where(ax_ >= wx1, np.abs(yy) <= hd, np.abs(yy) <= edge)
+    legz = np.abs(np.sin(th)) <= M['leg_y'] / R0
+    kind = np.where(legz & under, 0, np.where(under, 1, 2))
+    ZC = (MAG, GOLD, '#4a5260')
+    for kz in (0, 1, 2):
+        ax.plot(xx, np.where(kind == kz, yy, np.nan), color=ZC[kz], lw=3.6,
+                zorder=6, solid_capstyle='butt')
+
+    #  names on the drawing
+    ax.text(0, 0, 'centre\nleg\n\u00f8%.0f' % M['d_centre'], ha='center',
+            va='center', fontsize=9.6, color=NAVY, zorder=8, bbox=box)
+    for sgn in (-1, 1):
+        ax.text(sgn * (hw2 - 3.0), 0.0, 'outer leg', rotation=90,
+                ha='center', va='center', fontsize=9.6, color=NAVY,
+                zorder=8, bbox=box)
+    ax.annotate('back plate', xy=(-9.5, 12.6), xytext=(-26.0, 25.5),
+                fontsize=9.6, color=NAVY, ha='left', va='center', zorder=8,
+                arrowprops=dict(arrowstyle='-', color=NAVY, lw=0.8))
+    ax.annotate('the whole winding (NP1)', xy=(-9.0, -18.5),
+                xytext=(-31.0, -27.0),
+                fontsize=9.6, color='#8a5a2b', ha='left', va='center',
+                zorder=8, arrowprops=dict(arrowstyle='-', color='#8a5a2b',
+                                          lw=0.8))
+    ax.text(9.0, 25.5, 'front: no core,\nthe winding is in the open',
+            ha='left', va='center', fontsize=9.6, color=GREY, zorder=8)
+    ax.text(9.0, -26.5, 'back: the same', ha='left', va='center',
+            fontsize=9.6, color=GREY, zorder=8)
+
+    #  what the colours mean
+    tx = fig.add_axes([0.520, 0.015, 0.475, 0.970])
+    S.frame(tx, 0.0, 100.0, 0.0, 100.0)
+    pct = _C.zone_pct(NAME, rho)
+    S.label(tx, 0.0, 95.0, 'ONE TURN OF NP1, SEEN FROM ABOVE', size=11.0,
+            color=NAVY, weight='bold', ha='left')
+    S.label(tx, 0.0, 88.5, 'the turn in the middle of the winding, '
+            'r = %.1f mm' % rho, size=9.4, color=GREY, ha='left')
+    rows = ((0, '%d %%' % pct[0], 'ferrite all round:',
+             'an outer leg beside it'),
+            (1, '%d %%' % pct[1], 'the plates above and below,',
+             'but no outer leg beside it'),
+            (2, '%d %%' % pct[2], 'no ferrite at all:',
+             'outside the core, in the air'))
+    for q, (kz, p_, t1, t2) in enumerate(rows):
+        y = 78.0 - 13.0 * q
+        tx.plot([0.0, 7.0], [y, y], color=ZC[kz], lw=3.6,
+                solid_capstyle='butt', zorder=3)     # a swatch, not a wire
+        S.label(tx, 10.0, y, p_, size=10.5, color=ZC[kz], weight='bold',
+                ha='left')
+        S.label(tx, 25.0, y + 2.6, t1, size=9.8, color=NAVY, ha='left')
+        S.label(tx, 25.0, y - 3.0, t2, size=9.8, color=NAVY, ha='left')
+    lines = ('Why it matters. The resonant inductor',
+             'is the leakage of this transformer, the',
+             'field between NP1 and NS2 / NS3.',
+             'Ferrite around the winding holds that',
+             'field in; in the air it spreads out. Both',
+             'cases are solved and added in these',
+             'shares, radius by radius; the middle',
+             'share counts half in each (assumed).')
+    for i, t in enumerate(lines):
+        S.label(tx, 0.0, 38.0 - 4.9 * i, t, size=9.6, color=GREY, ha='left')
+
+    foot(fig, 'Core %s seen from above, to scale from the TDK data sheet: '
+              'the outer legs, the bow-tie back plate and the centre leg, '
+              'the winding as a pale ring under the plate, and one turn '
+              'coloured by what surrounds it.' % NAME)
+    save(fig, 'an_core_plan')
 
 
 # ------------------------------------------------- the voltage loop as blocks
@@ -2350,7 +2430,7 @@ def an_flyback_llc(save, foot):
                     arrowprops=dict(arrowstyle='-|>', color=GREY, lw=1.2,
                                     connectionstyle='arc3,rad=0.16'),
                     path_effects=HALO, zorder=9)
-    cap_(axl[3], 'own $\\Phi$ dashed, the sum solid, the gap shaded')
+    cap_(axl[3], 'own $\\Phi$ dashed, the sum solid, the difference shaded')
 
     #  ---- LLC, the eight-interval model with the design's own currents
     tc, e, ilm, ilr, io, _ = _cycle(0.70, V['lam'], V['Icomp'], V['ILm'])
@@ -2402,7 +2482,7 @@ def an_flyback_llc(save, foot):
                     arrowprops=dict(arrowstyle='-|>', color=GREY, lw=1.2,
                                     connectionstyle='arc3,rad=-0.18'),
                     path_effects=HALO, zorder=9)
-    cap_(axr[3], 'own $\\Phi$ dashed, the sum solid, the gap shaded')
+    cap_(axr[3], 'own $\\Phi$ dashed, the sum solid, the difference shaded')
 
     #  Short on purpose.  The document caption under this figure carries
     #  the reading instructions; repeating them here gave the page two
@@ -2844,9 +2924,14 @@ def an_xfmr_pins(save, foot):
     Left: the schematic symbol of the transformer with every terminal
     carrying its pin numbers - primary NP1, the ZCD auxiliary NAUX, and
     the two secondary windings NS2 / NS3 that make the centre tap.
-    Right: the coil former in the mounting-direction view, every pin at
-    its specified position, each ringed in the colour of the winding it
-    carries.
+    Below: the coil former
+    drawn from its data sheet (bobbin_outline.py reads the vector
+    drawing), (A) from below, the pin side - the view the data sheet
+    numbers its pins in - and (B) from above, which is the PCB footprint
+    on the component side.  Every pin at its specified position, ringed in
+    the colour of the winding it carries.  (A side view with arrows, then
+    a paragraph on how to read A and B, were tried and dropped: the two
+    view titles say it - user, 2026-09-30.)
 
     Numbers, positions and the assignment all come from cores.BOBBIN -
     the same source the vendor specification and the tables in the note
@@ -2859,10 +2944,10 @@ def an_xfmr_pins(save, foot):
     V = _A.V
     B = C.BOBBIN
     COL = {'NP1': MAG, 'NAUX': PUR, 'NS2': GRN, 'NS3': CYA}
-    fig = plt.figure(figsize=(9.35, 6.3))
+    fig = plt.figure(figsize=(9.35, 8.1))
 
     # ---------------------------------------------------------- symbol
-    ax = fig.add_axes([0.010, 0.060, 0.455, 0.860])
+    ax = fig.add_axes([0.272, 0.585, 0.455, 0.400])
     S.frame(ax, -0.6, 16.9, -0.3, 10.9)
     S.label(ax, 7.6, 10.45, 'THE TRANSFORMER, SCHEMATIC', size=11.5,
             color=NAVY, weight='bold')
@@ -2917,11 +3002,21 @@ def an_xfmr_pins(save, foot):
     S.wire(ax, [(XS, 4.3), (XS, YT)], color=COL['NS3'])
     S.wire(ax, [(XS, YT), (9.1, YT)], color=NAVY)
     S.dot(ax, XS, YT)
-    S.dot(ax, 9.1, YT)
-    S.wire(ax, [(9.1, YT), (9.1, 5.65), (XR, 5.65)], color=COL['NS2'])
-    S.wire(ax, [(9.1, YT), (9.1, 4.55), (XR, 4.55)], color=COL['NS3'])
-    pin(XR, 5.65, b2, 'NS2')
-    pin(XR, 4.55, a3, 'NS3')
+    if tuple(b2) != tuple(a3):          # three wires meet at 9.1 only then
+        S.dot(ax, 9.1, YT)
+    shared = tuple(b2) == tuple(a3)     # the tap made at the pins
+    if shared:
+        S.wire(ax, [(9.1, YT), (XR, YT)], color=NAVY)
+        ax.add_patch(Circle((XR, YT), 0.30, fc='white', ec=NAVY, lw=1.3,
+                            zorder=5))
+        ax.plot([XR], [YT], 'o', ms=3.4, color=NAVY, zorder=6)
+        S.label(ax, XR + 0.75, YT, C._plus(b2), size=9.8, color=NAVY,
+                weight='bold', ha='left', z=7)
+    else:
+        S.wire(ax, [(9.1, YT), (9.1, 5.65), (XR, 5.65)], color=COL['NS2'])
+        S.wire(ax, [(9.1, YT), (9.1, 4.55), (XR, 4.55)], color=COL['NS3'])
+        pin(XR, 5.65, b2, 'NS2')
+        pin(XR, 4.55, a3, 'NS3')
     S.dot(ax, XS + 0.42, 3.90, color=COL['NS3'], ms=4.8)
     S.wire(ax, [(XS, 1.9), (XS, 1.0), (XR, 1.0)], color=COL['NS3'])
     pin(XR, 1.0, b3, 'NS3')
@@ -2929,8 +3024,12 @@ def an_xfmr_pins(save, foot):
             color=COL['NS2'], weight='bold')
     S.label(ax, 8.75, 2.75, 'NS3\n%d T' % V['Ns'], size=10.5,
             color=COL['NS3'], weight='bold')
-    S.label(ax, 10.85, 2.95, '%s to %s joined on\nthe PCB: centre tap'
-            % (b2[0], a3[-1]), size=9.6, color=NAVY, ha='left')
+    if shared:
+        S.label(ax, 10.85, 3.55, 'centre tap: NS2 finish\nand NS3 start on '
+                'the\nsame pins', size=9.6, color=NAVY, ha='left')
+    else:
+        S.label(ax, 10.85, 2.95, '%s to %s joined on\nthe PCB: centre tap'
+                % (b2[0], a3[-1]), size=9.6, color=NAVY, ha='left')
     S.label(ax, 0.45, 9.2, 'start', size=9.4, color=GREY, ha='right')
     S.label(ax, 0.45, 4.9, 'finish', size=9.4, color=GREY, ha='right')
     S.label(ax, 14.3, 9.2, 'start', size=9.4, color=GREY, ha='left')
@@ -2939,98 +3038,90 @@ def an_xfmr_pins(save, foot):
             size=9.6, color=GREY)
 
     # ---------------------------------------------------- coil former
-    P = B['plan']
-    bx = fig.add_axes([0.485, 0.060, 0.505, 0.860])
-    hw, hh = P['w'] / 2.0, P['h'] / 2.0
-    S.frame(bx, -hw - 13.0, hw + 13.0, -hh - 17.0, hh + 16.0)
-    S.label(bx, 0.0, hh + 14.2, '%s COIL FORMER, VIEW IN MOUNTING DIRECTION'
-            % ('CUSTOM' if 'custom' in B['former'] else B['former']),
-            size=11.0, color=NAVY, weight='bold')
-    bx.add_patch(Rectangle((-hw, -hh), P['w'], P['h'], fc='#f3f4f6',
-                           ec=GREY, lw=1.2, zorder=1))
-    if P['coil_w']:
-        #  the coil between the flanges, seen edge-on from below
-        bx.add_patch(Rectangle((-P['coil_w'] / 2.0, -P['coil_h'] / 2.0),
-                               P['coil_w'], P['coil_h'], fc='#e4e7ec',
-                               ec=GREY, lw=0.8, hatch='////', zorder=1.5))
-        bx.text(0, 0, 'coil\n(between the flanges)', fontsize=9.4,
-                color=GREY, ha='center', va='center', zorder=2,
-                bbox=dict(boxstyle='round,pad=0.25', fc='white', ec='none'))
-    if P['mark']:
-        mx, my = P['mark']
-        bx.add_patch(Polygon([(mx, my), (mx - 2.6, my), (mx, my + 2.6)],
-                             closed=True, fc=GREY, ec=GREY, zorder=2))
-        bx.annotate('pin 1 marking', xy=(mx - 1.6, my + 0.7),
-                    xytext=(-hw - 12.0, -hh - 4.6), fontsize=9.6,
-                    color=GREY, ha='left',
-                    arrowprops=dict(arrowstyle='-|>', color=GREY, lw=1.0),
-                    zorder=9)
+    #  the outline is the data sheet's own drawing (bobbin_outline.py); the
+    #  pins sit at their dimensioned positions (cores.PIN_XY, bottom view)
+    import bobbin_outline as BO
+    OUT = BO.load()['views']
     by_pin = {}
     for w, (a, b) in C.PINMAP.items():
         for n in a + b:
             by_pin[n] = w
-    #  pins run along rows (custom) or columns (PQ): number them on the side
-    #  away from the coil
-    for n, (x, y) in C.PIN_XY.items():
-        w = by_pin.get(n)
-        c = COL[w] if w else '#9aa0a8'
-        bx.add_patch(Circle((x, y), 1.85, fc='white', ec=c, lw=1.6,
-                            zorder=3))
-        bx.add_patch(Circle((x, y), 0.45, fc=c if w else GREY, ec='none',
-                            zorder=4))
-        if B['pins'] > 12:                              # rows top/bottom
-            S.label(bx, x, y + (3.4 if y > 0 else -3.4), str(n), size=9.4,
-                    color=c, weight='bold')
-        else:
-            S.label(bx, x + (3.0 if x < 0 else -3.0), y, str(n), size=9.6,
-                    color=c, weight='bold',
-                    ha='left' if x < 0 else 'right')
-    #  winding name beside its group of pins
-    def grp(w):
-        a, b = C.PINMAP[w]
-        xs = [C.PIN_XY[n][0] for n in a + b]
-        ys = [C.PIN_XY[n][1] for n in a + b]
-        x, y = sum(xs) / len(xs), sum(ys) / len(ys)
-        if B['pins'] > 12:
-            S.label(bx, x, (hh + 5.0) if y > 0 else -(hh + 5.0),
-                    '%s\n%s' % (w, C.pins(w)), size=9.6, color=COL[w],
-                    weight='bold')
-        else:
-            S.label(bx, x + (-3.4 if x < 0 else 3.4), y,
-                    '%s\n%s' % (w, C.pins(w)), size=10.0, color=COL[w],
+    tap = set(C.PINMAP['NS2'][1]) & set(C.PINMAP['NS3'][0])
+    COL['TAP'] = NAVY
+    for n in tap:
+        by_pin[n] = 'TAP'
+    INK = '#3c4350'
+
+    def outline(bx, view, flip=False):
+        """the drawing's lines; flip turns the view half a turn (x, y -> -x, -y)"""
+        k = -1.0 if flip else 1.0
+        for pl in view['outline']:
+            xs, ys = zip(*pl)
+            #  zorder below 2: a drawing, not wiring (figcheck reads z 2)
+            bx.plot([k * x for x in xs], [k * y for y in ys], color=INK,
+                    lw=1.1, zorder=1.6, solid_joinstyle='round')
+        for pl in view['hidden']:
+            xs, ys = zip(*pl)
+            bx.plot([k * x for x in xs], [k * y for y in ys], color=INK,
+                    lw=0.8, ls=(0, (3, 2)), zorder=1.6)
+
+    def pinview(bx, mirror, title, sub):
+        """pins, numbers and winding names; mirror = the top view"""
+        hidden = False           # B is read as the footprint: pads, not
+                                 # hidden pins
+        S.frame(bx, -47.0, 47.0, -41.0, 38.0)
+        S.label(bx, 0.0, 35.4, title, size=11.0, color=NAVY, weight='bold')
+        S.label(bx, 0.0, 31.4, sub, size=9.4, color=GREY)
+        outline(bx, OUT['top'] if mirror else OUT['bottom'], flip=mirror)
+        k = -1.0 if mirror else 1.0
+        for n, (x, y) in C.PIN_XY.items():
+            x = k * x
+            w = by_pin.get(n)
+            c = COL[w] if w else '#9aa0a8'
+            bx.add_patch(Circle((x, y), 1.75, fc='white', ec=c, lw=1.6,
+                                ls='--' if hidden else '-', zorder=3))
+            bx.add_patch(Circle((x, y), 0.6, fc=c if w else GREY, ec='none',
+                                zorder=4))
+            out = -1.0 if x < 0 else 1.0            # outside the row
+            S.label(bx, x + out * 4.6, y, str(n), size=9.6, color=c,
                     weight='bold', ha='right' if x < 0 else 'left')
-    for w in ('NP1', 'NAUX', 'NS2', 'NS3'):
-        grp(w)
-    if B['pins'] > 12:
-        S.label(bx, -hw - 3.0, -20.32, 'primary\nside', size=9.4,
-                color=NAVY, ha='right')
-        S.label(bx, -hw - 3.0, 20.32, 'secondary\nside', size=9.4,
-                color=NAVY, ha='right')
-        #  the two datasheet numbers that place the pins
-        #  the pitch between two free pins, clear of the winding labels
-        f1, f2 = C.free_pins()[2:4]
-        bx.annotate('', xy=(C.PIN_XY[f2][0], -hh - 8.0),
-                    xytext=(C.PIN_XY[f1][0], -hh - 8.0), zorder=1,
-                    arrowprops=dict(arrowstyle='<->', color=GREY, lw=0.8,
-                                    shrinkA=0, shrinkB=0))
-        bx.text((C.PIN_XY[f1][0] + C.PIN_XY[f2][0]) / 2, -hh - 10.6,
-                '%.2f' % B['pitch'], fontsize=9.4, color=GREY, ha='center',
-                va='center', zorder=1)
-        bx.annotate('', xy=(hw + 5.0, 20.32), xytext=(hw + 5.0, -20.32),
-                    zorder=1,
-                    arrowprops=dict(arrowstyle='<->', color=GREY, lw=0.8,
-                                    shrinkA=0, shrinkB=0))
-        bx.text(hw + 7.2, 0.0, '%.2f' % B['rows_apart'], fontsize=9.4,
-                color=GREY, ha='center', va='center', rotation=90, zorder=1)
-    S.label(bx, 0.0, -hh - 14.6, 'ring = winding on that pin;  grey pins are '
-            'free', size=9.4, color=GREY)
+
+        def grp(w, pl=None, text=None, col=None):
+            if pl is None:
+                a, b = C.PINMAP[w]
+                pl = a + b
+            xs = [k * C.PIN_XY[n][0] for n in pl]
+            ys = [C.PIN_XY[n][1] for n in pl]
+            x, y = sum(xs) / len(xs), sum(ys) / len(ys)
+            text = text or '%s\n%s' % (w, C.pins(w))
+            out = -1.0 if x < 0 else 1.0
+            S.label(bx, x + out * 9.4, y, text, size=9.8, color=col or COL[w],
+                    weight='bold', ha='right' if x < 0 else 'left')
+        for w in ('NP1', 'NAUX', 'NS2', 'NS3'):
+            grp(w)
+        #  the chamfered corner: bottom left from below, bottom right from above
+        cx = 25.0 * (1.0 if mirror else -1.0)
+        bx.annotate('pin 1 marking (chamfer)', xy=(cx, -24.4),
+                    xytext=(0.0, -35.0), fontsize=9.4, color=GREY,
+                    ha='center', va='center', zorder=9,
+                    arrowprops=dict(arrowstyle='-|>', color=GREY, lw=1.0,
+                                    shrinkA=4, shrinkB=1))
+
+    ax_a = fig.add_axes([0.005, 0.025, 0.490, 0.530])
+    pinview(ax_a, False, 'A  BOTTOM VIEW (pin side)',
+            'as the TDK data sheet draws it')
+    ax_b = fig.add_axes([0.505, 0.025, 0.490, 0.530])
+    pinview(ax_b, True, 'B  TOP VIEW = PCB FOOTPRINT',
+            'component side; left and right swapped against A')
 
     foot(fig, 'The transformer: the schematic symbol with its pin numbers, '
-              'and the same pins on the custom coil former (its pins are '
-              'this note\'s specification). Primary and auxiliary share one '
-              'row, the two secondaries the other; each secondary bundle '
-              'ends on its own pin, and the centre tap is pins %s, joined on '
-              'the board.' % C.tap_text())
+              'and the %s coil former traced from its data sheet drawing: '
+              '(A) from below, the pin side, as the data sheet numbers it '
+              '(pin positions and the numbers 1, 6, 7 and 12 from the data '
+              'sheet, the others counted), and (B) from above, the PCB '
+              'footprint on the component side, left and right exchanged. One '
+              'conductor ends on a pin; the centre tap joins pins %s on the '
+              'board.' % (B['former'], C.tap_text()))
     save(fig, 'an_xfmr_pins')
 
 
@@ -3294,6 +3385,7 @@ FIGS = {'an_rac': an_rac, 'an_integrated': an_integrated,
         'an_cap_ind': an_cap_ind, 'an_loadshift': an_loadshift,
         'an_peakgain': an_peakgain, 'an_recovery': an_recovery,
         'an_core_section': an_core_section,
+        'an_core_plan': an_core_plan,
         'an_loop_blocks': an_loop_blocks,
         'an_comp_opamp': an_comp_opamp, 'an_loop_example': an_loop_example,
         'an_flyback_llc': an_flyback_llc, 'an_mmf': an_mmf,

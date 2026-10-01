@@ -11,3 +11,7 @@ __pycache__/
 #  last snapshot); committing them makes every clone disagree with itself
 Design Guide/generators/.guard_stamp.json
 Design Guide/generators/.snapshot_prev.json
+
+#  leakage_fem.py caches its field solutions (keyed by the layout) so the AN
+#  build does not re-solve them; one command regenerates it
+Design Guide/generators/.fem_cache.json

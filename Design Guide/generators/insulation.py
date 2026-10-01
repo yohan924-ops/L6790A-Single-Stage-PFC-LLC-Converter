@@ -223,14 +223,15 @@ def checks(V=None, name=None):
         ('NAUX to NS2, NS3 and the core', 'the triple insulation of NAUX, '
          'from pin to pin', 'reinforced: ' + tiw,
          'ok' if TIW_VRMS >= r['u_rms'] else 'FAIL'),
-        ('the face where the two sections touch', 'the triple insulation '
-         'of NP1 (nothing else is between them)', 'reinforced: ' + tiw,
-         'ok' if TIW_VRMS >= r['u_rms'] else 'FAIL'),
+        ('the partition between the sections (%.2f mm)' % w['sep'],
+         'nothing: it sets the leakage only; the wire carries the '
+         'insulation', 'none', 'ok'),
         ('NS2, NS3 to the core', 'the same side of the barrier: the core is '
          'secondary here', 'functional', 'ok'),
     ]
     if B and B.get('rows_apart'):
-        pin = 0.8 if 'square 0.8' in B.get('pin', '') else 1.0
+        import re
+        pin = float(re.search(r'([0-9.]+) mm', B.get('pin', '1.0 mm')).group(1))
         gap_pins = B['rows_apart'] - pin
         rows.append(('primary pin row to secondary pin row, across the '
                      'coil former', '%.1f mm between the rows (%.2f apart, '
@@ -238,6 +239,19 @@ def checks(V=None, name=None):
                      'creepage %.1f mm, clearance %.1f mm'
                      % (r['creep'], r['clearance']),
                      'ok' if gap_pins >= separation_min() else 'FAIL'))
+    M = w['M']
+    if B and M.get('plan_d_max'):
+        #  plan view: the pin rows stand beside the core's depth, so the
+        #  air path from a primary pin to the nearest ferrite is the row
+        #  offset less half the core depth at its tolerance limit less the
+        #  pin radius
+        cl_core = B['rows_apart'] / 2.0 - M['plan_d_max'] / 2.0 - pin / 2.0
+        rows.append(('primary pin to the core, through the air',
+                     '%.2f mm: rows %.2f mm apart, core %.1f mm deep at most, '
+                     'pin %.1f mm' % (cl_core, B['rows_apart'],
+                                      M['plan_d_max'], pin),
+                     'clearance %.1f mm' % r['clearance'],
+                     'ok' if cl_core >= r['clearance'] else 'FAIL'))
     rows.append(('primary pins and the stripped TIW ends to the core yoke '
                  'and to secondary leads', 'the coil former and the lead '
                  'dress, not this drawing',
@@ -276,15 +290,16 @@ OPEN = [
     'Clearance above 30 kHz (the tables for high-frequency working voltage) '
     'is not in these sources; the UL report applied the ordinary values at '
     '133 kHz and 588 V peak.',
-    'The TIW approval quoted is for 500 kHz; the start-up frequency f.SU is '
-    'above that for the first milliseconds of safe start.  Ask the wire '
-    'vendor.  The approval is Class B: the winding hot spot stays under '
-    '130 C, which the thermal measurement has to show.',
-    'L_short is an estimate (leakage.py, a 2-D field solution) at an '
-    'assumed winding pitch; the first samples measure it.',
-    'The coil former of E 60/22/16 is custom: its tube, flanges, pins and '
-    'material are this note\'s specification to the bobbin maker, and the '
-    'distances around the pins are checked on its drawing.',
+    'The TIW approval quoted is for 500 kHz; every switching frequency, '
+    'the start-up frequency f.SU included, has to stay under it (checks() '
+    'compares them).  The approval is Class B: the winding hot spot stays '
+    'under 130 C, which the thermal measurement has to show.',
+    'L_short is an estimate (leakage_fem.py, a 2-D field solution of two '
+    'sections weighted by the turn length at each radius) at an assumed '
+    'winding pitch; the first samples measure it.',
+    'The coil former is the catalogue part of the chosen core with a '
+    'partition added: the bobbin maker confirms the partition and the '
+    'distances around the pins on its drawing.',
 ]
 
 

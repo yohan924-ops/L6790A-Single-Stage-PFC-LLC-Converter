@@ -82,10 +82,10 @@ def _sheet_early(k):
     return _SHC[k]
 
 
-# WHICH design point the note is worked on.  The canonical sheet is a
-# different variant, so name the variant here rather than following it - the
-# workbook and the vendor specification are kept per variant and the note is
-# not allowed to drift between them.
+# WHICH design point the note is worked on.  Since 2026-10-01 there is one
+# (7p5to1_x1, one PQ 50/50) and the canonical sheet is built from it too; the
+# note still names it, so the vendor specification and the note read the
+# same file.
 AN_VARIANT = os.environ.get('AN_VARIANT', '7p5to1_x1')   # one transformer (2026-09-22)
 AN_SM = os.path.join(GUIDE, '..', 'Smath', 'variants',
                      'L6790A_%s.sm' % AN_VARIANT)
@@ -1167,22 +1167,18 @@ def legal():
                     'names the equation it comes from and shows the numbers '
                     'put into it.', S['tc'])],
          [Paragraph('V1.3', S['tc']), Paragraph('September 2026', S['tc']),
-          Paragraph('Design example on one transformer with '
-                    'the winding and pin assignment drawn. Compensator chapter '
-                    'rewritten with the loop equations, the op-amp equivalent '
-                    'of the TL431 network and a worked loop design. Text '
-                    'shortened throughout. Korean edition published with it. '
-                    'Later in September: V<sub>CC</sub> supplied by the '
-                    'auxiliary winding through a Zener regulator, and the '
-                    'safety insulation of the transformer for household AV '
-                    'equipment in the US, EU, Japan, Korea and China. The '
-                    'transformer of the example rebuilt around its '
-                    'leakage: a leakage estimate added, and a section '
-                    'winding, the primary in triple-insulated Litz beside a '
-                    'Litz secondary, the two sections touching, on a TDK '
-                    'E 60/22/16 core whose deep, short window takes it near '
-                    'the tank\'s leakage, with an allowance for the '
-                    'looseness of a real winding.',
+          Paragraph('Design example on one transformer, a TDK %s core on '
+                    'its catalogue coil former with a partition added; the '
+                    'winding, its leakage and the pins drawn, and the tank '
+                    'set by that leakage: L<sub>r</sub> %g&nbsp;&micro;H, '
+                    'L<sub>m</sub> %g&nbsp;&micro;H, C<sub>r</sub> '
+                    '%.0f&nbsp;nF. Compensator chapter rewritten with the loop '
+                    'equations, the op-amp equivalent of the TL431 network and '
+                    'a worked loop design. V<sub>CC</sub> from the auxiliary '
+                    'winding through a Zener regulator. Safety insulation of '
+                    'the transformer for household AV equipment in the US, '
+                    'EU, Japan, Korea and China. Text shortened throughout.'
+                    % (__import__('cores').CHOSEN, V['Lr'], V['Lm'], V['Cr']),
                     S['tc'])]],
         colWidths=[70, 90, CW - 160],
         style=TableStyle([('BACKGROUND', (0, 0), (-1, 0), NAVY),
@@ -1211,9 +1207,9 @@ def legal():
         'N<sub>rect</sub>V<sub>f</sub>, with <b>N<sub>rect</sub></b> the '
         'number of rectifier drops in the conduction path: 1 for a centre '
         'tap, 2 for a full bridge.',
-        '<b>n</b> is the model turns ratio in the gain equation; '
-        '<b>n<sub>T</sub></b> the wound ratio with the leakage in '
-        'L<sub>r</sub>.',
+        '<b>n</b> is the turns ratio of the gain model; '
+        '<b>n<sub>T</sub></b>&nbsp;=&nbsp;N<sub>p</sub>/N<sub>s</sub> is the '
+        'ratio actually wound.',
         '&lambda;&nbsp;=&nbsp;L<sub>r</sub>/L<sub>m</sub>; older literature '
         'uses m&nbsp;=&nbsp;1&nbsp;+&nbsp;1/&lambda;.',
         '&theta; is the line phase angle, zero at the mains zero crossing. '

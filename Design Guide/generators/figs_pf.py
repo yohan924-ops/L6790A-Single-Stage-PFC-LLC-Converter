@@ -162,9 +162,11 @@ def an_pf_chain(save, foot, R, sweep):
             ha='center', va='bottom', fontsize=10.2, color=CYA,
             path_effects=HALO, zorder=9)
     #  'both diverge' was wrong for the loading, which goes to zero
-    a.text(60, 0.80, u'at the zero crossing: gain demand → ∞, load → 0;\n'
+    #  bottom-anchored: top-anchored at 0.80 the second line ran under the
+    #  axis and was cut off (final review)
+    a.text(60, 0.06, u'at the zero crossing: gain demand → ∞, load → 0;\n'
            'a tank with no load has unlimited gain at f$_o$',
-           ha='left', va='top', fontsize=9.8, color=GREY,
+           ha='left', va='bottom', fontsize=9.8, color=GREY,
            path_effects=HALO, zorder=9)
     _tidy(a, '', 'M$_{req}$ / M$_{pk}$')
     a2.set_ylabel('Q / Q$_{pk}$', fontsize=10.5, color=CYA)

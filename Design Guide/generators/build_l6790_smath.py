@@ -20,42 +20,26 @@ from smsheet import Sheet                                          # noqa: E402
 from l6790 import design, sweep                                    # noqa: E402
 import zedsheet as ZS                                              # noqa: E402
 
-# 설계점 3종.  2차가 1턴이냐 2턴이냐로 감을 수 있는 세트 권선비가 갈린다.
-#   n.T = N.x*N.p/N.s 이고 N.x = 3 이므로 N.s=1 이면 3의 배수만, N.s=2 면 1.5 의 배수.
-#   n = n.T/sqrt(1+lambda) 이고 lambda = L.r/L.m 이므로 L.m 이 n 을 정한다.
-# 6:1 은 Z.0 을 낮춰야 산다.  ZVS 를 좌우하는 자화 전류가
-#   I.Lm,pk = 39.27 * n.T * lambda / (Z.0 * sqrt(1+lambda))   [V.out = 25 V]
-# 로 Z.0 에 반비례하기 때문이다.  n.T 가 작아 불리한 만큼 Z.0 = sqrt(L.r/C.r) 을
-# 10.49 -> 6 ohm 으로 내려 덮는다.  대가는 C.r 이 커지는 것과 순환 전류다.
-#   N.x 는 세트 안의 트랜스포머 개수다.  세 설계점은 LGE 기존 보드의 3직렬을
-#   그대로 쓰므로 3 이고, 8to1 만 2 다 - 코어 하나를 줄이는 대신 유닛당 1차가
-#   8턴이 된다.  N.x 가 2 면 N.s=2 에서 감을 수 있는 세트비가 1.0 단위가 된다
-#   (N.x=3 · N.s=2 는 1.5 단위라 8 을 못 잡는다).
-import cores as _CORES     # the x1 point's core area (cores.CHOSEN)
+#  The design point.  ONE TDK PQ 50/50 (N97, B65981A) on the catalogue
+#  former B65982E with a 3.0 mm partition, 15 : 2 (n.T 7.5): NP1 3 layers x
+#  5 T TIW-Litz d 2.9, NS2 2 T layer then NS3 2 T layer Litz d 4.0, NAUX 2 T
+#  on top.  2-D FEM leakage 23.3-26.4 uH (NS2 24.5, NS3 25.1 mid) - L.r 25 uH;
+#  C.r 180 nF (E12) and L.m 45 uH, lambda 0.556; R.T 21.5 k (E96).  The tank
+#  passes 41/44 over L.r 22.3-28.6 uH with these picks fixed.  A.e is read
+#  from cores.CORES, not written here.
+#    n.T = N.x*N.p/N.s ;  n = n.T/sqrt(1+lambda), lambda = L.r/L.m.
+#  The other design points (6:1, 8:1, 7.5:1 on three cores, 9:1) and the
+#  earlier cores (E 60/22/16, ETD 54) were removed on 2026-10-01 when this
+#  design became the only one; they are in git tag archive/before-pq50-root.
+#  Since 2026-09-25 the auxiliary winding supplies VCC (no external rail),
+#  n.aux = 1.0, so R.ZCD_H is 220 k.
+import cores as _CORES
 VARIANTS = {
-    #  9 : 1 (Np 3 · Ns 1 · L.m 24 uH) 은 2026-09-23 에 지웠다 - 정본이 7.5:1 이
-    #  되면서 쓰는 곳이 없어졌다.  근거와 수치는 docs/HISTORY.md.
-    '7p5to1': dict(nT=7.5, Cr=100, Lr=11.0, Lm=20.0, Nx=3, Np=5, Ns=2,
-                  kaux=1, RzH=220, CT=470, label='7.5 : 1'),
-    '8to1':   dict(nT=8.0, Cr=100, Lr=11.0, Lm=20.0, Nx=2, Np=8, Ns=2,
-                  kaux=1, RzH=220, CT=470, label='8 : 1'),
-    '6to1':   dict(nT=6.0, Cr=180, Lr=6.4, Lm=14.2, Nx=3, Np=2, Ns=1,
-                  kaux=1, RzH=220, CT=330, label='6 : 1',
-                  RBZ=680, CVCC=1000),
-    #  ONE transformer, 15 : 2 on a single core (2026-09-22, user: the
-    #  guide's example is one transformer).  Same tank as 7p5to1; N.aux =
-    #  1 * 2 = 2 turns.  The core is cores.CHOSEN (E 60/22/16, TDK
-    #  PC47EE60-Z) and its A.e is read from there, not written here - the
-    #  PQ 40/40 of the three-unit build has no room for a 15-turn primary.
-    '7p5to1_x1': dict(nT=7.5, Cr=100, Lr=11.0, Lm=20.0, Nx=1, Np=15, Ns=2,
+    '7p5to1_x1': dict(nT=7.5, Cr=180, Lr=25.0, Lm=45.0, Nx=1, Np=15, Ns=2,
                       kaux=1, RzH=220, CT=470, label='7.5 : 1',
-                      Ae=_CORES.CORES[_CORES.CHOSEN]['Ae']),
+                      Ae=_CORES.CORES['PQ 50/50']['Ae']),
 }
-#  2026-09-25: the auxiliary winding supplies VCC (no external rail), n.aux
-#  = 1.0 on every design point, so R.ZCD_H is 220 k on all of them.  RBZ and
-#  CVCC are the Zener feed resistor and the VCC capacitor of section 14c; only
-#  6:1 differs, because its higher f.Max and f.SU draw more gate current.
-VAR = os.environ.get('L6790_VARIANT', '7p5to1')    # 정본 = 7.5:1, 3 코어 (2026-09-23)
+VAR = os.environ.get('L6790_VARIANT', '7p5to1_x1')   # the only design point (2026-10-01)
 V = VARIANTS[VAR]
 V['n'] = V['nT'] / (1 + V['Lr'] / V['Lm']) ** 0.5
 
@@ -856,7 +840,7 @@ S.row('- C.T under its DESIGN limit (>1):', 'k.CTd', MIN('C.T_max/C.T', 'C.T/C.T
       note='the 270..1000 pF checks below are the DATASHEET range, a different limit.')
 S.row('- R.T that would put f.Min exactly on f.o:', 'R.T_ceil', "1/C.T*(1/(2*f.o)-T.idle)", 'ohm', 0)
 S.area_end()
-S.const('- SELECTED timing resistor:', 'R.T', "11*'kohm", 'kohm', 1,
+S.const('- SELECTED timing resistor:', 'R.T', "21.5*'kohm", 'kohm', 1,
         note='DS operating range 5 k to 30 k. A smaller R.T raises the VCO clamp.')
 S.row('- R.T under that ceiling (>1):', 'k.RTd', 'R.T_ceil/R.T', None, 3)
 S.row('- VCO minimum frequency:', 'f.Min', "1/(2*(C.T*R.T+T.idle))", 'kHz', 2)

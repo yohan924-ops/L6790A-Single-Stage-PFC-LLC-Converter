@@ -140,7 +140,7 @@ def main():
     import insulation                   # 절연 요구치의 유일한 출처
     INS = insulation.req()
     bad = 0
-    for var in ('7p5to1', '7p5to1_x1', '8to1', '6to1'):
+    for var in ('7p5to1_x1',):
         smp = os.path.join(SMDIR, 'L6790A_%s.sm' % var)
         xlp = os.path.join(HERE, '..', '..', 'Calculation Excel Sheet',
                            'variants', 'Transformer_Spec_%s.xlsx' % var)

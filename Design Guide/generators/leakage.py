@@ -25,10 +25,18 @@ checked against closed forms (self_test: the 1-D formula for windings that
 fill the window, and a pair of conductors in free space).
 
 cores.winding() draws a section winding: NP1 in triple-insulated Litz in
-one section, NS2 and NS3 in the other, the two sections touching.  This
+one section, NS2 and NS3 in the other, a partition between them.  This
 module says what L_short that gives, how it moves with the looseness of
-the winding and with any space between the sections, what each half of
+the winding and with the partition, what each half of
 the centre tap sees, and what the leakage field costs in the Litz.
+
+On the PQ 50/50 of this copy (2026-09-30) this module is NOT the reference:
+it weights every conductor with the one l_N, and on a deep winding round a
+PQ leg an outer turn is some 30 % longer than an inner one - the two
+halves of the centre tap come out in the wrong order and L_short about
+10 % low.  leakage_fem.py solves the same layout with the turn length at
+each radius and the bow-tie back plate; the note quotes that.  This module
+stays for its closed-form checks and the one-dimensional estimate one_d().
 
     python leakage.py            L_short of the chosen core's winding, what
                                  moves it, each half of the centre tap on its
@@ -105,7 +113,7 @@ def energy_open(blocks, n=20):
     return 0.25 * float(I @ L @ I)           # half of the space, half of LI2
 
 
-def blocks_of(V, name=None, g=0.0, only=None, turned=True, k=None,
+def blocks_of(V, name=None, g=None, only=None, turned=True, k=None,
               order=None):
     """The window and the winding blocks of cores.winding(), in metres.
 
@@ -130,8 +138,8 @@ def blocks_of(V, name=None, g=0.0, only=None, turned=True, k=None,
     else:
         pos = [(k, c) for k, row in enumerate(w['smap'])
                for c, who in enumerate(row) if who == only]
-        pc = w['d_sec'] * w['k']                     # pitch along the layer
-        pk = pc + w['t_tape']                       # layer pitch, tape in
+        pc = w['d_sec'] * w['k_ax']                  # pitch along the layer
+        pk = w['d_sec'] * w['k'] + w['t_tape']      # layer pitch, tape in
         for q, c in pos:
             bl.append(((x0 + q * pk) * mm,
                        (x0 + q * pk + w['d_sec']) * mm,
@@ -141,11 +149,11 @@ def blocks_of(V, name=None, g=0.0, only=None, turned=True, k=None,
     return w, a * mm, b * mm, bl
 
 
-def estimate(V, name=None, g=0.0, only=None, turned=True, k=None,
+def estimate(V, name=None, g=None, only=None, turned=True, k=None,
              order=None):
     """L_short [uH] referred to NP1, and its two parts.  k: the winding
-    pitch over the bundle (cores.K_WIND if None; 1.0 = packed tight); g a
-    space between the two sections (0: they touch, as designed)."""
+    pitch over the bundle (cores.K_WIND if None; 1.0 = packed tight); g the
+    partition (None: the design's)."""
     import cores
     name = name or cores.CHOSEN
     w, a, b, bl = blocks_of(V, name, g, only, turned, k, order)
@@ -172,17 +180,20 @@ def _centres(w):
     M, k, t = w['M'], w['k'], w['t_tape']
     x0 = M['tube_od'] / 2.0 - M['d_centre'] / 2.0
     fl = (M['win_h'] - w['wind_w']) / 2.0
-    pa, ps = w['d_pri'] * k, w['d_sec'] * k
+    ka = w['k_ax']
+    pa, ps = w['d_pri'] * k, w['d_sec'] * k            # layer to layer
     out = []
     for li, n in enumerate(w['rows_A']):
-        for q in range(n):                  # a short layer is spread
+        nb = n * w['pri_par']
+        for q in range(nb):                 # a short layer is spread
             out.append(('P', x0 + (pa + t) * li + pa / 2.0,
-                        fl + w['yA'][0] + w['w_A'] * (q + 0.5) / n,
+                        fl + w['yA'][0] + w['w_A'] * (q + 0.5) / nb,
                         w['n_strand']))
     for li, row in enumerate(w['smap']):
         for c, who in enumerate(row):
             out.append(('S', x0 + (ps + t) * li + ps / 2.0,
-                        fl + w['yS'][0] + ps * (c + 0.5), w['n_strand_s']))
+                        fl + w['yS'][0] + w['d_sec'] * ka * (c + 0.5),
+                        w['n_strand_s']))
     return out
 
 
@@ -227,7 +238,7 @@ def dc_loss(V, name=None):
     w = cores.winding(V, name)
     ln = cores.turn(w['name'])[0] * 1e-3
     a_s = pi * (cores.D_STRAND * 1e-3) ** 2 / 4.0
-    rp = 2.26e-8 * V['Np'] * ln / (w['n_strand'] * a_s)
+    rp = 2.26e-8 * V['Np'] * ln / (w['n_strand'] * w['pri_par'] * a_s)
     rs = 2.26e-8 * V['Ns'] * ln / (w['n_strand_s'] * w['sec_par'] * a_s)
     return V['Iprilc'] ** 2 * rp + 2 * V['Idio'] ** 2 * rs
 
@@ -257,9 +268,12 @@ def sharing(V, name=None):
     hw = (M['r_win_out'] - M['d_centre'] / 2.0) * 1e-3
     x0 = M['tube_od'] / 2.0 - M['d_centre'] / 2.0
     fl = (M['win_h'] - w['wind_w']) / 2.0
-    ps, ds = w['d_sec'] * k, w['d_sec']
+    ps, ds = w['d_sec'] * k, w['d_sec']             # layer to layer
+    pc = w['d_sec'] * w['k_ax']                     # along the layer
     y0 = fl + w['yS'][0]
     per = w['sec_par']
+    if per < 2:                          # one conductor a turn: no loop
+        return {'turned': 0.0, 'not_turned': 0.0, 'load': V['Idio']}
 
     def loop(dy_mm):
         dy = dy_mm * 1e-3
@@ -274,15 +288,66 @@ def sharing(V, name=None):
 
             def A(l, c):
                 return potential(a, b, bl, (x0 + (ps + t) * l + ps / 2.0)
-                                 * 1e-3, (y0 + ps * (c + 0.5)) * 1e-3) * lin
+                                 * 1e-3, (y0 + pc * (c + 0.5)) * 1e-3) * lin
             #  bundle c of the winding sits at place c in its first turn and
             #  at place per-1-c in its second when turned over
             L = [sum(A(l, (per - 1 - c) if (turned and j % 2) else c)
                      for j, l in enumerate(lay)) for c in range(per)]
             spread = max(L) - min(L)
-            worst = max(worst, spread * V['Iprilc'] / loop((per - 1) * ps))
+            worst = max(worst, spread * V['Iprilc'] / loop((per - 1) * pc))
         out['turned' if turned else 'not_turned'] = worst
     out['load'] = V['Idio'] / w['sec_par']
+    return out
+
+
+def sharing_pri(V, name=None):
+    """sharing() for the TIW-Litz bundles of a primary turn [A rms].
+
+    A primary turn is cores.PRI_PAR bundles side by side along the layer;
+    fifteen turns in four layers put them at fifteen places across the
+    primary section, where the leakage field runs radially and grows
+    towards the partition.  Each bundle links a different flux; summed over
+    the turns, the difference at the line-cycle rms primary current drives
+    a current around the loop two bundles make.  Returned as laid (the
+    group keeps its order along the axis in every layer) and with the group
+    turned over at each layer ('turned'), and the current each bundle
+    carries ('load')."""
+    import cores
+    from math import log
+    name = name or cores.CHOSEN
+    w = cores.winding(V, name)
+    ln, inside = cores.turn(name)
+    lin, lout = inside * ln * 1e-3, (1 - inside) * ln * 1e-3
+    M, k, t = w['M'], w['k'], w['t_tape']
+    hw = (M['r_win_out'] - M['d_centre'] / 2.0) * 1e-3
+    x0 = M['tube_od'] / 2.0 - M['d_centre'] / 2.0
+    fl = (M['win_h'] - w['wind_w']) / 2.0
+    pp = w['pri_par']
+    dp = w['d_pri']
+    pa = dp * k
+    _, a, b, bl = blocks_of(V, name)
+    out = {'load': V['Iprilc'] / pp}
+    if pp < 2:
+        out['as_laid'] = out['turned'] = 0.0
+        return out
+
+    def loop(dy_mm):
+        dy = dy_mm * 1e-3
+        return V['Np'] * (MU0 * dy / hw * lin + MU0 / pi
+                          * (log(dy / (dp * 5e-4)) + 0.25) * lout)
+    for turned in (False, True):
+        L = [0.0] * pp
+        for li, n in enumerate(w['rows_A']):
+            nb = n * pp
+            for tt in range(n):
+                for c in range(pp):
+                    q = tt * pp + ((pp - 1 - c) if (turned and li % 2) else c)
+                    y = fl + w['yA'][0] + w['w_A'] * (q + 0.5) / nb
+                    L[c] += potential(a, b, bl, (x0 + (pa + t) * li + pa / 2.0)
+                                      * 1e-3, y * 1e-3) * lin
+        dy = w['w_A'] / (w['rows_A'][0] * pp) * (pp - 1)
+        out['turned' if turned else 'as_laid'] = (max(L) - min(L)) \
+            * V['Iprilc'] / loop(dy)
     return out
 
 
@@ -294,7 +359,7 @@ def one_d(nA, nB, wA, wS, wB, g1, g2, h_w, l_n):
                               + nB ** 2 * (g2 + wB / 3.0))
 
 
-def one_d_of(V, name=None, g=0.0):
+def one_d_of(V, name=None, g=None):
     """one_d() for the layout cores.winding() draws (N_B = 0)."""
     import cores
     w = cores.winding(V, name, g)
@@ -305,23 +370,29 @@ def one_d_of(V, name=None, g=0.0):
                  (M['r_win_out'] - M['d_centre'] / 2.0) * mm, C['lN'] * mm)
 
 
-def sweep(V, name=None, step=0.1, gmax=0.5):
-    """[(space between the sections, L_short)] - what a space the winder
-    leaves between the two sections would add."""
-    out, g = [], 0.0
-    while g <= gmax + 1e-9:
-        out.append((g, estimate(V, name, g)['L']))
-        g += step
-    return out, gmax
+def sweep(V, name=None, step=0.1, dmax=0.5):
+    """[(partition, L_short)] from the design's partition down by dmax - the
+    only direction it can be trimmed, the former being full."""
+    import cores
+    g0 = cores.winding(V, name)['sep']
+    out, d = [], 0.0
+    while d <= dmax + 1e-9:
+        out.append((g0 - d, estimate(V, name, g0 - d)['L']))
+        d += step
+    return out, g0
 
 
 def orders(V, name=None):
-    """{order: (L NS2 alone, L NS3 alone)} for the ways the four secondary
+    """{order: (L NS2 alone, L NS3 alone)} for the ways the secondary
     layers can be stacked - what each half of the centre tap sees."""
     import cores
     out = {}
-    for o in (('NS2', 'NS2', 'NS3', 'NS3'), ('NS2', 'NS3', 'NS2', 'NS3'),
-              ('NS2', 'NS3', 'NS3', 'NS2')):
+    if cores.SEC_LAYERS == 2:
+        orders_ = (('NS2', 'NS3'), ('NS3', 'NS2'))
+    else:
+        orders_ = (('NS2', 'NS2', 'NS3', 'NS3'), ('NS2', 'NS3', 'NS2', 'NS3'),
+                   ('NS2', 'NS3', 'NS3', 'NS2'))
+    for o in orders_:
         out[o] = tuple(estimate(V, name, only=h, order=o)['L']
                        for h in ('NS2', 'NS3'))
     return out
@@ -356,8 +427,9 @@ def report(V=None):
            ' free-space pair %.0e (relative error)' % (e1, e2, e3)]
     r = estimate(V)
     w = r['w']
-    out.append('%s, NP1 %d T (one TIW-Litz bundle), NS2/NS3 layers from '
-               'the tube %s' % (r['name'], w['Np'], list(w['order'])))
+    out.append('%s, NP1 %d T (TIW-Litz), partition %.2f mm, '
+               'NS2/NS3 layers from the tube %s'
+               % (r['name'], w['Np'], w['sep'], list(w['order'])))
     out.append('  outside the core per metre: %.2f of the in-core value; '
                '%.0f %% of the turn inside the core' %
                (r['out_ratio'], 100 * r['inside']))
@@ -365,8 +437,8 @@ def report(V=None):
                'in-core-only figure %.2f uH' %
                (r['L'], V['Lshort'], r['L_in_only']))
     sw, gmax = sweep(V)
-    out.append('  with a space between the sections: '
-               + '  '.join('%.1f mm:%.2f' % t for t in sw))
+    out.append('  partition trimmed thinner: '
+               + '  '.join('%.2f mm:%.2f' % t for t in sw))
     out.append('  packed tight (pitch 1.00 instead of %.2f): %.2f uH'
                % (w['k_wind'], estimate(V, k=1.0)['L']))
     for who in ('NS2', 'NS3'):
@@ -387,6 +459,11 @@ def report(V=None):
                'rms as laid, %.1f A not turned over; each bundle carries '
                '%.2f A (first order)'
                % (w['sec_par'], sh['turned'], sh['not_turned'], sh['load']))
+    shp = sharing_pri(V)
+    out.append('  current around the %d bundles of a primary turn: %.1f A rms '
+               'as laid, %.1f A turned over at each layer; each bundle '
+               'carries %.2f A (first order)'
+               % (w['pri_par'], shp['as_laid'], shp['turned'], shp['load']))
     return '\n'.join(out)
 
 

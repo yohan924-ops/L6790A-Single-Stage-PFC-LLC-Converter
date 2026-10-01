@@ -474,7 +474,7 @@ def build(A):
             'i<sub>s</sub> is taken into the dot in the flyback and out of it '
             'in the LLC, so the flyback&rsquo;s ampere-turns add. '
             'Bottom row: dashed, what each winding would drive alone; solid, '
-            'their sum; shaded, what the secondary removed.'
+            'their sum; shaded, the difference the secondary makes.'
             % FR('an_flux_steps')))
     add(p('Figure&nbsp;%s follows one period of each converter interval by '
           'interval: which winding conducts, what voltage it holds, and so '
@@ -598,7 +598,7 @@ def build(A):
         'it over.',
         '<b>B<sub>pk</sub> is fixed, so core loss follows frequency.</b> '
         'The flux is the same at every point of the line cycle below '
-        'resonance, and the loss per cycle at that flux rises with '
+        'resonance, and the core loss at that flux rises with '
         'f<sub>sw</sub>. Above resonance the flux falls as 1/f<sub>sw</sub> and the '
         'loss falls with it, so the worst core loss is near f<sub>r</sub>.',
         '<b>The flyback habit that costs the most</b> is asking the '
@@ -655,7 +655,7 @@ def build(A):
           'voltage. <b>Displacement</b> (the phase) is what a motor gets '
           'wrong; <b>distortion</b> (the harmonic share of the rms) is what '
           'a rectifier gets wrong. The current above is roughly in phase '
-          'and still scores about 0.6.'))
+          'and still has a power factor of only about 0.6.'))
     add(p('Total harmonic distortion, THD, is the harmonic content as a '
           'fraction of the fundamental:'))
     add(eq(r'THD=\frac{\sqrt{I_{ac}^{2}-I_{1,rms}^{2}}}{I_{1,rms}}'
@@ -1205,13 +1205,13 @@ def build(A):
           'Three rules matter more than the arithmetic:'
           % dict(q=ER('Qdef'), e=ER('fr'))))
     ext(bullets([
-        'The three calculated figures are not one tank. L<sub>r</sub> is '
-        'whatever pairs with the <b>selected</b> C<sub>r</sub>, and the '
-        'L<sub>m</sub> figure is L<sub>r</sub> over the &lambda; that '
-        '<i>no load at the high corner</i> asks for, a condition a design '
-        'may knowingly not meet (Section&nbsp;'
+        'The three calculated values are not one tank. L<sub>r</sub> '
+        'follows from the <b>selected</b> C<sub>r</sub>, not the calculated '
+        'one. The calculated L<sub>m</sub> is L<sub>r</sub> divided by the '
+        '&lambda; that <i>no load at the high corner</i> asks for. A design '
+        'may knowingly miss that condition (Section&nbsp;'
         + SR('The other bound on &lambda;, and where it has no solution')
-        + '). It is not a value to round towards.',
+        + '), so do not round towards that L<sub>m</sub>.',
         '<b>A larger L<sub>m</sub> costs ZVS margin.</b> It lowers '
         '&lambda; and the magnetising current that swings the node. '
         'C<sub>r</sub> above and L<sub>m</sub> below their calculated values '
@@ -1260,8 +1260,8 @@ def build(A):
         'magnetising current. Its peak is neither the sum nor the larger of '
         'the two peaks, because they occur at different instants.',
         'Below resonance the secondary conducts for d of each half period. '
-        'The rms is the pulse peak times &radic;d; omitting d '
-        'over-estimates it, and the loss by its square. '
+        'The rms scales with &radic;d; omitting d over-estimates it, and '
+        'the loss by its square. '
         'Section&nbsp;' + SR('The currents this design has to carry')
         + ' draws the composite current of this design.']))
     add(h2('The transformer'))
@@ -1329,8 +1329,11 @@ def build(A):
               'Core saturation margin; the number the supplier tests to'],
              ['&mdash;', 'L<sub>open</sub>, L<sub>short</sub>',
               'LCR meter across NP1 at %s. L<sub>open</sub>: every other winding '
-              'open. L<sub>short</sub>: NS2 and NS3 both shorted, NAUX open. '
-              'Terminal quantities, so a supplier can test them.' % '100&nbsp;kHz, 1&nbsp;V',
+              'open. L<sub>short</sub>: one secondary half shorted, the other '
+              'half and NAUX open, then the other half: the tank sees the half '
+              'that conducts. With both halves shorted it reads lower when the '
+              'two halves do not lie in the same place. Terminal quantities, '
+              'so a supplier can test them.' % '100&nbsp;kHz, 1&nbsp;V',
               'L<sub>m</sub> + L<sub>r</sub> and L<sub>r</sub>: the tank '
               'itself']],
             widths=[CW * 0.07, CW * 0.17, CW * 0.48, CW * 0.28],
@@ -1373,8 +1376,12 @@ def build(A):
            r'L_{short}=L_{L1}+\frac{L_{\mu}\,n_{T}^{2}L_{L2}}'
            r'{L_{\mu}+n_{T}^{2}L_{L2}}=L_{r}', key='Lopen'))
     add(p('Both are read across the primary. L<sub>open</sub>: every other '
-          'winding open. L<sub>short</sub>: every secondary shorted (on a '
-          'centre-tapped part both halves), the auxiliary open. <b>Specify '
+          'winding open. L<sub>short</sub>: the secondary shorted, the '
+          'auxiliary open. On a centre-tapped part short <b>one half at a '
+          'time</b>: in service only one half conducts, so each half is what '
+          'the tank sees. Both halves shorted read lower when the two halves '
+          'do not lie in the same place; record that value, do not hold it '
+          'to L<sub>r</sub>. <b>Specify '
           'those two and the turns, never L<sub>&mu;</sub></b>: no terminal '
           'pair exposes it. State the turns as numbers, because with one or '
           'two secondary turns the lead-out loop dominates that '
@@ -1526,9 +1533,9 @@ def build(A):
         'the sections of a side-by-side or split winding the field crosses '
         'the window, straight through the face of the foil, and drives '
         'eddy currents across its whole width. There the secondary is Litz '
-        'too.',
-        'The ac resistance heats the winding; the dc resistance is a floor, '
-        'not an answer.']))
+        'too.']))
+    add(p('Either way the ac resistance heats the winding; the dc resistance '
+          'is a floor, not an answer.'))
     add(p('<b>Litz.</b> Pick a standard strand at or below 2&delta;; the '
           'strand count is the copper needed over what one strand gives:'))
     add(eq(r'a_{s}=\frac{\pi d_{s}^{2}}{4}\,,\qquad '
@@ -1577,7 +1584,8 @@ def build(A):
         'triple-insulated wire (made as Litz too) carries the reinforced '
         'insulation itself, and the gaps are free to be whatever the leakage '
         'asks.' % ER('leak'),
-        '<b>The core counts as the side it cannot be kept away from.</b> '
+        '<b>Treat the core as part of the side that sits closest to '
+        'it.</b> '
         'With plain wire the primary fills the window almost to the outer '
         'legs, so the core is primary, and the secondary needs reinforced '
         'distances to it: through the tube wall, over the flange, to the '
@@ -1748,10 +1756,13 @@ def build(A):
              'margin covers the fall, a part that meets &plusmn;10&nbsp;%% '
              'can hard switch. Section&nbsp;' % {}
              + SR('Controller network') + ' gives the check.'))
-    add(p('Core, bobbin, wire and winding order are the supplier&rsquo;s '
-          'choice, inside the insulation of Section&nbsp;'
+    add(p('Core, bobbin, wire and winding order can be left to the '
+          'supplier as long as L<sub>open</sub>, L<sub>short</sub> and the '
+          'insulation of Section&nbsp;'
           + SR('Safety insulation: what the winding has to carry')
-          + '. Everything above is measurable at the terminals.'))
+          + ' are met, because all of those are measurable at the terminals. '
+            'The design example fixes them anyway: its L<sub>r</sub> is the '
+            'leakage of one particular winding.'))
 
     add(h2('If one transformer is not practical'))
     add(p('At low voltage and high current the secondary is one heavy turn '
@@ -1879,10 +1890,11 @@ def build(A):
           % SR('Frequency modulation is the power factor correction')))
 
     add(h2('Supplying V<sub>CC</sub> from the auxiliary winding'))
-    add(p('The winding charges a capacitor through a diode, and an NPN '
-          'emitter follower whose base a Zener holds passes it on to the pin '
-          'through the bypass diode the datasheet asks for, which keeps the '
-          'start-up current out of the regulator. The pin then sits at '
+    add(p('The winding charges a capacitor through a diode. An NPN '
+          'emitter follower, its base held by a Zener, passes that voltage '
+          'on to the pin. Between them sits the bypass diode the datasheet '
+          'asks for; it keeps the start-up current out of the regulator. '
+          'The pin then sits at '
           'V<sub>CC,reg</sub>, the Zener voltage V<sub>DZ</sub> less the '
           'base-emitter drop V<sub>BE</sub> and the diode drop V<sub>D</sub>:'))
     add(eq(r'V_{CC,reg}=V_{DZ}-V_{BE}-V_{D}', key='vccreg'))
@@ -2267,7 +2279,9 @@ def build(A):
               'halves the rectifier conduction loss; doubles the device '
               'reverse voltage'],
              ['Target series resonance', 'f<sub>r</sub>', '%(frt).0f kHz' % V,
-              'chosen', 'sets the magnetics size'],
+              'chosen', 'the starting point; the leakage of the transformer '
+              'sets the final f<sub>r</sub>, %(fr).1f kHz (Section&nbsp;%(s)s)'
+              % dict(V, s=SR('Following the numbers through'))],
              ['Specified maximum f<sub>sw</sub>', 'f<sub>sw,max</sub>',
               '%(fswspec).0f kHz (%(fx).1f f<sub>r</sub>)' % dict(V, fx=V['fswspec'] / V['frt']), 'chosen',
               'an input to &lambda;, Section&nbsp;'
@@ -2285,8 +2299,8 @@ def build(A):
               'about %.0f %%; nothing downstream is sensitive' % (100 * (V['etaHB'] / 95.0 - 1))],
              ['Oscillator idle time', 'T<sub>idle</sub>',
               '%(Tidle).0f ns' % V, 'assumed',
-              'the draft datasheet also implies 350 and 700 ns; 700 ns would '
-              'close the floor margin &mdash; the first thing to measure'],
+              'the draft datasheet also implies 350 and 700 ns; %s '
+              '&mdash; the first thing to measure' % _idle700_text(V)],
              ['R<sub>DS(on)</sub> temperature factor', 'k<sub>T</sub>',
               '%(Rdpk).1f / %(Rdsk).1f' % V, 'assumed',
               'primary / secondary, read off the datasheet curves at '
@@ -2312,11 +2326,12 @@ def build(A):
               'sets the transformer insulation (Section&nbsp;%s)'
               % SR('Safety insulation of this transformer')],
              ['Transformer construction', '&mdash;',
-              'section winding on a custom coil former: NP1 in '
+              'section winding on a catalogue coil former with a partition '
+              'added: NP1 in '
               'triple-insulated Litz in one section, the Litz secondary in '
-              'the other, the sections touching, tape over every layer',
-              'chosen', 'the insulation in the wire; the window shape sets '
-              'L<sub>short</sub> (Section&nbsp;%s)'
+              'the other, tape over every layer',
+              'chosen', 'the insulation in the wire; the window shape and '
+              'the partition set L<sub>short</sub> (Section&nbsp;%s)'
               % SR('Choosing the core')],
              ['Winding figures', 'J, k<sub>litz</sub>, k<sub>w</sub>',
               '%.1f A/mm&sup2;, %.2f, %.2f; %.1f mm of triple insulation'
@@ -2335,12 +2350,12 @@ def build(A):
     ext(tbl('Principal values. The rest of the chapter shows where each one '
             'comes from.',
             [['Block', 'Values'],
-             ['Tank', 'C<sub>r</sub> %(Cr).0f nF, L<sub>r</sub> %(Lr).0f '
-              '&micro;H, L<sub>m</sub> %(Lm).0f &micro;H, '
-              '&lambda; %(lam).2f, f<sub>r</sub> %(fr).1f kHz, '
+             ['Tank', 'C<sub>r</sub> %(Cr).0f nF, L<sub>r</sub> %(Lr)g '
+              '&micro;H, L<sub>m</sub> %(Lm)g &micro;H, '
+              '&lambda; %(lam).3f, f<sub>r</sub> %(fr).1f kHz, '
               'f<sub>o</sub> %(fo).1f kHz' % V],
              ['Transformer', 'N<sub>p</sub>:N<sub>s</sub> '
-              '%(NpSet)d:%(Ns)d, n %(n).2f, n<sub>T</sub> %(nT).2f, '
+              '%(NpSet)d:%(Ns)d, n %(n).3f, n<sub>T</sub> %(nT).2f, '
               'L<sub>open</sub> %(Lopen).1f &micro;H, '
               'L<sub>short</sub> %(Lshort).1f &micro;H, '
               'A<sub>e</sub> &ge; %(Aereq).0f mm&sup2; at '
@@ -2350,12 +2365,12 @@ def build(A):
              ['Output', '%(Cout1).0f &micro;F &times; %(nC).0f = '
               '%(Cout).1f mF, ripple %(dVo).2f V (%(dVopc).2f %%), '
               'hold-up %(thold).2f ms' % V],
-             ['Controller', 'R<sub>T</sub> %(RT).0f k&Omega;, '
+             ['Controller', 'R<sub>T</sub> %(RT)g k&Omega;, '
               'C<sub>T</sub> %(CT).0f pF, R<sub>CS</sub> %(RCS).1f m&Omega;, '
               'R<sub>CFG</sub> %(RCFG).0f k&Omega;, '
               'R<sub>BM</sub> %(RBM).0f k&Omega;' % V],
              ['Loop', 'f<sub>c</sub> %(fcross).2f Hz, '
-              '&Phi;<sub>M</sub> %(PM).2f&deg;, '
+              '&Phi;<sub>M</sub> %(PM).1f&deg;, '
               'third harmonic %(D3).2f %%' % V],
              ['V<sub>CC</sub>', 'N<sub>aux</sub> %d T, Zener %.0f V, '
               'R<sub>BZ</sub> %.0f &Omega;, C<sub>VCC</sub> %.0f &micro;F, '
@@ -2422,14 +2437,14 @@ def build(A):
              'against a %(b).0f&nbsp;W budget; no single 600&nbsp;V device meets '
              'that budget in the standing position, so the design goes ahead '
              'and the heatsink question is settled by measurement '
-             '(Section&nbsp;%(ref)s). k<sub>RBZ</sub> = %(krbz).3f is the '
-             'thinnest that passes, but every input to it is already a worst '
-             'case (the Zener at the top of its tolerance, the least current '
-             'gain, the end of hold-up). k<sub>floor</sub> = %(kfloor).3f is '
-             'the thinnest that rests on unknowns: the transformer tolerance '
-             'and the idle time both move it, and neither is known to '
-             '2&nbsp;%% yet.'
+             '(Section&nbsp;%(ref)s). %(thin)s k<sub>RBZ</sub> = %(krbz).3f '
+             'is small too, but every input to it is already a worst case '
+             '(the Zener at the top of its tolerance, the least current gain, '
+             'the end of hold-up). k<sub>floor</sub> = %(kfloor).3f rests on '
+             'unknowns: the transformer tolerance and the idle time both move '
+             'it, and neither is measured yet.'
              % dict(V, a=A.SH['P.mos_dc'], b=_kb, krbz=A.SH['k.RBZ'],
+                    thin=_thinnest_text(V, A),
                     ref=SR('What to measure first on hardware'))))
 
     # ------------------------------------------------ the chain, step by step
@@ -2501,8 +2516,11 @@ def build(A):
              % (V['QZVS'], V['Rac'], V['QZVS'], V['Z0'])))
     # -- Cr, Lr
     add(p('<b>Step 7 &mdash; C<sub>r</sub> and L<sub>r</sub>.</b> '
-          'C<sub>r</sub> is taken <b>up</b> on purpose for Q margin; '
-          'L<sub>r</sub> pairs with the <i>selected</i> C<sub>r</sub>:'))
+          'C<sub>r</sub> is taken <b>up</b> on purpose for Q margin. The '
+          'L<sub>r</sub> that pairs with the <i>selected</i> C<sub>r</sub> '
+          'at the target f<sub>r</sub> is computed below; the L<sub>r</sub> '
+          'fitted is the leakage of the transformer (Section&nbsp;%s), and '
+          'f<sub>r</sub> follows it:' % SR('Choosing the core')))
     add(eqagain('fr'))
     add(calc(r'C_{r}=\frac{1}{2\pi f_{r}Z_{0,design}}'
              r'=\frac{1}{2\pi\times %.0f\ \mathrm{kHz}\times %.2f\ \Omega}'
@@ -2510,7 +2528,7 @@ def build(A):
              % (V['frt'], V['Z0'], V['Crc'], V['Cr'])))
     add(calc(r'L_{r}=\frac{1}{(2\pi f_{r})^{2}C_{r}}'
              r'=\frac{1}{(2\pi\times %.0f\ \mathrm{kHz})^{2}\times %.0f\ \mathrm{nF}}'
-             r'=%.2f\ \mu\mathrm{H}\ \rightarrow\ \mathbf{%.0f\ \mu H}'
+             r'=%.2f\ \mu\mathrm{H}\ \rightarrow\ \mathbf{%g\ \mu H}'
              % (V['frt'], V['Cr'], V['Lrc'], V['Lr'])))
     # -- lambda and Lm
     add(p('<b>Step 8 &mdash; &lambda; and L<sub>m</sub>.</b> Four candidates '
@@ -2519,7 +2537,7 @@ def build(A):
     add(calc(r'\lambda_{1}=%.3f\,,\quad \lambda_{2}=%.3f\,,\quad '
              r'\lambda_{3}=%.3f\,,\quad '
              r'\lambda_{TD}=\mathbf{%.3f}\quad\Longrightarrow\quad '
-             r'L_{m}=\frac{L_{r}}{\lambda_{TD}}=\frac{%.0f}{%.3f}'
+             r'L_{m}=\frac{L_{r}}{\lambda_{TD}}=\frac{%g}{%.3f}'
              r'=%.2f\ \mu\mathrm{H}'
              % (_SH['λ.1'], _SH['λ.2'], _SH['λ.3'], _SH['λ.TD'], V['Lr'], _SH['λ.TD'],
                 V['Lmc'])))
@@ -2529,19 +2547,19 @@ def build(A):
           'chosen with n so that n<sub>T</sub> is windable:'
           % dict(V, ref=SR('The other bound on &lambda;, and where it has '
                            'no solution'))))
-    add(calc(r'L_{m}=\mathbf{%.0f\ \mu H}\qquad '
-             r'\lambda_{act}=\frac{L_{r}}{L_{m}}=\frac{%.0f}{%.0f}'
+    add(calc(r'L_{m}=\mathbf{%g\ \mu H}\qquad '
+             r'\lambda_{act}=\frac{L_{r}}{L_{m}}=\frac{%g}{%g}'
              r'=\mathbf{%.3f}' % (V['Lm'], V['Lr'], V['Lm'], V['lam'])))
     # -- realised
     add(p('<b>Step 9 &mdash; what the selected parts make.</b> Every later '
           'check is measured against these:'))
     add(eqagain('fo'))
-    add(calc(r'f_{r}=\frac{1}{2\pi\sqrt{%.0f\ \mu\mathrm{H}\times %.0f\ \mathrm{nF}}}'
+    add(calc(r'f_{r}=\frac{1}{2\pi\sqrt{%g\ \mu\mathrm{H}\times %.0f\ \mathrm{nF}}}'
              r'=\mathbf{%.1f\ kHz}\qquad '
-             r'f_{o}=\frac{1}{2\pi\sqrt{%.0f\ \mu\mathrm{H}\times %.0f\ \mathrm{nF}}}'
+             r'f_{o}=\frac{1}{2\pi\sqrt{%g\ \mu\mathrm{H}\times %.0f\ \mathrm{nF}}}'
              r'=\mathbf{%.1f\ kHz}'
              % (V['Lr'], V['Cr'], V['fr'], V['Lr'] + V['Lm'], V['Cr'], V['fo'])))
-    add(calc(r'Z_{0}=\sqrt{\frac{%.0f\ \mu\mathrm{H}}{%.0f\ \mathrm{nF}}}'
+    add(calc(r'Z_{0}=\sqrt{\frac{%g\ \mu\mathrm{H}}{%.0f\ \mathrm{nF}}}'
              r'=%.2f\ \Omega\qquad '
              r'Q_{pk}=\frac{Z_{0}}{R_{ac}}=\frac{%.2f}{%.2f}=\mathbf{%.3f}'
              % (V['Lr'], V['Cr'], V['Z0s'], V['Z0s'], V['Rac'], V['Qpk'])))
@@ -2565,11 +2583,11 @@ def build(A):
              ['6', 'Q<sub>ZVS</sub>, Z<sub>0,design</sub>', ER('Qdef'),
               '%(QZVS).4f, %(Z0).2f &Omega;' % V],
              ['7', 'C<sub>r</sub>, L<sub>r</sub>', ER('fr'),
-              '%(Crc).1f &rarr; %(Cr).0f nF, %(Lrc).2f &rarr; %(Lr).0f '
+              '%(Crc).1f &rarr; %(Cr).0f nF, %(Lrc).2f &rarr; %(Lr)g '
               '&micro;H' % V],
              ['8', '&lambda;<sub>req</sub>, L<sub>m</sub>, '
               '&lambda;<sub>act</sub>', ER('lam'),
-              '%(lTD).3f, %(Lm).0f &micro;H, %(lam).3f'
+              '%(lTD).3f, %(Lm)g &micro;H, %(lam).3f'
               % dict(V, lTD=_SH['λ.TD'])],
              ['9', 'f<sub>r</sub>, f<sub>o</sub>, Q<sub>pk</sub>, '
               'n<sub>T</sub>', ER('fr') + ', ' + ER('fo') + ', ' + ER('Qdef'),
@@ -2579,10 +2597,17 @@ def build(A):
     add(note('<b>Steps 7 and 8 are the judgement calls.</b> C<sub>r</sub> is '
              '%(Cr).0f&nbsp;nF against a calculated %(Crc).1f: the larger '
              'capacitor lowers Q<sub>pk</sub>, which is where the ZVS margin '
-             'comes from. L<sub>m</sub> is %(Lm).0f&nbsp;&micro;H against '
+             'comes from. L<sub>m</sub> is %(Lm)g&nbsp;&micro;H against '
              '%(Lmc).1f: it lets the wound %(NpSet)d:%(Ns)d give the n the '
              'tank needs, and gives up the no-load solution (next note).'
-             % V))
+             % V
+             + ('' if abs(V['Lr'] / V['Lrc'] - 1) < 0.10 else
+                ' L<sub>r</sub> is %(Lr)g&nbsp;&micro;H against %(Lrc).2f: '
+                'it is the leakage of the filled transformer window '
+                '(Section&nbsp;%(ref)s), so f<sub>r</sub> falls from the '
+                '%(frt).0f&nbsp;kHz target to %(fr).1f&nbsp;kHz, and '
+                'L<sub>m</sub> keeps &lambda; with it.'
+                % dict(V, ref=SR('Choosing the core')))))
     if V['fnl'] is not None:
         add(note('<b>No-load solution.</b> The no-load gain of this tank '
                  'bottoms out at M<sub>&infin;</sub> = %(Minf).4f, and the '
@@ -2829,8 +2854,8 @@ def build(A):
             split=True))
 
     add(h2('What the transformer must provide'))
-    add(p('The tank asks for L<sub>r</sub> = %(Lr).0f&nbsp;&micro;H, '
-          'L<sub>m</sub> = %(Lm).0f&nbsp;&micro;H and n<sub>T</sub> = '
+    add(p('The tank asks for L<sub>r</sub> = %(Lr)g&nbsp;&micro;H, '
+          'L<sub>m</sub> = %(Lm)g&nbsp;&micro;H and n<sub>T</sub> = '
           '%(nT).2f. The transformer is one part: a %(Np)d-turn primary and '
           'two %(Ns)d-turn secondaries, NS2 and NS3, joined at the centre '
           'tap. NS2 is N<sub>s1</sub> of Figure&nbsp;%(f1)s and NS3 is '
@@ -2860,7 +2885,8 @@ def build(A):
               'open'],
              ['Short-circuit inductance', '%(Lshort).1f &micro;H' % V,
               'this is L<sub>r</sub>, no separate resonant inductor; across NP1, '
-              'NS2 and NS3 shorted, NAUX open'],
+              'NS2 shorted alone, then NS3 alone; the other half and NAUX '
+              'open'],
              ['A<sub>L</sub>', '%(AL).0f nH' % V,
               'open-circuit inductance / N<sub>p</sub>&sup2;; the core is '
               'gapped to it (Section&nbsp;%s)' % SR('Choosing the core')]],
@@ -2948,17 +2974,24 @@ def build(A):
              r'\,,\qquad d_{litz}=\sqrt{\frac{4\cdot%(a2).2f}{\pi\cdot'
              r'%(kl).2f}}=%(d).2f\;\mathrm{mm}'
              % dict(a2=_rs[3], a=_asn, n=_ns1, kl=_CORE.K_LITZ, d=_ds1)))
-    add(p('A secondary bundle of &oslash;%(d2).1f&nbsp;mm is too stiff to '
-          'lay flat in a layer by hand, so <b>each turn of NS2 and NS3 is '
-          '%(sp)d thinner bundles side by side</b>; NP1 stays one '
-          'triple-insulated Litz bundle. Their size comes from the window, '
-          'below.'
-          % dict(d2=_ds1, sp=_w['sec_par'])))
+    add(p('<b>Each winding is one conductor a turn</b>: no bundles in '
+          'parallel, so nothing can share current unevenly and every end is '
+          'one conductor on one pin. The sizes are rounded: NS2 and NS3 '
+          '<b>&oslash;%(ds).1f&nbsp;mm Litz</b>, above the %(d2).2f&nbsp;mm '
+          'the copper asks; NP1 <b>&oslash;%(dp).1f&nbsp;mm over its triple '
+          'insulation</b>, above the %(d1).2f&nbsp;mm the copper asks '
+          '(%(d1b).2f&nbsp;mm plus %(ta).1f&nbsp;mm of insulation), so that '
+          'its layers fill the same radial room as the secondary&rsquo;s '
+          '(below).'
+          % dict(ds=_CORE.D_SEC, d2=_ds1, dp=_CORE.D_PRI,
+                 d1=_dp1 + _CORE.TIW_LITZ_ADD, d1b=_dp1,
+                 ta=_CORE.TIW_LITZ_ADD)))
 
-    #  the arrangement, from the leakage (leakage.py)
+    #  the arrangement, from the leakage (leakage.py for the 1-D formula,
+    #  leakage_fem.py for the field solution of the drawn layout)
     import leakage as _LK
+    import leakage_fem as _LF
     import insulation as _INS
-    from math import pi as _pi
     _M, _mm = _w['M'], 1e-3
     _hw = _M['r_win_out'] - _M['d_centre'] / 2.0
     _sep = _INS.separation_min()
@@ -2966,44 +2999,43 @@ def build(A):
     _L1 = _LK.one_d(V['Np'], 0, _wsb * _mm, _w['w_S'] * _mm, 0.0, _sep * _mm,
                     0.0, _hw * _mm, _R['lN'] * _mm) * 1e6
     _L2 = _LK.one_d_of(V) * 1e6
-    _ef = _LK.estimate(V)
-    _et = _LK.estimate(V, k=1.0)['L']
-    _g01 = _LK.estimate(V, g=0.1)['L']
-    _ords = _LK.orders(V)
-    _h2, _h3 = _ords[_w['order']]
-    _o22 = _ords[('NS2', 'NS2', 'NS3', 'NS3')]
-    _o33 = _ords[('NS2', 'NS3', 'NS3', 'NS2')]
+    _ef = _LF.estimate(V)                        # both halves shorted
+    _ef0 = _LF.estimate(V, yoke=0.0)
+    _ef1 = _LF.estimate(V, yoke=1.0)
+    _h2 = _LF.estimate(V, only='NS2')
+    _h3 = _LF.estimate(V, only='NS3')
+    _h2a, _h3a = (_LF.estimate(V, only='NS2', yoke=0.0),
+                  _LF.estimate(V, only='NS3', yoke=1.0))
+    _hm = 0.5 * (_h2 + _h3)
     _hmax = max(_h2, _h3)
     _Lmax = V['Lshort'] * 1.10
-    _wt = _CORE.winding(V, k=1.0)
-    _sh = _LK.sharing(V)
-    _pa = _LK.proximity(V, V['fswA'])
-    _pb = _LK.proximity(V, V['fr'])
-    _pdc = _LK.dc_loss(V)
-    #  what the current around the parallel bundles adds: it runs out along
-    #  one outer bundle and back along the other, in both windings, all the
-    #  time the field is there (first order, like the current itself)
-    _asn_m = _pi * (_CORE.D_STRAND * 1e-3) ** 2 / 4.0
-    _rb = 2.26e-8 * V['Ns'] * _R['lN'] * 1e-3 / (_w['n_strand_s'] * _asn_m)
-    _pcirc = 2 * 2 * _sh['turned'] ** 2 * _rb
-    _psdc = 2 * V['Idio'] ** 2 * _rb / _w['sec_par']
-    _gl, _gin = _CORE.gap_len(V)
+    _et = _LF.estimate(V, k=1.0)
+    _g05 = _LF.estimate(V, g=_w['sep'] - 0.5)
+    _pa = _LF.proximity(V, V['fswA'])
+    _pb = _LF.proximity(V, V['fr'])
+    _dcl = _LF.dc_loss(V)
+    _pdc = _dcl['P']
+    _gl = _LF.gap_len(V)
+    _g0 = _CORE.gap(V, _R['Ae'])
+    _zp = _CORE.zone_pct(_CORE.CHOSEN, _w['r_tube'] + _w['h_A'] / 2.0)
+    _rin = _w['r_tube'] + _w['d_sec'] * _w['k'] / 2.0
+    _rout = _rin + _w['d_sec'] * _w['k'] + _w['t_tape']
     _wall = (_M['tube_od'] - _M['d_centre']) / 2.0
     _mid = _w['wind_w'] / 2.0                    # the gap, from the NP1 flange
-    _under = _w['yA'][1] - (_mid - _gl / 2.0)
     add(p('<b>The arrangement.</b> L<sub>short</sub> must come out at '
-          '%(Ls).1f&nbsp;&micro;H. Side by side, with the gap as the '
-          'reinforced insulation, the gap is at least the %(sep).1f&nbsp;mm '
-          'creepage (Section&nbsp;%(ins)s). On the window chosen below '
-          '(depth h<sub>w</sub> = %(hw).2f&nbsp;mm, mean turn '
-          'l<sub>N</sub> = %(ln).0f&nbsp;mm), Equation&nbsp;%(e)s with '
-          'N<sub>B</sub>&nbsp;=&nbsp;0, the primary as one plain Litz bundle '
-          'in three layers (w<sub>A</sub> = %(wa).2f&nbsp;mm) and the '
-          'secondary group (w<sub>S</sub> = %(ws).2f&nbsp;mm) gives'
+          '%(Ls).1f&nbsp;&micro;H. First try plain wire, side by side, with '
+          'the gap between the sections carrying the reinforced insulation: '
+          'the gap is then at least the %(sep).1f&nbsp;mm creepage '
+          '(Section&nbsp;%(ins)s). Take the window chosen below (depth '
+          'h<sub>w</sub> = %(hw).2f&nbsp;mm, mean turn l<sub>N</sub> = '
+          '%(ln).1f&nbsp;mm), the primary as one plain Litz bundle in three '
+          'layers (w<sub>A</sub> = %(wa).2f&nbsp;mm) and the secondary group '
+          '(w<sub>S</sub> = %(ws).2f&nbsp;mm). Equation&nbsp;%(e)s with '
+          'N<sub>B</sub>&nbsp;=&nbsp;0 gives'
           % dict(Ls=V['Lshort'], sep=_sep, e=ER('leak'), wa=_wsb,
                  ws=_w['w_S'], hw=_hw, ln=_R['lN'],
                  ins=SR('Safety insulation of this transformer'))))
-    add(calc(r'L_{short}\approx\frac{4\pi\times10^{-7}\times %(ln).0f\ '
+    add(calc(r'L_{short}\approx\frac{4\pi\times10^{-7}\times %(ln).1f\ '
              r'\mathrm{mm}}{%(hw).2f\ \mathrm{mm}}\times %(np)d^{2}\left('
              r'\frac{%(wa).2f}{3}+%(g).1f+\frac{%(ws).2f}{3}\right)\ \mathrm{mm}'
              r'=\mathbf{%(L).0f\ \mu H}'
@@ -3012,150 +3044,156 @@ def build(A):
     add(p('That is %(r).1f times the target. So <b>the insulation goes into '
           'the wire</b>: NP1 is triple-insulated Litz and NAUX is '
           'triple-insulated wire. The winding is then the <b>section '
-          'winding</b> of the usual LLC reference transformer: NP1 in one '
-          'section, the secondary group in the other, <b>the two sections '
-          'touching</b>, and a wrap of tape over every layer.'
+          'winding</b> of the usual LLC reference transformer: a two-section '
+          'coil former, NP1 in one section, the secondary group in the '
+          'other, the <b>partition</b> between them, and a wrap of tape over '
+          'every layer.'
           % dict(r=_L1 / V['Lshort'])))
     add(p('<b>The window this winding needs.</b> When each section fills '
           'the window depth, its width is its copper area over the depth, '
           'so Equation&nbsp;%(e)s goes as l<sub>N</sub> times the copper '
           'area over h<sub>w</sub>&sup2;: the leakage of a filled section '
-          'winding is set by the SHAPE of the window. It has to be deep and '
-          'short, on a centre leg no thicker than the flux asks. The '
-          'E&nbsp;60/22/16 window, %(hw).1f&nbsp;mm deep and '
-          '%(wh).1f&nbsp;mm high, takes it near L<sub>r</sub> with both '
-          'sections filling the depth and the flux well inside its limit.'
-          % dict(e=ER('leak'), hw=_hw, wh=_M['win_h'])))
-    add(p('<b>The build.</b> Both sections fill the radial room, '
-          'h<sub>r</sub> = %(hr).2f&nbsp;mm between the tube and the outer '
-          'legs at their tolerance limits. A real winding is not packed '
-          'tight: bundles in a layer, and layers on each other, sit a little '
-          'apart. The build is therefore laid out at a pitch of '
-          'k<sub>w</sub>&nbsp;=&nbsp;%(k).2f times the bundle diameter, '
-          'along the layer and from layer to layer, with a %(t).2f&nbsp;mm '
-          'wrap of tape over every layer. k<sub>w</sub> is an assumption '
-          'that the first sample&rsquo;s measured build replaces; a winding '
-          'tighter than that leaves the difference to the margin tape and a '
-          'finishing wrap. NP1, one bundle in %(lp)d layers of %(per)d turns '
-          '(the last layer %(last)d, spread over the width), and NS2 and '
-          'NS3, %(ls)d layers of one turn of %(sp)d bundles under NAUX '
-          '(&oslash;%(tiw).1f&nbsp;mm TIW) and its tape, give the bundle '
-          'diameters d<sub>b,p</sub> and d<sub>b,s</sub> and the current '
-          'densities J<sub>p</sub> and J<sub>s</sub> they run at:'
-          % dict(hr=_w['r_free'], k=_w['k_wind'], t=_w['t_tape'],
-                 lp=_w['layers_A'], per=_w['per_A'], last=_w['rows_A'][-1],
-                 ls=_w['sec_layers'], sp=_w['sec_par'],
-                 tiw=_w['tiw_od'])))
-    add(calc([r'd_{b,p}=\frac{%(hr).2f/%(lp)d-%(t).2f}{%(k).2f}=%(dp).2f\;'
-              r'\mathrm{mm}\ \ (\mathrm{bundle}\ %(dl).2f+%(ta).1f\ '
-              r'\mathrm{TIW})'
-              % dict(hr=_w['r_free'], lp=_w['layers_A'], t=_w['t_tape'],
-                     k=_w['k_wind'], dp=_w['d_pri'], dl=_w['d_litz'],
-                     ta=_w['tiw_add']),
-              r'd_{b,s}=\frac{(%(hr).2f-%(tk).2f)/%(ls)d-%(t).2f}'
-              r'{%(k).2f}=%(ds).2f\;\mathrm{mm}'
-              % dict(hr=_w['r_free'], t=_w['t_tape'], k=_w['k_wind'],
-                     ls=_w['sec_layers'], ds=_w['d_sec'],
-                     tk=_w['tiw_od'] * _w['k_wind'] + _w['t_tape']),
-              r'J_{p}=\frac{%(ip).2f\ \mathrm{A}}{%(ap).2f\ '
-              r'\mathrm{mm^{2}}}=\mathbf{%(jp).2f\ A/mm^{2}}\,,\qquad '
-              r'J_{s}=\frac{%(isec).2f\ \mathrm{A}}{%(sp)d\times '
-              r'%(asec).2f\ \mathrm{mm^{2}}}=\mathbf{%(js).2f\ A/mm^{2}}'
+          'winding is set by the SHAPE of the window: a deep, short window '
+          'leaks little, a shallow, long one a lot. Here the window is that '
+          'of a catalogue coil former, filled with nothing left empty, and '
+          'the tank&rsquo;s L<sub>r</sub> is set to what it gives.'
+          % dict(e=ER('leak'))))
+    add(p('<b>The build.</b> A real winding is not packed tight: turns in '
+          'a layer, and layers on each other, sit a little apart. The build '
+          'is laid out at a pitch of k<sub>w</sub>&nbsp;=&nbsp;%(k).2f times '
+          'the conductor from layer to layer, with a %(t).2f&nbsp;mm wrap of '
+          'tape over every layer; k<sub>w</sub> is an assumption that the '
+          'first sample&rsquo;s measured build replaces. NP1 is %(lp)d layers '
+          'of %(per)d turns; NS2 is one layer of its %(sp)d turns side by '
+          'side, NS3 the next layer, and NAUX (&oslash;%(tiw).1f&nbsp;mm TIW) '
+          'the last. The two sections come out nearly as deep as each other '
+          '(h<sub>A</sub> for NP1, h<sub>S</sub> for the secondary section '
+          'with NAUX), and '
+          'the radial room h<sub>r</sub> from the tube to the arc of the '
+          'outer legs is %(hr).2f&nbsp;mm, %(hm).2f&nbsp;mm at the tolerance '
+          'limits (the arc at its least, the tube at its most). Along the '
+          'layer the pitch k<sub>ax</sub> spreads the two sections over the '
+          'winding width less the %(g).1f&nbsp;mm partition, so nothing is '
+          'left empty:'
+          % dict(k=_w['k_wind'], t=_w['t_tape'], lp=_w['layers_A'],
+                 per=_w['per_A'], sp=_w['sec_per'], tiw=_w['tiw_od'],
+                 hr=_w['r_free'], hm=_w['room_min'], g=_w['sep'])))
+    add(calc([r'h_{A}=%(lp)d\times(%(dp).2f\times %(k).2f+%(t).2f)=%(ha).2f\;'
+              r'\mathrm{mm}'
+              % dict(lp=_w['layers_A'], dp=_w['d_pri'], k=_w['k_wind'],
+                     t=_w['t_tape'], ha=_w['h_A']),
+              r'h_{S}=%(ls)d\times(%(ds).2f\times %(k).2f'
+              r'+%(t).2f)+(%(ta).1f\times %(k).2f+%(t).2f)=%(hs).2f\;\mathrm{mm}'
+              % dict(lp=_w['layers_A'], dp=_w['d_pri'], k=_w['k_wind'],
+                     t=_w['t_tape'], ha=_w['h_A'], ls=_w['sec_layers'],
+                     ds=_w['d_sec'], ta=_w['tiw_od'], hs=_w['h_S_aux']),
+              r'J_{p}=\frac{%(ip).2f\ \mathrm{A}}{%(ap).2f\ \mathrm{mm^{2}}}'
+              r'=\mathbf{%(jp).2f\ A/mm^{2}}\,,\qquad '
+              r'J_{s}=\frac{%(isec).2f\ \mathrm{A}}{%(asec).2f\ \mathrm{mm^{2}}}'
+              r'=\mathbf{%(js).2f\ A/mm^{2}}'
               % dict(ip=_rp[2], ap=_w['area_p'], jp=_w['j_p'], isec=_rs[2],
-                     sp=_w['sec_par'], asec=_w['area_s'], js=_w['j_s'])]))
-    add(p('The primary bundle is %(np)d strands against the %(n1)d the '
-          'copper asks; the secondary bundle %(ns)d, %(sss)d a turn against '
-          '%(n2)d. Both run under the %(jc).1f&nbsp;A/mm&sup2; of this note: '
-          'the room the leakage leaves goes into copper.'
-          % dict(np=_w['n_strand'], n1=_np1, ns=_w['n_strand_s'],
-                 sss=_w['sec_par'] * _w['n_strand_s'], n2=_ns1,
+                     asec=_w['area_s'], js=_w['j_s']),
+              r'k_{ax}=\frac{%(W).1f-%(g).1f\ \mathrm{mm}}{%(np)d\times '
+              r'%(dp).2f+%(ns)d\times %(ds).2f\ \mathrm{mm}}=\mathbf{%(ka).3f}'
+              % dict(W=_w['wind_w'], g=_w['sep'], np=_w['per_A'],
+                     dp=_w['d_pri'], ns=_w['sec_per'], ds=_w['d_sec'],
+                     ka=_w['k_ax'])]))
+    add(p('The build is %(b).2f&nbsp;mm deep: %(cn).2f&nbsp;mm clear of the '
+          'leg arc, %(cm).2f&nbsp;mm at the tolerance limits, and about '
+          'level with the rim of the flanges (not dimensioned). The primary bundle is %(np)d strands '
+          'against the %(n1)d the copper asks, the secondary %(ns)d against '
+          '%(n2)d; both run under the %(jc).1f&nbsp;A/mm&sup2; of this '
+          'note.'
+          % dict(b=_w['build'], cn=_w['clear_nom'], cm=_w['clear_min'],
+                 np=_w['n_strand'], n1=_np1, ns=_w['n_strand_s'], n2=_ns1,
                  jc=_CORE.J_CU)))
     add(p('<b>The leakage.</b> Equation&nbsp;%(e)s with the widths of '
-          'Table&nbsp;%(t)s and nothing between the sections gives the upper '
-          'estimate'
-          % dict(e=ER('leak'), t=TR('winding'))))
-    add(calc(r'L_{short}\approx\frac{4\pi\times10^{-7}\times %(ln).0f\ '
+          'Table&nbsp;%(t)s and the %(g).2f&nbsp;mm partition, the whole '
+          'turn taken inside the core, gives the upper estimate'
+          % dict(e=ER('leak'), t=TR('winding'), g=_w['sep'])))
+    add(calc(r'L_{short}\approx\frac{4\pi\times10^{-7}\times %(ln).1f\ '
              r'\mathrm{mm}}{%(hw).2f\ \mathrm{mm}}\times %(np)d^{2}\left('
-             r'\frac{%(wa).2f}{3}+\frac{%(ws).2f}{3}\right)\ \mathrm{mm}'
+             r'\frac{%(wa).2f}{3}+%(g).2f+\frac{%(ws).2f}{3}\right)\ \mathrm{mm}'
              r'=\mathbf{%(L).1f\ \mu H}'
              % dict(ln=_R['lN'], hw=_hw, np=V['Np'], wa=_w['w_A'],
-                    ws=_w['w_S'], L=_L2)))
-    add(p('A field solution of the drawn layout (the window solved exactly '
-          'with the core as an ideal boundary, the part of each turn outside '
-          'the core solved in free space over the centre leg, where it leaks '
-          '%(ro).2f times as much per length) gives <b>%(Lf).2f&nbsp;&micro;H'
-          '</b>, %(pc).1f&nbsp;%% over L<sub>r</sub> and inside the '
-          '&plusmn;10&nbsp;%% of the specification. Wound tight '
-          '(k<sub>w</sub>&nbsp;=&nbsp;1) the same winding would leak '
-          '%(Lt).2f&nbsp;&micro;H, so the looseness of the winding moves '
-          'L<sub>short</sub> by %(dl).0f&nbsp;%%. <b>Nothing in this '
-          'construction trims it after the first samples.</b> A space left '
-          'between the sections raises it, %(d01).2f&nbsp;&micro;H for every '
-          '0.1&nbsp;mm, so the secondary group is wound tight against the '
-          'primary section; lowering it would take narrower sections. Both '
-          'figures are estimates; the first samples decide.'
-          % dict(ro=_ef['out_ratio'], Lf=_ef['L'],
-                 pc=100 * (_ef['L'] / V['Lshort'] - 1), Lt=_et,
-                 dl=100 * (1 - _et / _ef['L']), d01=_g01 - _ef['L'])))
-    add(p('<b>The order of the secondary layers.</b> In service only one '
-          'half of the centre tap conducts at a time, so the tank sees the '
-          'leakage with that half shorted and the other open, not the '
-          'both-shorted figure the specification measures. The four '
-          'secondary layers are one turn each, and their order decides '
-          'those two values. Wound %(ord)s from the tube out, the halves come '
-          'to <b>%(h2).2f and %(h3).2f&nbsp;&micro;H</b> (NS2, NS3 shorted '
-          'alone); both turns of NS2 under both of NS3 would give %(a2).2f '
-          'and %(a3).2f&nbsp;&micro;H, and NS2 on either side of NS3 %(b2).2f '
-          'and %(b3).2f&nbsp;&micro;H. The alternating order gives the '
-          'closest and the lowest pair. Even so, the higher half is '
-          '%(hp).0f&nbsp;%% over L<sub>r</sub>, outside the '
-          '&plusmn;10&nbsp;%% the both-shorted figure is held to, and its '
-          'resonant frequency is %(df).1f&nbsp;%% below the other&rsquo;s. '
-          'The first samples measure both halves (Table&nbsp;%(t)s). The '
-          'winder lays one turn of NS2, tape, one turn of NS3, tape, and so '
-          'on; each group steps up past the other&rsquo;s turn at the '
-          'lead-out side.'
-          % dict(ord=', '.join(_w['order']), h2=_h2, h3=_h3,
-                 a2=_o22[0], a3=_o22[1], b2=_o33[0], b3=_o33[1],
+                    g=_w['sep'], ws=_w['w_S'], L=_L2)))
+    add(p('Two things bring it down. The back plate of a PQ core is not a '
+          'rectangle but a bow tie, narrow at the centre leg (Figure&nbsp;'
+          '%(f)s): at the middle of the winding only %(zl).0f&nbsp;%% of a '
+          'turn has an outer leg beside it, %(zy).0f&nbsp;%% lies under the '
+          'plate with no outer leg, and %(zo).0f&nbsp;%% is outside the core. '
+          'And the winding is deep: a turn of the outer secondary layer is '
+          '%(rr).0f&nbsp;%% longer than one of the inner. A field solution of '
+          'the drawn layout takes both in: the section is solved through '
+          'the outer legs (the ferrite, the gap, the plates) and where the '
+          'turn leaves the core (the centre leg alone), and every part of '
+          'it is weighted with the length of turn at its radius that lies '
+          'in each; the part under the plate alone is counted half in each.'
+          % dict(f=FR('an_core_plan'), zl=_zp[0], zy=_zp[1], zo=_zp[2],
+                 rr=100 * (_rout / _rin - 1))))
+    add(fig('an_core_plan',
+            'The core seen from above, to scale: the outer legs, the '
+            'bow-tie back plate and the centre leg, the whole of NP1 as a '
+            'pale ring under the plate, and the turn in the middle of it '
+            'coloured by what surrounds it. The leakage is solved for the '
+            'ferrite-surrounded and the open case and added in these '
+            'shares, radius by radius.'))
+    add(p('<b>What the tank sees.</b> In service only one half of the '
+          'centre tap conducts at a time. With NS2 shorted alone the field '
+          'solution gives <b>%(h2).2f&nbsp;&micro;H</b>, with NS3 alone '
+          '<b>%(h3).2f&nbsp;&micro;H</b>: NS3 lies further out, where the '
+          'turns are longer. Their mean, %(hm).2f&nbsp;&micro;H, is within '
+          '%(dm).0f&nbsp;%% of the tank&rsquo;s L<sub>r</sub> of '
+          '%(Ls).1f&nbsp;&micro;H; counting the '
+          'part under the plate fully out, or fully in, moves the halves '
+          'to %(h2a).2f and %(h3a).2f&nbsp;&micro;H at the extremes. The '
+          'higher half is %(hp).1f&nbsp;%% over L<sub>r</sub>, %(inout)s the '
+          '&plusmn;10&nbsp;%% the specification holds each half to, and its '
+          'resonant frequency is %(df).1f&nbsp;%% below the other&rsquo;s: '
+          'the half with less leakage carries a little more of the load. '
+          'With both halves shorted, the specification&rsquo;s other '
+          'reading, the figure is lower, %(Lf).2f&nbsp;&micro;H '
+          '(%(L0).2f&ndash;%(L1).2f), because the two layers then share the '
+          'secondary ampere-turns. It is recorded, not held to '
+          'L<sub>r</sub>.'
+          % dict(h2=_h2, h3=_h3, hm=_hm, Ls=V['Lshort'], h2a=_h2a, h3a=_h3a,
+                 dm=max(1.0, -(-100 * abs(_hm / V['Lshort'] - 1) // 1)),
                  hp=100 * (_hmax / V['Lshort'] - 1),
+                 inout='inside' if _hmax <= _Lmax else 'outside',
                  df=100 * (1 - (min(_h2, _h3) / _hmax) ** 0.5),
-                 t=TR('spec-out'))))
-    add(p('<b>The bundles in parallel.</b> Across the secondary section the '
-          'leakage field runs radially and falls from the primary side to '
-          'the far flange, so the %(sp)d bundles of a turn, side by side, '
-          'link different flux and a current runs around them. The second '
-          'turn of each winding lays its bundles in the reverse order (the '
-          'group is turned over on its way up), so each bundle takes a near '
-          'place once and a far place once. That cuts the current, to a '
-          'first order, from %(nt).0f to %(tw).1f&nbsp;A rms against the '
-          '%(ld).1f&nbsp;A each bundle carries. It adds about '
-          '%(pc).2f&nbsp;W, %(pr).0f&nbsp;%% of the secondary dc loss; '
-          'the first sample checks it with a current probe on each pin.'
-          % dict(sp=_w['sec_par'], nt=_sh['not_turned'], tw=_sh['turned'],
-                 ld=_sh['load'], pc=_pcirc, pr=100 * _pcirc / _psdc)))
-    add(p('<b>The ac loss.</b> The dc resistance is a floor. Every strand '
-          'also sits in the leakage field, up to %(bp).1f&nbsp;mT rms in '
-          'the primary section and %(bs).1f in the secondary, and a strand '
-          'of diameter d<sub>s</sub> in a field B loses '
-          '&pi;&omega;&sup2;&sigma;d<sub>s</sub>&#8308;B&sup2;/64 per '
-          'metre. Summed over the strands of the drawn layout, at the '
-          'line-cycle rms current, that is %(pa).1f to %(pb).1f&nbsp;W in NP1 '
-          'and %(sa).1f to %(sb).1f&nbsp;W in NS2 and NS3 between '
-          '%(fa).0f&nbsp;kHz (the line peak at the half-bridge edge) and '
-          'f<sub>r</sub>, against %(dc).1f&nbsp;W of dc loss: a first-order '
-          'estimate, and <b>%(ra).0f to %(rb).0f times the dc loss</b>. It '
-          'is the price of using the leakage field as the resonant inductor, '
-          'and the strand sets it: for the same copper it goes as '
-          'd<sub>s</sub>&sup2;, so &oslash;0.071&nbsp;mm strands halve it and '
-          '&oslash;0.05&nbsp;mm quarter it, at a lower k<sub>litz</sub> that '
-          'the wire vendor gives. The thermal measurement of the first sample '
-          'decides the strand.'
-          % dict(bp=1e3 * _pa['B_pri'], bs=1e3 * _pa['B_sec'],
+                 Lf=_ef, L0=_ef0, L1=_ef1)))
+    add(p('<b>The partition is the knob after the first samples, in one '
+          'direction.</b> The %(g).1f&nbsp;mm wall can be moulded thinner, '
+          'which lowers the leakage, but not usefully thicker; '
+          '%(g5).1f&nbsp;mm lowers the both-shorted figure to '
+          '%(l5).2f&nbsp;&micro;H, and the pitch along the layer takes up '
+          'the width. Wound tight (k<sub>w</sub>&nbsp;=&nbsp;1) the same '
+          'winding reads %(Lt).2f&nbsp;&micro;H: the looseness moves it by '
+          '%(dl).1f&nbsp;%%. All of these are estimates; the first samples '
+          'decide.'
+          % dict(g=_w['sep'], g5=_w['sep'] - 0.5, l5=_g05, Lt=_et,
+                 dl=100 * abs(1 - _et / _ef))))
+    add(p('<b>The ac loss.</b> The dc resistance is a floor: %(dc).2f&nbsp;W '
+          'at the line-cycle rms currents, every turn at its own radius. '
+          'Every strand also sits in the leakage field, up to '
+          '%(bp).1f&nbsp;mT rms in the primary section and %(bs).1f in the '
+          'secondary, and a strand of diameter d<sub>s</sub> in a field of '
+          'peak B loses &pi;&omega;&sup2;&sigma;d<sub>s</sub>&#8308;'
+          'B&sup2;/128 per metre. Summed over the strands of the drawn '
+          'layout, the line-cycle rms current taken as a sine, that is '
+          '%(pa).1f to %(pb).1f&nbsp;W in NP1 and %(sa).1f to %(sb).1f&nbsp;W '
+          'in NS2 and NS3 between %(fa).0f&nbsp;kHz (the line peak at the '
+          'half-bridge edge) and f<sub>r</sub>: a first-order estimate, '
+          '<b>%(ra).1f to %(rb).1f times the dc loss</b>. It is the price of '
+          'using the leakage field as the resonant inductor, and the strand '
+          'sets it: for the same copper it goes as d<sub>s</sub>&sup2;. The '
+          'thermal measurement of the first sample decides the strand.'
+          % dict(dc=_pdc, bp=1e3 * _pa['B_pri'], bs=1e3 * _pa['B_sec'],
                  pa=_pa['P_pri'], pb=_pb['P_pri'], sa=_pa['P_sec'],
-                 sb=_pb['P_sec'], fa=V['fswA'], dc=_pdc,
+                 sb=_pb['P_sec'], fa=V['fswA'],
                  ra=(_pa['P_pri'] + _pa['P_sec']) / _pdc,
                  rb=(_pb['P_pri'] + _pb['P_sec']) / _pdc)))
-    _built = (V['Np'] * _w['area_p']
+    _built = (V['Np'] * _w['pri_par'] * _w['area_p']
               + 2 * V['Ns'] * _w['sec_par'] * _w['area_s'])
     add(p('<b>What the core must offer.</b> A<sub>e</sub> of at least '
           '%(ae).0f&nbsp;mm&sup2;; a window of at least %(cu).1f/%(ku).2f = '
@@ -3167,53 +3205,47 @@ def build(A):
           % dict(ae=V['Aereq'], cu=_CORE.window(V), ku=_CORE.K_U, win=_cw,
                  ivcc=A.SH['I.VCC'])))
     _pc = _R['P_core_max']
-    add(p('<b>The core.</b> TDK <b>%(core)s</b>, an %(chosen)s in %(mat)s '
+    add(p('<b>The core.</b> TDK <b>%(core)s</b>, a %(chosen)s in %(mat)s '
           'ferrite: A<sub>e</sub> = %(ae).0f&nbsp;mm&sup2;, %(rae).1f times '
-          'what the flux needs, so B<sub>pk</sub> is %(bpk).0f&nbsp;mT; a '
-          'window %(hw).2f&nbsp;mm deep and %(wh).1f&nbsp;mm high with a '
-          'rectangular centre leg %(f).1f&nbsp;mm across, all at the '
-          'catalogue limits that make the window smallest. No coil former is '
-          'catalogued for it, so the former is <b>custom</b>, made to this '
-          'winding: its tube leaves %(hr).2f&nbsp;mm of radial room, which '
-          'both sections fill; the winding takes %(ww).2f&nbsp;mm of the '
-          '%(wh).1f&nbsp;mm window height, and the flanges take the rest, '
-          '%(fl).2f&nbsp;mm each. That is %(un).2f&nbsp;mm a side more than '
-          'the thinnest flange assumed (%(fm).2f&nbsp;mm), together less '
-          'than one bundle pitch, so no bundle place is lost. Its '
-          'A<sub>N</sub> at the thinnest flanges is %(an).0f&nbsp;mm&sup2;; '
-          'the copper as built is %(bu).1f&nbsp;mm&sup2;. The catalogue '
-          'gives the core loss at one point only, %(p0).2f&nbsp;W at most at '
-          '%(pf).0f&nbsp;kHz, %(pb).0f&nbsp;mT and %(pt).0f&nbsp;&deg;C; the '
-          'loss at %(bpk).0f&nbsp;mT and f<sub>r</sub> comes from the '
-          '%(mat)s material curve. Table&nbsp;%(t2)s is the arithmetic.'
+          'what the flux needs, so B<sub>pk</sub> is %(bpk).0f&nbsp;mT. Its '
+          'window is %(hw).1f&nbsp;mm deep, from the round centre leg of '
+          '&oslash;%(f).0f&nbsp;mm to the arc that forms the inside of each '
+          'outer leg (&oslash;%(arc).0f&nbsp;mm), and %(wh).1f&nbsp;mm high. '
+          'Its coil former is the catalogue part <b>%(former)s</b>, one '
+          'section and %(pins)d pins; the only change asked of the bobbin '
+          'maker is a %(g).1f&nbsp;mm partition. The winding takes the '
+          '%(ww).1f&nbsp;mm between the flanges, the partition included. '
+          'A<sub>N</sub> is %(an).0f&nbsp;mm&sup2;; the copper as built is '
+          '%(bu).1f&nbsp;mm&sup2;. The catalogue gives the core loss at one '
+          'point only, %(p0).2f&nbsp;W at most at %(pf).0f&nbsp;kHz, '
+          '%(pb).0f&nbsp;mT and %(pt).0f&nbsp;&deg;C; the loss at the '
+          'operating flux comes from the %(mat)s material curve. '
+          'Table&nbsp;%(t2)s is the arithmetic.'
           % dict(chosen=_CORE.CHOSEN, mat=_R['material'], core=_R['core'],
                  ae=_R['Ae'], rae=_R['Ae'] / V['Aereq'],
                  bpk=_CORE.flux(V, _R['Ae']), hw=_hw, wh=_M['win_h'],
-                 f=_M['d_centre'], hr=_w['r_free'], ww=_w['wind_w'],
-                 fl=_w['flange'], un=_w['unused'], fm=_CORE.FLANGE_MIN,
+                 f=_M['d_centre'], arc=2 * _M['r_win_out'], ww=_w['wind_w'],
+                 former=_R['former'], pins=_CORE.BOBBIN['pins'], g=_w['sep'],
                  an=_R['AN'], bu=_built, p0=_pc[0], pf=_pc[1], pb=_pc[2],
                  pt=_pc[3], t2=TR('winding'))))
     add(p('<b>The gap is one piece, and the winding is close to it.</b> '
-          'TDK stocks this core gapped to %(al1)s nH only; '
-          'A<sub>L</sub>&nbsp;=&nbsp;%(AL).0f&nbsp;nH is ground to order. The '
-          'catalogue&rsquo;s A<sub>L</sub>-against-gap curve, a fit to its '
-          'measurement with the fringing in it, gives <b>about '
-          '%(cg).1f&nbsp;mm</b> for it%(ex)s; the vendor grinds to '
-          'A<sub>L</sub>, not to the length. The one gap is at the middle of '
-          'the centre leg, under the last %(ud).1f&nbsp;mm of the primary '
-          'section next to the face where the sections meet, with the first '
-          'layer of NP1 %(wall).2f&nbsp;mm away across the tube. Its '
-          'fringing field reaches into the inner layers; whether it is split '
-          'into several gaps, and what the fringing costs in the Litz, is '
-          'open (Table&nbsp;%(t)s).'
-          % dict(al1='250 and 500', AL=V['AL'], cg=_gl,
-                 ex=('' if _gin else ', past the %.0f&nbsp;mm end of the drawn '
-                     'curve, so the figure is extrapolated'
-                     % _R['AL_curve'][3]),
-                 ud=min(_under, _w['w_A']), wall=_wall,
-                 t=TR('openitems'))))
-    ext(tbl('The winding, from current to copper. NS3 is the same as NS2 '
-            'and is wound with it.',
+          'The data sheet gives no relation between A<sub>L</sub> and the '
+          'gap for this core; gapped cores are made to order, ground to '
+          'A<sub>L</sub>. Without fringing, &mu;<sub>0</sub>A<sub>e</sub>/'
+          'A<sub>L</sub> gives %(g0).2f&nbsp;mm for A<sub>L</sub>&nbsp;=&nbsp;'
+          '%(AL).0f&nbsp;nH; the field solution, fringing included, '
+          '<b>about %(gl).2f&nbsp;mm</b>. The gap is at the middle of the '
+          'centre leg, %(ud).1f&nbsp;mm from the primary-section flange, '
+          '%(pd)s, with the first layer of NP1 %(wall).2f&nbsp;mm away across '
+          'the tube. Its fringing field reaches into the inner layers; the '
+          'field solution counts it in the strand loss above.'
+          % dict(AL=V['AL'], g0=_g0, gl=_gl, ud=_mid,
+                 pd=('under the primary section, %.1f&nbsp;mm short of the '
+                     'partition' % (_w['yA'][1] - _mid))
+                 if _mid < _w['yA'][1] else 'under the secondary section',
+                 wall=_wall)))
+    ext(tbl('The winding, from current to copper. NS3 is the same as NS2, '
+            'one layer further out.',
             [['Step', 'Primary NP1', 'Secondary NS2'],
              ['Line-cycle rms current', '%.2f A' % _rp[2], '%.2f A' % _rs[2]],
              ['Copper asked at J = %.1f A/mm&sup2;' % _CORE.J_CU,
@@ -3221,49 +3253,52 @@ def build(A):
               % (_rp[2], _CORE.J_CU, _rp[3], _np1),
               '%.2f / %.1f = <b>%.2f mm&sup2;</b>, %d strands'
               % (_rs[2], _CORE.J_CU, _rs[3], _ns1)],
-             ['Pitch, radial room',
-              'k<sub>w</sub> = %.2f (assumed), tape %.2f mm; h<sub>r</sub> '
-              '= %.2f mm' % (_w['k_wind'], _w['t_tape'], _w['r_free']),
-              'the same; NAUX %.1f &times; %.2f + %.2f mm on top'
-              % (_w['tiw_od'], _w['k_wind'], _w['t_tape'])],
              ['Conductor as built',
-              'one triple-insulated Litz bundle, %d &times; &oslash;%.2f mm: '
-              '&oslash;%.2f + %.1f = <b>&oslash;%.2f mm</b>'
-              % (_w['n_strand'], _CORE.D_STRAND, _w['d_litz'],
-                 _w['tiw_add'], _w['d_pri']),
-              '%d Litz bundles side by side a turn, %d &times; &oslash;%.2f '
-              'mm each: <b>&oslash;%.2f mm</b>'
-              % (_w['sec_par'], _w['n_strand_s'], _CORE.D_STRAND,
-                 _w['d_sec'])],
+              'one triple-insulated Litz bundle a turn, %d &times; '
+              '&oslash;%.2f mm: &oslash;%.2f + %.1f = <b>&oslash;%.2f mm</b>'
+              % (_w['n_strand'], _CORE.D_STRAND, _w['d_litz'], _w['tiw_add'],
+                 _w['d_pri']),
+              'one Litz bundle a turn, %d &times; &oslash;%.2f mm: '
+              '<b>&oslash;%.2f mm</b>'
+              % (_w['n_strand_s'], _CORE.D_STRAND, _w['d_sec'])],
              ['Current density as built',
               '%.2f / %.2f = <b>%.2f A/mm&sup2;</b>'
               % (_rp[2], _w['area_p'], _w['j_p']),
-              '%.2f / (%d &times; %.2f) = <b>%.2f A/mm&sup2;</b>'
-              % (_rs[2], _w['sec_par'], _w['area_s'], _w['j_s'])],
+              '%.2f / %.2f = <b>%.2f A/mm&sup2;</b>'
+              % (_rs[2], _w['area_s'], _w['j_s'])],
              ['Turns and layers',
-              '%d T in %d layers of %s turns, the last layer spread'
+              '%d T in %d layers of %s turns'
               % (V['Np'], _w['layers_A'],
                  ', '.join(str(n) for n in _w['rows_A'])),
-              '%d T, one turn a layer; %d layers with NS3, from the tube %s'
-              % (V['Ns'], _w['sec_layers'], ', '.join(_w['order']))],
+              '%d T side by side in one layer; NS3 the next layer (from the '
+              'tube: %s)' % (V['Ns'], ', '.join(_w['order']))],
+             ['Pitch',
+              'k<sub>w</sub> = %.2f layer to layer (assumed), k<sub>ax</sub> '
+              '= %.3f along the layer, tape %.2f mm a layer'
+              % (_w['k_wind'], _w['k_ax'], _w['t_tape']),
+              'the same; NAUX %.1f &times; %.2f + %.2f mm on top'
+              % (_w['tiw_od'], _w['k_wind'], _w['t_tape'])],
              ['Width on the former',
-              '%d &times; %.2f &times; %.2f = <b>%.2f mm</b>'
-              % (_w['per_A'], _w['d_pri'], _w['k_wind'], _w['w_A']),
-              '%d &times; %.2f &times; %.2f = <b>%.2f mm</b>'
-              % (_w['sec_par'], _w['d_sec'], _w['k_wind'], _w['w_S'])],
+              '%d &times; %.2f &times; %.3f = <b>%.2f mm</b>'
+              % (_w['per_A'], _w['d_pri'], _w['k_ax'], _w['w_A']),
+              '%d &times; %.2f &times; %.3f = <b>%.2f mm</b>'
+              % (_w['sec_per'], _w['d_sec'], _w['k_ax'], _w['w_S'])],
              ['Radial build, tape included',
-              '%d &times; (%.2f &times; %.2f + %.2f) = <b>%.2f mm</b> of %.2f'
+              '%d &times; (%.2f &times; %.2f + %.2f) = <b>%.2f mm</b>'
               % (_w['layers_A'], _w['d_pri'], _w['k_wind'], _w['t_tape'],
-                 _w['h_A'], _w['r_free']),
+                 _w['h_A']),
               '%d &times; (%.2f &times; %.2f + %.2f) = %.2f mm, + NAUX = '
-              '<b>%.2f mm</b> of %.2f'
+              '<b>%.2f mm</b>'
               % (_w['sec_layers'], _w['d_sec'], _w['k_wind'], _w['t_tape'],
-                 _w['h_S'], _w['h_S_aux'], _w['r_free'])],
-             ['Former, custom',
-              'margin %.1f + %.2f + %.2f + margin %.1f = <b>%.2f mm</b> of '
-              'the %.1f mm window height; flanges %.2f mm each'
-              % (_w['margin'], _w['w_A'], _w['w_S'], _w['margin'],
-                 _w['wind_w'], _M['win_h'], _w['flange']), ''],
+                 _w['h_S'], _w['h_S_aux'])],
+             ['Radial room, tube to leg arc',
+              '%.2f mm nominal, %.2f mm at the tolerance limits; %.2f mm '
+              'left at the limits'
+              % (_w['r_free'], _w['room_min'], _w['clear_min']), ''],
+             ['Former, %s' % _R['former'],
+              '%.2f + partition %.2f + %.2f = <b>%.2f mm</b>, the width '
+              'between its flanges; nothing left free'
+              % (_w['w_A'], _w['sep'], _w['w_S'], _w['wind_w']), ''],
              ['Copper in the window',
               'asked: %d &times; %.2f + %d &times; %.2f = %.1f mm&sup2;, '
               'which at k<sub>u</sub> = %.2f needs %.0f mm&sup2; of window; '
@@ -3279,92 +3314,104 @@ def build(A):
           'Table&nbsp;%(t)s names each item.'
           % dict(f=FR('an_core_section'), t=TR('legend42'))))
     add(fig('an_core_section',
-            'The core in section (left, to scale), the winding unrolled '
-            'along the custom former (top right, to scale) and the secondary '
-            'group layer by layer (bottom right, not to scale). NP1 in one '
-            'section, the secondaries in the other, the two sections '
-            'touching; the yellow lines are the layer tape. The circled '
-            'numbers are the rows of Table&nbsp;%(t)s.'
-            % dict(t=TR('legend42')), shrink=False))
+            'The core in section (left, to scale) and the winding unrolled '
+            'along the coil former (right, to scale). NP1 in one section, NS2 and NS3 in '
+            'the other, a %(g).2f&nbsp;mm partition between them; the yellow '
+            'lines are the layer tape. The circled numbers are the rows of '
+            'Table&nbsp;%(t)s.'
+            % dict(t=TR('legend42'), g=_w['sep']), shrink=False))
     ext(tbl('Items of the figure.',
             [['Mark', 'Item', 'Turns', 'Conductor, placement'],
              ['1', 'NP1 primary, pins %s' % _CORE.pins('NP1', '&ndash;'),
               '%d T' % V['Np'],
-              'one triple-insulated Litz bundle, %d &times; &oslash;%.2f mm '
-              '(&oslash;%.2f mm), %d layers of %s turns in the primary '
-              'section, tape over each layer'
+              'one triple-insulated Litz bundle a turn, %d &times; '
+              '&oslash;%.2f mm (&oslash;%.2f mm), %d layers of %s turns in '
+              'the primary section; tape over each layer'
               % (_w['n_strand'], _CORE.D_STRAND, _w['d_pri'],
                  _w['layers_A'], ', '.join(str(n) for n in _w['rows_A']))],
              ['2', 'NS2 secondary, pins %s' % _CORE.pins('NS2', '&ndash;'),
               '%d T' % V['Ns'],
-              '%d Litz bundles side by side a turn, %d &times; &oslash;%.2f '
-              'mm each, one turn a layer, the bundle order reversed on the '
-              'second turn; tape over each layer'
-              % (_w['sec_par'], _w['n_strand_s'], _CORE.D_STRAND)],
+              'one Litz bundle a turn, %d &times; &oslash;%.2f mm '
+              '(&oslash;%.2f mm), both turns side by side in the first '
+              'secondary layer; tape over it'
+              % (_w['n_strand_s'], _CORE.D_STRAND, _w['d_sec'])],
              ['3', 'NS3 secondary, pins %s' % _CORE.pins('NS3', '&ndash;'),
-              '%d T' % V['Ns'], 'the same; from the tube out the layers are '
-              '%s' % ', '.join(_w['order'])],
+              '%d T' % V['Ns'], 'the same, the next layer out, wound in the '
+              'same sense as NS2'],
              ['4', 'NAUX auxiliary, pins %s'
               % _CORE.pins('NAUX', '&ndash;'), '%d T' % V['Naux'],
               'triple-insulated wire, &oslash;%.1f mm assumed, one layer over '
               'the secondaries; feeds V<sub>CC</sub> and ZCD'
               % _w['tiw_od']],
-             ['5', 'Tape', '&mdash;',
-              'margin %.1f mm at each flange, as high as the section beside '
-              'it; layer tape %.2f mm (assumed) over every layer and over '
-              'NAUX' % (_w['margin'], _w['t_tape'])],
-             ['6', 'Centre-leg gap', '&mdash;',
-              'one gap, about %.1f mm from the catalogue curve, ground to '
+             ['5', 'Centre-leg gap', '&mdash;',
+              'one gap, about %.2f mm from the field solution, ground to '
               'A<sub>L</sub> = %.0f nH' % (_gl, V['AL'])],
-             ['7', 'Coil former', '&mdash;',
-              'custom: tube %.1f mm across, flanges %.2f mm; no insulation '
-              'role' % (_M['tube_od'], _w['flange'])]],
+             ['6', 'Coil former', '&mdash;',
+              'TDK %s: tube &oslash;%.1f mm, flanges %.2f mm at the tube; no '
+              'insulation role' % (_R['former'], _M['tube_od'], _w['flange'])],
+             ['7', 'Partition', '&mdash;',
+              '%.2f mm, added to the catalogue former; the wall between the '
+              'sections, sets L<sub>short</sub> with the winding, no '
+              'insulation role' % _w['sep']]],
             widths=[CW * 0.07, CW * 0.30, CW * 0.09, CW * 0.54],
             key='legend42', split=True))
     _B = _CORE.BOBBIN
-    add(p('<b>Pins.</b> The former is custom, so its pins are specified '
-          'here: %(pins)d in two rows of %(half)d at %(pitch).2f&nbsp;mm, '
-          'rows %(rows).2f&nbsp;mm apart under the core. NP1 and the '
-          'auxiliary NAUX take the row at the primary-section flange, NS2 '
-          'and NS3 the other. Each end of NP1 and NAUX is one pin. Each end '
-          'of NS2 and NS3 is %(np)d pins, one for each bundle: %(np)d '
-          'bundles soldered to one pin would make it too thick for its hole '
-          'in the board. A pin then carries %(ip).1f&nbsp;A rms, line-cycle; '
-          'the bobbin maker confirms the rating. The NAUX leads cross the '
-          'primary section to their row inside their triple insulation. The '
-          'centre tap is made on the board.'
-          % dict(pins=_B['pins'], half=_B['pins'] // 2, pitch=_B['pitch'],
-                 rows=_B['rows_apart'], np=_w['sec_par'],
-                 ip=V['Idio'] / _w['sec_par'])))
+    add(p('<b>Pins.</b> The former %(former)s has %(pins)d pins in two rows '
+          'of %(half)d, rows %(rows).2f&nbsp;mm apart; in a row they are two '
+          'groups of three, %(pitch).2f&nbsp;mm apart within a group and '
+          '%(pb).1f&nbsp;mm between the groups. The data sheet numbers pins '
+          '1, 6, 7 and 12 in its view <b>from below</b>, the pin side; its '
+          'drawing does not say so, but that is the view that shows the pin '
+          'ends, and the view from above shows none. From the component '
+          'side of the board, where the footprint is drawn, left and right '
+          'are exchanged: Figure&nbsp;%(fig)s draws both. NP1 and the '
+          'auxiliary NAUX take the pin-1 row, '
+          'NS2 and NS3 the other. Every winding is one conductor, one pin '
+          'an end. <b>The centre tap is made on the board</b>, joining '
+          'NS2&rsquo;s finish (pin %(t2)d) and NS3&rsquo;s start (pin '
+          '%(t3)d), so each half can be measured on its own. A secondary pin '
+          'carries the whole current of its winding, %(ip).1f&nbsp;A rms '
+          'line-cycle: the bobbin maker confirms that rating, or the '
+          'secondary ends are brought straight out to the board. The NAUX '
+          'and secondary leads pass the primary section on their way to '
+          'the pins; NP1 carries the insulation there.'
+          % dict(former=_B['former'], pins=_B['pins'], half=_B['pins'] // 2,
+                 fig=FR('an_xfmr_pins'),
+                 pitch=_B['pitch'], pb=_B['pitch_b'], rows=_B['rows_apart'],
+                 t2=_CORE.PINMAP['NS2'][1][0], t3=_CORE.PINMAP['NS3'][0][0],
+                 ip=V['Idio'])))
     add(fig('an_xfmr_pins',
             'The schematic symbol with its pin numbers, and the same pins on '
-            'the %(former)s coil former (%(pins)d pins, pitch '
-            '%(pitch).2f&nbsp;mm, rows %(rows).2f&nbsp;mm apart). A ring in a '
-            'winding&rsquo;s colour marks its pins; grey pins are free. The '
-            'dot end is the start of each winding. %(note)s'
-            % dict(former=_B['former'], pins=_B['pins'], pitch=_B['pitch'],
+            'the %(former)s coil former (%(pins)d pins, rows %(rows).2f&nbsp;mm '
+            'apart), its outline traced from the data sheet drawing: (A) '
+            'from below, the pin side, as the data sheet draws it, and (B) '
+            'from above, the PCB footprint on the component side. A ring in '
+            'a winding&rsquo;s colour marks its pins. The dot end is the '
+            'start of each winding. '
+            '%(note)s'
+            % dict(former=_B['former'], pins=_B['pins'],
                    rows=_B['rows_apart'], note=_CORE.PIN_NOTE)))
     _PM = _CORE.PINMAP
 
     def PIN_ROW0(n):
-        return _CORE.PIN_XY[n][1] < 0
+        return _CORE.PIN_XY[n][0] < 0
     ext(tbl('Winding-to-pin assignment.',
             [['Winding', 'Pins (start &ndash; finish)', 'Turns', 'Conductor',
               'Row'],
              ['NP1 primary', _CORE.pins('NP1', '&ndash;'), '%d T' % V['Np'],
-              'one triple-insulated Litz bundle of %d &times; &oslash;%.2f '
-              'mm' % (_w['n_strand'], _CORE.D_STRAND),
-              _B['rows'][0]],
+              'triple-insulated Litz, %d &times; &oslash;%.2f mm'
+              % (_w['n_strand'], _CORE.D_STRAND), _B['rows'][0]],
              ['NAUX auxiliary (V<sub>CC</sub>, ZCD)',
               _CORE.pins('NAUX', '&ndash;'), '%d T' % V['Naux'],
               'triple-insulated wire over the secondary', _B['rows'][0]],
              ['NS2 secondary', _CORE.pins('NS2', '&ndash;'), '%d T' % V['Ns'],
-              'Litz, %d bundles side by side, one to each pin'
-              % _w['sec_par'], _B['rows'][1]],
+              'Litz, %d &times; &oslash;%.2f mm'
+              % (_w['n_strand_s'], _CORE.D_STRAND), _B['rows'][1]],
              ['NS3 secondary', _CORE.pins('NS3', '&ndash;'), '%d T' % V['Ns'],
-              'the same, wound with NS2', _B['rows'][1]],
-             ['Centre tap', '%s, joined on the PCB' % _CORE.tap_text(),
-              '&mdash;', '&mdash;', _B['rows'][1]],
+              'the same, the next layer', _B['rows'][1]],
+             ['Centre tap', _CORE.tap_text(),
+              '&mdash;', 'NS2 finish and NS3 start, joined on the board',
+              _B['rows'][1]],
              ['Free', ', '.join(str(n) for n in _CORE.free_pins()),
               '&mdash;', 'not connected',
               _B['rows'][0] if all(PIN_ROW0(n) for n in _CORE.free_pins())
@@ -3450,8 +3497,7 @@ def build(A):
             split=True))
     add(p('Table&nbsp;%(t)s takes every path between the two sides and '
           'names what carries it. The wire carries all of them inside the '
-          'winding: where the two sections touch, only the triple insulation '
-          'of NP1 is between them.' % dict(t=TR('inscheck'))))
+          'winding; the partition carries none.' % dict(t=TR('inscheck'))))
     ext(tbl('What carries the insulation on each path, on the %s.'
             % _cw2['name'],
             [['Path', 'Carried by', 'Required', 'Status']]
@@ -3468,23 +3514,27 @@ def build(A):
         'dress. Reinforced distances, or sleeving qualified as reinforced '
         'insulation.',
         'The triple-insulated Litz itself: one bundle of %d &times; '
-        '&oslash;%.2f mm is the size this design asks for; the '
-        '%.1f mm of insulation over the bundle is assumed, and the size and '
-        'its approval come from the wire vendor.'
-        % (_w['n_strand'], _CORE.D_STRAND, _w['tiw_add']),
+        '&oslash;%.2f mm, &oslash;%.1f mm over its insulation, is the size '
+        'this design asks for; the %.1f mm of insulation is assumed, and the '
+        'size and its approval come from the wire vendor.'
+        % (_w['n_strand'], _CORE.D_STRAND, _w['d_pri'], _w['tiw_add']),
         'The electric-strength value under the edition the certificate will '
         'cite, and the production test voltage and time.',
         'Clearance for the high-frequency part of the working voltage: the '
         'sources quoted do not give that table. A CB report applied the '
         'ordinary values at 133 kHz and 588 V peak [UL].',
-        'The TIW approval quoted stops at %d kHz; the start-up frequency is '
-        '%.0f kHz for the first milliseconds of safe start, and NP1 now '
-        'sees it too. Ask the wire vendor. Its Class %s rating also caps '
-        'the winding hot spot; the thermal measurement has to show it.'
-        % (_INS.TIW_FMAX / 1e3, A.SH['f.SU'], _INS.TIW_CLASS),
-        'L<sub>short</sub> is a field-solution estimate, %.2f&nbsp;&micro;H '
-        'with the sections touching at the assumed winding pitch; the first '
-        'samples decide.' % _ef['L']]))
+        ('The TIW approval quoted stops at %d kHz; the highest switching '
+         'frequency, the start-up frequency, is %.0f kHz, %s. Its Class %s '
+         'rating also caps the winding hot spot; the thermal measurement has '
+         'to show it.'
+         % (_INS.TIW_FMAX / 1e3, A.SH['f.SU'],
+            'under it' if A.SH['f.SU'] * 1e3 <= _INS.TIW_FMAX
+            else 'above it for the first milliseconds of safe start: ask the '
+                 'wire vendor', _INS.TIW_CLASS)),
+        'L<sub>short</sub> is a field-solution estimate, %.2f and '
+        '%.2f&nbsp;&micro;H for the two halves with the %.2f&nbsp;mm '
+        'partition at the assumed winding pitch; the first samples decide.'
+        % (_h2, _h3, _w['sep'])]))
 
     add(h2('Checking the flux, and the specification'))
     add(p('<b>Peak flux density</b> on the chosen core, at f<sub>r</sub> '
@@ -3576,33 +3626,36 @@ def build(A):
             [['Item', 'Value', 'Condition'],
              ['Core', '%s, %s, A<sub>L</sub> %.0f nH' % (
                  _CORE.CHOSEN, _R['material'], V['AL']),
-              'TDK %s; %s, to this specification; one centre-leg gap, '
-              'ground to A<sub>L</sub>' % (_R['core'], _R['former'])],
+              'TDK %s; coil former %s with a %.1f mm partition added; one '
+              'centre-leg gap, ground to A<sub>L</sub>'
+              % (_R['core'], _R['former'], _w['sep'])],
              ['Turns', 'N<sub>p</sub> %(Np)d T; NS2 %(Ns)d T and NS3 %(Ns)d T; '
               'NAUX %(Naux)d T' % V,
-              'section winding: NP1 as one triple-insulated Litz bundle in '
-              'one section, %d layers; NS2 and NS3 in the other, each turn %d '
-              'Litz bundles side by side, one turn a layer, layers %s from '
-              'the tube, the bundle order reversed on the second turn; the '
-              'two sections touching; tape over every layer; each bundle on '
-              'its own pin; centre tap outside the part; NAUX in '
-              'triple-insulated wire over the secondary'
-              % (_w['layers_A'], _w['sec_par'], ', '.join(_w['order']))],
+              'section winding: NP1 in one section, one triple-insulated '
+              'Litz bundle a turn, %d layers of %d turns; NS2 and NS3 in the '
+              'other, one Litz bundle a turn, NS2&rsquo;s %d turns side by '
+              'side in the first layer and NS3&rsquo;s in the second, wound '
+              'in the same sense; a %.2f mm partition between the sections; '
+              'tape over every layer; one conductor on a pin; the centre tap '
+              '(pins %s) joined on the board; NAUX in triple-insulated wire '
+              'over the secondary'
+              % (_w['layers_A'], _w['per_A'], _w['sec_per'], _w['sep'],
+                 _CORE.tap_text())],
              ['Open-circuit inductance',
               '%(Lopen).1f &micro;H, no more than %(Ldrop).1f %% low '
               '(Equation&nbsp;%(e)s)' % dict(V, e=ER('Ldrop')),
               'measured across NP1; every other winding (NS2, NS3, NAUX) open; '
               'LCR meter 100 kHz, 1 V'],
-             ['Leakage inductance', '%(Lshort).1f &micro;H &plusmn;10 %%' % V,
-              'measured across NP1; NS2 and NS3 both shorted, NAUX open; '
-              'LCR meter 100 kHz, 1 V; estimated at %.2f &micro;H with the '
-              'sections touching (Section&nbsp;%s)'
-              % (_ef['L'], SR('Choosing the core'))],
-             ['Leakage, each half', 'record both',
-              'as above with NS2 shorted alone, then NS3 alone: the two halves '
-              'of the centre tap, the values the tank sees (field solution '
-              '%.2f and %.2f &micro;H); a larger difference means the layer '
-              'order was not kept' % (_h2, _h3)],
+             ['Leakage inductance, each half',
+              '%(Lshort).1f &micro;H &plusmn;10 %%' % V,
+              'measured across NP1; NS2 shorted alone, NS3 and NAUX open; '
+              'then NS3 shorted alone, NS2 and NAUX open; LCR meter 100 kHz, '
+              '1 V; estimated at %.2f and %.2f &micro;H (Section&nbsp;%s). '
+              'Both halves must pass: the tank sees the one that conducts'
+              % (_h2, _h3, SR('Choosing the core'))],
+             ['Leakage inductance, both halves shorted', 'record',
+              'as above with NS2 and NS3 both shorted; estimated at %.2f '
+              '&micro;H, lower than each half alone' % _ef],
              ['DC overlap', '&ge; 90 %% of initial inductance' % V,
               'measured across NP1, every other winding open; dc %(IsatTest).0f A '
               'overlapped on the 100 kHz, 1 V signal; normal temperature '
@@ -3619,12 +3672,12 @@ def build(A):
              ['Switching frequency', '%(fswA).0f to %(fswB).0f kHz' % V,
               'at the line peak, full load, from the HB edge to the FB edge; '
               'near the zero crossings it falls towards f<sub>o</sub> = '
-              '%(fo).0f kHz' % V],
+              '%(fo).1f kHz' % V],
              ['Insulation', 'reinforced, NP1 + NAUX to NS2 + NS3 and the '
               'core: by the triple-insulated wire; at the pins clearance '
               '&ge; %.1f mm, creepage &ge; %.1f mm'
               % (_INS.req()['clearance'], _INS.req()['creep']),
-              'Table&nbsp;%s; nothing between the sections but the wire'
+              'Table&nbsp;%s; the partition carries no insulation'
               % TR('inscheck')],
              ['Electric strength', '%d V ac for 60 s (%d V dc)'
               % (_INS.req()['hipot_ac'], _INS.req()['hipot_dc']),
@@ -3743,7 +3796,12 @@ def build(A):
              ['<b>Itemised total</b>', '<b>%(t).2f W</b>'
               % dict(t=A.SH['P.pri_tot'] + A.SH['P.SR']
                      + A.SH['P.RCS'] + A.SH['P.Cout'] + A.SH['P.Qpass_nom']),
-              'and the magnetics are not in it']],
+              'devices only: the transformer windings add %.1f to %.1f W '
+              '(dc and strand loss, Section&nbsp;%s); the core loss is not '
+              'computed here'
+              % (_pdc + _pa['P_pri'] + _pa['P_sec'],
+                 _pdc + _pb['P_pri'] + _pb['P_sec'],
+                 SR('Choosing the core'))]],
             widths=[CW * 0.34, CW * 0.14, CW * 0.52], key='loss', split=True))
     add(p('<b>The standing primary device</b>, the low-side switch of the '
           'idle leg in half-bridge morphing, carries the whole line-cycle '
@@ -4029,7 +4087,7 @@ def build(A):
     ext(tbl('Controller network for the worked design.',
             [['Part', 'Value', 'Result'],
              ['C<sub>T</sub> / R<sub>T</sub>',
-              '%(CT).0f pF / %(RT).0f k&Omega;' % V,
+              '%(CT).0f pF / %(RT)g k&Omega;' % V,
               'f<sub>Min</sub> %(fMin).1f kHz, f<sub>Max</sub> %(fMax).1f kHz'
               % V],
              ['R<sub>CS</sub>', '%(RCS).1f m&Omega; (%(RCS1).0f m&Omega; '
@@ -4054,7 +4112,7 @@ def build(A):
               '%(CFo).0f nF / %(CF).0f nF / %(RF).0f k&Omega; / %(Cfx).2f nF'
               % V,
               'f<sub>c</sub> %(fcross).2f Hz, &Phi;<sub>M</sub> '
-              '%(PM).2f&deg;' % V]],
+              '%(PM).1f&deg;' % V]],
             widths=[CW * 0.20, CW * 0.34, CW * 0.46], split=True))
 
     add(h2('The oscillator: C<sub>T</sub> first, then R<sub>T</sub>'))
@@ -4069,19 +4127,22 @@ def build(A):
           'because it sets the <i>span</i>, R<sub>T</sub> after it because it '
           'sets the <i>floor</i>:'))
     add(eq(r'C_{T,max}=\frac{I_{EA,max}}{2V_{ref}}\cdot'
-           r'\frac{(1-2T_{idle}f_{sw,max,op})(1-2T_{idle}f_{sw,min})}'
-           r'{f_{sw,max,op}-f_{sw,min}}\,,\qquad '
+           r'\frac{(1-2T_{idle}f_{sw,des})(1-2T_{idle}f_{sw,min})}'
+           r'{f_{sw,des}-f_{sw,min}}\,,\qquad '
            r'C_{T,min}=\frac{1}{R_{T,max}}'
            r'\left(\frac{1}{2f_{sw,min}}-T_{idle}\right)', key='CT'))
     add(eq(r'R_{T,ceil}=\frac{1}{C_{T}}'
            r'\left(\frac{1}{2f_{sw,min}}-T_{idle}\right)', key='RTceil'))
     add(p('with f<sub>sw,min</sub> = f<sub>o</sub>&nbsp;=&nbsp;'
-          '%(fo).1f&nbsp;kHz; f<sub>sw,max,op</sub>&nbsp;=&nbsp;'
-          '%(fop).1f&nbsp;kHz, the highest frequency the converter actually '
-          'runs at (the full-bridge edge at the line peak), not the '
-          '%(fswspec).0f&nbsp;kHz specification; I<sub>EA,max</sub>&nbsp;=&nbsp;'
+          '%(fo).1f&nbsp;kHz; f<sub>sw,des</sub>&nbsp;=&nbsp;'
+          '%(fop).1f&nbsp;kHz, the frequency the oscillator span is designed '
+          'to: 1.5 times the highest frequency the converter runs at, '
+          '%(fmx).1f&nbsp;kHz (the full-bridge edge at the line peak), and '
+          'no more than the %(fswspec).0f&nbsp;kHz specification; '
+          'I<sub>EA,max</sub>&nbsp;=&nbsp;'
           '400&nbsp;&micro;A, V<sub>ref</sub>&nbsp;=&nbsp;1.5&nbsp;V and '
-          'T<sub>idle</sub>&nbsp;=&nbsp;%(Tidle).0f&nbsp;ns:' % dict(V, fop=A.SH['f.sw_max_des'])))
+          'T<sub>idle</sub>&nbsp;=&nbsp;%(Tidle).0f&nbsp;ns:'
+          % dict(V, fop=A.SH['f.sw_max_des'], fmx=V['fswmaxop'])))
     add(calc(r'C_{T,max}=\frac{400\times10^{-6}}{2\cdot1.5}\cdot'
              r'\frac{(1-2\cdot%(t).0f\!\times\!10^{-9}\cdot'
              r'%(fmx).1f\!\times\!10^{3})'
@@ -4103,7 +4164,7 @@ def build(A):
              r'\left(\frac{1}{2\cdot%(fo).1f\times10^{3}}'
              r'-%(t).0f\times10^{-9}\right)'
              r'=%(RTceil).2f\;\mathrm{k\Omega}\;\rightarrow\;'
-             r'%(RT).0f\;\mathrm{k\Omega}'
+             r'%(RT)g\;\mathrm{k\Omega}'
              % dict(V, t=V['Tidle'], RTceil=A.SH['R.T_ceil'] / 1e3)))
     add(note('<b>R<sub>T,ceil</sub> is a maximum.</b> f<sub>Min</sub> '
              '<i>falls</i> as R<sub>T</sub> grows, so rounding up drops the '
@@ -4112,7 +4173,7 @@ def build(A):
     add(eq(r'f_{Min}=\frac{1}{2(C_{T}R_{T}+T_{idle})}\,,\qquad '
            r'f_{Max}=\frac{1}{2\left(\frac{C_{T}}'
            r'{\frac{I_{EA,max}}{V_{ref}}+\frac{1}{R_{T}}}+T_{idle}\right)}', key='fMinMax'))
-    add(p('f<sub>Min</sub>&nbsp;=&nbsp;1/[2(%(CT).0f&nbsp;pF&times;%(RT).0f'
+    add(p('f<sub>Min</sub>&nbsp;=&nbsp;1/[2(%(CT).0f&nbsp;pF&times;%(RT)g'
           '&nbsp;k&Omega; + %(Ts).2f&nbsp;&micro;s)] = '
           '<b>%(fMin).2f&nbsp;kHz</b>, which must clear f<sub>o</sub>.'
           % dict(V, Ts=V['Tidle'] / 1e3)))
@@ -4132,7 +4193,7 @@ def build(A):
               '%(tau).2f &micro;s' % dict(V, tau=A.SH['τ.RT']),
               '2.5 to 12 &micro;s', '%(a).3f / %(b).3f'
               % dict(a=A.SH['k.tau_lo'], b=A.SH['k.tau_hi'])],
-             ['R<sub>T</sub>', '%(RT).0f k&Omega;' % V, '5 to 30 k&Omega;',
+             ['R<sub>T</sub>', '%(RT)g k&Omega;' % V, '5 to 30 k&Omega;',
               '%(a).3f / %(b).3f'
               % dict(a=A.SH['k.RT_lo'], b=A.SH['k.RT_hi'])],
              ['C<sub>T</sub>', '%(CT).0f pF' % V, '270 to 1000 pF',
@@ -4145,11 +4206,13 @@ def build(A):
              'expression, and its Table&nbsp;2 back-solves to about '
              '250&nbsp;ns; this design uses '
              '%(Tidle).0f&nbsp;ns. At 700&nbsp;ns f<sub>Min</sub> would be '
-             '%(a).1f&nbsp;kHz, below f<sub>o</sub>, and f<sub>Max</sub> '
-             '%(b).1f&nbsp;kHz against the %(c).1f&nbsp;kHz the FB edge '
-             'needs. Measure it first.'
+             '%(a).1f&nbsp;kHz, %(side)s f<sub>o</sub> = %(fo).1f&nbsp;kHz, '
+             'and f<sub>Max</sub> %(b).1f&nbsp;kHz against the '
+             '%(c).1f&nbsp;kHz the FB edge needs. Measure it first.'
              % dict(V, a=_f_idle(V, 700.0)[0], b=_f_idle(V, 700.0)[1],
-                    c=V['fswmaxop'])))
+                    c=V['fswmaxop'],
+                    side='below' if _f_idle(V, 700.0)[0] < V['fo'] else
+                    'only just above')))
 
     add(h2('The current-sense resistor, which sets three things at once'))
     add(p('Two conditions, the smaller wins:'))
@@ -4381,11 +4444,13 @@ def build(A):
     add(note('t<sub>hand</sub> assumes the set holds its load off until the '
              'rail is up, as a TV sequences its panel. Any load during '
              'start-up stretches it, and C<sub>VCC</sub> with it.'))
+    add(p('Two wiring rules for the start-up path:'))
     ext(bullets([
         '<b>HVSU connects ahead of the bridge</b>, on the ac side, through '
         'one 1000&nbsp;V diode per line; behind the bridge X-capacitor '
         'discharge and brown-out detection both stop working.',
-        '100&nbsp;nF at the pin, beside C<sub>VCC</sub>.']))
+        '<b>100&nbsp;nF at the V<sub>CC</sub> pin</b>, beside '
+        'C<sub>VCC</sub>.']))
 
     # =============================================================== 7
     add(h2('Controller pin rules'))
@@ -4496,17 +4561,21 @@ def build(A):
     add(p('In order; the first four decide whether the design is sound.'))
     ext(bullets([
         '<b>f<sub>sw</sub>(&theta;) over a line half cycle.</b> It settles '
-        'T<sub>idle</sub> and both oscillator clamps, the thinnest margin in '
-        'the design.',
+        'T<sub>idle</sub>, the unknown behind both oscillator clamps.',
         '<b>Cold start into the full %(Cout).1f&nbsp;mF bank.</b> The '
         'start-up window is finite and this risk is new to the '
         'architecture.' % V,
-        '<b>ZVS at the half-bridge edge</b> (245&nbsp;V<sub>pk</sub>, full '
-        'load): calculated %(cTzc).0f&nbsp;ns against %(tD).0f&nbsp;ns. '
-        'Then the worst point of the sweep, %(zLoad).0f&nbsp;%% load, '
-        '%(zAt)s, %(zTzc).0f&nbsp;ns, which is the '
-        'figure this design is held to.'
-        % dict(V, zAt=_where(ZVS_WORST['zVin'], A.R), **ZVS_WORST),
+        ('<b>ZVS at the half-bridge edge</b> (245&nbsp;V<sub>pk</sub>, full '
+         'load), which is also the worst point of the sweep: calculated '
+         '%(zTzc).0f&nbsp;ns against %(tD).0f&nbsp;ns.'
+         % dict(V, **ZVS_WORST)
+         if round(ZVS_WORST['cTzc']) == round(ZVS_WORST['zTzc']) else
+         '<b>ZVS at the half-bridge edge</b> (245&nbsp;V<sub>pk</sub>, full '
+         'load): calculated %(cTzc).0f&nbsp;ns against %(tD).0f&nbsp;ns. '
+         'Then the worst point of the sweep, %(zLoad).0f&nbsp;%% load, '
+         '%(zAt)s, %(zTzc).0f&nbsp;ns, which is the '
+         'figure this design is held to.'
+         % dict(V, zAt=_where(ZVS_WORST['zVin'], A.R), **ZVS_WORST)),
         '<b>Switching frequency at the full-bridge edge</b> '
         '(235&nbsp;V<sub>pk</sub>, full load): calculated %(fswB).1f&nbsp;kHz; '
         'it must not hit the VCO ceiling.' % V,
@@ -4542,7 +4611,7 @@ def build(A):
         ('f<sub>r</sub>, f<sub>o</sub>', 'series resonance, and the lower resonance with L<sub>m</sub> included'),
         ('f<sub>sw</sub>, f<sub>n</sub>', 'switching frequency, and the same normalised to f<sub>r</sub>'),
         ('f<sub>sw,max</sub>, f<sub>sw,min</sub>', 'the specified maximum switching frequency, an input to &lambda;; and the lowest frequency the oscillator must reach, f<sub>o</sub> in this design'),
-        ('f<sub>sw,max,op</sub>', 'the highest switching frequency the converter actually runs at (the full-bridge edge at the line peak); the oscillator span is sized to it'),
+        ('f<sub>sw,des</sub>', 'the frequency the oscillator span is designed to: 1.5 times the highest switching frequency the converter runs at, capped by the specified maximum'),
         ('T<sub>sw</sub>, T<sub>r</sub>', 'switching period 1/f<sub>sw</sub>, and the resonant period 1/f<sub>r</sub>'),
         ('&lambda;, m', 'L<sub>r</sub>/L<sub>m</sub>, and (L<sub>r</sub>+L<sub>m</sub>)/L<sub>r</sub> = 1 + 1/&lambda;'),
         ('&lambda;<sub>act</sub>, &lambda;<sub>req</sub>', 'the &lambda; of the selected parts, and the &lambda; the design asked for'),
@@ -4619,7 +4688,7 @@ def build(A):
         ('N<sub>s1</sub>, N<sub>s2</sub>', 'the upper and lower halves of the centre-tapped secondary (NS2 and NS3 in the design example)'),
         ('i<sub>NS</sub>, i<sub>NS2</sub>, i<sub>NS3</sub>, v<sub>NS</sub>', 'in the design example: the current of a secondary winding, named by its winding, and the voltage across one'),
         ('N<sub>aux</sub>, n<sub>aux</sub>/n<sub>sec</sub>', 'auxiliary winding turns, and its turns ratio to one secondary'),
-        ('L<sub>open</sub>, L<sub>short</sub>', 'inductance across the primary with every other winding open; and with every secondary shorted and the auxiliary open'),
+        ('L<sub>open</sub>, L<sub>short</sub>', 'inductance across the primary with every other winding open; and with the secondary shorted, on a centre tap one half at a time, the auxiliary open'),
         ('I<sub>dc</sub>', 'the dc current the DC-overlap test overlaps on the LCR signal'),
         ('I<sub>p,pk</sub>, L<sub>p</sub>', 'in the flyback comparison only: the primary peak current and the primary inductance of a flyback'),
         ('&Phi;, &Phi;<sub>p</sub>, &Phi;<sub>s</sub>', 'in the flyback comparison: the core flux, and the flux the primary and the secondary ampere-turns would set up alone'),
@@ -4642,8 +4711,9 @@ def build(A):
         ('w<sub>A</sub>, w<sub>S</sub>, w<sub>B</sub>', 'axial widths of primary part A, the secondary and primary part B'),
         ('g<sub>1</sub>, g<sub>2</sub>', 'the gaps between the winding sections'),
         ('h<sub>w</sub>, l<sub>N</sub>', 'depth of the winding window, across which the leakage field runs, and the mean turn length'),
-        ('h<sub>r</sub>, k<sub>w</sub>', 'radial room between the coil-former tube and the outer legs, and the winding pitch over the bundle diameter (the looseness of a real winding)'),
-        ('d<sub>b,p</sub>, d<sub>b,s</sub>', 'outside diameter of one primary bundle (triple insulation included) and of one secondary bundle, as built'),
+        ('h<sub>r</sub>, k<sub>w</sub>', 'radial room between the coil-former tube and the rim of its flanges (or the outer legs, whichever is closer), and the pitch from layer to layer over the bundle diameter (the looseness of a real winding)'),
+        ('h<sub>A</sub>, h<sub>S</sub>', 'radial build of the primary section and of the secondary section with NAUX'),
+        ('k<sub>ax</sub>', 'pitch along a layer over the bundle diameter, spread so that the two sections and the partition fill the winding width'),
         ('J<sub>p</sub>, J<sub>s</sub>', 'current density in the primary and in each secondary winding, as built'),
 
         ('<b>Semiconductors</b>', ''),
@@ -4775,8 +4845,8 @@ def build(A):
               '350 ns in the C<sub>T,max</sub> expression; Table 2 (recommended '
               'operating range) back-solves to about 250 ns',
               '<b>%(Tidle).0f ns.</b> The two clamps bracket the operating '
-              'range at 250 ns and stop doing so at 700 ns, so this is a '
-              'measurement, not a rounding' % V],
+              'range at 250 ns; %(t7)s, so this is a measurement, not a '
+              'rounding' % dict(V, t7=_idle700_text(V))],
              ['Brown-out expression',
               'V<sub>BO</sub> = min(60 V, R<sub>CFG</sub>&middot;4 V/k&Omega;) '
               '&mdash; read literally this is 60 V for every resistor, which '
@@ -4905,15 +4975,23 @@ def build(A):
               '%(kPSR).3f &mdash; essentially exhausted' % V,
               'One more device in parallel per leg recovers it; the decision '
               'waits on the measured temperature'],
-             ['Transformer inductance tolerance',
-              'the tank tolerates a %(Ldrop).1f %% fall in open-circuit '
-              'inductance and the usual specification asks for '
-              '&plusmn;10 %%' % V,
-              'R<sub>T</sub> stays at %(RT).0f k&Omega; until the first '
-              'board. A lower R<sub>T</sub> covers &plusmn;10 %% but widens '
-              'the zero-crossing dead zone; choose after measuring '
-              'f<sub>sw</sub>(&theta;) and the input-current THD at 90 and '
-              '230 Vac' % V],
+             (['Transformer inductance tolerance',
+               'the tank tolerates a %(Ldrop).1f %% fall in open-circuit '
+               'inductance, which covers the usual &plusmn;10 %%' % V,
+               'R<sub>T</sub> stays at %(RT)g k&Omega; until the first '
+               'board. A higher R<sub>T</sub> narrows the zero-crossing dead '
+               'zone but spends this margin; choose after measuring '
+               'f<sub>sw</sub>(&theta;) and the input-current THD at 90 and '
+               '230 Vac' % V] if V['Ldrop'] >= 10.0 else
+              ['Transformer inductance tolerance',
+               'the tank tolerates a %(Ldrop).1f %% fall in open-circuit '
+               'inductance and the usual specification asks for '
+               '&plusmn;10 %%' % V,
+               'R<sub>T</sub> stays at %(RT)g k&Omega; until the first '
+               'board. A lower R<sub>T</sub> covers &plusmn;10 %% but widens '
+               'the zero-crossing dead zone; choose after measuring '
+               'f<sub>sw</sub>(&theta;) and the input-current THD at 90 and '
+               '230 Vac' % V]),
              ['Output bank volume and height',
               '%(Cout).1f mF, %(nC).0f parts' % V,
               'A mechanical question, not an electrical one, and it can send '
@@ -4946,47 +5024,47 @@ def build(A):
               'certificate will cite: electric strength, the high-frequency '
               'clearance table, the production test'],
              ['TIW approval',
-              '%d kHz, Class %s' % (_INS.TIW_FMAX / 1e3, _INS.TIW_CLASS),
-              'The start-up frequency is above it for milliseconds; ask the '
-              'wire vendor, and hold the winding under 130 &deg;C'],
-             ['Leakage of the section winding',
-              '%.2f &micro;H with the sections touching and k<sub>w</sub> = '
-              '%.2f, a field-solution estimate; %.2f &micro;H wound tight'
-              % (_ef['L'], _w['k_wind'], _et),
-              'Measure L<sub>short</sub> on the first samples. Nothing trims '
-              'it: a space between the sections raises it about %.2f '
-              '&micro;H a 0.1 mm, and lowering it takes narrower sections'
-              % (_g01 - _ef['L'])],
+              '%d kHz, Class %s; f<sub>SU</sub> %.0f kHz'
+              % (_INS.TIW_FMAX / 1e3, _INS.TIW_CLASS, A.SH['f.SU']),
+              'Confirm the approval for the wire sizes used, and hold the '
+              'winding under 130 &deg;C'],
              ['Leakage of each half',
-              'NS2 alone %.2f, NS3 alone %.2f &micro;H; the higher is %.0f %% '
-              'over L<sub>r</sub>' % (_h2, _h3,
-                                     100 * (_hmax / V['Lshort'] - 1)),
-              'The tank sees the half that conducts: measure both, and judge '
-              'the tank and R<sub>T</sub> with them'],
+              'NS2 alone %.2f, NS3 alone %.2f &micro;H with the %.2f mm '
+              'partition and k<sub>w</sub> = %.2f, a field-solution estimate; '
+              '%.2f&ndash;%.2f at the extremes of the back-plate share'
+              % (_h2, _h3, _w['sep'], _w['k_wind'], _h2a, _h3a),
+              'Measure both halves on the first samples and judge the tank '
+              'and R<sub>T</sub> with them. A thinner partition lowers them; '
+              'it is not made thicker than %.1f mm' % _w['sep']],
+             ['Leakage, both halves shorted',
+              '%.2f &micro;H estimated, %.2f wound tight' % (_ef, _et),
+              'Recorded on the samples; it is not the value the tank sees'],
              ['Winding pitch k<sub>w</sub>',
               '%.2f, assumed' % _w['k_wind'],
-              'Measure the build of the first sample; a looser winding than '
-              'that does not fit the %.2f mm of radial room' % _w['r_free']],
-             ['Custom coil former',
-              'tube %.1f mm across, flanges %.2f mm, %d pins in two rows'
-              % (_M['tube_od'], _w['flange'], _CORE.BOBBIN['pins']),
-              'No former is catalogued for %s; the bobbin maker draws it to '
-              'this specification and confirms the pins, their current '
-              'rating and the distances around them' % _CORE.CHOSEN],
+              'Measure the build of the first sample; at the tolerance limits '
+              'the winding has %.2f mm to the leg arc' % _w['clear_min']],
+             ['Partition in the coil former',
+              '%.1f mm added to the catalogue %s (one section, %d pins)'
+              % (_w['sep'], _R['former'], _CORE.BOBBIN['pins']),
+              'The bobbin maker confirms that the partition can be moulded '
+              'into the former, and the distances around the pins'],
+             ['Secondary pins',
+              '%.1f A rms line-cycle on one &oslash;%s pin'
+              % (V['Idio'], _CORE.BOBBIN['pin'].split()[-2]),
+              'The bobbin maker gives the pin rating; otherwise the secondary '
+              'ends go straight to the board'],
              ['Centre-leg gap',
-              'one gap of about %.1f mm, from the catalogue curve%s'
-              % (_gl, '' if _gin else ' extrapolated past its %.0f mm end'
-                 % _R['AL_curve'][3]),
-              'The first layer of NP1 is %.2f mm from it: ask the core vendor '
-              'for a split or distributed gap, and measure the winding '
+              'one gap of about %.2f mm (field solution; %.2f mm without '
+              'fringing)' % (_gl, _g0),
+              'The first layer of NP1 is %.2f mm from it: measure the winding '
               'temperature near it' % _wall],
              ['Core loss',
               '%s at %.0f mT and f<sub>r</sub>: not computed; the catalogue '
               'gives %.2f W at most at %.0f kHz, %.0f mT, %.0f &deg;C'
               % (_R['material'], _CORE.flux(V, _R['Ae']), _pc[0], _pc[1],
                  _pc[2], _pc[3]),
-              'Read the %s material curve; measure the core temperature'
-              % _R['material']],
+              'Read the %s material curve at the core temperature (the loss '
+              'rises below 100 &deg;C); measure it' % _R['material']],
              ['Ac loss of the Litz',
               '%.1f to %.1f W from the leakage field on %.1f W dc, first '
               'order, &oslash;%.2f mm strands'
@@ -4994,19 +5072,15 @@ def build(A):
                  _pdc, _CORE.D_STRAND),
               'Measure the winding temperature; a finer strand (loss as '
               'd<sub>s</sub>&sup2;) is the remedy, its fill from the vendor'],
-             ['Parallel secondary bundles',
-              'about %.1f A rms around the %d bundles of a turn, against '
-              '%.1f A each, first order; about %.2f W'
-              % (_sh['turned'], _w['sec_par'], _sh['load'], _pcirc),
-              'Measure the bundle currents on the first sample, a current '
-              'probe on each pin'],
-             ['Triple-insulated Litz for NP1',
-              'one bundle of %d &times; &oslash;%.2f mm, %.1f mm of '
-              'insulation assumed'
-              % (_w['n_strand'], _CORE.D_STRAND, _w['tiw_add']),
-              'The wire vendor confirms the size, the diameter and the '
-              'approval; a thicker wire takes radial room from %.2f mm'
-              % _w['r_free']]],
+             ['Wire sizes',
+              'NP1 triple-insulated Litz &oslash;%.1f mm (%d &times; '
+              '&oslash;%.2f, %.1f mm of insulation assumed); NS2, NS3 Litz '
+              '&oslash;%.1f mm (%d &times; &oslash;%.2f)'
+              % (_w['d_pri'], _w['n_strand'], _CORE.D_STRAND, _w['tiw_add'],
+                 _w['d_sec'], _w['n_strand_s'], _CORE.D_STRAND),
+              'The wire vendor confirms the sizes, the insulation and the '
+              'approval, and the bend of the &oslash;%.1f mm Litz on the '
+              '&oslash;%.1f mm tube' % (_w['d_sec'], _M['tube_od'])]],
             widths=[CW * 0.22, CW * 0.34, CW * 0.44], key='openitems',
             split=True))
     add(note('<b>Every cross-check here is a consistency check, not a '
@@ -5027,6 +5101,31 @@ def _minus(x, fmt):
     """a number with a typographic minus, not a hyphen"""
     s = fmt % x
     return s.replace('-', '&minus;')
+
+
+def _idle700_text(V):
+    """what 700 ns of idle time would do to the two clamps, read from the
+    numbers rather than written once for one tank"""
+    fmin, fmax = _f_idle(V, 700.0)
+    if fmin < V['fo'] or fmax < V['fswmaxop']:
+        return 'at 700 ns they no longer do'
+    return ('at 700 ns they still do, but the floor margin falls to '
+            '%.3f' % (fmin / V['fo']))
+
+
+def _thinnest_text(V, A):
+    """the smallest verification margin that passes, named by its row"""
+    rows = [('ZVS at the worst point of the sweep', ZVS_WORST['zk']),
+            ('the oscillator floor', V['kfloor']),
+            ('the oscillator ceiling', V['kceil']),
+            ('the over-current threshold', V['kOCP']),
+            ('hold-up', V['khold']),
+            ('the secondary loss per rectifier leg', V['kPSR']),
+            ('V<sub>CC</sub> above the start-up threshold', A.SH['k.VCClo']),
+            ('the Zener feed', A.SH['k.RBZ']),
+            ('C<sub>VCC</sub> at the start-up hand-over', A.SH['k.CVCC'])]
+    name, k = min(((n, k) for n, k in rows if k > 1.0), key=lambda r: r[1])
+    return 'The thinnest margin that passes is %s, k = %.3f.' % (name, k)
 
 
 def _f_idle(V, tidle_ns):

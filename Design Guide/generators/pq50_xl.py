@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-"""PQ50 copy only: set the tank and timing picks of the ST workbook for the
+"""One-off, applied 2026-09-30: set the tank and timing picks of the ST workbook for the
 single TDK PQ 50/50 15 : 2 transformer (2026-09-30) and log them in
-CHANGELOG_rev0_6.  The book arrives from the Lr14 copy with the ETD 54 picks.
+CHANGELOG_rev0_6.  The book then carried the earlier ETD 54 picks.
 
     Res. Tank Design  F43  C.r  200    -> 180   nF
                       F44  L.r  23.4   -> 25    uH
@@ -28,7 +28,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 XL = os.path.normpath(os.path.join(HERE, '..', '..', 'Calculation Excel Sheet',
                                    'L6790_spreadsheet_r1_0_corrected_rev0_6.xlsx'))
 VAR = os.path.normpath(os.path.join(HERE, '..', '..', 'Calculation Excel Sheet',
-                                    'variants', 'L6790_workbook_7p5to1.xlsx'))
+                                    'variants', 'L6790_workbook_7p5to1_x1.xlsx'))
 LOG = 'xl/worksheets/sheet1.xml'           # CHANGELOG_rev0_6
 PICKS = (('Res. Tank Design', 'xl/worksheets/sheet4.xml', 'F43', '200', '180',
           'C.r resonant capacitor, nF'),
