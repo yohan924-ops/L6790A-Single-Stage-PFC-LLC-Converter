@@ -263,7 +263,7 @@ def hop(ax, x, y, r=0.20, color=NAVY, lw=LW, z=5):
 
 def mosfet(ax, x, y, name, state='on', h=1.80, gate=1.00,
            dx_d=0.80, dx_c=1.50, halo=True, body=True, coss=True,
-           name_at='gate', size=11.5, lws=1.0, arrow=1.0, ox=1.0):
+           name_at='gate', size=11.5, lws=1.0, arrow=1.0, ox=1.0, wx=1.0):
     """One switch: the MOSFET, its body diode and its C_oss, in parallel.
 
     Enhancement mode, so the channel is THREE separate bars with gaps you
@@ -284,7 +284,8 @@ def mosfet(ax, x, y, name, state='on', h=1.80, gate=1.00,
     points and do not shrink with h, so at h ~ 1.3 the oxide gap and the
     three-bar gaps close up and the bulk arrow hides under the strokes.
     lws scales the strokes, arrow the bulk arrow, ox the gate-to-channel
-    gap.  All three are 1 by default, which is the symbol as reviewed.
+    gap, wx the channel-to-lead width (the bulk stub, where the arrow
+    sits).  All are 1 by default, which is the symbol as reviewed.
     """
     #  Every dimension inside the symbol is a fraction of the
     #  drain-to-source span, so one call serves a full-page panel and a
@@ -312,7 +313,7 @@ def mosfet(ax, x, y, name, state='on', h=1.80, gate=1.00,
             boxstyle='round,pad=0.10,rounding_size=0.16', fc=YEL, alpha=0.40,
             ec='none', zorder=1))
 
-    xc = x - 0.38 * u
+    xc = x - 0.38 * u * wx
     xg = xc - 0.24 * u * ox
     wire(ax, [(x - gate, y), (xg, y)], cm, 1.5 * lws, gid='symbol')  # gate lead
     ax.plot([xg, xg], [y - 0.58 * u, y + 0.58 * u], color=cm,
