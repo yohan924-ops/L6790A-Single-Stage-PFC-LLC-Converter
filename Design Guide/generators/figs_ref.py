@@ -4664,10 +4664,9 @@ def an_full(save, foot):
     XOC, XFX = oc[0], 3.1
     S.wire(ax, [(x_, y_), (XOC, y_), oc])
     S.dot(ax, XFX, y_)
-    vcap(XFX, y_, y_ - 2.2)
-    pg(XFX, y_ - 2.2, 0.3)
-    S.label(ax, 0.1, y_ - 3.6, 'C$_{fx}$ ' + _c(_sv('C.fx')), size=SZ,
-            ha='left')
+    vcap(XFX, y_, y_ - 1.8)
+    pg(XFX, y_ - 1.8, 0.3)
+    S.label(ax, XFX, y_ - 3.3, 'C$_{fx}$\n' + _c(_sv('C.fx')), size=SZ)
     S.wire(ax, [oe, (XOC, y_ - 2.5)])
     pg(XOC, y_ - 2.5, 0.0)
     for dy in (0.22, -0.22):
@@ -4675,7 +4674,7 @@ def an_full(save, foot):
                                      (0.55, y_ - 1.4 + dy), arrowstyle='-|>',
                                      mutation_scale=8, color=NAVY, lw=1.0,
                                      zorder=5, shrinkA=0, shrinkB=0))
-    S.label(ax, 0.2, y_ + 0.6, 'Q4B', size=SN, ha='left', color=GREY)
+    S.label(ax, 0.2, y_ + 0.85, 'Q4B\nSFH617A-2', size=SN, ha='left')
     # ZCD from AUX through a divider; CFG and BM to ground
     zx, zy = U1['ZCD']
     YZN = 5.2
