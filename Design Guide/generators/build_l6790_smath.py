@@ -1122,8 +1122,12 @@ S.row('- Drop across the integrated DMOS alone:', 'V.drop_int',
       "Q.g_run*10^(-9)*'A*'s*R.BS/T.chg", 'V', 2,
       note='compare with V.CC_reg: the DMOS alone cannot hold the high side - '
            'hence the external diode.')
-S.const('[ASSUMED] External bootstrap diode forward drop:', 'V.F_bs', "1.0*'V",
-        'V', 2, note='replace with the chosen diode at its charging current.')
+S.const('[DS] ES1J (D.BS) forward drop, max. at 1 A:', 'V.F_bs', "1.30*'V",
+        'V', 2, note='Diodes Inc. ES1J, DS39406 Rev. 2: 600 V, 1 A, t.rr '
+                     '35 ns max. Taken at 1 A, above the charging current.')
+S.const('[DS] ES1J repetitive reverse voltage:', 'V.RRM_bs', "600*'V", 'V', 0)
+S.row('- bootstrap diode against the bus (>1):', 'k.VRbs', 'V.RRM_bs/V.DS_pri',
+      None, 3)
 S.const('[PICK] Bootstrap capacitor C.BOOT:', 'C.BOOT', "470*'nF", 'nF', 0)
 S.row('- Longest high-side on-time, at f.Min:', 'T.on_max', '1/(2*f.Min)',
       'μs', 2)
@@ -1289,6 +1293,11 @@ S.note('One NXP TEA2095TE (HSO8) drives both centre-tap legs: GDA/GDB to the '
        'the power ground track), VCC from the 12 V-class follower of 14c.4 '
        'with its own decoupling capacitor at the pin. Its gate drive, regulation and timing are the '
        'IC\'s own and are not designed here. Source: TEA2095TE Rev. 1.3.')
+S.const('[PICK] SR gate resistor, one per MOSFET:', 'R.G_SR', "0*'ohm", 'ohm',
+        1, note='ST EVL6790_670W SR board fits 0 ohm (R4-R7, 0805) - a '
+                'footprint to tune on the prototype. The TEA2095TE sinks 2 A '
+                'peak through a 2.5 ohm pull-down (DS Table 7) and regulates '
+                'V.DS to -25 mV; a resistor slows the turn-off it relies on.')
 S.const('[DS] TEA2095TE VCC, maximum:', 'V.SRcc_max', "38*'V", 'V', 0)
 S.row('- SR controller VCC above the OVP2 output (>1):', 'k.SRVCC',
       'V.SRcc_max/V.OVP2_act', None, 3,
@@ -1426,6 +1435,29 @@ S.row('- D.ZSR: highest ambient at P.DZSR [C]:', 'T.aDZSR',
       "T.jDZ-R.thDZ*P.DZSR/'W", None, 0)
 S.row('- R.BZ dissipation at OVP1, no load (rating to buy):', 'P.RBZ',
       '(V.Caux_OVP1-V.DZ_min)^2/R.BZ_sel', 'W', 3)
+S.note('D.aux and D.byp are 1N4148W (Diodes Inc. DS30086 Rev. 31). D.byp carries '
+       'I.VCC; D.aux carries I.VCC and the Zener feed. The drop is the '
+       'datasheet maximum at 150 mA; D.aux conducts in pulses, so its real loss '
+       'is higher than V.F x the average - measure it. The thermal resistance '
+       'is the datasheet\'s, on 2 x 2 inch pads.')
+S.const('[DS] 1N4148W continuous forward current:', 'I.F_4148', "300*'mA", 'mA',
+        0)
+S.const('[DS] 1N4148W forward voltage, max. at 150 mA:', 'V.F_4148', "1.25*'V",
+        'V', 2)
+S.const('[DS] 1N4148W junction-to-ambient, 2 x 2 inch pads [C/W]:', 'R.th4148',
+        '315', None, 0)
+S.const('[DS] 1N4148W junction temperature, max. [C]:', 'T.j4148', '150', None,
+        0)
+S.row('- D.aux average current at OVP1 and f.Max:', 'I.Daux',
+      'I.VCC+(V.Caux_OVP1-V.DZ_min)/R.BZ_sel', 'mA', 1)
+S.row('- D.aux continuous current rating (>1):', 'k.IDaux', 'I.F_4148/I.Daux',
+      None, 3)
+S.row('- D.aux dissipation:', 'P.Daux', 'V.F_4148*I.Daux', 'W', 3)
+S.row('- D.aux: highest ambient [C]:', 'T.aDaux',
+      "T.j4148-R.th4148*P.Daux/'W", None, 0)
+S.row('- D.byp dissipation:', 'P.Dbyp', 'V.F_4148*I.VCC', 'W', 3)
+S.row('- D.byp: highest ambient [C]:', 'T.aDbyp',
+      "T.j4148-R.th4148*P.Dbyp/'W", None, 0)
 
 S.h2('14b. Datasheet Operating Limits - every ratio below must be greater than 1')
 S.note('DS Table 2 (recommended operating range) and DS section 5.3.2. These are hard silicon '
@@ -2164,12 +2196,12 @@ S.table(['function', 'designator', 'device class and count'],
           '4 positions x n.par, STO60N045DM9'],
          ['Centre-tap rectifiers', 'D1 D2', '2 legs x n.SR, SR MOSFET'],
          ['VCC rectifier and bypass diodes', 'D.aux D.byp',
-          '2 x PMEG10010ELR (100 V, 1 A Schottky)'],
+          '2 x 1N4148W (100 V, 300 mA) - 14c.5'],
          ['VCC pass transistor', 'Q.VCC',
           '1 x PHPT61003NY, 6 cm2 collector pad - 14c.5'],
          ['VCC Zener', 'D.Z', '1 x BZT52H-C15, 1 cm2 cathode pad - 14c.5'],
          ['Gate drivers', 'U.HB1 U.HB2', '2 x L6498LD, SO-14 - 14c.1'],
-         ['Bootstrap diodes', 'D.BS1 D.BS2', '2 x PNU65010ER (650 V, 1 A)'],
+         ['Bootstrap diodes', 'D.BS1 D.BS2', '2 x ES1J (600 V, 1 A, 35 ns)'],
          ['SR controller', 'U.SR', '1 x TEA2095TE, HSO8 - 14c.3'],
          ['SR supply pass transistor', 'Q.SR',
           '1 x PHPT61003NY, 6 cm2 collector pad - 14c.5'],
