@@ -263,7 +263,8 @@ def hop(ax, x, y, r=0.20, color=NAVY, lw=LW, z=5):
 
 def mosfet(ax, x, y, name, state='on', h=1.80, gate=1.00,
            dx_d=0.80, dx_c=1.50, halo=True, body=True, coss=True,
-           name_at='gate', size=11.5, lws=1.0, arrow=1.0, ox=1.0, wx=1.0):
+           name_at='gate', size=11.5, lws=1.0, arrow=1.0, ox=1.0, wx=1.0,
+           flip=False):
     """One switch: the MOSFET, its body diode and its C_oss, in parallel.
 
     Enhancement mode, so the channel is THREE separate bars with gaps you
@@ -286,13 +287,17 @@ def mosfet(ax, x, y, name, state='on', h=1.80, gate=1.00,
     lws scales the strokes, arrow the bulk arrow, ox the gate-to-channel
     gap, wx the channel-to-lead width (the bulk stub, where the arrow
     sits).  All are 1 by default, which is the symbol as reviewed.
+    flip=True draws it upside down - drain at the bottom, source at the
+    top, body diode turned with it - for a switch whose drain bus runs
+    below it.  The return is still (drain end, source end).
     """
     #  Every dimension inside the symbol is a fraction of the
     #  drain-to-source span, so one call serves a full-page panel and a
     #  switch in a block diagram.  u = 1 is the size the mode panels
     #  were reviewed at, and those numbers are the ones written below.
     u = h / 1.80
-    yt, yb = y + h / 2, y - h / 2
+    sgn = -1.0 if flip else 1.0
+    yt, yb = y + sgn * h / 2, y - sgn * h / 2      # drain end, source end
     #  'plain' is a switch in a figure that is not about switching states -
     #  drawn in full ink, with no halo, because greying it would say it was
     #  off and that figure is not making that claim.
@@ -309,7 +314,7 @@ def mosfet(ax, x, y, name, state='on', h=1.80, gate=1.00,
 
     if live and halo:                          # a soft halo, not a filled box
         ax.add_patch(FancyBboxPatch(
-            (x - 1.02 * u, yb), 1.16 * u, h,
+            (x - 1.02 * u, min(yt, yb)), 1.16 * u, h,
             boxstyle='round,pad=0.10,rounding_size=0.16', fc=YEL, alpha=0.40,
             ec='none', zorder=1))
 
@@ -326,11 +331,12 @@ def mosfet(ax, x, y, name, state='on', h=1.80, gate=1.00,
     #  parasitics hang off the drain and source nodes without dots, both
     #  by the convention of the symbol, not of the wiring around it.
     lw_ = LW * lws
-    wire(ax, [(xc, y + 0.44 * u), (x, y + 0.44 * u), (x, yt)], cm, lw_,
+    yd_, ys_ = y + sgn * 0.44 * u, y - sgn * 0.44 * u
+    wire(ax, [(xc, yd_), (x, yd_), (x, yt)], cm, lw_,
          gid='symbol')                                          # drain
-    wire(ax, [(xc, y - 0.44 * u), (x, y - 0.44 * u), (x, yb)], cm, lw_,
+    wire(ax, [(xc, ys_), (x, ys_), (x, yb)], cm, lw_,
          gid='symbol')                                          # source
-    wire(ax, [(xc, y), (x, y), (x, y - 0.44 * u)], cm, lw_,
+    wire(ax, [(xc, y), (x, y), (x, ys_)], cm, lw_,
          gid='symbol')                                                # bulk
     #  the bulk arrow is drawn in the symbol's own units, tip on the middle
     #  bar and the rest of the stub left as line to the source lead.  A
@@ -353,12 +359,12 @@ def mosfet(ax, x, y, name, state='on', h=1.80, gate=1.00,
     if body:
         wire(ax, [(x + dx_d, yb), (x + dx_d, yt)], cd,
              2.0 if cd == GRN else 1.4, gid='symbol')
-        vdiode(ax, x + dx_d, y, 0.26 * u, up=True, color=cd,
+        vdiode(ax, x + dx_d, y, 0.26 * u, up=not flip, color=cd,
                lw=2.2 if cd == GRN else 1.6)
     if coss:
-        wire(ax, [(x + dx_c, yb), (x + dx_c, y - 0.12 * u)], cc, 1.4,
+        wire(ax, [(x + dx_c, yb), (x + dx_c, y - sgn * 0.12 * u)], cc, 1.4,
              gid='symbol')
-        wire(ax, [(x + dx_c, y + 0.12 * u), (x + dx_c, yt)], cc, 1.4,
+        wire(ax, [(x + dx_c, y + sgn * 0.12 * u), (x + dx_c, yt)], cc, 1.4,
              gid='symbol')
         vcap(ax, x + dx_c, y, 0.28 * u, 0.12 * u, color=cc, lw=2.0)
     if name:
