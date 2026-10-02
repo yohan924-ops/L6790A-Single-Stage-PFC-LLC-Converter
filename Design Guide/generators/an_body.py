@@ -2367,9 +2367,8 @@ def build(A):
               '&mdash; the first thing to measure' % _idle700_text(V)],
              ['R<sub>DS(on)</sub> temperature factor', 'k<sub>T</sub>',
               '%(Rdpk).1f / %(Rdsk).1f' % V, 'datasheet',
-              'primary / secondary at T<sub>j</sub> = 125&nbsp;&deg;C; the '
-              'primary from the vector curve of its datasheet, the secondary '
-              'carried from the earlier SR selection'],
+              'primary / secondary at T<sub>j</sub> = 125&nbsp;&deg;C, both '
+              'from the vector curves of their datasheets'],
              ['Burst entry point', 'r<sub>BM</sub>',
               '%(rBM).0f %% of P<sub>in</sub> (%(PinBM).0f W)'
               % dict(V, rBM=A.SH['r.BM'] * 100), 'assumed',
@@ -2390,10 +2389,13 @@ def build(A):
               'diodes', 'chosen',
               'the controller has no driver of its own (Section&nbsp;%s)'
               % SR('The gate drivers: two L6498LD')],
+             ['SR MOSFETs', '&mdash;',
+              'STL160N10F8, %(nSR).0f per leg, four in all' % V, 'chosen',
+              '100&nbsp;V STripFET F8 (Section&nbsp;%s)'
+              % SR('The SR MOSFETs: STL160N10F8')],
              ['Synchronous rectifier', '&mdash;',
-              'TEA2095TE, %(nSR).0f MOSFETs per leg' % V, 'chosen',
-              'connection and limits only; the SR MOSFET datasheet is not '
-              'part of this revision (Section&nbsp;%s)'
+              'TEA2095TE', 'chosen',
+              'connection and limits only (Section&nbsp;%s)'
               % SR('Synchronous rectification: TEA2095TE')],
              ['Regulator parts', 'V<sub>BE</sub>, V<sub>D</sub>, '
               '&beta;<sub>min</sub>, I<sub>Z,min</sub>',
@@ -2454,8 +2456,8 @@ def build(A):
               'third harmonic %(D3).2f %%' % V],
              ['Switches', 'STO60N045DM9 &times; 4; 2 &times; L6498LD, '
               'R<sub>G</sub> %(RG).1f &Omega;, C<sub>BOOT</sub> %(CBOOT).0f nF '
-              'with an external diode; TEA2095TE, %(nSR).0f SR MOSFETs per leg'
-              % V],
+              'with an external diode; TEA2095TE, %(nSR).0f STL160N10F8 per '
+              'leg' % V],
              ['V<sub>CC</sub>', 'N<sub>aux</sub> %d T, Zener %.0f V, '
               'R<sub>BZ</sub> %.0f &Omega;, C<sub>VCC</sub> %.0f &micro;F, '
               'V<sub>CC,reg</sub> %.2f V'
@@ -3922,8 +3924,10 @@ def build(A):
                     P=A.SH['P.mos_dc'])))
     add(p('<b>Each secondary rectifier</b> carries the leg current over the '
           '%(nSR).0f devices in parallel, with k<sub>T</sub>&nbsp;=&nbsp;'
-          '%(kTs).1f on %(Rs).1f&nbsp;m&Omega;:'
-          % dict(V, kTs=V['Rdsk'], Rs=V['Rds'])))
+          '%(kTs).1f on %(Rs).1f&nbsp;m&Omega; (STL160N10F8, '
+          'Section&nbsp;%(ref)s):'
+          % dict(V, kTs=V['Rdsk'], Rs=V['Rds'],
+                 ref=SR('The SR MOSFETs: STL160N10F8'))))
     add(calc(r'P_{SR}=\left(\frac{%(I).2f}{%(n).0f}\right)^{2}'
              r'\cdot%(kT).1f\cdot%(R).1f\times10^{-3}'
              r'=%(P).3f\;\mathrm{W\;per\;device}'
@@ -4208,6 +4212,59 @@ def build(A):
              'its outputs low only once its own V<sub>CC</sub> is above '
              '3&nbsp;V, and the resistor covers the time before that.'))
 
+    add(h2('The SR MOSFETs: STL160N10F8'))
+    _f = dict(A.SH)
+    for _k in ('V.DS_SR', 'R.thJA_SR', 'Q.g_sync', 'C.g_SR', 'V.G_SRmax',
+               'C.iss_SR', 'P.SR_budget'):
+        _f.setdefault(_k, A._builder_const(_k))
+    add(p('Each centre-tap leg has %(n).0f STMicroelectronics STL160N10F8 in '
+          'parallel [STL]: 100&nbsp;V STripFET F8 parts in PowerFLAT 5&times;6, '
+          'drain on pins 5&ndash;8, gate on 4, source on 1&ndash;3. Against '
+          'what Section&nbsp;%(s)s asks of them:'
+          % dict(n=V['nSR'], s=SR('What the semiconductors have to be'))))
+    add(tbl('STL160N10F8 against the secondary requirements (DS14249 Rev 5).',
+            [['Quantity', 'Datasheet', 'Asked', 'Margin'],
+             ['V<sub>DS</sub>', '%.0f V' % _f['V.DS_SR'],
+              '%.0f V' % _f['V.DS_sec_rec'], '%.3f' % _f['k.VDSsec']],
+             ['R<sub>DS(on)</sub> max., 25&nbsp;&deg;C, V<sub>GS</sub> = 10 V',
+              '%.1f m&Omega;' % V['Rds'],
+              '%.2f m&Omega;' % _f['R.dson_req_25_s'], '%.3f' % _f['k.RDSsec']],
+             ['k<sub>T</sub>, 25 to 125&nbsp;&deg;C (Fig.&nbsp;13)',
+              '%.1f' % V['Rdsk'], '&mdash;', '&mdash;'],
+             ['Loss per device, per leg budget',
+              '%.3f W' % _f['P.SR_dev'],
+              '%.1f W per leg' % _f['P.SR_budget'], '%.3f' % _f['k.PSR']],
+             ['Gate charge at the highest drive',
+              '%.1f nC' % _f['Q.g_SR'], '%.1f nC' % _f['Q.g_SR_max'],
+              '%.3f' % _f['k.QgSR']]],
+            widths=[CW * 0.42, CW * 0.18, CW * 0.22, CW * 0.18],
+            key='stl160'))
+    add(p('k<sub>T</sub> is read from the vector curve of Fig.&nbsp;13 '
+          '(1.504 at 125&nbsp;&deg;C, typical), so R<sub>DS(on)</sub> is '
+          '%(rh).1f&nbsp;m&Omega; hot and the four devices lose '
+          '%(p).2f&nbsp;W together. On the datasheet&rsquo;s 2s2p board, '
+          '%(rt).0f&nbsp;&deg;C/W, one device would rise %(dt).0f&nbsp;&deg;C; '
+          'the real board decides.'
+          % dict(rh=_f['R.dson_s'], p=_f['P.SR'], rt=_f['R.thJA_SR'],
+                 dt=_f['ΔT.SR_dev'])))
+    add(p('The gate charge is the one that matters for an SR MOSFET, which '
+          'turns on with its drain already at the body-diode drop: '
+          'Q<sub>g,sync</sub> = %(q).0f&nbsp;nC at 10&nbsp;V, typical. The '
+          'controller drives up to %(vg).1f&nbsp;V, and past the plateau the '
+          'gate-charge curve (Fig.&nbsp;8, read from its vector) rises '
+          'C<sub>g,SR</sub> = %(cg).2f&nbsp;nC per volt, so'
+          % dict(q=_f['Q.g_sync'], vg=_f['V.G_SRmax'], cg=_f['C.g_SR'])))
+    add(calc(r'Q_{g,SR}=%(q).0f+%(cg).2f\cdot(%(vg).1f-10)=%(r).1f\;\mathrm{nC}'
+             % dict(q=_f['Q.g_sync'], cg=_f['C.g_SR'], vg=_f['V.G_SRmax'],
+                    r=_f['Q.g_SR'])))
+    add(p('per device. Two on each gate pin present C<sub>iss</sub> = '
+          '%(n).0f &times; %(c).1f = %(cp).1f&nbsp;nF at 50&nbsp;V, typical: '
+          'about the 10&nbsp;nF into which the TEA2095TE datasheet '
+          'characterises its driver. The body diode, V<sub>SD</sub> at most '
+          '1.2&nbsp;V at 60&nbsp;A and Q<sub>rr</sub> 160&nbsp;nC typical, '
+          'conducts only in the dead times the controller leaves.'
+          % dict(n=V['nSR'], c=_f['C.iss_SR'], cp=_f['C.iss_pin'])))
+
     add(h2('Synchronous rectification: TEA2095TE'))
     add(p('One NXP TEA2095TE drives both centre-tap legs, each leg %(nSR).0f '
           'MOSFETs in parallel [TEA] (Figure&nbsp;%(f)s). It needs no design '
@@ -4261,12 +4318,11 @@ def build(A):
                     hi=_q['V.SR_max'])))
     add(p('k = %(k).3f over %(ch).0f&nbsp;V. A 13&nbsp;V Zener would centre '
           'the band near 12&nbsp;V and put its bottom at %(l13).2f&nbsp;V, '
-          'where the gate drive is not specified. The SR MOSFET datasheet is '
-          'not in hand, so the follower is sized for a current, '
-          'I<sub>SR,max</sub> = %(im).0f&nbsp;mA, and that becomes a '
-          'requirement on the MOSFET. With %(n).0f MOSFETs switched per '
-          'period and the run frequency bounded at f<sub>Max</sub>, as for '
-          'the primary,'
+          'where the gate drive is not specified. The follower is sized for '
+          'a current, I<sub>SR,max</sub> = %(im).0f&nbsp;mA, which sets the '
+          'most gate charge an SR MOSFET may bring. With %(n).0f MOSFETs '
+          'switched per period and the run frequency bounded at '
+          'f<sub>Max</sub>, as for the primary,'
           % dict(k=_q['k.SRlo'], ch=_q['V.SR_char'], im=_q['I.SR_max'],
                  n=_q['N.SRsw'],
                  l13=13 * (1 - V['tolDZ']) - V['VFj'])))
@@ -4274,7 +4330,14 @@ def build(A):
              r'{%(n).0f\cdot%(fk).1f\,\mathrm{kHz}}=%(q).1f\;\mathrm{nC}'
              % dict(im=_q['I.SR_max'], iq=_q['I.SR_q'], n=_q['N.SRsw'],
                     fk=_q['f.Max'], q=_q['Q.g_SR_max'])))
-    add(p('per MOSFET at the 10.6&nbsp;V drive, with I<sub>SR,q</sub> = '
+    add(p('per MOSFET, against the %(qg).1f&nbsp;nC of the STL160N10F8 '
+          '(k = %(kq).3f); at f<sub>Max</sub> the follower then carries'
+          % dict(qg=_q['Q.g_SR'], kq=_q['k.QgSR'])))
+    add(calc(r'I_{SR}=%(iq).2f+%(n).0f\cdot%(qg).1f\,\mathrm{nC}\cdot'
+             r'%(fk).1f\,\mathrm{kHz}=%(i).1f\;\mathrm{mA}'
+             % dict(iq=_q['I.SR_q'], n=_q['N.SRsw'], qg=_q['Q.g_SR'],
+                    fk=_q['f.Max'], i=_q['I.SR'])))
+    add(p('with I<sub>SR,q</sub> = '
           '%(iq).2f&nbsp;mA the controller&rsquo;s own current. The '
           'discharge-mode current, %(id).0f&nbsp;mA at most at 12&nbsp;V and '
           'less above, sits well inside (k = %(kd).3f). R<sub>BSR</sub> '
@@ -4299,8 +4362,11 @@ def build(A):
           '%(pi).3f&nbsp;W, a %(ti).0f&nbsp;&deg;C rise at the '
           '%(rt).0f&nbsp;&deg;C/W the datasheet quotes on a four-layer board; '
           'fed from the output at OVP1 it would be %(pd).2f&nbsp;W and '
-          '%(td).0f&nbsp;&deg;C.'
-          % dict(o1=_sh['V.OVP1_act'], pz=_q['P.DZSR'], pr=_q['P.RBSR'],
+          '%(td).0f&nbsp;&deg;C. At the real I<sub>SR</sub> the two figures '
+          'are %(prun).2f&nbsp;W in the pass transistor at the nominal output '
+          'and %(ir).3f&nbsp;W in the controller.'
+          % dict(o1=_sh['V.OVP1_act'], prun=_q['P.QSR_run'],
+                 ir=_q['P.SR_run'], pz=_q['P.DZSR'], pr=_q['P.RBSR'],
                  pq=_q['P.QSR'], pn=_q['P.QSR_nom'], n=_q['N.SRsw'],
                  o2=_sh['V.OVP2_act'], sx=_q['V.SR_max'], vg=V['VGSR'],
                  ig=_q['I.SR_max'] - _q['I.SR_q'], pi=_q['P.SR_int'],
@@ -4340,10 +4406,6 @@ def build(A):
              'position for each gate, 220&nbsp;&Omega; in series with each '
              'drain-sense line, and V<sub>CC</sub> from an auxiliary rail '
              'through 10&nbsp;&Omega; with 10&nbsp;&micro;F at the pin.'))
-    add(note('The SR MOSFET datasheet is not part of this revision: '
-             'R<sub>DS(on)</sub> = %(Rds).1f&nbsp;m&Omega; and k<sub>T</sub> = '
-             '%(Rdsk).1f are carried from the earlier selection, and its gate '
-             'charge must stay under Q<sub>g,SR</sub> above.' % V))
 
     add(h2('The voltage loop, as built'))
     from math import atan, degrees, sqrt, pi
@@ -5131,8 +5193,7 @@ def build(A):
           'value: the EMI filter; the input bridge BR1, the start-up, '
           'bootstrap and auxiliary diodes, Q<sub>VCC</sub> and Q<sub>SR</sub>, '
           'which Section&nbsp;%(s2)s gives as requirements; C<sub>aux</sub>; '
-          'the SR MOSFETs and their gate resistors, whose datasheet is still '
-          'open; and the %(vz).0f&nbsp;V rail V<sub>Z</sub> that feeds the '
+          'the SR gate resistors; and the %(vz).0f&nbsp;V rail V<sub>Z</sub> that feeds the '
           'optocoupler LED, which the loop design takes as given.'
           % dict(s2=SR('What the semiconductors have to be'), vz=V['VZ'])))
     add(fig('an_full_pri',
@@ -5303,7 +5364,9 @@ def build(A):
         ('D<sub>HV</sub>, D<sub>aux</sub>, C<sub>aux</sub>, Q<sub>VCC</sub>, D<sub>Z</sub>, D<sub>byp</sub>', 'the start-up diodes to HVSU; the rectifier and capacitor on the auxiliary winding; the V<sub>CC</sub> pass transistor, its base Zener and the bypass diode on its emitter'),
         ('C<sub>HF</sub>', 'the ceramic capacitor beside the output bank'),
         ('V<sub>CC,SR</sub>, R<sub>BSR</sub>, D<sub>ZSR</sub>, Q<sub>SR</sub>, C<sub>SR</sub>', 'the SR controller supply, and the feed resistor, Zener, pass transistor and pin capacitor of the follower that makes it'),
-        ('I<sub>SR,max</sub>, I<sub>SR,q</sub>, Q<sub>g,SR</sub>', 'the current that follower is sized for, the SR controller&rsquo;s own current, and the gate charge per SR MOSFET that current allows'),
+        ('I<sub>SR,max</sub>, I<sub>SR</sub>, I<sub>SR,q</sub>', 'the current the SR supply follower is sized for, the current it carries with the chosen MOSFETs, and the SR controller&rsquo;s own current'),
+        ('C<sub>iss</sub>, V<sub>SD</sub>, Q<sub>rr</sub>', 'a MOSFET&rsquo;s input capacitance, and its body diode&rsquo;s forward voltage and reverse-recovery charge'),
+        ('Q<sub>g,SR</sub>, Q<sub>g,sync</sub>, C<sub>g,SR</sub>', 'gate charge of one SR MOSFET at the highest drive, the datasheet&rsquo;s synchronous-rectifier gate charge at 10&nbsp;V, and the slope of its gate-charge curve past the plateau'),
         ('Q<sub>g,run</sub>, Q<sub>g,SU</sub>', 'the gate charge at the highest regulated V<sub>CC</sub>, and at V<sub>CCon</sub> where start-up begins'),
         ('V<sub>BO,min</sub>, V<sub>CC,drv,min</sub>, P<sub>drv,max</sub>, R<sub>drv</sub>', 'the lowest recommended floating and low-side driver supplies, the dissipation the driver package allows, and its output resistance'),
         ('S<sub>mid</sub>, S<sub>OUT,max</sub>', 'slope of the bridge midpoint during the swing, and the slew rate the driver&rsquo;s OUT pin allows'),
@@ -5397,6 +5460,9 @@ def build(A):
         'package</i>, DS14711 Rev&nbsp;4, June 2026.',
         '[L6498] STMicroelectronics, <i>L6498, high voltage high and '
         'low-side 2 A gate driver</i>, DocID030318 Rev&nbsp;3, September 2017.',
+        '[STL] STMicroelectronics, <i>STL160N10F8, N-channel 100 V, '
+        '3.2 m&Omega; max., 158 A STripFET F8 Power MOSFET in a PowerFLAT '
+        '5x6 package</i>, DS14249 Rev&nbsp;5, July 2024.',
         '[TEA] NXP Semiconductors, <i>TEA2095TE, GreenChip dual synchronous '
         'rectifier controller</i>, product data sheet Rev.&nbsp;1.3, '
         '20&nbsp;October 2025.']))
@@ -5585,12 +5651,12 @@ def build(A):
               'Optimistic. Taking 95 %% instead moves R<sub>CS</sub> and '
               'R<sub>ac</sub> by about %.0f %%, so nothing downstream is '
               'sensitive &mdash; but it should be replaced by a measurement' % (100 * (V['etaHB'] / 95.0 - 1))],
-             ['SR MOSFET datasheet',
-              'not part of this revision; %(Rds).1f m&Omega; and k<sub>T</sub> '
-              '%(Rdsk).1f carried over' % V,
-              'Fit its datasheet: Q<sub>g</sub> at the 10.6&nbsp;V drive '
-              'at most %.1f&nbsp;nC for the SR supply follower as sized; two '
-              'per gate pin set the SR switching times' % A.SH['Q.g_SR_max']],
+             ['SR MOSFET gate charge',
+              'typical values only: Q<sub>g,sync</sub> and the Fig.&nbsp;8 '
+              'slope of the STL160N10F8',
+              'Measure the SR supply current at full load; the follower allows '
+              '%.1f&nbsp;nC per device. Two per gate pin set the SR switching '
+              'times' % A.SH['Q.g_SR_max']],
              ['Bootstrap diode',
               'V<sub>F</sub> = %(VFbs).1f V assumed, part not chosen' % V,
               'Choose a fast diode rated like the primary switches and put its '

@@ -54,6 +54,7 @@
 | **`audit_sm.py`** | **시트 구조 감사** — 죽은 변수 · 정의 전 사용 · **한계는 있는데 비교가 없는 짝** · 설명 없는 판정값 |
 | **`audit_rpn.py`** | **`.sm` 의 RPN 을 되읽어 독립 평가.** 인쇄된 값은 smsheet 의 Python 계산이고 SMath 가 실제로 도는 것은 RPN 이다. 둘이 같은지 보는 유일한 검사 |
 | **`audit_dim.py`** | **차원 해석.** 두 평가 경로 모두 단위를 스칼라로 다루므로 `V + A` 를 못 잡는다. 표시 단위가 계산 차원과 맞는지도 본다 |
+| **`sr_xl.py`** | **1회성, 83차 적용** — STL160N10F8 데이터시트를 워크북에: `Power Components` C92 부품명 TPH3R70APL1 → STL160N10F8 · D96 `RD` 0.0037 → 0.0032 Ω · D98 `kT.sec` 1.9 → 1.5(둘 다 빌더 상수에서 읽음), `CHANGELOG_rev0_6` 에 기록, 변형 사본에 복사. 두 번 돌려도 같다 |
 | **`fet_xl.py`** | **1회성, 81차 적용** — STO60N045DM9 데이터시트를 워크북에: `Design Spec` D46 `c.HB` 800 → 3028.98 pF(`l6790.PRI_FET` 로 계산, 손으로 적지 않음) · `Power Components` D58 `kT.pri` 1.8 → 1.9 · D72 `Cpar` 10 → 100 pF, `CHANGELOG_rev0_6` 에 기록, 변형 사본에 복사. 두 번 돌려도 같다 |
 | **`xl_sm_compare.py`** | **엑셀 ↔ SMath 전량 대조 135항목** — 사양·전력예산·탱크·전류·출력뱅크·IC정수·루프·보상망. 차이마다 `same` / `INTENDED`(사유 인쇄) / `** DIFF` 로 판정. **워크북을 손댔으면 이걸 돌린다** |
 | **`xlsx_patch.py`** | **워크북 XML 안전 편집.** `set_cell()`(교체-또는-순서맞춰-삽입) + 쓰기 전 전 시트 구조 검사. 인자 없이 실행하면 현재 워크북을 점검만 한다 |
@@ -134,12 +135,12 @@ audit_md   no problems found
 **빌드 후 `check_sm.py`를 반드시 돌릴 것.** 현재 상태:
 
 ```
-paper A3 Landscape 1654 x 1169 · regions 2283 · overlaps 0 · right overflow 0
+paper A3 Landscape 1654 x 1169 · regions 2317 · overlaps 0 · right overflow 0
 page straddles 0 (한 쪽이 1120 px · 접힘 25개가 23440 px 을 숨긴다)
 seam clearance 가장 아슬아슬한 곳 61 px · 여백 띠 위 60 / 아래 60
 text re-wrap 0 · functions [abs atan augment cos el eval ln range sin sqrt vectorize] (전부 허용 집합)
 height 72250 px, 그중 48810 px 이 인쇄됨 = 44 pages · plots 0 · zedgraph 7 · pictures 3
-yellow inputs 175 · VERDICT OK
+yellow inputs 181 · VERDICT OK
 ```
 
 > **"몇 쪽"은 접힘을 뺀 높이로 센다.** 접힌 영역은 종이를 안 먹으므로 파일 높이를

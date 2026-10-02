@@ -3758,7 +3758,7 @@ def _sr_block(ax, full=False):
     sx_, sy_ = c['SSA']
     S.wire(ax, [(sx_, sy_), (23.2, sy_), (23.2, YSA)])
     S.dot(ax, 23.2, YSA)
-    S.label(ax, xb, YDA + 0.42, 'leg A: two in parallel', size=9.4,
+    S.label(ax, xb, YDA + 0.42, 'leg A: two STL160N10F8 in parallel', size=9.4,
             color=GREY)
     S.label(ax, 14.7, 16.1, 'one gate resistor per MOSFET', size=8.6,
             color=GREY)
@@ -3783,7 +3783,7 @@ def _sr_block(ax, full=False):
     sx_, sy_ = c['SSB']
     S.wire(ax, [(sx_, sy_), (23.2, sy_), (23.2, YSB)])
     S.dot(ax, 23.2, YSB)
-    S.label(ax, 19.8, 0.95, 'leg B: two in parallel', size=9.4, color=GREY)
+    S.label(ax, 19.8, 0.95, 'leg B: two STL160N10F8 in parallel', size=9.4, color=GREY)
 
 
 def an_sr_ctrl(save, foot):

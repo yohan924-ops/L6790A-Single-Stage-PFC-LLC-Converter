@@ -791,7 +791,8 @@ S.row('- rms current in ONE device:', 'I.SR_dev', 'I.sec_leg/n.SR', 'A', 2)
 S.const('[PICK] Conduction loss budget per leg:', 'P.SR_budget', "3*'W", 'W', 2)
 S.row('- Required RDSon per leg:', 'R.dson_req_leg',
       "P.SR_budget/I.sec_leg^2", 'mohm', 2)
-S.const('[PICK] RDSon rise from 25 C to Tj,max:', 'K.Tsec', '1.9', None, 2)
+S.const('[DS] STL160N10F8 RDSon rise from 25 C to 125 C:', 'K.Tsec', '1.5',
+        None, 2, note='Fig. 13, read from the vector curve: 1.504 (typical).')
 S.row('- Required RDSon per DEVICE at Tj,max:', 'R.dson_req_dev',
       "n.SR*R.dson_req_leg", 'mohm', 2)
 S.row('- The same as a 25 C datasheet number (SOURCE AGAINST THIS):',
@@ -828,9 +829,11 @@ S.row('- Case-to-ambient allowed for Tj = 125 C [C/W]:', 'R.thCA_max',
       "(125-T.amb)/(P.mos_dc/'W)-R.thJC", None, 2)
 S.row('- Total primary conduction loss (either mode):', 'P.pri_tot',
       "N.mos/2*R.dson_p*I.pri_lc^2", 'W', 2)
-S.const('[PICK] Secondary SR RDSon max per device, 25 C at VGS = 10 V:', 'R.dson_s25', "3.7*'mohm",
-        'mohm', 2,
-        note='check against R.dson_req_25_s in 13.2 whenever it changes.')
+S.const('[DS] STL160N10F8 RDSon max per device, 25 C at VGS = 10 V:',
+        'R.dson_s25', "3.2*'mohm", 'mohm', 2,
+        note='DS14249 Rev 5, Table 3. Check against R.dson_req_25_s in 13.2.')
+S.row('- RDSon margin against the requirement (>1):', 'k.RDSsec',
+      'R.dson_req_25_s/R.dson_s25', None, 3)
 S.row('- the same at Tj,max, per device:', 'R.dson_s',
       "R.dson_s25*K.Tsec", 'mohm', 2)
 S.row('- loss in ONE SR device:', 'P.SR_dev', "R.dson_s*I.SR_dev^2", 'W', 3)
@@ -838,6 +841,13 @@ S.row('- Secondary conduction loss (total):', 'P.SR',
       "2*N.rect*R.dson_s/n.SR*I.diode_lc^2", 'W', 2)
 S.row('- Budget margin per leg (>1):', 'k.PSR',
       "P.SR_budget/(P.SR/(2*N.rect))", None, 3)
+S.const('[DS] STL160N10F8 drain-source voltage:', 'V.DS_SR', "100*'V", 'V', 0)
+S.row('- above the recommended secondary rating (>1):', 'k.VDSsec',
+      'V.DS_SR/V.DS_sec_rec', None, 3)
+S.const('[DS] STL160N10F8 junction-to-ambient, 2s2p board [C/W]:', 'R.thJA_SR',
+        '16', None, 0, note='JESD51-7 board; R.thJC 0.9 C/W.')
+S.row('- junction rise of ONE SR device on that board [C]:', 'ΔT.SR_dev',
+      "P.SR_dev/'W*R.thJA_SR", None, 0)
 S.row('- Input bridge rms current:', 'I.BR_rms', "I.in_max/sqrt(2)", 'A', 3)
 S.row('- Input bridge average current:', 'I.BR_avg', "sqrt(2)/π*I.in_max", 'A', 3)
 S.row('- Input bridge loss:', 'P.BR', "2*(2*I.BR_avg*V.f_BR)+4*R.d*I.BR_rms^2", 'W', 3)
@@ -1316,8 +1326,8 @@ S.const('[DS] Discharge-mode current at VCC = 12 V, max.:', 'I.SR_dch',
              'the 12 V value bounds the band below.')
 S.const('[PICK] SR supply current the follower is sized for:', 'I.SR_max',
         "150*'mA", 'mA', 0,
-        note='the SR MOSFET datasheet is not in hand, so this sets a '
-             'requirement on it (next row) instead of using its gate charge.')
+        note='a pick, which sets the most gate charge an SR MOSFET may '
+             'bring (next row); the STL160N10F8 is checked against it below.')
 S.row('- SR MOSFETs switched per period (2 legs x n.SR):', 'N.SRsw',
       '2*n.SR', None, 0)
 S.row('- Gate charge per SR MOSFET this allows, at f.Max [nC]:', 'Q.g_SR_max',
@@ -1360,6 +1370,26 @@ S.row('- the same drop fed straight from V.out at OVP1:', 'P.SR_dir',
       '(V.OVP1_act-V.G_SR)*(I.SR_max-I.SR_q)', 'W', 2)
 S.row('- its junction rise - why the follower is there [C]:', 'ΔT.SR_dir',
       "R.thSR*P.SR_dir/'W", None, 0)
+S.const('[DS] STL160N10F8 gate charge, sync. MOSFET, 0 to 10 V [nC]:',
+        'Q.g_sync', '72', None, 0,
+        note='Table 4: VDS = 0.1 V, the way an SR MOSFET turns on (typical).')
+S.const('[DS] the slope past the plateau [nF]:', 'C.g_SR', '7.96', None, 2,
+        note='Fig. 8 read from the vector curve, 10 V and 8 V points.')
+S.const('[DS] TEA2095TE gate drive, maximum:', 'V.G_SRmax', "11.2*'V", 'V', 1)
+S.const('[DS] STL160N10F8 input capacitance at 50 V, typical [nF]:',
+        'C.iss_SR', '5.4', None, 1)
+S.row('- two on one gate pin [nF] (the driver is characterised into 10 nF):',
+      'C.iss_pin', 'n.SR*C.iss_SR', None, 1)
+S.row('- Gate charge per SR MOSFET at the highest drive [nC]:', 'Q.g_SR',
+      "Q.g_sync+C.g_SR*(V.G_SRmax/'V-10)", None, 1)
+S.row('- under what the follower allows (>1):', 'k.QgSR',
+      'Q.g_SR_max/Q.g_SR', None, 3)
+S.row('- SR supply current with it, at f.Max:', 'I.SR',
+      "I.SR_q+N.SRsw*Q.g_SR*10^(-9)*'A*'s*f.Max", 'mA', 1)
+S.row('- pass transistor at the nominal output, that current:', 'P.QSR_run',
+      '(V.out-V.SR)*I.SR', 'W', 2)
+S.row('- IC drop to its gate supply, that current:', 'P.SR_run',
+      '(V.SR_max-V.G_SR)*(I.SR-I.SR_q)', 'W', 3)
 S.const('[PICK] Decoupling capacitor at the VCC pin:', 'C.SR', "10*'μF", 'μF', 0,
         note='the datasheet asks for one close to the pin and gives no '
              'value; 10 uF is what ST\'s EVL6790_670W SR board fits.')

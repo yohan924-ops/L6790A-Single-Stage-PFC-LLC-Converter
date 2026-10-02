@@ -172,7 +172,7 @@ V = dict(
     Icout1=SH['I.Cout_each'], Ccer=SH['C.ceramic'],
     Crip=SH['C.ripple'], Chold=SH['C.hold_req'],
     VDS=SH['V.DS_pri'], VDSs=SH['V.DS_sec_rec'],
-    Rdreq=SH['R.dson_req_dev_p'], Rdp=45.0, Rds=3.7, Rdsk=1.9,
+    Rdreq=SH['R.dson_req_dev_p'], 
     nSR=2, npar=1,
     RT=SH['R.T'], CT=SH['C.T'], fMin=SH['f.Min'], fMax=SH['f.Max'],
     RCS=SH['R.CS'], RCS1=SH['R.CS_single'], RCFG=30.0, VBO=SH['V.BO_act'],
@@ -317,6 +317,10 @@ def _builder_const(name):
         raise KeyError('no S.const for %s in the sheet builder' % name)
     return float(re.match(r'[-+0-9.eE]+', m.group(1)).group(0))
 
+
+#  the device datasheet values the loss section substitutes
+V.update(Rdp=_builder_const('R.dson_p25'), Rds=_builder_const('R.dson_s25'),
+         Rdsk=_builder_const('K.Tsec'))
 
 #  the voltage loop, every number the design example substitutes
 V.update(
