@@ -1263,6 +1263,9 @@ S.row('- C.VCC that bridges the hand-over:', 'C.VCC_req',
 S.const('[PICK] SELECTED C.VCC:', 'C.VCC_sel', "%g*'μF" % V.get('CVCC', 1000),
         'μF', 0)
 S.row('- C.VCC margin (>1):', 'k.CVCC', 'C.VCC_sel/C.VCC_req', None, 3)
+S.const('[PICK] Ceramic at the VCC pin, beside C.VCC:', 'C.VCC_hf', "100*'nF",
+        'nF', 0, note='the wiring rule of the AN: decouples the pin, not '
+                      'the start-up.')
 S.row('- Delay before the first switching, 230 Vac:', 't.VCCchg',
       'C.VCC_sel*V.CC_on/I.HVSU_hi', 's', 2,
       note='the price of C.VCC: the HVSU fills it at 9 mA from the line. '
@@ -1273,24 +1276,93 @@ S.h2('14c.3  Synchronous rectifier controller - TEA2095TE (connection checks onl
 S.note('One NXP TEA2095TE (HSO8) drives both centre-tap legs: GDA/GDB to the '
        'gates of the n.SR paralleled SR MOSFETs of each leg, DSA/DSB and '
        'SSA/SSB as Kelvin sense lines to their drains and sources (never on '
-       'the power ground track), VCC from the output with its own decoupling '
-       'capacitor at the pin. Its gate drive, regulation and timing are the '
+       'the power ground track), VCC from the 12 V-class follower of 14c.4 '
+       'with its own decoupling capacitor at the pin. Its gate drive, regulation and timing are the '
        'IC\'s own and are not designed here. Source: TEA2095TE Rev. 1.3.')
 S.const('[DS] TEA2095TE VCC, maximum:', 'V.SRcc_max', "38*'V", 'V', 0)
 S.row('- SR controller VCC above the OVP2 output (>1):', 'k.SRVCC',
       'V.SRcc_max/V.OVP2_act', None, 3,
-      note='the controller is fed from V.out, which OVP2 is the last to stop.')
+      note='the follower of 14c.4 feeds it; this holds even with the pass '
+           'transistor shorted, VCC then at V.out, which OVP2 stops.')
 S.const('[DS] TEA2095TE drain-sense voltage, maximum:', 'V.DSsense', "120*'V",
         'V', 0)
 S.row('- drain sense above the SR drain rating asked for (>1):', 'k.DSsense',
       'V.DSsense/V.DS_sec_rec', None, 3)
 S.const('[DS] TEA2095TE gate drive, VCC >= 12 V, min.:', 'V.G_SR', "10.4*'V",
-        'V', 1, note='10.4 V at VCC = 12 V and 10.7 V at 38 V: V.out sits in between.')
+        'V', 1, note='10.4 V at VCC = 12 V and 10.7 V at 38 V: V.SR_min below '
+                     'is held at 12 V or more for this.')
 S.row('- SR gate drive reaches the RDSon test voltage 10 V (>1):', 'k.VGSR',
       "V.G_SR/(10*'V)", None, 3,
       note='R.dson_s25 above is quoted at VGS = 10 V.')
 S.const('[DS] TEA2095TE start voltage, max.:', 'V.SRstart', "4.75*'V", 'V', 2,
         note='below this output voltage the body diodes rectify alone.')
+
+S.h2('14c.4  SR controller supply - a 12 V-class Zener follower from V.out')
+S.note('Fed straight from V.out the TEA2095TE drops V.out - V.G to its own '
+       'gate-drive supply, and that drop times the SR gate current heats the '
+       'IC. A Zener and an NPN emitter follower, the same circuit as the '
+       'primary VCC regulator (14c), take the drop outside: V.out -> R.BSR '
+       '-> Zener D.ZSR (base) and V.out -> collector, emitter -> VCC pin and '
+       'C.SR. The datasheet characterises the gate drive at VCC = 12 V, so '
+       'the bottom of the band is held at 12 V or more. Source: TEA2095TE '
+       'Rev. 1.3, Table 7.')
+S.const('[DS] VCC at which the gate drive is characterised:', 'V.SR_char',
+        "12*'V", 'V', 1)
+S.const('[DS] Operating supply current without gate charge, max.:', 'I.SR_q',
+        "1.05*'mA", 'mA', 2)
+S.const('[DS] Discharge-mode current at VCC = 12 V, max.:', 'I.SR_dch',
+        "41*'mA", 'mA', 0,
+        note='0.4 W / VCC; 27 mA max. at 19.5 V. It falls as VCC rises, so '
+             'the 12 V value bounds the band below.')
+S.const('[PICK] SR supply current the follower is sized for:', 'I.SR_max',
+        "150*'mA", 'mA', 0,
+        note='the SR MOSFET datasheet is not in hand, so this sets a '
+             'requirement on it (next row) instead of using its gate charge.')
+S.row('- SR MOSFETs switched per period (2 legs x n.SR):', 'N.SRsw',
+      '2*n.SR', None, 0)
+S.row('- Gate charge per SR MOSFET this allows, at f.Max [nC]:', 'Q.g_SR_max',
+      "(I.SR_max-I.SR_q)/(N.SRsw*f.Max)*10^9/('A*'s)", None, 1,
+      note='a requirement on the SR MOSFET: Q.g at the 10.6 V drive. f.Max '
+           'bounds the run frequency, as for the primary (14c.2).')
+S.row('- sized above the discharge-mode current (>1):', 'k.SRdch',
+      'I.SR_max/I.SR_dch', None, 3)
+S.const('[PICK] SELECTED Zener voltage, SR supply:', 'V.DZSR_sel', "15*'V",
+        'V', 1, note='13 V would put the bottom of the band at 11.65 V, '
+                     'below V.SR_char.')
+S.row('- SR VCC, nominal:', 'V.SR', 'V.DZSR_sel-V.F_j', 'V', 2)
+S.row('- SR VCC, low end:', 'V.SR_min', 'V.DZSR_sel*(1-tol.DZ)-V.F_j', 'V', 2)
+S.row('- SR VCC, high end:', 'V.SR_max', 'V.DZSR_sel*(1+tol.DZ)-V.F_j', 'V', 2)
+S.row('- low end above the characterised 12 V (>1):', 'k.SRlo',
+      'V.SR_min/V.SR_char', None, 3)
+S.row('- Largest R.BSR that still regulates at V.out_min:', 'R.BSR_max',
+      '(V.out_min-V.DZSR_sel*(1+tol.DZ))/(I.SR_max/β.min+I.DZ_min)', 'ohm', 0,
+      note='the same transistor class and Zener bias as 14c.2.')
+S.const('[PICK] SELECTED Zener feed resistor R.BSR:', 'R.BSR_sel',
+        "750*'ohm", 'ohm', 0)
+S.row('- R.BSR margin (>1):', 'k.RBSR', 'R.BSR_max/R.BSR_sel', None, 3)
+S.row('- Zener dissipation, no load, V.out at OVP1 (rating to buy):', 'P.DZSR',
+      'V.DZSR_sel*(1+tol.DZ)*(V.OVP1_act-V.DZSR_sel*(1-tol.DZ))/R.BSR_sel',
+      'mW', 0)
+S.row('- R.BSR dissipation at OVP1 (rating to buy):', 'P.RBSR',
+      '(V.OVP1_act-V.DZSR_sel*(1-tol.DZ))^2/R.BSR_sel', 'W', 3)
+S.row('- Pass transistor dissipation at OVP1 and I.SR_max (rating to buy):',
+      'P.QSR', '(V.OVP1_act-V.SR_min)*I.SR_max', 'W', 2)
+S.row('- the same at the nominal output:', 'P.QSR_nom',
+      '(V.out-V.SR)*I.SR_max', 'W', 2,
+      note='scales with the real gate current: Q.g x N.SRsw x f.sw.')
+S.const('[DS] TEA2095TE junction-to-ambient [C/W]:', 'R.thSR',
+        '46', None, 0, note='HSO8 on a 4-layer 60 x 125 mm board, '
+                                   'exposed pad soldered.')
+S.row('- IC drop to its gate supply at I.SR_max, from the follower:', 'P.SR_int',
+      '(V.SR_max-V.G_SR)*(I.SR_max-I.SR_q)', 'W', 3)
+S.row('- its junction rise [C]:', 'ΔT.SR', "R.thSR*P.SR_int/'W", None, 0)
+S.row('- the same drop fed straight from V.out at OVP1:', 'P.SR_dir',
+      '(V.OVP1_act-V.G_SR)*(I.SR_max-I.SR_q)', 'W', 2)
+S.row('- its junction rise - why the follower is there [C]:', 'ΔT.SR_dir',
+      "R.thSR*P.SR_dir/'W", None, 0)
+S.const('[PICK] Decoupling capacitor at the VCC pin:', 'C.SR', "10*'μF", 'μF', 0,
+        note='the datasheet asks for one close to the pin and gives no '
+             'value; 10 uF is what ST\'s EVL6790_670W SR board fits.')
 
 S.h2('14b. Datasheet Operating Limits - every ratio below must be greater than 1')
 S.note('DS Table 2 (recommended operating range) and DS section 5.3.2. These are hard silicon '
@@ -1961,8 +2033,14 @@ S.show('- Zener tolerance grade:', 'tol.DZ', None, 3)
 S.show('- Zener feed resistor, SELECTED:', 'R.BZ_sel', 'ohm', 0)
 S.show('- Zener power rating, at least:', 'P.DZ', 'mW', 0)
 S.show('- VCC capacitor, SELECTED:', 'C.VCC_sel', 'μF', 0)
+S.show('- VCC pin ceramic:', 'C.VCC_hf', 'nF', 0)
 S.show('- Bootstrap capacitor, per leg:', 'C.BOOT', 'nF', 0)
 S.show('- Gate resistor, per switch:', 'R.G', 'ohm', 1)
+S.show('- SR supply Zener, SELECTED:', 'V.DZSR_sel', 'V', 1)
+S.show('- SR supply Zener feed resistor, SELECTED:', 'R.BSR_sel', 'ohm', 0)
+S.show('- SR supply Zener power rating, at least:', 'P.DZSR', 'mW', 0)
+S.show('- SR supply feed resistor power rating, at least:', 'P.RBSR', 'W', 3)
+S.show('- SR controller VCC capacitor:', 'C.SR', 'μF', 0)
 
 S.h2('19.6  Semiconductors - the REQUIREMENT each part has to meet')
 S.table(['function', 'designator', 'device class and count'],
@@ -1979,6 +2057,9 @@ S.table(['function', 'designator', 'device class and count'],
          ['Bootstrap diodes', 'D.BS1 D.BS2',
           '2 x fast, rated like the primary switches'],
          ['SR controller', 'U.SR', '1 x TEA2095TE, HSO8 - 14c.3'],
+         ['SR supply pass transistor', 'Q.SR',
+          '1 x NPN, beta >= beta.min, P >= P.QSR, V.CE >= V.OVP2_act - 14c.4'],
+         ['SR supply Zener', 'D.ZSR', '1 x V.DZSR_sel, tol.DZ, P >= P.DZSR'],
          ['Feedback optocoupler', '-', '1 x, CTR binned - see 16.5'],
          ['External error amplifier', '-', '1 x, 2.5 V shunt regulator']],
         widths=[430, 260, 230])

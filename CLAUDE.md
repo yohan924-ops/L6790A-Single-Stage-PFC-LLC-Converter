@@ -51,7 +51,7 @@ f_r 75.0 kHz · f_o 44.8 kHz · B_pk 125.5 mT(A_e 332) · A_L 311 nH · n 6.013(
 
 | 경로 | 무엇 | 상태 |
 | :--- | :--- | :--- |
-| `Smath/L6790A_SingleStage_PF_LLC_Design_Guide.sm` | **정본 시트** — 19절 · 노란 입력 셀 166개 · ZedGraph 판 7장 · A3 가로 52쪽 | rev 1 · F9 확인됨 — **시트 §14c · 시트 §14c.1–14c.3(2026-09-25 · 10-01 신설)은 아직 F9 미확인** |
+| `Smath/L6790A_SingleStage_PF_LLC_Design_Guide.sm` | **정본 시트** — 19절 · 노란 입력 셀 175개 · ZedGraph 판 7장 · A3 가로 55쪽 | rev 1 · F9 확인됨 — **시트 §14c · 시트 §14c.1–14c.4(2026-09-25 · 10-01 · 10-02 신설)은 아직 F9 미확인** |
 | `Smath/variants/L6790A_7p5to1_x1.sm` | 정본과 같은 바이트. `L6790_VARIANT=7p5to1_x1` 로 `build_l6790_smath.py` 가 만든다 — AN · 벤더 사양서가 읽는다 | 검사 통과 |
 | `Smath/tools/L6790A_probe.sm` · `L6790A_ruler.sm` | 진단 프로브 P1–P29 · 쪽 경계 자 | 큰 시트가 안 열리면 프로브부터 |
 | `Smath/tools/L6790A_gainzed.sm` · `L6790A_gainladder.sm` · `L6790A_gainplot.sm` | 게인 곡선을 SMath 로 그릴 수 있는가 — 확인용 3종 | **아직 아무도 안 열었다** |

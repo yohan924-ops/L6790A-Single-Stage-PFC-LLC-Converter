@@ -293,6 +293,12 @@ def mosfet(ax, x, y, name, state='on', h=1.80, gate=1.00,
     cm = NAVY if state in ('on', 'plain') else OFF_C
     cd = GRN if state == 'diode' else OFF_C
     cc = {'charge': MAG, 'discharge': CYA}.get(state, OFF_C)
+    #  grey says "carrying nothing", which only means something in a figure
+    #  about the switching states.  A plain switch draws its body diode and
+    #  C_oss in the same ink as the device (2026-10-02, user: no shading).
+    cpar = OFF_C
+    if state == 'plain':
+        cd = cc = cpar = NAVY
 
     if live and halo:                          # a soft halo, not a filled box
         ax.add_patch(FancyBboxPatch(
@@ -316,11 +322,14 @@ def mosfet(ax, x, y, name, state='on', h=1.80, gate=1.00,
     wire(ax, [(xc, y - 0.44 * u), (x, y - 0.44 * u), (x, yb)], cm,
          gid='symbol')                                          # source
     wire(ax, [(xc, y), (x, y), (x, y - 0.44 * u)], cm, gid='symbol')  # bulk
-    ax.add_patch(FancyArrowPatch((x - 0.13 * u, y), (xc + 0.05 * u, y),
-                                 arrowstyle='-|>',
-                                 mutation_scale=10 * min(u, 1.0) ** 0.5,
-                                 color=cm, lw=1.5, zorder=5,
-                                 shrinkA=0, shrinkB=0))
+    #  the bulk arrow is drawn in the symbol's own units, tip on the middle
+    #  bar and the rest of the stub left as line to the source lead.  A
+    #  FancyArrowPatch sizes its head in points, so on a small symbol the
+    #  head filled the whole stub and sat against the source lead instead
+    #  of the channel (2026-10-02, user: the arrow's length is off).
+    xt = xc + 0.05 * u
+    ax.fill([xt, xt + 0.22 * u, xt + 0.22 * u], [y, y + 0.10 * u, y - 0.10 * u],
+            color=cm, zorder=5, lw=0)
 
     # body diode and C_oss hang off the same two nodes.  A figure that is
     # not about the dead time leaves them out - they are only there to
@@ -328,8 +337,8 @@ def mosfet(ax, x, y, name, state='on', h=1.80, gate=1.00,
     far = x
     if body or coss:
         far = x + (dx_c if coss else dx_d)
-        wire(ax, [(x, yt), (far, yt)], OFF_C, 1.4, gid='symbol')
-        wire(ax, [(x, yb), (far, yb)], OFF_C, 1.4, gid='symbol')
+        wire(ax, [(x, yt), (far, yt)], cpar, 1.4, gid='symbol')
+        wire(ax, [(x, yb), (far, yb)], cpar, 1.4, gid='symbol')
     if body:
         wire(ax, [(x + dx_d, yb), (x + dx_d, yt)], cd,
              2.0 if cd == GRN else 1.4, gid='symbol')
