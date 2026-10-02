@@ -4554,7 +4554,7 @@ def an_full(save, foot):
             ha='right')
 
     # ================================================= T1
-    XC = 35.2                              # T1: the line between the sides
+    XC = 33.8                              # T1: the line between the sides
     YT1 = 37.8                             # pin 1
     YS7 = 34.5                             # pin 7: NS2 + NS3 centred between
     #                                        the two SR drain buses (37.8, YG)
@@ -4805,43 +4805,45 @@ def an_full(save, foot):
     #  pins sit at the bus heights and its SS pins at the source-bus
     #  heights, so each Kelvin wire is one straight run to the nearer
     #  MOSFET (Q_A2, Q_B2).
-    XV = 38.8                              # V_out: centre tap straight down
+    XV = 37.6                              # V_out: centre tap straight down
     S.wire(ax, [(xs, YCT), (XV, YCT)])
     S.label(ax, XV - 0.15, YCT + 0.4, '%d, %d' % (_pm['NS2'][1][0],
                                                    _pm['NS3'][0][0]),
             size=SN, color=GREY, ha='right')
     YDA, YCA_, YSA, HOPA = YT1, 35.7, 33.2, 34.0
     YDB, YCB, YSB, HOPB = 27.0, 29.1, 31.6, 30.8
-    XQ1, XQ2 = 41.5, 47.1
+    XQ1, XQ2 = 40.5, 46.1
     MGS = 2.1                              # gate lead: the resistor clear
     #                                        of the gate
     MOSS = dict(MOS, gate=MGS)
     xr1, xr2 = XQ1 + MGS + 0.9, XQ2 + MGS + 0.9
     XG = xr2 + 1.1                         # where the gate run splits
-    TX0, TX1 = XG + 1.5, XG + 5.1
+    TX0, TX1 = XG + 1.5, XG + 6.1
     TY0, TY1 = YDB - 1.0, YDA + 1.0        # room for the supply pins' names
     c = _ic(ax, TX0, TY0, TX1, TY1, 'TEA2095TE',
             [('L', YDA, 6, 'DSA'), ('L', YCA_, 8, 'GDA'),
              ('L', YSA, 5, 'SSA'), ('L', YSB, 4, 'SSB'),
              ('L', YCB, 1, 'GDB'), ('L', YDB, 3, 'DSB'),
-             ('T', TX0 + 2.3, 7, 'VCC'), ('B', TX0 + 2.3, 2, 'GND')],
+             ('T', TX0 + 2.8, 7, 'VCC'), ('B', TX0 + 2.8, 2, 'GND')],
             size=SN, psize=SN, tpad=0.45, title=False)
-    S.label(ax, TX0 - 1.3, TY1 + 1.05, 'U7', size=SN, weight='bold', ha='left')
-    S.label(ax, TX0 - 1.3, TY1 + 0.5, 'TEA2095TE', size=SN, ha='left')
+    #  name in the box's free right half, between the SSA and SSB rows
+    S.label(ax, TX0 + 3.0, (YSA + YSB) / 2.0 + 0.3, 'U7', size=SN,
+            weight='bold')
+    S.label(ax, TX0 + 3.0, (YSA + YSB) / 2.0 - 0.3, 'TEA2095TE', size=8.2)
     gx_, gy_ = c['GND']
     S.wire(ax, [(gx_, gy_), (gx_, gy_ - 0.4)])
     sg(gx_, gy_ - 0.4, 0.0)
-    #  VCC: up from the top pin, left along the top edge of the page to the
-    #  flag, C_SR hanging off that run
+    #  VCC: up from the top pin, a short run left to the flag, C_SR hanging
+    #  off it just clear of the box
     vx, vy = c['VCC']
-    YVS = 40.4
-    XSR, XFL = TX0 - 3.6, XG - 5.8
+    YVS = 40.0
+    XSR, XFL = TX0 - 0.7, TX0 - 1.7
     S.wire(ax, [(vx, vy), (vx, YVS), (XFL, YVS)])
     S.dot(ax, XSR, YVS)
-    vcap(XSR, YVS, 38.9)
-    sg(XSR, 38.9, 0.3)
-    flag(XFL, YVS, 'V$_{CC,SR}$', side='l')
-    S.label(ax, XSR - 0.45, 39.45, 'C$_{SR}$ ' + _c(_sv('C.SR') * 1e3),
+    vcap(XSR, YVS, 39.0)
+    sg(XSR, 39.0, 0.3)
+    flag(XFL, YVS, 'V$_{CC,SR}$', side='u')
+    S.label(ax, XSR - 0.45, 39.5, 'C$_{SR}$ ' + _c(_sv('C.SR') * 1e3),
             size=SN, ha='right')
 
     def pair(yc, ydrain, ysrc, flip, leg, hop_y, ds, gd, ss, xgnd):
