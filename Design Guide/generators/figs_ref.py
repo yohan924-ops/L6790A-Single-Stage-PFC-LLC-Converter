@@ -4555,9 +4555,8 @@ def an_full(save, foot):
     # ================================================= T1
     XC = 31.6
     YT1 = 37.8                             # pin 1
-    YS7 = 34.6                             # pin 7: the secondary and the SR
-    #                                        stage sit lower, T1's caption
-    #                                        centred over the core
+    YS7 = 35.8                             # pin 7: NS2 + NS3 centred between
+    #                                        the two SR drain buses (37.8, YG)
     (p1, p3), (p4, p6), (s7, s9), (s10, s12) = _xf(
         ax, XC, [('L', YT1, YB, 4), ('L', 32.4, 30.2, 2),
                  ('R', YS7, YS7 - 2.0, 2), ('R', YS7 - 2.2, YS7 - 4.2, 2)])
@@ -4579,21 +4578,21 @@ def an_full(save, foot):
             color=GREY, ha='right')
     S.label(ax, xs + 0.3, s12[1] - 0.3, str(_pm['NS3'][1][0]), size=SN,
             color=GREY, ha='left')
-    S.label(ax, XC, 40.7, 'T1  PQ 50/50, N97', size=9.0, weight='bold')
-    S.label(ax, XC, 40.1, 'L$_{open}$ %.0f $\\mu$H, L$_r$ %.0f $\\mu$H'
+    S.label(ax, XC, 39.75, 'T1  PQ 50/50, N97', size=9.0, weight='bold')
+    S.label(ax, XC, 39.15, 'L$_{open}$ %.0f $\\mu$H, L$_r$ %.0f $\\mu$H'
             % (_sv('L.open'), _sv('L.short')), size=SN, color=GREY)
     S.label(ax, (XCN + xw) / 2.0, 35.7, 'NP1\n%.0f T' % _sv('N.p'), size=SN)
-    S.label(ax, xs + 0.8, YS7 - 0.8, 'NS2\n%.0f T' % _sv('N.s'), size=SN,
+    S.label(ax, xs + 0.8, YS7 - 0.7, 'NS2\n%.0f T' % _sv('N.s'), size=SN,
             ha='left')
-    S.label(ax, xs + 0.8, YS7 - 3.4, 'NS3\n%.0f T' % _sv('N.s'), size=SN,
+    S.label(ax, xs + 0.8, YS7 - 3.5, 'NS3\n%.0f T' % _sv('N.s'), size=SN,
             ha='left')
     # NAUX: pin 4 (the dot) on a short stub to the left, down to ground on
     # a lead of its own; pin 6 straight down to D_aux
-    XG4 = xw - 0.9
-    S.wire(ax, [p4, (XG4, p4[1]), (XG4, p4[1] - 0.7)])
-    pg(XG4, p4[1] - 0.7, 0.0)
-    S.label(ax, xw - 0.45, 30.9, 'NAUX %.0f T' % _sv('N.aux'), size=SN,
-            ha='right')
+    XG4 = xw - 1.6
+    S.wire(ax, [p4, (XG4, p4[1]), (XG4, p4[1] - 1.4)])
+    pg(XG4, p4[1] - 1.4, 0.0)
+    S.label(ax, XG4 - 0.45, p4[1] - 0.75, 'NAUX\n%.0f T' % _sv('N.aux'),
+            size=SN, ha='right')
     YAX = 29.4
     S.wire(ax, [p6, (xw, YAX)])
     S.dot(ax, xw, YAX)
@@ -4761,7 +4760,7 @@ def an_full(save, foot):
     vcap(XCA, YN1, 24.8, 'C$_{aux}$\n' + _c(_sv('C.aux') * 1e3), side='r',
          yl=25.6)
     pg(XCA, 24.8, 0.3)
-    bq, cq, eq_ = _npn(ax, XRZ + 0.9, YBN, **BJ)
+    bq, cq, eq_ = _npn(ax, XRZ + 0.5, YBN, **BJ)
     S.wire(ax, [(xw, YN1), (cq[0], YN1), cq])
     vres(XRZ, YN1, YBN, 'R$_{BZ}$\n' + _r(_sv('R.BZ_sel')), side='l',
          yl=23.5)
@@ -4789,90 +4788,99 @@ def an_full(save, foot):
             + ' $\\parallel$ ' + _c(_sv('C.VCC_hf')), size=SN, ha='left')
 
     # ================================================= SR stage
-    XV = 36.0                              # V_out: centre tap straight down
+    #  Mirrored: the MOSFETs next to the windings, the IC to their right,
+    #  gates on the right of each MOSFET (mirror=True).  Leg A upright
+    #  with its drain bus at the height of NP1's pin-1 run, leg B upside
+    #  down with its drain bus at the height of the primary return rail
+    #  YG - the two sides of T1 wired at the same heights.  The IC's DS
+    #  pins sit at the bus heights and its SS pins at the source-bus
+    #  heights, so each Kelvin wire is one straight run to the nearer
+    #  MOSFET (Q_A2, Q_B2).
+    XV = 36.8                              # V_out: centre tap straight down
     S.wire(ax, [(xs, YCT), (XV, YCT)])
-    S.label(ax, xs + 2.0, YCT + 0.4, '%d, %d' % (_pm['NS2'][1][0],
-                                                 _pm['NS3'][0][0]),
-            size=SN, color=GREY)
-    #  leg A upright (drain bus on top), leg B upside down (drain bus at the
-    #  bottom), so each leg's DS/SS pair runs straight across from the IC
-    #  SS pins sit at the source-bus height, DS pins on the drain lead:
-    #  both Kelvin wires are straight
-    YDA, YCA_, YSA, HOPA, YDSA = 38.5, 36.1, 33.9, 34.5, 37.6
-    YDB, YCB, YSB, HOPB, YDSB = 26.3, 28.7, 30.9, 30.3, 27.2
-    TX0, TX1, TY0, TY1 = 38.6, 42.6, 26.75, 38.05
-    c = _ic(ax, TX0, TY0, TX1, TY1, 'TEA2095TE',
-            [('R', YDSA, 6, 'DSA'), ('R', YCA_, 8, 'GDA'),
-             ('R', YSA, 5, 'SSA'), ('R', YSB, 4, 'SSB'),
-             ('R', YCB, 1, 'GDB'), ('R', YDSB, 3, 'DSB'),
-             ('L', 36.7, 7, 'VCC'), ('L', 29.5, 2, 'GND')],
-            ref=33.1, size=SN, psize=SN, tsize=8.6, tpad=0.45)
-    S.label(ax, TX0 + 1.6, 32.3, 'U7', size=SN, color=GREY)
-    gx_, gy_ = c['GND']
-    S.wire(ax, [(gx_, gy_), (TX0 - 0.9, gy_)])
-    sg(TX0 - 0.9, gy_, 0.4)
-    vx, vy = c['VCC']
-    XSR = TX0 - 1.0
-    S.wire(ax, [(vx, vy), (XSR - 1.0, vy)])
-    S.dot(ax, XSR, vy)
-    vcap(XSR, vy, 35.1)
-    sg(XSR, 35.1, 0.3)
-    flag(XSR - 1.0, vy, 'V$_{CC,SR}$', side='u')
-    S.label(ax, XSR - 0.45, 35.9, 'C$_{SR}$\n' + _c(_sv('C.SR') * 1e3),
-            size=SN, ha='right')
-    XG, XQ1, XQ2, XGND = 43.6, 49.1, 54.7, 56.3
+    S.label(ax, XV - 0.15, YCT + 0.4, '%d, %d' % (_pm['NS2'][1][0],
+                                                   _pm['NS3'][0][0]),
+            size=SN, color=GREY, ha='right')
+    YDA, YCA_, YSA, HOPA = YT1, 36.2, 34.3, 34.8
+    YDB, YCB, YSB, HOPB = YG, 31.2, 33.1, 32.6
+    XQ1, XQ2 = 39.7, 45.3
     MGS = 2.1                              # gate lead: the resistor clear
     #                                        of the gate
     MOSS = dict(MOS, gate=MGS)
+    xr1, xr2 = XQ1 + MGS + 0.9, XQ2 + MGS + 0.9
+    XG = xr2 + 1.1                         # where the gate run splits
+    TX0, TX1 = XG + 1.5, XG + 4.9
+    TY0, TY1 = YDB - 0.45, YDA + 0.45
+    c = _ic(ax, TX0, TY0, TX1, TY1, 'TEA2095TE',
+            [('L', YDA, 6, 'DSA'), ('L', YCA_, 8, 'GDA'),
+             ('L', YSA, 5, 'SSA'), ('L', YSB, 4, 'SSB'),
+             ('L', YCB, 1, 'GDB'), ('L', YDB, 3, 'DSB'),
+             ('R', 37.0, 7, 'VCC'), ('R', 30.4, 2, 'GND')],
+            ref=33.7, size=SN, psize=SN, tsize=8.2, tpad=0.45)
+    S.label(ax, TX0 + 1.7, 32.9, 'U7', size=SN, color=GREY)
+    gx_, gy_ = c['GND']
+    S.wire(ax, [(gx_, gy_), (TX1 + 1.3, gy_)])
+    sg(TX1 + 1.3, gy_, 0.4)
+    vx, vy = c['VCC']
+    XSR = TX1 + 1.3
+    S.wire(ax, [(vx, vy), (XSR, vy), (XSR, vy + 0.9)])
+    S.dot(ax, XSR, vy)
+    vcap(XSR, vy, 35.4)
+    sg(XSR, 35.4, 0.3)
+    flag(XSR, vy + 0.9, 'V$_{CC,SR}$', side='u')
+    S.label(ax, XSR, 34.3, 'C$_{SR}$ ' + _c(_sv('C.SR') * 1e3), size=SN)
 
-    def pair(yc, ydrain, ysrc, flip, leg, hop_y, ds, gd, ss):
-        """two MOSFETs, each with its gate resistor right at its gate.  The
-        gate run splits once at XG; the second branch passes the first
-        MOSFET's source lead with a hop.  DS goes to the first MOSFET's
-        drain lead and SS to its source node: the Kelvin pair."""
+    def pair(yc, ydrain, ysrc, flip, leg, hop_y, ds, gd, ss, xgnd):
+        """two MOSFETs, each with its gate resistor on its own gate lead.
+        The gate run from the IC splits once at XG: straight on through
+        R_G2 into Q2, and a branch at hop_y that passes Q2's source lead
+        with a hop and comes up into R_G1.  DS lands on the drain bus at
+        Q2's lead, SS on the source bus at Q2's lead: the Kelvin pair.
+        The source bus runs back past Q1 to xgnd, where the two legs'
+        buses join and go to ground."""
         for x in (XQ1, XQ2):
-            d, s_ = X.mosfet(ax, x, yc, None, 'plain', flip=flip, **MOSS)
+            d, s_ = X.mosfet(ax, x, yc, None, 'plain', flip=flip,
+                             mirror=True, **MOSS)
             S.wire(ax, [d, (x, ydrain)])
             S.wire(ax, [s_, (x, ysrc)])
-        S.dot(ax, XQ1, ydrain)
         up = -1 if flip else 1             # towards the drain bus
-        for x, k in ((XQ1, 1), (XQ2, 2)):   # name beside the drain lead
-            S.label(ax, x + 0.4, yc + up * (MH / 2.0 + 0.72),
+        for x, k in ((XQ1, 1), (XQ2, 2)):   # name beyond the drain bus
+            S.label(ax, x + 0.35, ydrain + up * 0.45,
                     'Q$_{%s%d}$' % (leg, k),
                     size=SN, ha='left', weight='bold')
         S.wire(ax, [gd, (XG, yc), (XG, hop_y)])
         S.dot(ax, XG, yc)
-        xr1, xr2 = XQ1 - MGS - 0.9, XQ2 - MGS - 0.9
-        r1a, r1b = S.res(ax, xr1, yc)
-        S.wire(ax, [(XG, yc), r1a])
-        S.wire(ax, [r1b, (XQ1 - MGS, yc)])
-        xu = xr2 - 1.1
-        S.wire(ax, [(XG, hop_y), (XQ1 - R, hop_y)])
-        X.hop(ax, XQ1, hop_y, r=R)
         r2a, r2b = S.res(ax, xr2, yc)
-        S.wire(ax, [(XQ1 + R, hop_y), (xu, hop_y), (xu, yc), r2a])
-        S.wire(ax, [r2b, (XQ2 - MGS, yc)])
+        S.wire(ax, [(XG, yc), r2b])
+        S.wire(ax, [r2a, (XQ2 + MGS, yc)])
+        xu = xr1 + 1.1
+        S.wire(ax, [(XG, hop_y), (XQ2 + R, hop_y)])
+        X.hop(ax, XQ2, hop_y, r=R)
+        r1a, r1b = S.res(ax, xr1, yc)
+        S.wire(ax, [(XQ2 - R, hop_y), (xu, hop_y), (xu, yc), r1b])
+        S.wire(ax, [r1a, (XQ1 + MGS, yc)])
         for xr_ in (xr1, xr2):             # the side away from the hop run
-            S.label(ax, xr_ + 0.15, yc + up * 0.7,
+            S.label(ax, xr_ - 0.15, yc + up * 0.7,
                     'R$_{G,SR}$ ' + _r(_sv('R.G_SR')), size=SN)
-        # Kelvin pair: DS straight to the drain lead, SS into the source
-        # node from the far side of the bus
-        S.wire(ax, [ds, (XQ1, ds[1])])
-        S.dot(ax, XQ1, ds[1])
-        S.wire(ax, [ss, (XQ1, ss[1]), (XQ1, ysrc)])
-        # the source bus, grounded at its far end on a lead of its own
-        S.wire(ax, [(XQ1, ysrc), (XGND, ysrc), (XGND, ysrc - 0.5)])
-        S.dot(ax, XQ1, ysrc)
+        S.wire(ax, [ds, (XQ2, ydrain)])
+        S.dot(ax, XQ2, ydrain)
+        S.dot(ax, XQ1, ydrain)
+        S.wire(ax, [ss, (XQ2, ysrc)])
+        S.wire(ax, [(XQ2, ysrc), (xgnd, ysrc)])
         S.dot(ax, XQ2, ysrc)
-        sg(XGND, ysrc - 0.5, 0.0)
+        S.dot(ax, XQ1, ysrc)
 
-    pair(YCA_, YDA, YSA, False, 'A', HOPA, c['DSA'], c['GDA'], c['SSA'])
+    XGS = XQ1 - 1.6                        # the secondary ground
+    pair(YCA_, YDA, YSA, False, 'A', HOPA, c['DSA'], c['GDA'], c['SSA'], XGS)
     S.wire(ax, [s7, (xs, YDA), (XQ2, YDA)])
-    pair(YCB, YDB, YSB, True, 'B', HOPB, c['DSB'], c['GDB'], c['SSB'])
+    pair(YCB, YDB, YSB, True, 'B', HOPB, c['DSB'], c['GDB'], c['SSB'], XGS)
+    S.wire(ax, [(XGS, YSA), (XGS, YSB), (XGS, YSB - 0.45)])
+    S.dot(ax, XGS, YSB)
+    sg(XGS, YSB - 0.45, 0.0)
     S.wire(ax, [s12, (xs, YDB), (XV - R, YDB)])
     X.hop(ax, XV, YDB, r=R)
     S.wire(ax, [(XV + R, YDB), (XQ2, YDB)])
-    S.label(ax, 56.6, 24.75, 'Q$_{A1}$–Q$_{B2}$  STL160N10F8, two in parallel '
+    S.label(ax, 56.6, 27.6, 'Q$_{A1}$–Q$_{B2}$  STL160N10F8, two in parallel '
             'per leg', size=SN, color=GREY, ha='right')
 
     # ================================================= output bank

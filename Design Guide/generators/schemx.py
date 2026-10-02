@@ -264,7 +264,7 @@ def hop(ax, x, y, r=0.20, color=NAVY, lw=LW, z=5):
 def mosfet(ax, x, y, name, state='on', h=1.80, gate=1.00,
            dx_d=0.80, dx_c=1.50, halo=True, body=True, coss=True,
            name_at='gate', size=11.5, lws=1.0, arrow=1.0, ox=1.0, wx=1.0,
-           flip=False):
+           flip=False, mirror=False):
     """One switch: the MOSFET, its body diode and its C_oss, in parallel.
 
     Enhancement mode, so the channel is THREE separate bars with gaps you
@@ -289,7 +289,9 @@ def mosfet(ax, x, y, name, state='on', h=1.80, gate=1.00,
     sits).  All are 1 by default, which is the symbol as reviewed.
     flip=True draws it upside down - drain at the bottom, source at the
     top, body diode turned with it - for a switch whose drain bus runs
-    below it.  The return is still (drain end, source end).
+    below it.  mirror=True draws it left for right - gate lead to the
+    right, body diode and C_oss to the left - for a switch whose driver
+    sits on its right.  The return is still (drain end, source end).
     """
     #  Every dimension inside the symbol is a fraction of the
     #  drain-to-source span, so one call serves a full-page panel and a
@@ -297,6 +299,7 @@ def mosfet(ax, x, y, name, state='on', h=1.80, gate=1.00,
     #  were reviewed at, and those numbers are the ones written below.
     u = h / 1.80
     sgn = -1.0 if flip else 1.0
+    sx = -1.0 if mirror else 1.0
     yt, yb = y + sgn * h / 2, y - sgn * h / 2      # drain end, source end
     #  'plain' is a switch in a figure that is not about switching states -
     #  drawn in full ink, with no halo, because greying it would say it was
@@ -314,13 +317,14 @@ def mosfet(ax, x, y, name, state='on', h=1.80, gate=1.00,
 
     if live and halo:                          # a soft halo, not a filled box
         ax.add_patch(FancyBboxPatch(
-            (x - 1.02 * u, min(yt, yb)), 1.16 * u, h,
+            (x - (1.02 if not mirror else 0.14) * u, min(yt, yb)), 1.16 * u, h,
             boxstyle='round,pad=0.10,rounding_size=0.16', fc=YEL, alpha=0.40,
             ec='none', zorder=1))
 
-    xc = x - 0.38 * u * wx
-    xg = xc - 0.24 * u * ox
-    wire(ax, [(x - gate, y), (xg, y)], cm, 1.5 * lws, gid='symbol')  # gate lead
+    xc = x - sx * 0.38 * u * wx
+    xg = xc - sx * 0.24 * u * ox
+    wire(ax, [(x - sx * gate, y), (xg, y)], cm, 1.5 * lws,
+         gid='symbol')                                            # gate lead
     ax.plot([xg, xg], [y - 0.58 * u, y + 0.58 * u], color=cm,
             lw=2.3 * lws * min(u, 1.0) ** 0.4, zorder=4)
     for y0, y1 in ((0.30, 0.58), (-0.14, 0.14), (-0.58, -0.30)):
@@ -343,8 +347,8 @@ def mosfet(ax, x, y, name, state='on', h=1.80, gate=1.00,
     #  FancyArrowPatch sizes its head in points, so on a small symbol the
     #  head filled the whole stub and sat against the source lead instead
     #  of the channel (2026-10-02, user: the arrow's length is off).
-    xt = xc + 0.05 * u
-    al, ah = 0.22 * u * arrow, 0.10 * u * arrow
+    xt = xc + sx * 0.05 * u
+    al, ah = sx * 0.22 * u * arrow, 0.10 * u * arrow
     ax.fill([xt, xt + al, xt + al], [y, y + ah, y - ah],
             color=cm, zorder=5, lw=0)
 
@@ -352,29 +356,30 @@ def mosfet(ax, x, y, name, state='on', h=1.80, gate=1.00,
     # not about the dead time leaves them out - they are only there to
     # give intervals 3, 4, 7 and 8 somewhere to land.
     far = x
+    xd, xk = x + sx * dx_d, x + sx * dx_c
     if body or coss:
-        far = x + (dx_c if coss else dx_d)
+        far = xk if coss else xd
         wire(ax, [(x, yt), (far, yt)], cpar, 1.4, gid='symbol')
         wire(ax, [(x, yb), (far, yb)], cpar, 1.4, gid='symbol')
     if body:
-        wire(ax, [(x + dx_d, yb), (x + dx_d, yt)], cd,
+        wire(ax, [(xd, yb), (xd, yt)], cd,
              2.0 if cd == GRN else 1.4, gid='symbol')
-        vdiode(ax, x + dx_d, y, 0.26 * u, up=not flip, color=cd,
+        vdiode(ax, xd, y, 0.26 * u, up=not flip, color=cd,
                lw=2.2 if cd == GRN else 1.6)
     if coss:
-        wire(ax, [(x + dx_c, yb), (x + dx_c, y - sgn * 0.12 * u)], cc, 1.4,
+        wire(ax, [(xk, yb), (xk, y - sgn * 0.12 * u)], cc, 1.4,
              gid='symbol')
-        wire(ax, [(x + dx_c, y + sgn * 0.12 * u), (x + dx_c, yt)], cc, 1.4,
+        wire(ax, [(xk, y + sgn * 0.12 * u), (xk, yt)], cc, 1.4,
              gid='symbol')
-        vcap(ax, x + dx_c, y, 0.28 * u, 0.12 * u, color=cc, lw=2.0)
+        vcap(ax, xk, y, 0.28 * u, 0.12 * u, color=cc, lw=2.0)
     if name:
         nc = GREY if state == 'off' else NAVY
         if name_at == 'gate':
-            txt(ax, x - gate - 0.14, y, name, size=size, weight='bold',
-                color=nc, ha='right')
+            txt(ax, x - sx * (gate + 0.14), y, name, size=size,
+                weight='bold', color=nc, ha='right' if not mirror else 'left')
         else:                                   # clear of the whole cluster
-            txt(ax, far + 0.22, y, name, size=size, weight='bold',
-                color=nc, ha='left')
+            txt(ax, far + sx * 0.22, y, name, size=size, weight='bold',
+                color=nc, ha='left' if not mirror else 'right')
     return (x, yt), (x, yb)
 
 
