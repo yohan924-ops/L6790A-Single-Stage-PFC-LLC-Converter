@@ -74,23 +74,24 @@ IC       R_CS 24 mohm · 개당 120 mohm · 병렬 5 · I_OCP1 22.9 A · k_OCP 1
 ```
 k.675 2.364          k.ADT_hi 1.909       k.ADT_lo 5.500       k.Ae 1.594
 k.BO 1.061           k.CFG_hi 1.567       k.CFG_lo 2.000       k.CT_hi 2.128
-k.CT_lo 1.741        k.CTd 1.293          k.CVCC 1.039         k.Cin 1.071
-k.D3rd 1.182         k.DSsense 1.500      k.GM 3.418           k.IDaux 1.773
-k.LOUT2 6.960        k.NRCS 1.142         k.OCP 1.265          k.OUTdrv 1.286
-k.OVP1 1.052         k.OVsat 1.258        k.PM 0.993           k.PSR 1.539
-k.Pdrv 1.864         k.Ploss 0.324  <-- 미달 k.QgSR 1.599         k.RBSR 1.083
-k.RBZ 1.172          k.RBZ_hi 1.020       k.RBZ_lo 1.039       k.RB_hi 1.051
-k.RB_lo 1.070        k.RCS 1.022          k.RDSsec 1.539       k.RN 1.652
-k.RP 1.106           k.RT_hi 1.395        k.RT_lo 4.300        k.RTd 1.079
-k.RZ 1.075           k.SRVCC 1.208        k.SRdch 3.659        k.SRlo 1.129
-k.SU 1.416           k.TT 1.294           k.TTd 1.118          k.VBO 1.209
-k.VCC 1.742          k.VCCdrv 1.176       k.VCClo 1.071        k.VDSsec 1.250
-k.VGSR 1.040         k.VIH 1.600          k.VIL 2.375          k.VRbs 1.236
-k.ZVS 2.891          k.auxr 0.836  <-- 미달 k.ceil 2.410         k.dvdt 1.222
-k.floor 1.077        k.hold 1.119         k.lam 0.446  <-- 미달 k.pulse 10.810
-k.tau_hi 1.188       k.tau_lo 4.042       k.thand 2.821
+k.CT_lo 1.741        k.CTd 1.293          k.CVCC 1.039         k.Caux 14.550
+k.Cin 1.071          k.D3rd 1.182         k.DSsense 1.500      k.GM 3.418
+k.IDaux 1.773        k.LOUT2 6.960        k.NRCS 1.142         k.OCP 1.265
+k.OUTdrv 1.286       k.OVP1 1.052         k.OVsat 1.258        k.PM 0.993
+k.PSR 1.539          k.Pdrv 1.864         k.Ploss 0.324  <-- 미달 k.QgSR 1.599
+k.RBSR 1.083         k.RBZ 1.172          k.RBZ_hi 1.020       k.RBZ_lo 1.039
+k.RB_hi 1.051        k.RB_lo 1.070        k.RCS 1.022          k.RDSsec 1.539
+k.RN 1.652           k.RP 1.106           k.RT_hi 1.395        k.RT_lo 4.300
+k.RTd 1.079          k.RZ 1.075           k.SRVCC 1.208        k.SRdch 3.659
+k.SRlo 1.129         k.SU 1.416           k.TT 1.294           k.TTd 1.118
+k.VBO 1.209          k.VCC 1.742          k.VCCdrv 1.176       k.VCClo 1.071
+k.VCaux 1.626        k.VDSsec 1.250       k.VGSR 1.040         k.VIH 1.600
+k.VIL 2.375          k.VRbs 1.236         k.ZVS 2.891          k.auxr 0.836  <-- 미달
+k.ceil 2.410         k.dvdt 1.222         k.floor 1.077        k.hold 1.119
+k.lam 0.446  <-- 미달 k.pulse 10.810       k.tau_hi 1.188       k.tau_lo 4.042
+k.thand 2.821
 
-통과 64 / 67   미달: k.Ploss, k.auxr, k.lam   ← 아래 설명 참조
+통과 66 / 69   미달: k.Ploss, k.auxr, k.lam   ← 아래 설명 참조
 k.OVP1 1.052 은 V.OVP1_act 28.93 V, 목표 27.5 V, 하한은 V.out+5 % -> 합격
 k.PM 0.993 은 Φ.act 49.64°, 목표 50°, 합격선 45° -> 합격
 k.Ploss 0.324 는 1차 정적 도통 소자(LVG2) 9.62 W 대 잠정 예산 3 W. 어느 기술로도 소자 1개로는 불가능하다(열간 25.3 mohm 필요, 600 V 최선이 17 mohm@25C). **2026-08-24 사용자가 현 구성으로 확정** — 방열판 여부는 시제품 열 실측에서 판정한다. **오류가 아니다**

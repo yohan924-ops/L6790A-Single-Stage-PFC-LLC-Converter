@@ -1452,6 +1452,16 @@ S.row('- D.aux average current at OVP1 and f.Max:', 'I.Daux',
       'I.VCC+(V.Caux_OVP1-V.DZ_min)/R.BZ_sel', 'mA', 1)
 S.row('- D.aux continuous current rating (>1):', 'k.IDaux', 'I.F_4148/I.Daux',
       None, 3)
+S.note('C.aux carries the load while the half-wave rectifier is off, half a '
+       'period; the longest half period is at f.Min. Taken at I.Daux, the '
+       'f.Max bound, so the sag below is an upper bound.')
+S.const('[PICK] C.aux, ceramic, 50 V:', 'C.aux', "10*'μF", 'μF', 0)
+S.row('- C.aux sag over half a period at f.Min:', 'ΔV.Caux',
+      'I.Daux/(2*f.Min*C.aux)', 'V', 3)
+S.row('- follower headroom at the end of hold-up against that sag (>1):',
+      'k.Caux', '(V.Caux_hold-V.DZ_max)/ΔV.Caux', None, 2)
+S.row('- C.aux voltage rating against OVP2 (>1):', 'k.VCaux',
+      "50*'V/V.Caux_OVP2", None, 3)
 S.row('- D.aux dissipation:', 'P.Daux', 'V.F_4148*I.Daux', 'W', 3)
 S.row('- D.aux: highest ambient [C]:', 'T.aDaux',
       "T.j4148-R.th4148*P.Daux/'W", None, 0)
@@ -2175,6 +2185,7 @@ S.show('- Zener feed resistor, SELECTED:', 'R.BZ_sel', 'ohm', 0)
 S.show('- Zener power rating, at least:', 'P.DZ', 'mW', 0)
 S.show('- VCC capacitor, SELECTED:', 'C.VCC_sel', 'μF', 0)
 S.show('- VCC pin ceramic:', 'C.VCC_hf', 'nF', 0)
+S.show('- Auxiliary rectifier capacitor C.aux (50 V):', 'C.aux', 'μF', 0)
 S.show('- Bootstrap capacitor, per leg:', 'C.BOOT', 'nF', 0)
 S.show('- Gate resistor, per switch:', 'R.G', 'ohm', 1)
 S.show('- SR supply Zener, SELECTED:', 'V.DZSR_sel', 'V', 1)
