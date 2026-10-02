@@ -4705,8 +4705,9 @@ def an_full(save, foot):
                  ('R', y0 + 6.70, 13, 'BOOT'), ('R', y0 + 4.97, 11, 'OUT'),
                  ('R', y0 + 3.24, 12, 'HVG'), ('R', y0 + 1.51, 6, 'LVG')],
                 size=SN, psize=SN, tpad=0.45, title=False)
-        S.label(ax, x0 + 1.5, y0 + H_ + 0.85, nm + '  L6498LD', size=SN,
-                weight='bold', ha='left')
+        S.label(ax, x0 - 0.35, y0 + 3.95, nm, size=SN, weight='bold',
+                ha='right')
+        S.label(ax, x0 - 0.35, y0 + 3.35, 'L6498LD', size=SN, ha='right')
         for pin in ('SGND', 'PGND'):
             gx, gy = u[pin]
             pg(gx, gy, 0.15)
@@ -4822,10 +4823,10 @@ def an_full(save, foot):
             [('L', YDA, 6, 'DSA'), ('L', YCA_, 8, 'GDA'),
              ('L', YSA, 5, 'SSA'), ('L', YSB, 4, 'SSB'),
              ('L', YCB, 1, 'GDB'), ('L', YDB, 3, 'DSB'),
-             ('T', TX1 - 0.8, 7, 'VCC'), ('B', TX1 - 0.8, 2, 'GND')],
+             ('T', TX1 - 0.6, 7, 'VCC'), ('B', TX1 - 0.8, 2, 'GND')],
             size=SN, psize=SN, tpad=0.45, title=False)
-    S.label(ax, TX1 - 1.1, TY1 + 0.75, 'U7  TEA2095TE', size=SN,
-            weight='bold', ha='right')
+    S.label(ax, TX0 - 0.7, TY1 + 1.05, 'U7', size=SN, weight='bold', ha='left')
+    S.label(ax, TX0 - 0.7, TY1 + 0.5, 'TEA2095TE', size=SN, ha='left')
     gx_, gy_ = c['GND']
     S.wire(ax, [(gx_, gy_), (gx_, gy_ - 0.4)])
     sg(gx_, gy_ - 0.4, 0.0)
@@ -4833,7 +4834,7 @@ def an_full(save, foot):
     #  flag, C_SR hanging off that run
     vx, vy = c['VCC']
     YVS = 40.0
-    XSR, XFL = TX0 - 2.6, XG - 4.8
+    XSR, XFL = TX0 - 3.2, XG - 5.4
     S.wire(ax, [(vx, vy), (vx, YVS), (XFL, YVS)])
     S.dot(ax, XSR, YVS)
     vcap(XSR, YVS, 38.9)
@@ -5012,8 +5013,7 @@ def an_full(save, foot):
     S.wire(ax, [uc, (XU6, YLA)])
     S.wire(ax, [ua, (XU6, YGR)])
     sg(XU6, YGR, 0.4)
-    S.label(ax, XU6 - 0.6, YRZ + 0.7, 'Q6', size=SN, ha='right')
-    S.label(ax, XU6 - 0.6, YRZ - 0.75, 'TL431B', size=SN, ha='right')
+    S.label(ax, XU6 + 0.5, YRZ - 0.7, 'Q6\nTL431B', size=SN, ha='left')
     vcap(XCZ, YLA, YGR, 'C$_Z$\n' + _c(_sv('C.Z') * 1e3), side='l', yl=9.9)
     sg(XCZ, YGR, 0.4)
     save(fig, 'an_full')
