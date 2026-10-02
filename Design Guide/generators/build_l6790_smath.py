@@ -1399,9 +1399,20 @@ S.row('- pass transistor at the nominal output, that current:', 'P.QSR_run',
       '(V.out-V.SR)*I.SR', 'W', 2)
 S.row('- IC drop to its gate supply, that current:', 'P.SR_run',
       '(V.SR_max-V.G_SR)*(I.SR-I.SR_q)', 'W', 3)
-S.const('[PICK] Decoupling capacitor at the VCC pin:', 'C.SR', "10*'μF", 'μF', 0,
-        note='the datasheet asks for one close to the pin and gives no '
-             'value; 10 uF is what ST\'s EVL6790_670W SR board fits.')
+S.const('[PICK] Series resistor into the VCC pin (RC filter):', 'R.SR',
+        "10*'ohm", 'ohm', 0,
+        note='2026-10-02 user: a 10 ohm / 100 nF RC filter at the pin in '
+             'place of the 10 uF the ST EVL6790_670W SR board fits.')
+S.const('[PICK] Capacitor at the VCC pin:', 'C.SR', "100*'nF", 'nF', 0)
+S.row('- mean drop across R.SR at f.Max:', 'ΔV.RSR', 'R.SR*I.SR', 'V', 2)
+S.row('- dip at the pin as one leg\'s pair is charged (n.SR x Q.g_SR out of '
+      'C.SR):', 'ΔV.CSR', "n.SR*Q.g_SR*10^(-9)*'A*'s/C.SR", 'V', 2)
+S.row('- VCC pin at the bottom of the band, after both:', 'V.SRpin_min',
+      'V.SR_min-ΔV.RSR-ΔV.CSR', 'V', 2)
+S.row('- held at the characterised 12 V (>1):', 'k.SRpin',
+      'V.SRpin_min/V.SR_char', None, 3,
+      note='one leg\'s gate charge is more than 100 nF holds: a bulk '
+           'capacitor behind R.SR (the 10 uF it replaced) brings this back.')
 
 S.h2('14c.5  Heat in the two followers and their Zeners')
 S.note('Both followers are sized at f.Max, the oscillator ceiling, which bounds '
@@ -1707,7 +1718,7 @@ S.y = max(_y1, S.y)
 S.const('[DS] FB pin internal resistance:', 'R.FB', "35*'kohm", 'kohm', 1)
 S.const('[DS] FB steady-state current:', 'I.FB_steady', "150*'μA", 'μA', 1)
 S.const('[DS] FB maximum current:', 'I.FB_max', "300*'μA", 'μA', 1)
-S.const('[PICK] Shunt regulator reference (TL431):', 'V.R', "2.495*'V", 'V', 3)
+S.const('[PICK] Shunt regulator reference (TL431B, as Q6):', 'V.R', "2.495*'V", 'V', 3)
 S.const('[PICK] LED rail divider, upper (E96):', 'R.Z1', "38.3*'kohm", 'kohm', 1)
 S.const('[PICK] LED rail divider, lower:', 'R.Z2', "10*'kohm", 'kohm', 1)
 S.row('- Feedback supply V.Z, a second TL431 as a shunt regulator (16.1b):',
@@ -2192,7 +2203,8 @@ S.show('- SR supply Zener, SELECTED:', 'V.DZSR_sel', 'V', 1)
 S.show('- SR supply Zener feed resistor, SELECTED:', 'R.BSR_sel', 'ohm', 0)
 S.show('- SR supply Zener power rating, at least:', 'P.DZSR', 'mW', 0)
 S.show('- SR supply feed resistor power rating, at least:', 'P.RBSR', 'W', 3)
-S.show('- SR controller VCC capacitor:', 'C.SR', 'μF', 0)
+S.show('- SR controller VCC filter resistor:', 'R.SR', 'ohm', 0)
+S.show('- SR controller VCC capacitor:', 'C.SR', 'nF', 0)
 S.show('- LED rail feed resistor, SELECTED:', 'R.Z_sel', 'ohm', 0)
 S.show('- LED rail divider, upper:', 'R.Z1', 'kohm', 1)
 S.show('- LED rail divider, lower:', 'R.Z2', 'kohm', 1)
@@ -2221,7 +2233,8 @@ S.table(['function', 'designator', 'device class and count'],
          ['LED rail regulator', 'Q6', '1 x TL431B, SOT-23 - 16.1b'],
          ['Feedback optocoupler', 'Q4',
           '1 x SFH617A-2 (the ST tool\'s part; CTR bin 2 as on the EVB) - 16.5'],
-         ['External error amplifier', 'Q5', '1 x TL431, 2.5 V shunt regulator']],
+         ['External error amplifier', 'Q5',
+          '1 x TL431B, 2.5 V shunt regulator - one grade with Q6']],
         widths=[430, 260, 230])
 S.show('- Primary: devices in parallel per position:', 'n.par', None, 0)
 S.show('- Primary: minimum drain-source voltage:', 'V.DS_pri', 'V', 1)

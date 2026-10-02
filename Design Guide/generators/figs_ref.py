@@ -3660,7 +3660,7 @@ def _sr_block(ax, full=False):
     # leg-A drain bus: R_BSR into the Zener and the base, collector on
     # V_out, emitter down to the pin with C_SR beside it
     vx, vy = c['VCC']
-    YR, XRB, YBN = 21.5, 6.4, 19.0
+    YR, XRB, YBN = 21.5, 6.4, 19.4
     YDA_ = 16.8                       # the leg-A drain bus, drawn below
     _term(ax, 3.6, YR)
     S.label(ax, 3.25, YR, 'V$_{out}$', size=10, ha='right')
@@ -3683,9 +3683,14 @@ def _sr_block(ax, full=False):
     S.label(ax, vx + 0.35, YBN + 0.15, 'Q$_{SR}$', size=10, ha='left',
             weight='bold')
     YVC = 15.8
-    S.wire(ax, [eq_, (vx, vy)])       # the drain bus hops it, below
-    S.label(ax, vx + 0.25, 17.75, 'V$_{CC,SR}$ %.1f V' % _sv('V.SR'),
+    #  the RC filter: R_SR in the emitter run, C_SR at the pin node
+    ra_, rb_ = S.res(ax, vx, eq_[1] - 0.85, horiz=False)   # above the hop
+    S.wire(ax, [eq_, rb_])
+    S.wire(ax, [ra_, (vx, vy)])       # the drain bus hops it, below
+    S.label(ax, vx + 0.3, eq_[1] + 0.1, 'V$_{CC,SR}$ %.1f V' % _sv('V.SR'),
             size=9.0, ha='left', color=GREY)
+    S.label(ax, vx + 0.35, eq_[1] - 0.85, 'R$_{SR}$ %.0f $\\Omega$'
+            % _sv('R.SR'), size=9.4, ha='left')
     XCD = 7.6
     S.dot(ax, vx, YVC)
     S.wire(ax, [(vx, YVC), (XCD, YVC)])
@@ -3693,7 +3698,7 @@ def _sr_block(ax, full=False):
     S.wire(ax, [(XCD, YVC), cb])
     S.wire(ax, [ca, (XCD, 14.4)])
     S.gnd(ax, XCD, 14.4)
-    S.label(ax, XCD - 0.75, 15.0, 'C$_{SR}$\n%.0f $\\mu$F' % _sv('C.SR'),
+    S.label(ax, XCD - 0.75, 15.0, 'C$_{SR}$\n%.0f nF' % _sv('C.SR'),
             size=9.4, ha='right')
     # ------------------------------------------------- centre tap = V_out
     S.wire(ax, [t['s_tap'], (6.0, 9.5)])
@@ -4295,7 +4300,7 @@ def an_full_sec(save, foot):
     S.wire(ax, [(XRI, YREF), tr])
     S.wire(ax, [ta, (XK, YG)])
     S.dot(ax, XK, YG)
-    S.label(ax, XK + 0.6, YREF - 0.55, 'Q5  TL431', size=8.8, ha='left')
+    S.label(ax, XK + 0.6, YREF - 0.55, 'Q5  TL431B', size=8.8, ha='left')
     # compensation between REF and K
     XL_, YF1, YF2 = 11.8, 5.6, 4.4
     S.wire(ax, [(XL_, YREF), (XL_, YF1)])
@@ -4833,18 +4838,22 @@ def an_full(save, foot):
     gx_, gy_ = c['GND']
     S.wire(ax, [(gx_, gy_), (gx_, gy_ - 0.4)])
     sg(gx_, gy_ - 0.4, 0.0)
-    #  VCC: up from the top pin, a short run left to the flag, C_SR hanging
-    #  off it just clear of the box
+    #  VCC: up from the top pin, C_SR to ground just clear of the box,
+    #  R_SR in the run out to the flag - the RC filter at the pin
     vx, vy = c['VCC']
     YVS = 40.0
-    XSR, XFL = TX0 - 0.7, TX0 - 1.7
-    S.wire(ax, [(vx, vy), (vx, YVS), (XFL, YVS)])
+    XSR, XRS_, XFL = TX0 - 1.0, TX0 - 2.6, TX0 - 4.2
+    S.wire(ax, [(vx, vy), (vx, YVS), (XSR, YVS)])
     S.dot(ax, XSR, YVS)
-    vcap(XSR, YVS, 39.0)
-    sg(XSR, 39.0, 0.3)
+    vcap(XSR, YVS, 39.2)
+    sg(XSR, 39.2, 0.3)
+    ra_, rb_ = S.res(ax, XRS_, YVS)
+    S.wire(ax, [(XSR, YVS), rb_])
+    S.wire(ax, [ra_, (XFL, YVS)])
     flag(XFL, YVS, 'V$_{CC,SR}$', side='u')
-    S.label(ax, XSR - 0.45, 39.5, 'C$_{SR}$ ' + _c(_sv('C.SR') * 1e3),
-            size=SN, ha='right')
+    S.label(ax, XRS_, YVS - 0.65, 'R$_{SR}$ ' + _r(_sv('R.SR')), size=SN)
+    S.label(ax, XSR + 0.6, 39.6, 'C$_{SR}$ ' + _c(_sv('C.SR')), size=SN,
+            ha='left')
 
     def pair(yc, ydrain, ysrc, flip, leg, hop_y, ds, gd, ss, xgnd):
         """two MOSFETs, each with its gate resistor on its own gate lead.
@@ -4958,7 +4967,7 @@ def an_full(save, foot):
     S.dot(ax, XL_, YREF)
     S.wire(ax, [ta, (XK, YGR)])
     sg(XK, YGR, 0.4)
-    S.label(ax, XK + 0.5, YREF - 0.7, 'Q5\nTL431', size=SN, ha='left')
+    S.label(ax, XK + 0.5, YREF - 0.7, 'Q5\nTL431B', size=SN, ha='left')
     S.wire(ax, [(XL_, YREF), (XL_, YF1)])
     S.dot(ax, XL_, YF2)
     ca, cb = S.cap(ax, 42.5, YF1)
