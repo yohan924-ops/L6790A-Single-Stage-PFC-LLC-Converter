@@ -1739,7 +1739,7 @@ S.row('- inside the window, lower check (>1):', 'k.RB_lo', 'R.B/R.B_min', None, 
 S.row('- inside the window, upper check (>1):', 'k.RB_hi', 'R.B_max/R.B', None, 3)
 
 S.h2('16.1b  The LED supply V.Z - a TL431 shunt regulator fed from V.out')
-S.note('V.out -> R.Z -> V.Z node with C.Z; a TL431 (U6) cathode on the node, '
+S.note('V.out -> R.Z -> V.Z node with C.Z; a TL431 (Q6) cathode on the node, '
        'anode to the secondary ground, REF from R.Z1 over R.Z2. The R.B window '
        'above is narrow (k.RB_lo, k.RB_hi), so the rail has to hold its value: '
        'a +-5 % Zener would move the upper bound under R.B (row r.RB_zener5).')
@@ -1761,7 +1761,7 @@ S.row('- window held over the band, lower (>1):', 'k.RBZ_lo', 'R.B/R.B_minZ',
 S.row('- the upper ratio with a +-5 % 12 V Zener instead (<1 fails):',
       'r.RB_zener5',
       "((12*'V*0.95-(V.R+V.Fo))/(V.Fo/R.P+I.FB_steady/CTR.s))/R.B", None, 3)
-S.row('- largest current R.B can draw (cathode of U5 at V.R):', 'I.RB_max',
+S.row('- largest current R.B can draw (cathode of Q5 at V.R):', 'I.RB_max',
       '(V.Z_max-V.R)/R.B', 'mA', 2)
 S.const('[DS] TL431 minimum cathode current for regulation, max.:', 'I.KA_min',
         "1*'mA", 'mA', 1, note='TI SLVS543S, VKA = Vref.')
@@ -1772,11 +1772,11 @@ S.const('[PICK] SELECTED feed resistor R.Z:', 'R.Z_sel', "2200*'ohm", 'ohm', 0)
 S.row('- R.Z margin (>1):', 'k.RZ', 'R.Z_max/R.Z_sel', None, 3)
 S.row('- R.Z dissipation at OVP1 (rating to buy):', 'P.RZ',
       '(V.OVP1_act-V.Z_min)^2/R.Z_sel', 'W', 3)
-S.row('- U6 dissipation at OVP1, LED off:', 'P.U6',
+S.row('- Q6 dissipation at OVP1, LED off:', 'P.Q6',
       'V.Z_max*((V.OVP1_act-V.Z_min)/R.Z_sel-I.Zdiv)', 'mW', 0)
-S.const('[DS] TL431 SOT-23 (DBZ) junction-to-ambient [C/W]:', 'R.thU6', '206',
+S.const('[DS] TL431 SOT-23 (DBZ) junction-to-ambient [C/W]:', 'R.thQ6', '206',
         None, 0)
-S.row('- its junction rise [C]:', 'ΔT.U6', "R.thU6*P.U6/'W", None, 0)
+S.row('- its junction rise [C]:', 'ΔT.Q6', "R.thQ6*P.Q6/'W", None, 0)
 S.const('[PICK] Capacitor on V.Z:', 'C.Z', "10*'μF", 'μF', 0,
         note='TI Fig. 6-18 (SOT-23): unstable only between about 0.01 and 2 uF '
              'at VKA 10-15 V; a 25 V X7R part stays above that under bias.')
@@ -2217,7 +2217,7 @@ S.table(['function', 'designator', 'device class and count'],
          ['SR supply pass transistor', 'Q.SR',
           '1 x PHPT61003NY, 6 cm2 collector pad - 14c.5'],
          ['SR supply Zener', 'D.ZSR', '1 x BZT52H-C15, 1 cm2 cathode pad'],
-         ['LED rail regulator', 'U6', '1 x TL431B, SOT-23 - 16.1b'],
+         ['LED rail regulator', 'Q6', '1 x TL431B, SOT-23 - 16.1b'],
          ['Feedback optocoupler', '-', '1 x, CTR binned - see 16.5'],
          ['External error amplifier', '-', '1 x, 2.5 V shunt regulator']],
         widths=[430, 260, 230])

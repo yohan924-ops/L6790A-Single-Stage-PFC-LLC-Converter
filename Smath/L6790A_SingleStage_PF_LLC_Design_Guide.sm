@@ -23012,7 +23012,7 @@
     <region left="20" top="69168" width="1560" height="51" color="#444444" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
-        <p style="font-weight: normal; font-style: normal; font-size: 9px;">V.out -&gt; R.Z -&gt; V.Z node with C.Z; a TL431 (U6) cathode on the node, anode to the secondary ground, REF from R.Z1 over R.Z2. The R.B window above is narrow (k.RB_lo, k.RB_hi), so the rail has to hold its value: a +-5 % Zener would move the upper bound under</p>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">V.out -&gt; R.Z -&gt; V.Z node with C.Z; a TL431 (Q6) cathode on the node, anode to the secondary ground, REF from R.Z1 over R.Z2. The R.B window above is narrow (k.RB_lo, k.RB_hi), so the rail has to hold its value: a +-5 % Zener would move the upper bound under</p>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">R.B (row r.RB_zener5).</p>
       </content>
     </text>
@@ -23290,7 +23290,7 @@
     <region left="20" top="69968" width="470" height="53" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
-        <p style="font-weight: normal; font-style: normal; font-size: 10px;">- largest current R.B can draw (cathode of U5 at V.R):</p>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">- largest current R.B can draw (cathode of Q5 at V.R):</p>
       </content>
     </text>
     </region>
@@ -23465,14 +23465,14 @@
     <region left="20" top="70402" width="470" height="53" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
-        <p style="font-weight: normal; font-style: normal; font-size: 10px;">- U6 dissipation at OVP1, LED off:</p>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Q6 dissipation at OVP1, LED off:</p>
       </content>
     </text>
     </region>
     <region left="510" top="70402" width="1080" height="53" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="0">
       <input>
-        <e type="operand">P.U6</e>
+        <e type="operand">P.Q6</e>
         <e type="operand">V.Z_max</e>
         <e type="operand">V.OVP1_act</e>
         <e type="operand">V.Z_min</e>
@@ -23503,7 +23503,7 @@
     <region left="510" top="70463" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
-        <e type="operand">R.thU6</e>
+        <e type="operand">R.thQ6</e>
         <e type="operand">206</e>
         <e type="operator" args="2">:</e>
       </input>
@@ -23519,9 +23519,9 @@
     <region left="510" top="70506" width="1080" height="53" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="0">
       <input>
-        <e type="operand">ΔT.U6</e>
-        <e type="operand">R.thU6</e>
-        <e type="operand">P.U6</e>
+        <e type="operand">ΔT.Q6</e>
+        <e type="operand">R.thQ6</e>
+        <e type="operand">P.Q6</e>
         <e type="operator" args="2">*</e>
         <e type="operand" style="unit">W</e>
         <e type="operator" args="2">/</e>
@@ -29509,7 +29509,7 @@
     <region left="450" top="88276" width="250" height="23" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
-        <p style="font-weight: normal; font-style: normal; font-size: 9px;">U6</p>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">Q6</p>
       </content>
     </text>
     </region>

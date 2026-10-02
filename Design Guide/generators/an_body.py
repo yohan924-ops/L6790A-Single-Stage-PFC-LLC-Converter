@@ -5177,7 +5177,7 @@ def build(A):
     add(h2('The whole circuit, with this design&rsquo;s values'))
     add(p('Figures&nbsp;%(f1)s and %(f2)s put the parts of this chapter '
           'together on two sheets, which meet at the transformer and at the '
-          'optocoupler U4. A net that continues elsewhere on its sheet '
+          'optocoupler Q4. A net that continues elsewhere on its sheet '
           'carries a flag with the name of the net. Every value printed is '
           'the value selected in the sheet. The parts that are named here '
           'for the first time are those of the V<sub>CC</sub> regulator of '
@@ -5208,7 +5208,7 @@ def build(A):
             'The whole circuit, sheet 2 of 2: the secondary side. The SR stage '
             'of Figure&nbsp;%s above, the output bank and the voltage loop '
             'below; the V<sub>out</sub> flags are one net. The transistor of '
-            'U4 is on sheet 1.' % FR('an_sr_ctrl')))
+            'Q4 is on sheet 1.' % FR('an_sr_ctrl')))
 
     # =============================================================== 8
     add(h1('List of symbols'))
