@@ -4426,13 +4426,13 @@ def an_full(save, foot):
         ax.plot(x + rr * np.cos(th), yc0 + rr * np.sin(th), color=NAVY,
                 lw=2.2, zorder=4)
         X.note_symbol(ax, 'cap', x, yc_, 2 * s_, 2 * g_ + 0.25)
-        ax.text(x - s_ - 0.12, yc_ + g_ + 0.1, '+', size=7.5, color=NAVY,
+        ax.text(x - s_ - 0.14, yc_ + g_ + 0.06, '+', size=9.5, color=NAVY,
                 ha='right', va='bottom', zorder=5)
         S.wire(ax, [(x, ytop), (x, yc_ + g_)])
         S.wire(ax, [(x, yc_ - g_), (x, ybot)])
         if label:
             yy = yc_ if yl is None else yl
-            S.label(ax, x + (0.5 if side == 'r' else -0.5), yy, label,
+            S.label(ax, x + (0.65 if side == 'r' else -0.65), yy, label,
                     size=SZ, ha='left' if side == 'r' else 'right')
 
     def pg(x, y, lead=0.35):              # primary ground on a short lead
@@ -4816,8 +4816,8 @@ def an_full(save, foot):
              ('L', YSA, 5, 'SSA'), ('L', YSB, 4, 'SSB'),
              ('L', YCB, 1, 'GDB'), ('L', YDB, 3, 'DSB'),
              ('R', 37.0, 7, 'VCC'), ('R', 30.4, 2, 'GND')],
-            ref=33.7, size=SN, psize=SN, tsize=8.2, tpad=0.45)
-    S.label(ax, TX0 + 1.7, 32.9, 'U7', size=SN, color=GREY)
+            ref=(YCA_ + YSA) / 2.0, size=SN, psize=SN, tsize=8.2, tpad=0.45)
+    S.label(ax, TX0 + 1.7, (YSB + YCB) / 2.0, 'U7', size=SN, color=GREY)
     gx_, gy_ = c['GND']
     S.wire(ax, [(gx_, gy_), (TX1 + 1.3, gy_)])
     sg(TX1 + 1.3, gy_, 0.4)
@@ -4902,7 +4902,8 @@ def an_full(save, foot):
         S.dot(ax, x, YO2)
         fn_(x, YO2, 20.2)
         sg(x, 20.2, 0.4)
-        S.label(ax, x + 0.5, 21.6, txt_, size=SZ, ha='left')
+        S.label(ax, x + (0.65 if fn_ is ecap else 0.5), 21.6, txt_, size=SZ,
+                ha='left')
     # the SR supply follower (14c.4)
     XRB, XQB, YBS = 47.8, 49.0, 20.0
     S.dot(ax, XRB, YO2)
