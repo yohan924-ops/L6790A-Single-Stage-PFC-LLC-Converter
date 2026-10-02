@@ -4055,7 +4055,7 @@ def an_full_pri(save, foot):
                                      (0.18, y_ - 1.6 + dy), arrowstyle='-|>',
                                      mutation_scale=9, color=NAVY, lw=1.2,
                                      zorder=5, shrinkA=0, shrinkB=0))
-    S.label(ax, -0.3, y_ + 1.05, 'Q4, LED on sheet 2', size=8.4,
+    S.label(ax, -0.3, y_ + 1.05, 'Q4B, LED on sheet 2', size=8.4,
             color=GREY, ha='left')
     # BM and CFG to ground, ZCD from the auxiliary winding
     for pin, xr_, key, nm in (('BM', 10.2, 'R.BM_sel', 'R$_{BM}$'),
@@ -4330,7 +4330,7 @@ def an_full_sec(save, foot):
                                      arrowstyle='-|>', mutation_scale=9,
                                      color=NAVY, lw=1.2, zorder=5,
                                      shrinkA=0, shrinkB=0))
-    S.label(ax, XK + 1.25, ym - 0.1, 'Q4 LED', size=8.6, ha='left',
+    S.label(ax, XK + 1.25, ym - 0.1, 'Q4A LED', size=8.6, ha='left',
             color=GREY)
     XP = XK - 1.7
     S.wire(ax, [(XK, YLA), (XP, YLA)])
@@ -4566,7 +4566,7 @@ def an_full(save, foot):
     S.wire(ax, [(X2, YB), p3])
     S.wire(ax, [s9, s10])
     YCT = (s9[1] + s10[1]) / 2.0
-    S.dot(ax, xs, YCT)
+    X.nodot(ax, xs, YCT)                   # pins 9 and 10 joined, no dot (user)
     #  pin numbers: on the outer side of each lead, just above its end
     for (px, py), n_, sd in ((p1, _pm['NP1'][0][0], -1),
                              (p3, _pm['NP1'][1][0], -1),
@@ -4670,7 +4670,7 @@ def an_full(save, foot):
                                      (0.55, y_ - 1.4 + dy), arrowstyle='-|>',
                                      mutation_scale=8, color=NAVY, lw=1.0,
                                      zorder=5, shrinkA=0, shrinkB=0))
-    S.label(ax, 0.2, y_ + 0.6, 'Q4', size=SN, ha='left', color=GREY)
+    S.label(ax, 0.2, y_ + 0.6, 'Q4B', size=SN, ha='left', color=GREY)
     # ZCD from AUX through a divider; CFG and BM to ground
     zx, zy = U1['ZCD']
     YZN = 5.2
@@ -4818,18 +4818,18 @@ def an_full(save, foot):
     MOSS = dict(MOS, gate=MGS)
     xr1, xr2 = XQ1 + MGS + 0.9, XQ2 + MGS + 0.9
     XG = xr2 + 1.1                         # where the gate run splits
-    TX0, TX1 = XG + 1.5, XG + 6.1
+    TX0, TX1 = XG + 1.2, XG + 6.3
     TY0, TY1 = YDB - 1.0, YDA + 1.0        # room for the supply pins' names
     c = _ic(ax, TX0, TY0, TX1, TY1, 'TEA2095TE',
             [('L', YDA, 6, 'DSA'), ('L', YCA_, 8, 'GDA'),
              ('L', YSA, 5, 'SSA'), ('L', YSB, 4, 'SSB'),
              ('L', YCB, 1, 'GDB'), ('L', YDB, 3, 'DSB'),
-             ('T', TX0 + 2.8, 7, 'VCC'), ('B', TX0 + 2.8, 2, 'GND')],
+             ('T', TX0 + 2.9, 7, 'VCC'), ('B', TX0 + 2.9, 2, 'GND')],
             size=SN, psize=SN, tpad=0.45, title=False)
     #  name in the box's free right half, between the SSA and SSB rows
-    S.label(ax, TX0 + 3.0, (YSA + YSB) / 2.0 + 0.3, 'U7', size=SN,
+    S.label(ax, TX0 + 3.1, (YSA + YSB) / 2.0 + 0.3, 'U7', size=SN,
             weight='bold')
-    S.label(ax, TX0 + 3.0, (YSA + YSB) / 2.0 - 0.3, 'TEA2095TE', size=8.2)
+    S.label(ax, TX0 + 3.1, (YSA + YSB) / 2.0 - 0.3, 'TEA2095TE', size=8.2)
     gx_, gy_ = c['GND']
     S.wire(ax, [(gx_, gy_), (gx_, gy_ - 0.4)])
     sg(gx_, gy_ - 0.4, 0.0)
@@ -4988,7 +4988,7 @@ def an_full(save, foot):
                                      arrowstyle='-|>', mutation_scale=8,
                                      color=NAVY, lw=1.0, zorder=5,
                                      shrinkA=0, shrinkB=0))
-    S.label(ax, XK + 1.15, ym - 0.1, 'Q4', size=SN, ha='left', color=GREY)
+    S.label(ax, XK + 1.15, ym - 0.1, 'Q4A\nSFH617A-2', size=SN, ha='left')
     XPr = XK - 1.8
     S.wire(ax, [(XK, YLA), (XPr, YLA)])
     S.wire(ax, [(XK, YLC), (XPr, YLC)])
