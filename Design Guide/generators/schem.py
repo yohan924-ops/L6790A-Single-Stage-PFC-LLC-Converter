@@ -167,7 +167,9 @@ def diode(ax, x, y, t=None, horiz=True, s=None, flip=False, color=NAVY):
     kit's size at this axes' scale.
     """
     #  0.56: doubled 2026-09-21 with the kit's vdiode - see there
-    s = 0.56 * X.scale(ax) if s is None else s
+    #  ax._diode_k shrinks a figure's diodes on their own (2026-10-02, the
+    #  whole-circuit drawing: 80 % of the rest of its symbols)
+    s = (0.56 * X.scale(ax) * getattr(ax, '_diode_k', 1.0)) if s is None else s
     d = -1 if flip else 1
     a, w = 0.62 * s, 0.72 * s                     # half-length, half-width
     if horiz:

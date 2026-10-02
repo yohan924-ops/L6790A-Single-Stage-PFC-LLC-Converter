@@ -1394,6 +1394,39 @@ S.const('[PICK] Decoupling capacitor at the VCC pin:', 'C.SR', "10*'μF", 'μF',
         note='the datasheet asks for one close to the pin and gives no '
              'value; 10 uF is what ST\'s EVL6790_670W SR board fits.')
 
+S.h2('14c.5  Heat in the two followers and their Zeners')
+S.note('Both followers are sized at f.Max, the oscillator ceiling, which bounds '
+       'the gate current; the dissipations above are therefore upper bounds. '
+       'Each part is rated by the highest ambient it allows at that bound, '
+       'T.a = T.j,max - R.th(j-a) x P, on the copper its datasheet quotes.')
+S.const('[DS] PHPT61003NY (Q.VCC, Q.SR), 6 cm2 collector pad [C/W]:', 'R.thQ',
+        '50', None, 0, note='Nexperia, LFPAK56, 100 V 3 A; 115 C/W on the '
+                            'standard footprint.')
+S.const('[DS] PHPT61003NY junction temperature, max. [C]:', 'T.jQ', '175', None, 0)
+S.const('[DS] the same transistor on its standard footprint [C/W]:', 'R.thQ_std',
+        '115', None, 0)
+S.row('- Q.VCC: highest ambient at P.Qpass [C]:', 'T.aQVCC',
+      "T.jQ-R.thQ*P.Qpass/'W", None, 0)
+S.row('- Q.VCC: the same on the standard footprint [C]:', 'T.aQVCC_std',
+      "T.jQ-R.thQ_std*P.Qpass/'W", None, 0,
+      note='why the collector needs its 6 cm2 of copper.')
+S.row('- Q.SR: highest ambient at P.QSR (sized current) [C]:', 'T.aQSR',
+      "T.jQ-R.thQ*P.QSR/'W", None, 0)
+S.row('- Q.SR at OVP1 with the STL160N10F8 charge:', 'P.QSR_ovp',
+      '(V.OVP1_act-V.SR_min)*I.SR', 'W', 2)
+S.row('- its highest ambient [C]:', 'T.aQSR_run', "T.jQ-R.thQ*P.QSR_ovp/'W",
+      None, 0)
+S.const('[DS] BZT52H-C15 (D.Z, D.ZSR), 1 cm2 cathode pad [C/W]:', 'R.thDZ',
+        '150', None, 0, note='Nexperia, SOD123F, about +-5 %; 330 C/W on the '
+                             'standard footprint.')
+S.const('[DS] BZT52H junction temperature, max. [C]:', 'T.jDZ', '150', None, 0)
+S.row('- D.Z: highest ambient at P.DZ [C]:', 'T.aDZ', "T.jDZ-R.thDZ*P.DZ/'W",
+      None, 0)
+S.row('- D.ZSR: highest ambient at P.DZSR [C]:', 'T.aDZSR',
+      "T.jDZ-R.thDZ*P.DZSR/'W", None, 0)
+S.row('- R.BZ dissipation at OVP1, no load (rating to buy):', 'P.RBZ',
+      '(V.Caux_OVP1-V.DZ_min)^2/R.BZ_sel', 'W', 3)
+
 S.h2('14b. Datasheet Operating Limits - every ratio below must be greater than 1')
 S.note('DS Table 2 (recommended operating range) and DS section 5.3.2. These are hard silicon '
        'limits, not design preferences.')
@@ -1632,8 +1665,11 @@ S.y = max(_y1, S.y)
 S.const('[DS] FB pin internal resistance:', 'R.FB', "35*'kohm", 'kohm', 1)
 S.const('[DS] FB steady-state current:', 'I.FB_steady', "150*'μA", 'μA', 1)
 S.const('[DS] FB maximum current:', 'I.FB_max', "300*'μA", 'μA', 1)
-S.const('[PICK] Feedback supply voltage:', 'V.Z', "12*'V", 'V', 1)
 S.const('[PICK] Shunt regulator reference (TL431):', 'V.R', "2.495*'V", 'V', 3)
+S.const('[PICK] LED rail divider, upper (E96):', 'R.Z1', "38.3*'kohm", 'kohm', 1)
+S.const('[PICK] LED rail divider, lower:', 'R.Z2', "10*'kohm", 'kohm', 1)
+S.row('- Feedback supply V.Z, a second TL431 as a shunt regulator (16.1b):',
+      'V.Z', 'V.R*(1+R.Z1/R.Z2)', 'V', 3)
 S.const('[PICK] Shunt regulator minimum current:', 'I.min', "0.8*'mA", 'mA', 2)
 S.const('[PICK] Optodiode forward drop:', 'V.Fo', "1.15*'V", 'V', 3)
 S.const('[PICK] Optocoupler CTR at steady state:', 'CTR.s', '0.37', None, 3)
@@ -1659,6 +1695,49 @@ S.row('- photodiode resistor check (>1):', 'k.RP', 'R.P_max/R.P', None, 3,
       note='[144]  a MAXIMUM, so round DOWN.')
 S.row('- inside the window, lower check (>1):', 'k.RB_lo', 'R.B/R.B_min', None, 3)
 S.row('- inside the window, upper check (>1):', 'k.RB_hi', 'R.B_max/R.B', None, 3)
+
+S.h2('16.1b  The LED supply V.Z - a TL431 shunt regulator fed from V.out')
+S.note('V.out -> R.Z -> V.Z node with C.Z; a TL431 (U6) cathode on the node, '
+       'anode to the secondary ground, REF from R.Z1 over R.Z2. The R.B window '
+       'above is narrow (k.RB_lo, k.RB_hi), so the rail has to hold its value: '
+       'a +-5 % Zener would move the upper bound under R.B (row r.RB_zener5).')
+S.const('[PICK] TL431 reference tolerance (grade B, the part to buy):', 'tol.VR',
+        '0.005', None, 3)
+S.const('[PICK] Divider resistor tolerance:', 'tol.RZ', '0.01', None, 3)
+S.row('- V.Z, low end:', 'V.Z_min',
+      'V.R*(1-tol.VR)*(1+R.Z1*(1-tol.RZ)/(R.Z2*(1+tol.RZ)))', 'V', 3)
+S.row('- V.Z, high end:', 'V.Z_max',
+      'V.R*(1+tol.VR)*(1+R.Z1*(1+tol.RZ)/(R.Z2*(1-tol.RZ)))', 'V', 3)
+S.row('- R.B upper bound at the low end of V.Z:', 'R.B_maxZ',
+      '(V.Z_min-(V.R+V.Fo))/(V.Fo/R.P+I.FB_steady/CTR.s)', 'kohm', 3)
+S.row('- R.B lower bound at the high end of V.Z:', 'R.B_minZ',
+      '(V.Z_max-(V.R+V.Fo))/(V.Fo/R.P+I.FB_max/CTR.m)', 'kohm', 3)
+S.row('- window held over the band, upper (>1):', 'k.RBZ_hi', 'R.B_maxZ/R.B',
+      None, 3)
+S.row('- window held over the band, lower (>1):', 'k.RBZ_lo', 'R.B/R.B_minZ',
+      None, 3)
+S.row('- the upper ratio with a +-5 % 12 V Zener instead (<1 fails):',
+      'r.RB_zener5',
+      "((12*'V*0.95-(V.R+V.Fo))/(V.Fo/R.P+I.FB_steady/CTR.s))/R.B", None, 3)
+S.row('- largest current R.B can draw (cathode of U5 at V.R):', 'I.RB_max',
+      '(V.Z_max-V.R)/R.B', 'mA', 2)
+S.const('[DS] TL431 minimum cathode current for regulation, max.:', 'I.KA_min',
+        "1*'mA", 'mA', 1, note='TI SLVS543S, VKA = Vref.')
+S.row('- divider current:', 'I.Zdiv', 'V.Z/(R.Z1+R.Z2)', 'mA', 3)
+S.row('- Largest feed resistor at the end of hold-up:', 'R.Z_max',
+      '(V.out_min-V.Z_max)/(I.RB_max+I.KA_min+I.Zdiv)', 'ohm', 0)
+S.const('[PICK] SELECTED feed resistor R.Z:', 'R.Z_sel', "2200*'ohm", 'ohm', 0)
+S.row('- R.Z margin (>1):', 'k.RZ', 'R.Z_max/R.Z_sel', None, 3)
+S.row('- R.Z dissipation at OVP1 (rating to buy):', 'P.RZ',
+      '(V.OVP1_act-V.Z_min)^2/R.Z_sel', 'W', 3)
+S.row('- U6 dissipation at OVP1, LED off:', 'P.U6',
+      'V.Z_max*((V.OVP1_act-V.Z_min)/R.Z_sel-I.Zdiv)', 'mW', 0)
+S.const('[DS] TL431 SOT-23 (DBZ) junction-to-ambient [C/W]:', 'R.thU6', '206',
+        None, 0)
+S.row('- its junction rise [C]:', 'ΔT.U6', "R.thU6*P.U6/'W", None, 0)
+S.const('[PICK] Capacitor on V.Z:', 'C.Z', "10*'μF", 'μF', 0,
+        note='TI Fig. 6-18 (SOT-23): unstable only between about 0.01 and 2 uF '
+             'at VKA 10-15 V; a 25 V X7R part stays above that under bias.')
 
 S.h2('16.2  Compensation components   [133] - [136]')
 S.row('- Calculated feedback capacitor C.Fo:', 'C.Fo_calc',
@@ -2071,25 +2150,31 @@ S.show('- SR supply Zener feed resistor, SELECTED:', 'R.BSR_sel', 'ohm', 0)
 S.show('- SR supply Zener power rating, at least:', 'P.DZSR', 'mW', 0)
 S.show('- SR supply feed resistor power rating, at least:', 'P.RBSR', 'W', 3)
 S.show('- SR controller VCC capacitor:', 'C.SR', 'μF', 0)
+S.show('- LED rail feed resistor, SELECTED:', 'R.Z_sel', 'ohm', 0)
+S.show('- LED rail divider, upper:', 'R.Z1', 'kohm', 1)
+S.show('- LED rail divider, lower:', 'R.Z2', 'kohm', 1)
+S.show('- LED rail capacitor:', 'C.Z', 'μF', 0)
+S.show('- VCC Zener feed resistor power rating, at least:', 'P.RBZ', 'W', 3)
 
 S.h2('19.6  Semiconductors - the REQUIREMENT each part has to meet')
 S.table(['function', 'designator', 'device class and count'],
-        [['HVSU connecting diodes', '-', '2 x, 1000 V, low leakage'],
+        [['HVSU connecting diodes', 'D.HV', '2 x S1M (1000 V, 1 A)'],
          ['Input bridge rectifier', '-', '1 x, see 19.4 for Vf and rd'],
          ['Primary switches', 'HVG1 HVG2 LVG1 LVG2',
           '4 positions x n.par, STO60N045DM9'],
          ['Centre-tap rectifiers', 'D1 D2', '2 legs x n.SR, SR MOSFET'],
          ['VCC rectifier and bypass diodes', 'D.aux D.byp',
-          '2 x, rated above V.Caux_OVP2'],
+          '2 x PMEG10010ELR (100 V, 1 A Schottky)'],
          ['VCC pass transistor', 'Q.VCC',
-          '1 x NPN, beta >= beta.min, P >= P.Qpass'],
+          '1 x PHPT61003NY, 6 cm2 collector pad - 14c.5'],
+         ['VCC Zener', 'D.Z', '1 x BZT52H-C15, 1 cm2 cathode pad - 14c.5'],
          ['Gate drivers', 'U.HB1 U.HB2', '2 x L6498LD, SO-14 - 14c.1'],
-         ['Bootstrap diodes', 'D.BS1 D.BS2',
-          '2 x fast, rated like the primary switches'],
+         ['Bootstrap diodes', 'D.BS1 D.BS2', '2 x PNU65010ER (650 V, 1 A)'],
          ['SR controller', 'U.SR', '1 x TEA2095TE, HSO8 - 14c.3'],
          ['SR supply pass transistor', 'Q.SR',
-          '1 x NPN, beta >= beta.min, P >= P.QSR, V.CE >= V.OVP2_act - 14c.4'],
-         ['SR supply Zener', 'D.ZSR', '1 x V.DZSR_sel, tol.DZ, P >= P.DZSR'],
+          '1 x PHPT61003NY, 6 cm2 collector pad - 14c.5'],
+         ['SR supply Zener', 'D.ZSR', '1 x BZT52H-C15, 1 cm2 cathode pad'],
+         ['LED rail regulator', 'U6', '1 x TL431B, SOT-23 - 16.1b'],
          ['Feedback optocoupler', '-', '1 x, CTR binned - see 16.5'],
          ['External error amplifier', '-', '1 x, 2.5 V shunt regulator']],
         widths=[430, 260, 230])

@@ -3380,7 +3380,7 @@ def an_dc_overlap(save, foot):
 
 # ------------------------------------------------- gate drive and SR (81)
 def _ic(ax, x0, y0, x1, y1, part, pins, stub=0.55, size=9.6, psize=8.4,
-        ref=None):
+        ref=None, tsize=10.5, tpad=0.30):
     """An IC as a box with numbered pins.  -> {pin name: wire end point}
 
     pins: (side, position, number, name).  side is 'L', 'R', 'T' or 'B';
@@ -3392,7 +3392,7 @@ def _ic(ax, x0, y0, x1, y1, part, pins, stub=0.55, size=9.6, psize=8.4,
     ax.add_patch(Rectangle((x0, y0), x1 - x0, y1 - y0, fc='#F4F5F7', ec=NAVY,
                            lw=1.8, zorder=3))
     cx = (x0 + x1) / 2.0
-    S.label(ax, cx, (y0 + y1) / 2.0 if ref is None else ref, part, size=10.5,
+    S.label(ax, cx, (y0 + y1) / 2.0 if ref is None else ref, part, size=tsize,
             weight='bold')
     k = X.scale(ax)
     st = stub * k
@@ -3413,7 +3413,7 @@ def _ic(ax, x0, y0, x1, y1, part, pins, stub=0.55, size=9.6, psize=8.4,
             d = 1 if side == 'T' else -1
             yo = ye + d * st
             S.wire(ax, [(pos, ye), (pos, yo)])
-            S.label(ax, pos, ye - d * 0.30, name, size=size)
+            S.label(ax, pos, ye - d * tpad, name, size=size)
             S.label(ax, pos + 0.24 * k, ye + d * st / 2.0, str(num),
                     size=psize, color=GREY, ha='left')
             out[name] = (pos, yo)
@@ -3457,7 +3457,7 @@ def _npn(ax, xb, y, h=1.4, left=False):
 def _zener(ax, x, y):
     """A Zener on a vertical branch, cathode up.  -> (anode, cathode)"""
     a, c = S.diode(ax, x, y, horiz=False)
-    s = 0.56 * X.scale(ax)
+    s = 0.56 * X.scale(ax) * getattr(ax, '_diode_k', 1.0)
     w = 0.72 * s
     yb = c[1]
     ax.plot([x - w, x - w - 0.22 * w], [yb, yb - 0.32 * w], color=NAVY,
@@ -3842,7 +3842,7 @@ def _xf(ax, xc, wind, over=None):
     """Windings beside one core, each its own coil.  wind: (side, ytop,
     ybot, turns); side 'L' or 'R'.  The dot is at the top (the start).
     -> [(top terminal, bottom terminal)] in the order given."""
-    r = X.WIND_R * X.scale(ax, xfmr=True)
+    r = X.WIND_R * X.scale(ax, xfmr=True) * getattr(ax, '_xf_mult', 1.0)
     core = 0.13
     gap = core + 2.5 * r
     out, ext = [], []
@@ -4224,7 +4224,7 @@ def _tl431(ax, x, y):
     """A TL431 as its datasheet draws it: a shunt-regulator triangle, cathode
     up, with REF taken off its left side.  -> (anode, cathode, REF end)"""
     a, c = _zener(ax, x, y)
-    s = 0.56 * X.scale(ax)
+    s = 0.56 * X.scale(ax) * getattr(ax, '_diode_k', 1.0)
     ax.plot([x - 0.72 * s * 0.5, x - 0.95], [y, y], color=NAVY, lw=1.6,
             zorder=3)
     return a, c, (x - 0.95, y)
@@ -4348,6 +4348,569 @@ def an_full_sec(save, foot):
     save(fig, 'an_full_sec')
 
 
+def an_full(save, foot):
+    """The whole converter on one landscape page: primary on the left,
+    secondary on the right, T1 between them.  Every value is read from the
+    sheet (_sv); a block without a value is a part this note does not size.
+    Pin numbers: L6790A as ST's EVL6790_670W control board numbers them,
+    L6498LD in SO-14, TEA2095TE in HSO8, T1 as an_xfmr_pins.  The page sets
+    it 90 degrees round, so it is drawn at the size it prints: the symbols
+    are scaled down (ax._sym_mult) and the diodes a further 20 %.
+    """
+    import an_pdf
+    import cores
+    V = an_pdf.V
+    _pm = cores.PINMAP
+    fig = plt.figure(figsize=(11.0, 8.36))
+    W, H = 52.0, 39.5
+    ax = _ax(fig, [0.01, 0.01, 0.98, 0.98], 0.0, W, 0.0, H)
+    ax._sym_mult = 0.51
+    ax._xf_mult = 0.5
+    ax._diode_k = 0.8
+    R = 0.16
+    SZ, SN = 8.6, 8.4                    # value and name lettering
+    MH, MG = 1.3, 1.0                    # MOSFET height and gate lead
+
+    def vres(x, ytop, ybot, label=None, side='r', yl=None):
+        a_, b_ = S.res(ax, x, (ytop + ybot) / 2.0, horiz=False)
+        S.wire(ax, [(x, ytop), b_])
+        S.wire(ax, [a_, (x, ybot)])
+        if label:
+            yy = (ytop + ybot) / 2.0 if yl is None else yl
+            S.label(ax, x + (0.4 if side == 'r' else -0.4), yy, label,
+                    size=SZ, ha='left' if side == 'r' else 'right')
+
+    def vcap(x, ytop, ybot, label=None, side='r'):
+        a_, b_ = S.cap(ax, x, (ytop + ybot) / 2.0, horiz=False)
+        S.wire(ax, [(x, ytop), b_])
+        S.wire(ax, [a_, (x, ybot)])
+        if label:
+            S.label(ax, x + (0.45 if side == 'r' else -0.45),
+                    (ytop + ybot) / 2.0, label, size=SZ,
+                    ha='left' if side == 'r' else 'right')
+
+    def pg(x, y, lead=0.35):              # primary ground on a short lead
+        S.wire(ax, [(x, y), (x, y - lead)])
+        _pgnd(ax, x, y - lead)
+
+    def sg(x, y, lead=0.3):               # secondary ground
+        if lead:
+            S.wire(ax, [(x, y), (x, y - lead)])
+        y -= lead
+        s_ = 0.30
+        for k, w in enumerate((1.0, 0.62, 0.28)):
+            ax.plot([x - s_ * w, x + s_ * w], [y - k * 0.17] * 2,
+                    color=NAVY, lw=1.6, zorder=3)
+
+    # ================================================= primary power band
+    YL, YN = 37.4, 33.8
+    for yy, nm in ((YL, 'L'), (YN, 'N')):
+        _term(ax, 0.35, yy)
+        S.label(ax, 0.35, yy + 0.5, nm, size=SN)
+        S.wire(ax, [(0.35, yy), (1.1, yy)])
+    S.label(ax, 0.1, 39.05, '%.0f–%.0f Vac' % (V['Vacmin'], V['Vacmax']),
+            size=SN, ha='left', color=GREY)
+    S.box(ax, 2.3, 35.6, 2.4, 5.0, 'EMI\nfilter\n\nnot\nsized', size=SN)
+    XH1, XH2 = 4.3, 5.3
+    S.wire(ax, [(3.5, YL), (6.2, YL)])
+    S.dot(ax, XH1, YL)
+    S.wire(ax, [(3.5, YN), (XH1 - R, YN)])
+    X.hop(ax, XH1, YN, r=R)
+    S.wire(ax, [(XH1 + R, YN), (6.2, YN)])
+    S.dot(ax, XH2, YN)
+    a1, k1 = S.diode(ax, XH1, 32.2, horiz=False, flip=True)
+    a2, k2 = S.diode(ax, XH2, 32.2, horiz=False, flip=True)
+    S.wire(ax, [(XH1, YL), a1])
+    S.wire(ax, [(XH2, YN), a2])
+    YJ = 31.2
+    S.wire(ax, [k2, (XH2, YJ), (XH1, YJ)])
+    S.label(ax, XH1 - 0.45, 32.2, 'D$_{HV}$\nS1M', size=SN, ha='right')
+    S.box(ax, 7.2, 35.6, 2.0, 5.0, 'BR1', size=9.4, weight='bold')
+    XCI, XM, YG = 9.0, 10.3, 31.0
+    X1, X2 = 14.8, 19.6                   # the two bridge legs
+    S.wire(ax, [(8.2, YL), (X2, YL)])
+    S.dot(ax, XCI, YL)
+    vcap(XCI, YL, YN)
+    S.label(ax, XCI + 0.45, 35.6, 'C$_{in}$\n' + _c(_sv('C.in_sel')), size=SZ,
+            ha='left')
+    S.wire(ax, [(8.2, YN), (XM, YN), (XM, YG)])
+    S.dot(ax, XCI, YN)
+    S.dot(ax, XM, YG)
+    ra, rb = S.res(ax, 11.9, YG)
+    S.wire(ax, [(XM, YG), ra])
+    S.wire(ax, [rb, (X2, YG)])
+    S.label(ax, 11.9, YG - 0.75, 'R$_{CS}$ %.0f m$\\Omega$' % _sv('R.CS'),
+            size=SZ)
+    S.label(ax, 11.9, YG - 1.35, '%.0f × %.0f m$\\Omega$'
+            % (_sv('N.RCS'), _sv('R.CS_single')), size=SN, color=GREY)
+    S.dot(ax, 13.6, YG)
+    pg(13.6, YG)
+    YH, YLO, YA, YB = 36.0, 32.6, 34.3, 33.7
+    for x, nh, nl in ((X1, 'S1', 'S2'), (X2, 'S3', 'S4')):
+        d1, s1 = X.mosfet(ax, x, YH, None, 'plain', h=MH, gate=MG,
+                          body=True, coss=False)
+        d2, s2 = X.mosfet(ax, x, YLO, None, 'plain', h=MH, gate=MG,
+                          body=True, coss=False)
+        S.wire(ax, [d1, (x, YL)])
+        S.wire(ax, [s1, d2])
+        S.wire(ax, [s2, (x, YG)])
+        S.label(ax, x + 1.05, YH + 0.45, nh, size=9.0, weight='bold',
+                ha='left')
+        S.label(ax, x + 1.05, YLO - 0.45, nl, size=9.0, weight='bold',
+                ha='left')
+        _flag(ax, x - MG, YH, 'HVG' + ('1' if x == X1 else '2'), side='l',
+              size=SN)
+        _flag(ax, x - MG, YLO, 'LVG' + ('1' if x == X1 else '2'), side='l',
+              size=SN)
+    S.dot(ax, X1, YL)
+    S.dot(ax, X1, YG)
+    S.label(ax, 17.5, 38.05, 'S1–S4  STO60N045DM9', size=SN, color=GREY)
+    S.dot(ax, X1, YA)
+    S.label(ax, X1 - 0.35, YA + 0.4, 'A', size=9.0, weight='bold')
+    S.wire(ax, [(X1, YA), (X2 - R, YA)])
+    X.hop(ax, X2, YA, r=R)
+    XCR = 21.6
+    ca, cb = S.cap(ax, XCR, YA)
+    S.wire(ax, [(X2 + R, YA), ca])
+    S.label(ax, XCR, YA + 0.6, 'C$_r$ ' + _c(_sv('C.r')), size=SZ)
+    S.dot(ax, X2, YB)
+    S.label(ax, X2 + 1.4, YB - 0.4, 'B', size=9.0, weight='bold')
+    # ================================================= T1, both sides
+    XC = 26.4
+    (p1, p3), (p4, p6), (s7, s9), (s10, s12) = _xf(
+        ax, XC, [('L', 37.0, 33.7, 5), ('L', 32.8, 30.2, 3),
+                 ('R', 37.0, 33.8, 5), ('R', 33.4, 30.2, 5)])
+    xw, xs = p1[0], s7[0]
+    S.wire(ax, [cb, (22.9, YA), (22.9, p1[1]), p1])
+    S.wire(ax, [(X2, YB), p3])
+    S.wire(ax, [s9, s10])
+    S.dot(ax, xs, 33.6)
+    for (px, py), n_ in ((p1, _pm['NP1'][0][0]), (p3, _pm['NP1'][1][0]),
+                         (p4, _pm['NAUX'][0][0]), (p6, _pm['NAUX'][1][0])):
+        S.label(ax, px - 0.35, py + (0.3 if (px, py) != p6 else -0.35),
+                str(n_), size=SN, color=GREY, ha='right')
+    for (px, py), n_ in ((s7, _pm['NS2'][0][0]), (s12, _pm['NS3'][1][0])):
+        S.label(ax, px + 0.35, py + 0.3 if n_ == _pm['NS2'][0][0] else py - 0.3,
+                str(n_), size=SN, color=GREY, ha='left')
+    S.label(ax, xs + 0.35, 33.25, '%d, %d' % (_pm['NS2'][1][0],
+                                              _pm['NS3'][0][0]),
+            size=SN, color=GREY, ha='left')
+    S.label(ax, 24.6, 39.1, 'T1  PQ 50/50, N97', size=9.0, weight='bold')
+    S.label(ax, 24.6, 38.5, 'L$_{open}$ %.0f $\\mu$H, L$_r$ %.0f $\\mu$H'
+            % (_sv('L.open'), _sv('L.short')), size=SN, color=GREY)
+    S.label(ax, xw - 0.5, 35.4, 'NP1\n%.0f T' % _sv('N.p'), size=SN,
+            ha='right')
+    S.wire(ax, [p4, (23.4, p4[1]), (23.4, p4[1] - 0.2)])
+    _pgnd(ax, 23.4, p4[1] - 0.2)
+    S.label(ax, xw - 0.5, 31.4, 'NAUX\n%.0f T' % _sv('N.aux'), size=SN,
+            ha='right')
+    S.label(ax, xs + 0.5, 35.4, 'NS2\n%.0f T' % _sv('N.s'), size=SN,
+            ha='left')
+    S.label(ax, xs + 0.5, 31.6, 'NS3\n%.0f T' % _sv('N.s'), size=SN,
+            ha='left')
+
+    # ================================================= controller U1
+    XU0, XU1, YU0, YU1 = 3.3, 9.6, 10.0, 27.4
+    U1 = _ic(ax, XU0, YU0, XU1, YU1, 'L6790A',
+             [('T', XH1, 1, 'HVSU'), ('T', 6.3, 6, 'ISEN'),
+              ('T', 8.3, 4, 'VCC'),
+              ('R', 25.8, 16, 'HOUT1'), ('R', 24.8, 15, 'LOUT1'),
+              ('R', 15.8, 14, 'HOUT2'), ('R', 14.8, 13, 'LOUT2'),
+              ('B', 4.2, 12, 'ZCD'), ('B', 6.3, 11, 'CFG'),
+              ('B', 8.4, 10, 'BM'),
+              ('L', 26.0, 3, 'DRV_EN'), ('L', 23.6, 7, 'RT'),
+              ('L', 21.2, 8, 'CT'), ('L', 18.8, 5, 'GND'),
+              ('L', 15.4, 9, 'FB')], ref=20.6, size=SN, psize=SN,
+             tsize=9.4, tpad=0.45)
+    S.label(ax, 6.3, 19.8, 'U1', size=SN, color=GREY)
+    S.wire(ax, [k1, U1['HVSU']])
+    S.dot(ax, XH1, YJ)
+    YIS = 29.8
+    S.wire(ax, [(XM, YG), (XM, YIS), (U1['ISEN'][0], YIS), U1['ISEN']])
+    x_, y_ = U1['DRV_EN']
+    S.wire(ax, [(x_, y_), (1.0, y_)])
+    _term(ax, 1.0, y_)
+    S.label(ax, 1.0, y_ + 0.5, 'open', size=SN, color=GREY)
+    for pin, kind, val, nm in (('RT', 'res', _r(_sv('R.T') * 1e3), 'R$_T$'),
+                               ('CT', 'cap', _c(_sv('C.T') / 1e3), 'C$_T$')):
+        x_, y_ = U1[pin]
+        a_, b_ = (S.res if kind == 'res' else S.cap)(ax, 1.6, y_)
+        S.wire(ax, [(x_, y_), b_])
+        S.wire(ax, [a_, (0.5, y_)])
+        pg(0.5, y_, 0.4)
+        S.label(ax, 1.6, y_ + 0.85, nm + '\n' + val, size=SZ)
+    x_, y_ = U1['GND']
+    S.wire(ax, [(x_, y_), (1.8, y_)])
+    pg(1.8, y_, 0.4)
+    # FB: the optocoupler's transistor and C_fx
+    x_, y_ = U1['FB']
+    XOC, XFX = 1.15, 2.3
+    S.wire(ax, [(x_, y_), (XOC, y_)])
+    S.dot(ax, XFX, y_)
+    vcap(XFX, y_, y_ - 1.8)
+    pg(XFX, y_ - 1.8, 0.3)
+    S.label(ax, 0.05, y_ - 3.5, 'C$_{fx}$ ' + _c(_sv('C.fx')), size=SZ,
+            ha='left')
+    _, oc, oe = _npn(ax, 0.6, y_ - 1.25, h=1.0)
+    S.wire(ax, [oc, (XOC, y_)])
+    S.wire(ax, [oe, (XOC, y_ - 2.2)])
+    pg(XOC, y_ - 2.2, 0.0)
+    for dy in (0.2, -0.2):
+        ax.add_patch(FancyArrowPatch((0.05, y_ - 1.25 + dy + 0.25),
+                                     (0.4, y_ - 1.25 + dy), arrowstyle='-|>',
+                                     mutation_scale=7, color=NAVY, lw=1.0,
+                                     zorder=5, shrinkA=0, shrinkB=0))
+    S.label(ax, 0.1, y_ + 0.55, 'U4', size=SN, ha='left', color=GREY)
+    # ZCD from AUX through a divider; CFG and BM to ground
+    zx, zy = U1['ZCD']
+    YZN = 8.2
+    S.wire(ax, [(zx, zy), (zx, YZN)])
+    S.dot(ax, zx, YZN)
+    ra_, rb_ = S.res(ax, 2.8, YZN)
+    S.wire(ax, [(zx, YZN), rb_])
+    S.wire(ax, [ra_, (1.4, YZN)])
+    _flag(ax, 1.4, YZN, 'AUX', side='l', size=SN)
+    S.label(ax, 3.9, YZN + 0.6, 'R$_{ZCD,H}$ ' + _r(_sv('R.ZCD_H_sel') * 1e3),
+            size=SZ, ha='right')
+    vres(zx, YZN, 4.8, 'R$_{ZCD,L}$\n' + _r(_sv('R.ZCD_L_sel') * 1e3), 'l',
+         yl=6.4)
+    pg(zx, 4.8)
+    for pin, key, nm in (('CFG', 'R.CFG_sel', 'R$_{CFG}$'),
+                         ('BM', 'R.BM_sel', 'R$_{BM}$')):
+        x_, y_ = U1[pin]
+        vres(x_, y_, 6.6, nm + '\n' + _r(_sv(key) * 1e3), yl=8.0)
+        pg(x_, 6.6)
+
+    # ================================================= drivers U2, U3
+    YV, XO, YO = 28.4, 22.0, 18.4
+    W_, H_ = 4.4, 7.0
+
+    def driver(x0, y0, nm, leg):
+        u = _ic(ax, x0, y0, x0 + W_, y0 + H_, 'L6498LD',
+                [('L', y0 + 5.8, 1, 'HIN'), ('L', y0 + 4.8, 2, 'LIN'),
+                 ('T', x0 + 2.2, 7, 'VCC'),
+                 ('B', x0 + 0.9, 3, 'SGND'), ('B', x0 + 2.9, 5, 'PGND'),
+                 ('R', y0 + 5.8, 13, 'BOOT'), ('R', y0 + 4.8, 12, 'HVG'),
+                 ('R', y0 + 3.4, 11, 'OUT'), ('R', y0 + 1.6, 6, 'LVG')],
+                ref=y0 + 2.5, size=SN, psize=SN, tsize=9.0,
+                tpad=0.45)
+        S.label(ax, x0 + 1.4, y0 + 1.6, nm, size=SN, color=GREY)
+        for pin in ('SGND', 'PGND'):
+            gx, gy = u[pin]
+            pg(gx, gy, 0.15)
+        xb = x0 + W_ + 1.1
+        bx, by = u['BOOT']
+        ox, oy = u['OUT']
+        hx, hy = u['HVG']
+        lx, ly = u['LVG']
+        S.wire(ax, [(bx, by), (xb, by)])
+        S.dot(ax, xb, by)
+        cyc = (by + oy) / 2.0
+        ca_, cb_ = S.cap(ax, xb, oy + 0.55, horiz=False)
+        S.wire(ax, [(xb, by), cb_])
+        S.wire(ax, [ca_, (xb, oy)])
+        S.dot(ax, xb, oy)
+        xr = xb + 1.3
+        S.wire(ax, [(hx, hy), (xb - R, hy)])
+        X.hop(ax, xb, hy, r=R)
+        ra_, rb_ = S.res(ax, xr, hy)
+        S.wire(ax, [(xb + R, hy), ra_])
+        S.wire(ax, [rb_, (xr + 1.0, hy)])
+        _flag(ax, xr + 1.0, hy, 'HVG' + leg, side='r', size=SN)
+        S.wire(ax, [(ox, oy), (xr + 1.0, oy)])
+        _flag(ax, xr + 1.0, oy, 'A' if leg == '1' else 'B', side='r',
+              size=SN)
+        ra_, rb_ = S.res(ax, xr, ly)
+        S.wire(ax, [(lx, ly), ra_])
+        S.wire(ax, [rb_, (xr + 1.0, ly)])
+        _flag(ax, xr + 1.0, ly, 'LVG' + leg, side='r', size=SN)
+        return u, xb, by
+    XD = 11.6
+    u2, xb2, by2 = driver(XD, 20.0, 'U2', '1')
+    u3, xb3, by3 = driver(XD, 10.0, 'U3', '2')
+    for a_, b_ in ((U1['HOUT1'], u2['HIN']), (U1['LOUT1'], u2['LIN']),
+                   (U1['HOUT2'], u3['HIN']), (U1['LOUT2'], u3['LIN'])):
+        S.wire(ax, [a_, b_])
+    #  V_CC: the controller and leg 1 on YV, leg 2 on the regulator's
+    #  output run YO, joined by XO
+    S.wire(ax, [U1['VCC'], (U1['VCC'][0], YV), (XO, YV), (XO, YO)])
+    S.wire(ax, [u2['VCC'], (u2['VCC'][0], YV)])
+    S.dot(ax, u2['VCC'][0], YV)
+    S.wire(ax, [u3['VCC'], (u3['VCC'][0], YO), (XO, YO)])
+    S.label(ax, 11.0, YV + 0.45, 'V$_{CC}$', size=SZ)
+    for xb_, ytop, by_ in ((xb2, YV, by2), (xb3, YO, by3)):
+        da, dk = S.diode(ax, xb_, (ytop + by_) / 2.0, horiz=False, flip=True)
+        S.wire(ax, [(xb_, ytop), da])
+        S.wire(ax, [dk, (xb_, by_)])
+        S.dot(ax, xb_, ytop)
+        S.label(ax, xb_ + 0.4, (ytop + by_) / 2.0, 'D$_{BS}$', size=SN,
+                ha='left')
+    S.label(ax, 16.0, 8.4, 'D$_{BS}$ PNU65010ER,  C$_{BOOT}$ %s,  R$_G$ %s'
+            % (_c(_sv('C.BOOT')), _r(_sv('R.G'))), size=SN, color=GREY)
+
+    # ================================================= V_CC regulator
+    N6 = (xw, 29.3)
+    S.wire(ax, [p6, N6])
+    S.dot(ax, *N6)
+    S.wire(ax, [N6, (xw - 0.9, N6[1])])
+    _flag(ax, xw - 0.9, N6[1], 'AUX', side='l', size=SN)
+    da, dk = S.diode(ax, xw, 28.45, horiz=False, flip=True)
+    S.wire(ax, [N6, da])
+    YCA = 27.6
+    S.wire(ax, [dk, (xw, YCA)])
+    S.label(ax, xw + 0.4, 28.45, 'D$_{aux}$ PMEG10010ELR', size=SN,
+            ha='left')
+    XRZ, XCA = xw + 1.0, xw + 4.6
+    bq, cq, eq_ = _npn(ax, XRZ + 0.6, 24.9, h=1.0)
+    S.wire(ax, [(xw, YCA), (XCA, YCA)])
+    S.dot(ax, XRZ, YCA)
+    S.dot(ax, cq[0], YCA)
+    S.wire(ax, [(cq[0], YCA), cq])
+    vcap(XCA, YCA, 25.8, 'C$_{aux}$', side='l')
+    pg(XCA, 25.8, 0.2)
+    vres(XRZ, YCA, 24.9, 'R$_{BZ}$\n' + _r(_sv('R.BZ_sel')), side='l')
+    S.dot(ax, XRZ, 24.9)
+    S.wire(ax, [(XRZ, 24.9), bq])
+    za, zc = _zener(ax, XRZ, 23.9)
+    S.wire(ax, [(XRZ, 24.9), zc])
+    S.wire(ax, [za, (XRZ, 23.2)])
+    _pgnd(ax, XRZ, 23.2)
+    S.label(ax, XRZ - 0.45, 23.9, 'D$_Z$\nBZT52H-C15', size=SN, ha='right')
+    S.label(ax, cq[0] + 0.35, 24.2, 'Q$_{VCC}$\nPHPT61003NY', size=SN,
+            ha='left')
+    ya, yk = S.diode(ax, eq_[0], 21.4, horiz=False, flip=True)
+    S.wire(ax, [eq_, ya])
+    S.wire(ax, [yk, (eq_[0], YO)])
+    S.label(ax, eq_[0] - 0.4, 21.4, 'D$_{byp}$\nPMEG10010ELR', size=SN,
+            ha='right')
+    S.wire(ax, [(XO, YO), (eq_[0], YO)])
+    S.dot(ax, XO, YO)
+    for xc_ in (22.8, 24.0):
+        S.dot(ax, xc_, YO)
+        vcap(xc_, YO, YO - 1.3)
+        pg(xc_, YO - 1.3, 0.15)
+    S.label(ax, 24.45, YO - 0.75, 'C$_{VCC}$ ' + _c(_sv('C.VCC_sel') * 1e3)
+            + ' $\\parallel$ ' + _c(_sv('C.VCC_hf')), size=SN, ha='left')
+
+    # ================================================= SR stage
+    XV = 32.0                                   # V_out leaves the centre tap
+    S.wire(ax, [(xs, 33.6), (XV, 33.6)])
+    TX0, TX1, TY0, TY1 = 35.2, 39.6, 30.8, 36.8
+    c = _ic(ax, TX0, TY0, TX1, TY1, 'TEA2095TE',
+            [('R', 36.0, 8, 'GDA'), ('R', 34.3, 5, 'SSA'),
+             ('T', 37.6, 6, 'DSA'), ('L', 36.0, 7, 'VCC'),
+             ('R', 33.2, 4, 'SSB'), ('R', 32.1, 1, 'GDB'),
+             ('B', 37.6, 3, 'DSB'), ('B', 36.0, 2, 'GND')], ref=35.15,
+            size=SN, psize=SN, tsize=8.6, tpad=0.45)
+    S.label(ax, 36.6, 34.3, 'U7', size=SN, color=GREY)
+    sg(*c['GND'], lead=0.0)
+    vx, vy = c['VCC']
+    XSR = 34.0
+    S.wire(ax, [(vx, vy), (32.9, vy)])
+    S.dot(ax, XSR, vy)
+    vcap(XSR, vy, 34.4)
+    sg(XSR, 34.4, 0.1)
+    _flag(ax, 32.9, vy, 'V$_{CC,SR}$', side='u', size=SN)
+    S.label(ax, XSR - 0.4, 35.0, 'C$_{SR}$\n' + _c(_sv('C.SR') * 1e3),
+            size=SN, ha='right')
+    XG, XRG, XQ1, XQ2 = 40.8, 42.0, 44.6, 47.9
+    XSA, XSB, XGN = 49.6, 50.2, 51.0
+
+    def pair(yc, ydrain, ysrc, gate_pin, leg, hop_y):
+        for x in (XQ1, XQ2):
+            d, s_ = X.mosfet(ax, x, yc, None, 'plain', h=MH, gate=MG,
+                             body=True, coss=False)
+            S.wire(ax, [d, (x, ydrain)])
+            S.wire(ax, [s_, (x, ysrc)])
+        S.dot(ax, XQ1, ydrain)
+        for x, k in ((XQ1, 1), (XQ2, 2)):
+            S.label(ax, x + 1.0, yc + 0.55, 'Q$_{%s%d}$' % (leg, k), size=SN,
+                    ha='left', weight='bold')
+        gpx, gpy = gate_pin
+        ys_ = sorted((gpy, yc, hop_y))
+        S.wire(ax, [(gpx, gpy), (XG, gpy)])
+        S.wire(ax, [(XG, ys_[0]), (XG, ys_[2])])
+        S.dot(ax, XG, ys_[1])
+        r1a, r1b = S.res(ax, XRG, yc)
+        S.wire(ax, [(XG, yc), r1a])
+        S.wire(ax, [r1b, (XQ1 - MG, yc)])
+        r2a, r2b = S.res(ax, XRG, hop_y)
+        S.wire(ax, [(XG, hop_y), r2a])
+        S.wire(ax, [r2b, (XQ1 - R, hop_y)])
+        X.hop(ax, XQ1, hop_y, r=R)
+        xu = XQ2 - MG - 0.6
+        S.wire(ax, [(XQ1 + R, hop_y), (xu, hop_y), (xu, yc),
+                    (XQ2 - MG, yc)])
+        S.wire(ax, [(XQ1, ysrc), (XGN, ysrc)])
+        S.dot(ax, XQ2, ysrc)
+        sg(XGN, ysrc, 0.2)
+
+    # leg A: NS2 from pin 7, drains on YDA
+    YDA, YCA_, YSA = 38.4, 36.9, 34.8
+    pair(YCA_, YDA, YSA, c['GDA'], 'A', 35.5)
+    S.wire(ax, [s7, (xs, YDA), (XQ2, YDA)])
+    dx_, dy_ = c['DSA']
+    S.wire(ax, [(dx_, dy_), (dx_, YDA)])
+    S.dot(ax, dx_, YDA)
+    sx_, sy_ = c['SSA']
+    S.wire(ax, [(sx_, sy_), (XSA, sy_), (XSA, YSA)])
+    S.dot(ax, XSA, YSA)
+    # leg B: NS3 from pin 12, drains on YDB; the bus hops V_out and the
+    # gate run
+    YDB, YCB, YSB = 29.4, 27.9, 26.0
+    pair(YCB, YDB, YSB, c['GDB'], 'B', 26.6)
+    S.wire(ax, [s12, (xs, YDB), (XV - R, YDB)])
+    X.hop(ax, XV, YDB, r=R)
+    S.wire(ax, [(XV + R, YDB), (XG - R, YDB)])
+    X.hop(ax, XG, YDB, r=R)
+    S.wire(ax, [(XG + R, YDB), (XQ2, YDB)])
+    dx_, dy_ = c['DSB']
+    S.wire(ax, [(dx_, dy_), (dx_, YDB)])
+    S.dot(ax, dx_, YDB)
+    sx_, sy_ = c['SSB']
+    S.wire(ax, [(sx_, sy_), (XSB, sy_), (XSB, YSB)])
+    S.dot(ax, XSB, YSB)
+    S.label(ax, 51.8, 39.1, 'Q$_{A1}$–Q$_{B2}$  STL160N10F8, two in parallel '
+            'per leg, one R$_G$ each', size=SN, color=GREY, ha='right')
+
+    # ================================================= output bank
+    YO2, YT = 23.4, 15.6
+    S.wire(ax, [(XV, 33.6), (XV, YT)])
+    S.dot(ax, XV, YO2)
+    S.wire(ax, [(XV, YO2), (51.4, YO2)])
+    _term(ax, 51.4, YO2)
+    S.label(ax, 51.6, YO2 + 0.55, '+%.0f V, %.1f A' % (V['Vout'], V['Iout']),
+            size=SN, ha='right')
+    _term(ax, 51.4, 21.4)
+    S.wire(ax, [(51.4, 21.4), (50.6, 21.4)])
+    sg(50.6, 21.4, 0.0)
+    S.label(ax, 51.6, 20.6, 'return', size=SN, ha='right')
+    for x, txt_ in ((33.2, 'C$_{out}$ %.1f mF\n%.0f × %.0f $\\mu$F'
+                     % (_sv('C.out'), _sv('n.C'), _sv('C.single'))),
+                    (37.8, 'C$_{HF}$\n%.0f $\\mu$F' % _sv('C.ceramic'))):
+        S.dot(ax, x, YO2)
+        vcap(x, YO2, 20.8)
+        sg(x, 20.8, 0.1)
+        S.label(ax, x + 0.45, 22.1, txt_, size=SZ, ha='left')
+    # the SR supply follower (14c.4)
+    XRB, XQB = 43.2, 43.8
+    S.dot(ax, XRB, YO2)
+    vres(XRB, YO2, 20.6, 'R$_{BSR}$\n' + _r(_sv('R.BSR_sel')), side='l')
+    S.dot(ax, XRB, 20.6)
+    bq, cq, eq_ = _npn(ax, XQB, 20.6, h=1.0)
+    S.wire(ax, [(XRB, 20.6), bq])
+    S.wire(ax, [cq, (cq[0], YO2)])
+    S.dot(ax, cq[0], YO2)
+    za, zc = _zener(ax, XRB, 19.6)
+    S.wire(ax, [(XRB, 20.6), zc])
+    S.wire(ax, [za, (XRB, 18.9)])
+    sg(XRB, 18.9, 0.0)
+    S.label(ax, XRB - 0.45, 19.4, 'D$_{ZSR}$\nBZT52H-C15', size=SN,
+            ha='right')
+    S.wire(ax, [eq_, (eq_[0], 18.8)])
+    _flag(ax, eq_[0], 18.8, 'V$_{CC,SR}$', side='r', size=SN)
+    S.label(ax, eq_[0] + 0.35, 21.3, 'Q$_{SR}$\nPHPT61003NY', size=SN,
+            ha='left')
+
+    # ================================================= voltage loop
+    YGR = 1.4
+    XRI, YREF = 33.4, 4.6
+    S.wire(ax, [(XV, YT), (44.0, YT)])
+    vres(XRI, YT, YREF, 'R$_I$\n' + _r(_sv('R.I') * 1e3), side='l')
+    S.dot(ax, XRI, YT)
+    vres(XRI, YREF, YGR, 'R$_O$\n' + _r(_sv('R.o') * 1e3), side='l')
+    S.dot(ax, XRI, YREF)
+    XK = 39.4
+    ta, tc, tr = _tl431(ax, XK, YREF)
+    XL_, YF1, YF2 = 34.6, 8.4, 6.8
+    S.wire(ax, [(XRI, YREF), tr])
+    S.dot(ax, XL_, YREF)
+    S.wire(ax, [ta, (XK, YGR)])
+    S.label(ax, XK + 0.45, YREF - 0.6, 'U5\nTL431', size=SN, ha='left')
+    S.wire(ax, [(XL_, YREF), (XL_, YF1)])
+    S.dot(ax, XL_, YF2)
+    ca, cb = S.cap(ax, 37.0, YF1)
+    S.wire(ax, [(XL_, YF1), ca])
+    S.wire(ax, [cb, (XK, YF1)])
+    S.label(ax, 37.0, YF1 + 0.55, 'C$_{Fo}$ ' + _c(_sv('C.Fo')), size=SZ)
+    ra, rb = S.res(ax, 35.8, YF2)
+    ca, cb = S.cap(ax, 37.9, YF2)
+    S.wire(ax, [(XL_, YF2), ra])
+    S.wire(ax, [rb, ca])
+    S.wire(ax, [cb, (XK, YF2)])
+    S.label(ax, 35.8, YF2 - 0.6, 'R$_F$ ' + _r(_sv('R.F') * 1e3), size=SZ)
+    S.label(ax, 37.9, YF2 + 0.6, 'C$_F$ ' + _c(_sv('C.F')), size=SZ)
+    YLC, YLA = 10.2, 12.4
+    S.wire(ax, [tc, (XK, YLC)])
+    S.dot(ax, XK, YF1)
+    S.dot(ax, XK, YF2)
+    la, lk = S.diode(ax, XK, (YLC + YLA) / 2.0, horiz=False, flip=True)
+    S.wire(ax, [(XK, YLA), la])
+    S.wire(ax, [lk, (XK, YLC)])
+    S.dot(ax, XK, YLC)
+    S.dot(ax, XK, YLA)
+    ym = (YLC + YLA) / 2.0
+    for dy in (0.2, -0.2):
+        ax.add_patch(FancyArrowPatch((XK + 0.45, ym + dy),
+                                     (XK + 0.85, ym + dy + 0.25),
+                                     arrowstyle='-|>', mutation_scale=7,
+                                     color=NAVY, lw=1.0, zorder=5,
+                                     shrinkA=0, shrinkB=0))
+    S.label(ax, XK + 1.0, ym - 0.1, 'U4', size=SN, ha='left', color=GREY)
+    XP = XK - 1.6
+    S.wire(ax, [(XK, YLA), (XP, YLA)])
+    S.wire(ax, [(XK, YLC), (XP, YLC)])
+    vres(XP, YLA, YLC, 'R$_P$\n' + _r(_sv('R.P') * 1e3), side='l')
+    # the LED rail V_Z: R_Z from V_out, U6 as a shunt regulator (16.1b)
+    XRB_, XRZ_, XZD, XU6, XCZ = 41.8, 44.0, 46.0, 48.0, 51.0
+    ra, rb = S.res(ax, XRB_, YLA)
+    S.wire(ax, [(XK, YLA), ra])
+    S.wire(ax, [rb, (XCZ, YLA)])
+    S.label(ax, XRB_, YLA + 0.55, 'R$_B$ ' + _r(_sv('R.B') * 1e3), size=SZ)
+    vres(XRZ_, YT, YLA, 'R$_Z$ ' + _r(_sv('R.Z_sel')))
+    for x in (XRZ_, XZD, XU6):
+        S.dot(ax, x, YLA)
+    S.label(ax, 46.0, YLA + 0.5, 'V$_Z$ %.1f V' % _sv('V.Z'), size=SZ,
+            ha='left')
+    YRZ = 6.6
+    vres(XZD, YLA, YRZ, 'R$_{Z1}$\n' + _r(_sv('R.Z1') * 1e3), side='l')
+    vres(XZD, YRZ, YGR, 'R$_{Z2}$\n' + _r(_sv('R.Z2') * 1e3), side='l')
+    S.dot(ax, XZD, YRZ)
+    ua, uc, ur = _tl431(ax, XU6, YRZ)
+    S.wire(ax, [(XZD, YRZ), ur])
+    S.wire(ax, [uc, (XU6, YLA)])
+    S.wire(ax, [ua, (XU6, YGR)])
+    S.label(ax, XU6 + 0.45, YRZ - 0.7, 'U6\nTL431B', size=SN, ha='left')
+    vcap(XCZ, YLA, YGR)
+    S.label(ax, XCZ - 0.4, 9.4, 'C$_Z$\n' + _c(_sv('C.Z') * 1e3), size=SZ,
+            ha='right')
+    S.wire(ax, [(XRI, YGR), (XCZ, YGR)])
+    for x in (XK, XZD, XU6):
+        S.dot(ax, x, YGR)
+    sg(42.0, YGR, 0.3)
+    S.dot(ax, 42.0, YGR)
+
+    # ================================================= legend
+    YLG = 5.6
+    _pgnd(ax, 16.2, YLG + 0.25)
+    S.label(ax, 16.7, YLG, 'primary ground (bridge return)', size=SN,
+            ha='left', color=GREY)
+    sg(16.2, YLG - 1.05, 0.0)
+    S.label(ax, 16.7, YLG - 1.3, 'secondary ground (output return)',
+            size=SN, ha='left', color=GREY)
+    _term(ax, 16.2, YLG - 2.4)
+    S.label(ax, 16.7, YLG - 2.4, 'net continues at the flag of the same name',
+            size=SN, ha='left', color=GREY)
+    S.label(ax, 16.0, YLG - 3.6, 'Q$_{VCC}$, Q$_{SR}$: 6 cm$^2$ collector pad;'
+            '  D$_Z$, D$_{ZSR}$: 1 cm$^2$ cathode pad', size=SN, ha='left',
+            color=GREY)
+    S.label(ax, 16.0, YLG - 4.5, 'R$_{BZ}$ ≥ %.2f W, R$_{BSR}$ ≥ %.2f W, '
+            'R$_Z$ ≥ %.2f W (at OVP1)' % (_sv('P.RBZ'), _sv('P.RBSR'),
+                                        _sv('P.RZ')),
+            size=SN, ha='left', color=GREY)
+    save(fig, 'an_full')
+
+
 FIGS = {'an_rac': an_rac, 'an_integrated': an_integrated,
         'an_pfc_cap': an_pfc_cap, 'an_pfc_boost': an_pfc_boost,
         'an_pfc_ccm': an_pfc_ccm, 'an_two_stage': an_two_stage,
@@ -4362,4 +4925,5 @@ FIGS = {'an_rac': an_rac, 'an_integrated': an_integrated,
         'an_flux_steps': an_flux_steps, 'an_dc_overlap': an_dc_overlap,
         'an_xfmr_read': an_xfmr_read, 'an_xfmr_pins': an_xfmr_pins,
         'an_gate_drive': an_gate_drive, 'an_sr_ctrl': an_sr_ctrl,
-        'an_full_pri': an_full_pri, 'an_full_sec': an_full_sec}
+        'an_full_pri': an_full_pri, 'an_full_sec': an_full_sec,
+        'an_full': an_full}
