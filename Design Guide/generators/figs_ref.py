@@ -3694,12 +3694,15 @@ def _sr_block(ax, full=False):
     XCD = 7.6
     S.dot(ax, vx, YVC)
     S.wire(ax, [(vx, YVC), (XCD, YVC)])
-    ca, cb = S.cap(ax, XCD, 15.0, horiz=False)
-    S.wire(ax, [(XCD, YVC), cb])
-    S.wire(ax, [ca, (XCD, 14.4)])
-    S.gnd(ax, XCD, 14.4)
-    S.label(ax, XCD - 0.75, 15.0, 'C$_{SR}$\n%.0f nF' % _sv('C.SR'),
-            size=9.4, ha='right')
+    for xc_ in (XCD, XCD + 1.0):
+        if xc_ != XCD:
+            S.dot(ax, xc_, YVC)
+        ca, cb = S.cap(ax, xc_, 15.0, horiz=False)
+        S.wire(ax, [(xc_, YVC), cb])
+        S.wire(ax, [ca, (xc_, 14.4)])
+        S.gnd(ax, xc_, 14.4)
+    S.label(ax, XCD - 0.75, 15.0, 'C$_{SR}$\n%.0f nF\n$\\parallel$ %.1f $\\mu$F'
+            % (_sv('C.SR'), _sv('C.SRb')), size=9.4, ha='right')
     # ------------------------------------------------- centre tap = V_out
     S.wire(ax, [t['s_tap'], (6.0, 9.5)])
     _term(ax, 6.0, 9.5)
@@ -4828,7 +4831,7 @@ def an_full(save, foot):
             [('L', YDA, 6, 'DSA'), ('L', YCA_, 8, 'GDA'),
              ('L', YSA, 5, 'SSA'), ('L', YSB, 4, 'SSB'),
              ('L', YCB, 1, 'GDB'), ('L', YDB, 3, 'DSB'),
-             ('T', TX0 + 2.9, 7, 'VCC'), ('B', TX0 + 2.9, 2, 'GND')],
+             ('T', TX0 + 3.6, 7, 'VCC'), ('B', TX0 + 3.6, 2, 'GND')],
             size=SN, psize=SN, tpad=0.45, title=False)
     #  name in the box's free right half, between the SSA and SSB rows
     S.label(ax, TX0 + 3.1, (YSA + YSB) / 2.0 + 0.3, 'U7', size=SN,
@@ -4840,19 +4843,20 @@ def an_full(save, foot):
     #  VCC: up from the top pin, C_SR to ground just clear of the box,
     #  R_SR in the run out to the flag - the RC filter at the pin
     vx, vy = c['VCC']
-    YVS = 40.0
-    XSR, XRS_, XFL = TX0 - 1.0, TX0 - 2.6, TX0 - 4.2
+    YVS = 40.3
+    XSR, XSRb, XRS_, XFL = TX0 - 3.0, TX0 - 1.8, TX0 - 4.4, TX0 - 5.9
     S.wire(ax, [(vx, vy), (vx, YVS), (XSR, YVS)])
-    S.dot(ax, XSR, YVS)
-    vcap(XSR, YVS, 39.2)
-    sg(XSR, 39.2, 0.3)
+    for xc_ in (XSR, XSRb):
+        S.dot(ax, xc_, YVS)
+        vcap(xc_, YVS, 39.6)
+        sg(xc_, 39.6, 0.2)
     ra_, rb_ = S.res(ax, XRS_, YVS)
     S.wire(ax, [(XSR, YVS), rb_])
     S.wire(ax, [ra_, (XFL, YVS)])
     flag(XFL, YVS, 'V$_{CC,SR}$', side='u')
-    S.label(ax, XRS_, YVS - 0.65, 'R$_{SR}$ ' + _r(_sv('R.SR')), size=SN)
-    S.label(ax, XSR + 0.6, 39.6, 'C$_{SR}$ ' + _c(_sv('C.SR')), size=SN,
-            ha='left')
+    S.label(ax, XRS_ - 0.2, YVS - 0.65, 'R$_{SR}$ ' + _r(_sv('R.SR')), size=SN)
+    S.label(ax, XSRb + 0.6, 39.6, 'C$_{SR}$\n' + _c(_sv('C.SR'))
+            + ' $\\parallel$ ' + _c(_sv('C.SRb') * 1e3), size=SN, ha='left')
 
     def pair(yc, ydrain, ysrc, flip, leg, hop_y, ds, gd, ss, xgnd):
         """two MOSFETs, each with its gate resistor on its own gate lead.

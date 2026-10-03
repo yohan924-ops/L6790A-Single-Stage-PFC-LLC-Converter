@@ -4295,8 +4295,8 @@ def build(A):
             widths=[CW * 0.12, CW * 0.18, CW * 0.70], key='tea2095pins'))
     _q = dict(A.SH)
     for _k in ('V.SR_char', 'I.SR_max', 'I.SR_q', 'I.SR_dch', 'R.thSR',
-               'V.DZSR_sel', 'R.BSR_sel', 'C.SR', 'R.SR', 'ΔV.RSR', 'ΔV.CSR',
-               'k.SRpin'):
+               'V.DZSR_sel', 'R.BSR_sel', 'C.SR', 'C.SRb', 'R.SR', 'ΔV.RSR',
+               'ΔV.CSR', 'k.SRpin'):
         _q.setdefault(_k, A._builder_const(_k))
     add(p('<b>Its supply.</b> Fed straight from the %(vo).0f&nbsp;V output, '
           'the controller would drop the difference to its own gate-drive '
@@ -4306,19 +4306,18 @@ def build(A):
           'outside: R<sub>BSR</sub> from the output to a Zener D<sub>ZSR</sub> '
           'on the base, the collector on the output, the emitter through '
           'R<sub>SR</sub> = %(rs).0f&nbsp;&Omega; to VCC with C<sub>SR</sub> = '
-          '%(c).0f&nbsp;nF at the pin, an RC filter (the ST board fits '
-          '10&nbsp;&micro;F there). The resistor drops %(dr).2f&nbsp;V at '
-          'the f<sub>Max</sub> current and the capacitor dips '
-          '%(dc).2f&nbsp;V as one leg\'s pair is charged, k = %(kp).3f over '
-          'the characterised 12&nbsp;V: a bulk capacitor behind the resistor '
-          'is still needed. The datasheet '
+          '%(c).0f&nbsp;nF and a %(cb).1f&nbsp;&micro;F bulk at the pin, an '
+          'RC filter (the ST board fits 10&nbsp;&micro;F there). The '
+          'resistor drops %(dr).2f&nbsp;V at the f<sub>Max</sub> current and '
+          'the pin dips %(dc).2f&nbsp;V as one leg\'s pair is charged, '
+          'k = %(kp).3f over the characterised 12&nbsp;V. The datasheet '
           'gives the gate drive at V<sub>CC</sub> = %(ch).0f&nbsp;V, so the '
           'bottom of the band, not its middle, is held there: with a '
           '%(z).0f&nbsp;V Zener of &plusmn;%(tp).0f&nbsp;%% and '
           'V<sub>BE</sub> = %(VFj).1f&nbsp;V,'
           % dict(V, vo=V['Vout'], e=ER('vccreg'), c=_q['C.SR'],
-                 rs=_q['R.SR'], dr=_q['ΔV.RSR'], dc=_q['ΔV.CSR'],
-                 kp=_q['k.SRpin'],
+                 rs=_q['R.SR'], cb=_q['C.SRb'], dr=_q['ΔV.RSR'],
+                 dc=_q['ΔV.CSR'], kp=_q['k.SRpin'],
                  ch=_q['V.SR_char'], z=_q['V.DZSR_sel'],
                  tp=100 * V['tolDZ'])))
     add(calc(r'V_{CC,SR}=%(z).0f-%(VFj).1f=%(r).2f\;\mathrm{V}'

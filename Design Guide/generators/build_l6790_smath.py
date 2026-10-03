@@ -1404,15 +1404,17 @@ S.const('[PICK] Series resistor into the VCC pin (RC filter):', 'R.SR',
         note='2026-10-02 user: a 10 ohm / 100 nF RC filter at the pin in '
              'place of the 10 uF the ST EVL6790_670W SR board fits.')
 S.const('[PICK] Capacitor at the VCC pin:', 'C.SR', "100*'nF", 'nF', 0)
+S.const('[PICK] Bulk capacitor beside it, at the pin:', 'C.SRb', "2.2*'μF", 'μF',
+        1, note='2026-10-03 user. 100 nF alone let the pin dip 1.6 V as one '
+                'leg\'s pair was charged (k.SRpin 0.915); the bulk takes that.')
 S.row('- mean drop across R.SR at f.Max:', 'ΔV.RSR', 'R.SR*I.SR', 'V', 2)
 S.row('- dip at the pin as one leg\'s pair is charged (n.SR x Q.g_SR out of '
-      'C.SR):', 'ΔV.CSR', "n.SR*Q.g_SR*10^(-9)*'A*'s/C.SR", 'V', 2)
+      'C.SR + C.SRb):', 'ΔV.CSR', "n.SR*Q.g_SR*10^(-9)*'A*'s/(C.SR+C.SRb)",
+      'V', 2)
 S.row('- VCC pin at the bottom of the band, after both:', 'V.SRpin_min',
       'V.SR_min-ΔV.RSR-ΔV.CSR', 'V', 2)
 S.row('- held at the characterised 12 V (>1):', 'k.SRpin',
-      'V.SRpin_min/V.SR_char', None, 3,
-      note='one leg\'s gate charge is more than 100 nF holds: a bulk '
-           'capacitor behind R.SR (the 10 uF it replaced) brings this back.')
+      'V.SRpin_min/V.SR_char', None, 3)
 
 S.h2('14c.5  Heat in the two followers and their Zeners')
 S.note('Both followers are sized at f.Max, the oscillator ceiling, which bounds '
@@ -2205,6 +2207,7 @@ S.show('- SR supply Zener power rating, at least:', 'P.DZSR', 'mW', 0)
 S.show('- SR supply feed resistor power rating, at least:', 'P.RBSR', 'W', 3)
 S.show('- SR controller VCC filter resistor:', 'R.SR', 'ohm', 0)
 S.show('- SR controller VCC capacitor:', 'C.SR', 'nF', 0)
+S.show('- SR controller VCC bulk capacitor:', 'C.SRb', 'μF', 1)
 S.show('- LED rail feed resistor, SELECTED:', 'R.Z_sel', 'ohm', 0)
 S.show('- LED rail divider, upper:', 'R.Z1', 'kohm', 1)
 S.show('- LED rail divider, lower:', 'R.Z2', 'kohm', 1)

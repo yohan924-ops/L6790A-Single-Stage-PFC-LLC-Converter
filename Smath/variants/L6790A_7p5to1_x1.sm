@@ -17837,11 +17837,36 @@
     <region left="20" top="50500" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">[PICK] Bulk capacitor beside it, at the pin:</p>
+      </content>
+    </text>
+    </region>
+    <region left="510" top="50500" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <math>
+      <input>
+        <e type="operand">C.SRb</e>
+        <e type="operand">2.2</e>
+        <e type="operand" style="unit">μF</e>
+        <e type="operator" args="2">*</e>
+        <e type="operator" args="2">:</e>
+      </input>
+    </math>
+    </region>
+    <region left="20" top="50543" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">2026-10-03 user. 100 nF alone let the pin dip 1.6 V as one leg&#x27;s pair was charged (k.SRpin 0.915); the bulk takes that.</p>
+      </content>
+    </text>
+    </region>
+    <region left="20" top="50724" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- mean drop across R.SR at f.Max:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="50500" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="50724" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="2">
       <input>
         <e type="operand">ΔV.RSR</e>
@@ -17858,15 +17883,15 @@
         </result>
     </math>
     </region>
-    <region left="20" top="50724" width="470" height="65" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="50767" width="470" height="65" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- dip at the pin as one leg&#x27;s pair is charged (n.SR x Q.g_SR out of</p>
-        <p style="font-weight: normal; font-style: normal; font-size: 10px;">C.SR):</p>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">C.SR + C.SRb):</p>
       </content>
     </text>
     </region>
-    <region left="510" top="50724" width="1080" height="65" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="50767" width="1080" height="65" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="2">
       <input>
         <e type="operand">ΔV.CSR</e>
@@ -17883,6 +17908,8 @@
         <e type="operand" style="unit">s</e>
         <e type="operator" args="2">*</e>
         <e type="operand">C.SR</e>
+        <e type="operand">C.SRb</e>
+        <e type="operator" args="2">+</e>
         <e type="operator" args="2">/</e>
         <e type="operator" args="2">:</e>
       </input>
@@ -17890,18 +17917,18 @@
           <e type="operand" style="unit">V</e>
         </contract>
         <result action="numeric">
-          <e type="operand">1.63</e>
+          <e type="operand">0.07</e>
         </result>
     </math>
     </region>
-    <region left="20" top="50797" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="50840" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- VCC pin at the bottom of the band, after both:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="50797" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="50840" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="2">
       <input>
         <e type="operand">V.SRpin_min</e>
@@ -17916,18 +17943,18 @@
           <e type="operand" style="unit">V</e>
         </contract>
         <result action="numeric">
-          <e type="operand">10.98</e>
+          <e type="operand">12.54</e>
         </result>
     </math>
     </region>
-    <region left="20" top="50840" width="470" height="53" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="50883" width="470" height="53" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- held at the characterised 12 V (&gt;1):</p>
       </content>
     </text>
     </region>
-    <region left="510" top="50840" width="1080" height="53" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="50883" width="1080" height="53" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="3">
       <input>
         <e type="operand">k.SRpin</e>
@@ -17937,25 +17964,18 @@
         <e type="operator" args="2">:</e>
       </input>
         <result action="numeric">
-          <e type="operand">0.915</e>
+          <e type="operand">1.045</e>
         </result>
     </math>
     </region>
-    <region left="20" top="50901" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
-    <text lang="eng" fontFamily="Arial" fontSize="10">
-      <content>
-        <p style="font-weight: normal; font-style: normal; font-size: 9px;">one leg&#x27;s gate charge is more than 100 nF holds: a bulk capacitor behind R.SR (the 10 uF it replaced) brings this back.</p>
-      </content>
-    </text>
-    </region>
-    <region left="20" top="50948" width="1560" height="27" color="#0f2a44" fontSize="12" isBreakable="false">
+    <region left="20" top="50960" width="1560" height="27" color="#0f2a44" fontSize="12" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: bold; font-style: normal; font-size: 12px;">14c.5  Heat in the two followers and their Zeners</p>
       </content>
     </text>
     </region>
-    <region left="20" top="50983" width="1560" height="51" color="#444444" fontSize="9" isBreakable="false">
+    <region left="20" top="50995" width="1560" height="51" color="#444444" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">Both followers are sized at f.Max, the oscillator ceiling, which bounds the gate current; the dissipations above are therefore upper bounds. Each part is rated by the highest ambient it allows at that bound, T.a = T.j,max - R.th(j-a) x P, on the copper its</p>
@@ -17963,14 +17983,14 @@
       </content>
     </text>
     </region>
-    <region left="20" top="51042" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="51054" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] PHPT61003NY (Q.VCC, Q.SR), 6 cm2 collector pad [C/W]:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="51042" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="51054" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">R.thQ</e>
@@ -17979,21 +17999,21 @@
       </input>
     </math>
     </region>
-    <region left="20" top="51085" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
+    <region left="20" top="51097" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">Nexperia, LFPAK56, 100 V 3 A; 115 C/W on the standard footprint.</p>
       </content>
     </text>
     </region>
-    <region left="20" top="51116" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="51128" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] PHPT61003NY junction temperature, max. [C]:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="51116" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="51128" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">T.jQ</e>
@@ -18002,14 +18022,14 @@
       </input>
     </math>
     </region>
-    <region left="20" top="51159" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="51171" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] the same transistor on its standard footprint [C/W]:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="51159" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="51171" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">R.thQ_std</e>
@@ -18018,14 +18038,14 @@
       </input>
     </math>
     </region>
-    <region left="20" top="51202" width="470" height="53" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="51214" width="470" height="53" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Q.VCC: highest ambient at P.Qpass [C]:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="51202" width="1080" height="53" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="51214" width="1080" height="53" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="0">
       <input>
         <e type="operand">T.aQVCC</e>
@@ -18043,14 +18063,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="51263" width="470" height="53" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="51275" width="470" height="53" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Q.VCC: the same on the standard footprint [C]:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="51263" width="1080" height="53" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="51275" width="1080" height="53" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="0">
       <input>
         <e type="operand">T.aQVCC_std</e>
@@ -18068,21 +18088,21 @@
         </result>
     </math>
     </region>
-    <region left="20" top="51324" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
+    <region left="20" top="51336" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">why the collector needs its 6 cm2 of copper.</p>
       </content>
     </text>
     </region>
-    <region left="20" top="51355" width="470" height="53" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="51367" width="470" height="53" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Q.SR: highest ambient at P.QSR (sized current) [C]:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="51355" width="1080" height="53" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="51367" width="1080" height="53" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="0">
       <input>
         <e type="operand">T.aQSR</e>
@@ -18100,14 +18120,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="51416" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="51428" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Q.SR at OVP1 with the STL160N10F8 charge:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="51416" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="51428" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="2">
       <input>
         <e type="operand">P.QSR_ovp</e>
@@ -18127,14 +18147,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="51459" width="470" height="53" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="51471" width="470" height="53" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- its highest ambient [C]:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="51459" width="1080" height="53" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="51471" width="1080" height="53" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="0">
       <input>
         <e type="operand">T.aQSR_run</e>
@@ -18152,14 +18172,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="51520" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="51532" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] BZT52H-C15 (D.Z, D.ZSR), 1 cm2 cathode pad [C/W]:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="51520" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="51532" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">R.thDZ</e>
@@ -18168,21 +18188,21 @@
       </input>
     </math>
     </region>
-    <region left="20" top="51563" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
+    <region left="20" top="51575" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">Nexperia, SOD123F, about +-5 %; 330 C/W on the standard footprint.</p>
       </content>
     </text>
     </region>
-    <region left="20" top="51594" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="51606" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] BZT52H junction temperature, max. [C]:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="51594" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="51606" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">T.jDZ</e>
@@ -18191,14 +18211,14 @@
       </input>
     </math>
     </region>
-    <region left="20" top="51637" width="470" height="53" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="51649" width="470" height="53" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- D.Z: highest ambient at P.DZ [C]:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="51637" width="1080" height="53" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="51649" width="1080" height="53" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="0">
       <input>
         <e type="operand">T.aDZ</e>
@@ -29270,11 +29290,31 @@
     <region left="20" top="87069" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
-        <p style="font-weight: normal; font-style: normal; font-size: 10px;">- LED rail feed resistor, SELECTED:</p>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">- SR controller VCC bulk capacitor:</p>
       </content>
     </text>
     </region>
     <region left="510" top="87069" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
+    <math decimalPlaces="1">
+      <input>
+        <e type="operand">C.SRb</e>
+      </input>
+        <contract>
+          <e type="operand" style="unit">μF</e>
+        </contract>
+        <result action="numeric">
+          <e type="operand">2.2</e>
+        </result>
+    </math>
+    </region>
+    <region left="20" top="87112" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">- LED rail feed resistor, SELECTED:</p>
+      </content>
+    </text>
+    </region>
+    <region left="510" top="87112" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="0">
       <input>
         <e type="operand">R.Z_sel</e>
@@ -29287,14 +29327,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="87112" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="87155" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- LED rail divider, upper:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="87112" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="87155" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="1">
       <input>
         <e type="operand">R.Z1</e>
@@ -29307,14 +29347,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="87155" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="87198" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- LED rail divider, lower:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="87155" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="87198" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="1">
       <input>
         <e type="operand">R.Z2</e>
@@ -29327,14 +29367,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="87198" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="87241" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- LED rail capacitor:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="87198" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="87241" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="0">
       <input>
         <e type="operand">C.Z</e>
@@ -29347,14 +29387,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="87241" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="87415" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- VCC Zener feed resistor power rating, at least:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="87241" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="87415" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="3">
       <input>
         <e type="operand">P.RBZ</e>
@@ -29367,133 +29407,133 @@
         </result>
     </math>
     </region>
-    <region left="20" top="87415" width="1560" height="27" color="#0f2a44" fontSize="12" isBreakable="false">
+    <region left="20" top="87474" width="1560" height="27" color="#0f2a44" fontSize="12" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: bold; font-style: normal; font-size: 12px;">19.6  Semiconductors - the REQUIREMENT each part has to meet</p>
       </content>
     </text>
     </region>
-    <region left="20" top="87450" width="420" height="23" color="#000000" fontSize="9" isBreakable="false">
+    <region left="20" top="87509" width="420" height="23" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: bold; font-style: normal; font-size: 9px;">function</p>
       </content>
     </text>
     </region>
-    <region left="450" top="87450" width="250" height="23" color="#000000" fontSize="9" isBreakable="false">
+    <region left="450" top="87509" width="250" height="23" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: bold; font-style: normal; font-size: 9px;">designator</p>
       </content>
     </text>
     </region>
-    <region left="710" top="87450" width="220" height="23" color="#000000" fontSize="9" isBreakable="false">
+    <region left="710" top="87509" width="220" height="23" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: bold; font-style: normal; font-size: 9px;">device class and count</p>
       </content>
     </text>
     </region>
-    <region left="20" top="87481" width="420" height="23" color="#000000" fontSize="9" isBreakable="false">
+    <region left="20" top="87540" width="420" height="23" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">HVSU connecting diodes</p>
       </content>
     </text>
     </region>
-    <region left="450" top="87481" width="250" height="23" color="#000000" fontSize="9" isBreakable="false">
+    <region left="450" top="87540" width="250" height="23" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">D.HV</p>
       </content>
     </text>
     </region>
-    <region left="710" top="87481" width="220" height="23" color="#000000" fontSize="9" isBreakable="false">
+    <region left="710" top="87540" width="220" height="23" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">2 x S1M (1000 V, 1 A)</p>
       </content>
     </text>
     </region>
-    <region left="20" top="87512" width="420" height="23" color="#000000" fontSize="9" isBreakable="false">
+    <region left="20" top="87571" width="420" height="23" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">Input bridge rectifier</p>
       </content>
     </text>
     </region>
-    <region left="450" top="87512" width="250" height="23" color="#000000" fontSize="9" isBreakable="false">
+    <region left="450" top="87571" width="250" height="23" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">-</p>
       </content>
     </text>
     </region>
-    <region left="710" top="87512" width="220" height="23" color="#000000" fontSize="9" isBreakable="false">
+    <region left="710" top="87571" width="220" height="23" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">1 x, see 19.4 for Vf and rd</p>
       </content>
     </text>
     </region>
-    <region left="20" top="87543" width="420" height="23" color="#000000" fontSize="9" isBreakable="false">
+    <region left="20" top="87602" width="420" height="23" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">Primary switches</p>
       </content>
     </text>
     </region>
-    <region left="450" top="87543" width="250" height="23" color="#000000" fontSize="9" isBreakable="false">
+    <region left="450" top="87602" width="250" height="23" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">S1 S2 S3 S4</p>
       </content>
     </text>
     </region>
-    <region left="710" top="87543" width="220" height="23" color="#000000" fontSize="9" isBreakable="false">
+    <region left="710" top="87602" width="220" height="23" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">4 positions x n.par, STO60N045DM9</p>
       </content>
     </text>
     </region>
-    <region left="20" top="87574" width="420" height="23" color="#000000" fontSize="9" isBreakable="false">
+    <region left="20" top="87633" width="420" height="23" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">Centre-tap rectifiers</p>
       </content>
     </text>
     </region>
-    <region left="450" top="87574" width="250" height="23" color="#000000" fontSize="9" isBreakable="false">
+    <region left="450" top="87633" width="250" height="23" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">Q.A1 Q.A2 Q.B1 Q.B2</p>
       </content>
     </text>
     </region>
-    <region left="710" top="87574" width="220" height="23" color="#000000" fontSize="9" isBreakable="false">
+    <region left="710" top="87633" width="220" height="23" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">2 legs x n.SR, SR MOSFET</p>
       </content>
     </text>
     </region>
-    <region left="20" top="87605" width="420" height="23" color="#000000" fontSize="9" isBreakable="false">
+    <region left="20" top="87664" width="420" height="23" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">VCC rectifier and bypass diodes</p>
       </content>
     </text>
     </region>
-    <region left="450" top="87605" width="250" height="23" color="#000000" fontSize="9" isBreakable="false">
+    <region left="450" top="87664" width="250" height="23" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">D.aux D.byp</p>
       </content>
     </text>
     </region>
-    <region left="710" top="87605" width="220" height="51" color="#000000" fontSize="9" isBreakable="false">
+    <region left="710" top="87664" width="220" height="51" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">2 x 1N4148W (100 V, 300 mA) -</p>
@@ -29501,21 +29541,21 @@
       </content>
     </text>
     </region>
-    <region left="20" top="87664" width="420" height="23" color="#000000" fontSize="9" isBreakable="false">
+    <region left="20" top="87723" width="420" height="23" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">VCC pass transistor</p>
       </content>
     </text>
     </region>
-    <region left="450" top="87664" width="250" height="23" color="#000000" fontSize="9" isBreakable="false">
+    <region left="450" top="87723" width="250" height="23" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">Q.VCC</p>
       </content>
     </text>
     </region>
-    <region left="710" top="87664" width="220" height="51" color="#000000" fontSize="9" isBreakable="false">
+    <region left="710" top="87723" width="220" height="51" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">1 x PHPT61003NY, 6 cm2 collector</p>
@@ -29523,21 +29563,21 @@
       </content>
     </text>
     </region>
-    <region left="20" top="87723" width="420" height="23" color="#000000" fontSize="9" isBreakable="false">
+    <region left="20" top="87782" width="420" height="23" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">VCC Zener</p>
       </content>
     </text>
     </region>
-    <region left="450" top="87723" width="250" height="23" color="#000000" fontSize="9" isBreakable="false">
+    <region left="450" top="87782" width="250" height="23" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">D.Z</p>
       </content>
     </text>
     </region>
-    <region left="710" top="87723" width="220" height="51" color="#000000" fontSize="9" isBreakable="false">
+    <region left="710" top="87782" width="220" height="51" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">1 x BZT52H-C15, 1 cm2 cathode pad</p>
@@ -29545,84 +29585,84 @@
       </content>
     </text>
     </region>
-    <region left="20" top="87782" width="420" height="23" color="#000000" fontSize="9" isBreakable="false">
+    <region left="20" top="87841" width="420" height="23" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">Gate drivers</p>
       </content>
     </text>
     </region>
-    <region left="450" top="87782" width="250" height="23" color="#000000" fontSize="9" isBreakable="false">
+    <region left="450" top="87841" width="250" height="23" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">U2 U3</p>
       </content>
     </text>
     </region>
-    <region left="710" top="87782" width="220" height="23" color="#000000" fontSize="9" isBreakable="false">
+    <region left="710" top="87841" width="220" height="23" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">2 x L6498LD, SO-14 - 14c.1</p>
       </content>
     </text>
     </region>
-    <region left="20" top="87813" width="420" height="23" color="#000000" fontSize="9" isBreakable="false">
+    <region left="20" top="87872" width="420" height="23" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">Bootstrap diodes</p>
       </content>
     </text>
     </region>
-    <region left="450" top="87813" width="250" height="23" color="#000000" fontSize="9" isBreakable="false">
+    <region left="450" top="87872" width="250" height="23" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">D.BS1 D.BS2</p>
       </content>
     </text>
     </region>
-    <region left="710" top="87813" width="220" height="23" color="#000000" fontSize="9" isBreakable="false">
+    <region left="710" top="87872" width="220" height="23" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">2 x ES1J (600 V, 1 A, 35 ns)</p>
       </content>
     </text>
     </region>
-    <region left="20" top="87844" width="420" height="23" color="#000000" fontSize="9" isBreakable="false">
+    <region left="20" top="87903" width="420" height="23" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">SR controller</p>
       </content>
     </text>
     </region>
-    <region left="450" top="87844" width="250" height="23" color="#000000" fontSize="9" isBreakable="false">
+    <region left="450" top="87903" width="250" height="23" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">U7</p>
       </content>
     </text>
     </region>
-    <region left="710" top="87844" width="220" height="23" color="#000000" fontSize="9" isBreakable="false">
+    <region left="710" top="87903" width="220" height="23" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">1 x TEA2095TE, HSO8 - 14c.3</p>
       </content>
     </text>
     </region>
-    <region left="20" top="87875" width="420" height="23" color="#000000" fontSize="9" isBreakable="false">
+    <region left="20" top="87934" width="420" height="23" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">SR supply pass transistor</p>
       </content>
     </text>
     </region>
-    <region left="450" top="87875" width="250" height="23" color="#000000" fontSize="9" isBreakable="false">
+    <region left="450" top="87934" width="250" height="23" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">Q.SR</p>
       </content>
     </text>
     </region>
-    <region left="710" top="87875" width="220" height="51" color="#000000" fontSize="9" isBreakable="false">
+    <region left="710" top="87934" width="220" height="51" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">1 x PHPT61003NY, 6 cm2 collector</p>
@@ -29630,63 +29670,63 @@
       </content>
     </text>
     </region>
-    <region left="20" top="87934" width="420" height="23" color="#000000" fontSize="9" isBreakable="false">
+    <region left="20" top="87993" width="420" height="23" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">SR supply Zener</p>
       </content>
     </text>
     </region>
-    <region left="450" top="87934" width="250" height="23" color="#000000" fontSize="9" isBreakable="false">
+    <region left="450" top="87993" width="250" height="23" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">D.ZSR</p>
       </content>
     </text>
     </region>
-    <region left="710" top="87934" width="220" height="23" color="#000000" fontSize="9" isBreakable="false">
+    <region left="710" top="87993" width="220" height="23" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">1 x BZT52H-C15, 1 cm2 cathode pad</p>
       </content>
     </text>
     </region>
-    <region left="20" top="87965" width="420" height="23" color="#000000" fontSize="9" isBreakable="false">
+    <region left="20" top="88024" width="420" height="23" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">LED rail regulator</p>
       </content>
     </text>
     </region>
-    <region left="450" top="87965" width="250" height="23" color="#000000" fontSize="9" isBreakable="false">
+    <region left="450" top="88024" width="250" height="23" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">Q6</p>
       </content>
     </text>
     </region>
-    <region left="710" top="87965" width="220" height="23" color="#000000" fontSize="9" isBreakable="false">
+    <region left="710" top="88024" width="220" height="23" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">1 x TL431B, SOT-23 - 16.1b</p>
       </content>
     </text>
     </region>
-    <region left="20" top="87996" width="420" height="23" color="#000000" fontSize="9" isBreakable="false">
+    <region left="20" top="88055" width="420" height="23" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">Feedback optocoupler</p>
       </content>
     </text>
     </region>
-    <region left="450" top="87996" width="250" height="23" color="#000000" fontSize="9" isBreakable="false">
+    <region left="450" top="88055" width="250" height="23" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">Q4</p>
       </content>
     </text>
     </region>
-    <region left="710" top="87996" width="220" height="51" color="#000000" fontSize="9" isBreakable="false">
+    <region left="710" top="88055" width="220" height="51" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">1 x SFH617A-2 (the ST tool&#x27;s part;</p>
@@ -29694,21 +29734,21 @@
       </content>
     </text>
     </region>
-    <region left="20" top="88055" width="420" height="23" color="#000000" fontSize="9" isBreakable="false">
+    <region left="20" top="88114" width="420" height="23" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">External error amplifier</p>
       </content>
     </text>
     </region>
-    <region left="450" top="88055" width="250" height="23" color="#000000" fontSize="9" isBreakable="false">
+    <region left="450" top="88114" width="250" height="23" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">Q5</p>
       </content>
     </text>
     </region>
-    <region left="710" top="88055" width="220" height="51" color="#000000" fontSize="9" isBreakable="false">
+    <region left="710" top="88114" width="220" height="51" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">1 x TL431B, 2.5 V shunt regulator</p>
@@ -29716,14 +29756,14 @@
       </content>
     </text>
     </region>
-    <region left="20" top="88122" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="88181" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Primary: devices in parallel per position:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="88122" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="88181" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="0">
       <input>
         <e type="operand">n.par</e>
@@ -29733,14 +29773,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="88165" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="88224" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Primary: minimum drain-source voltage:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="88165" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="88224" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="1">
       <input>
         <e type="operand">V.DS_pri</e>
@@ -29753,14 +29793,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="88208" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="88267" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Primary: peak current rating per POSITION:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="88208" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="88267" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="2">
       <input>
         <e type="operand">I.pri_rating</e>
@@ -29773,14 +29813,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="88251" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="88310" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Primary: peak current in ONE device:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="88251" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="88310" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="2">
       <input>
         <e type="operand">I.pk_dev</e>
@@ -29793,14 +29833,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="88294" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="88353" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Primary: rms current in ONE device:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="88294" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="88353" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="3">
       <input>
         <e type="operand">I.mos_dev</e>
@@ -29813,14 +29853,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="88337" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="88535" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Primary: required RDSon per DEVICE at Tj,max:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="88337" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="88535" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="1">
       <input>
         <e type="operand">R.dson_req_dev_p</e>
@@ -29833,14 +29873,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="88380" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="88578" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Primary: the same, as a 25 C datasheet number:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="88380" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="88578" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="1">
       <input>
         <e type="operand">R.dson_req_25_p</e>
@@ -29853,14 +29893,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="88535" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="88621" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Primary: midpoint capacitance used for ZVS:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="88535" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="88621" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="0">
       <input>
         <e type="operand">c.HB</e>
@@ -29873,14 +29913,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="88578" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="88664" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Secondary: devices in parallel per leg:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="88578" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="88664" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="0">
       <input>
         <e type="operand">n.SR</e>
@@ -29890,14 +29930,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="88621" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="88707" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Secondary: recommended drain-source voltage:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="88621" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="88707" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="1">
       <input>
         <e type="operand">V.DS_sec_rec</e>
@@ -29910,14 +29950,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="88664" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="88750" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Secondary: peak current rating per LEG:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="88664" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="88750" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="1">
       <input>
         <e type="operand">I.sec_rating</e>
@@ -29930,14 +29970,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="88707" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="88793" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Secondary: peak current in ONE device:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="88707" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="88793" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="1">
       <input>
         <e type="operand">I.SR_pk_dev</e>
@@ -29950,14 +29990,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="88750" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="88836" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Secondary: rms current in ONE device:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="88750" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="88836" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="2">
       <input>
         <e type="operand">I.SR_dev</e>
@@ -29970,14 +30010,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="88793" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="88879" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Secondary: required RDSon per DEVICE at Tj,max:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="88793" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="88879" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="2">
       <input>
         <e type="operand">R.dson_req_dev</e>
@@ -29990,14 +30030,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="88836" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="88922" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Secondary: the same, as a 25 C datasheet number:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="88836" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="88922" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="2">
       <input>
         <e type="operand">R.dson_req_25_s</e>
@@ -30010,14 +30050,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="88879" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="88965" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- VCC pass transistor: power to dissipate:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="88879" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="88965" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="2">
       <input>
         <e type="operand">P.Qpass</e>
@@ -30030,14 +30070,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="88922" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="89008" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- VCC pass transistor: V.CE it must block:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="88922" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="89008" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="1">
       <input>
         <e type="operand">V.Caux_OVP2</e>
@@ -30050,14 +30090,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="88965" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="89051" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Optocoupler: CTR at steady state:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="88965" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="89051" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="3">
       <input>
         <e type="operand">CTR.s</e>
@@ -30067,14 +30107,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="89008" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="89094" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Shunt regulator: reference voltage:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="89008" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="89094" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="3">
       <input>
         <e type="operand">V.R</e>
@@ -30087,14 +30127,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="89067" width="1560" height="27" color="#0f2a44" fontSize="12" isBreakable="false">
+    <region left="20" top="89153" width="1560" height="27" color="#0f2a44" fontSize="12" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: bold; font-style: normal; font-size: 12px;">19.7  Schematics</p>
       </content>
     </text>
     </region>
-    <region left="20" top="89102" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
+    <region left="20" top="89188" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">HVSU on the AC side of the bridge. Nothing on CFG, BM, DRV_EN or RT. No filter on ISEN.</p>
