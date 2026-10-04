@@ -115,6 +115,7 @@ def _diode_along(ax, a, b, s=None, color=NAVY, lw=2.2, z=4):
     v = np.array([-u[1], u[0]])                 # across
     m = a + d * 0.5
     tip, base = m + u * s, m - u * s
+    X.note_symbol(ax, 'diode', m[0], m[1], 2 * s, 2 * s * 0.86)
     ax.fill(*zip(base + v * s * 0.86, base - v * s * 0.86, tip),
             color=color, zorder=z)
     ax.plot([tip[0] + v[0] * s * 0.86, tip[0] - v[0] * s * 0.86],
@@ -168,6 +169,7 @@ def an_rac(save, foot):
     fig = plt.figure(figsize=(9.35, 4.44))
 
     ax = _ax(fig, [0.02, 0.30, 0.62, 0.66], -1.2, 14.6, -2.3, 4.6)
+    ax._sym_mult = 1.3                 # D1, D2 printed 10.5 pt (2026-10-04)
     # the tank, standing in as a current source
     S.acsrc(ax, 0.3, 1.5, None)
     S.label(ax, 0.06, 0.76, 'i$_{RI}$', size=11, color=MAG, ha='right')
@@ -212,14 +214,15 @@ def an_rac(save, foot):
     S.wire(ax, [t['s_tap'], (XJ - 0.20, 1.5)])
     S.hop(ax, XJ, 1.5)
     S.wire(ax, [(XJ + 0.20, 1.5), (12.5, 1.5)])
-    S.shunt(ax, 11.1, 1.5, -1.4, 'cap', 'C$_{out}$', frac=0.34)
+    S.shunt(ax, 11.1, 1.5, -1.4, 'cap', None, frac=0.34)
+    S.label(ax, 10.55, 0.05, 'C$_{out}$', size=10.5, ha='right')
     S.dot(ax, 11.1, 1.5)
     S.dot(ax, 11.1, -1.4)
     S.shunt(ax, 12.5, 1.5, -1.4, 'res', 'R$_L$', frac=0.52)
     S.label(ax, 12.98, 1.18, '+', size=12, color=GREY)
     S.label(ax, 12.98, -1.08, '$-$', size=12, color=GREY)
-    S.label(ax, 13.4, 0.30, 'V$_{out}$', size=11.5, ha='left')
-    S.label(ax, 13.4, -0.22, 'stiff', size=10, ha='left', color=GREY)
+    S.label(ax, 13.75, 0.30, 'V$_{out}$', size=11.5, ha='left')
+    S.label(ax, 13.75, -0.22, 'stiff', size=10, ha='left', color=GREY)
 
     #  What exactly is being replaced.  Without the box the reader has to
     #  guess how far to the right the substitution reaches - and the two
@@ -416,6 +419,7 @@ def an_pfc_cap(save, foot):
     fig = plt.figure(figsize=(9.35, 5.41))
 
     ax = _ax(fig, [0.05, 0.50, 0.90, 0.46], -1.4, 13.6, -2.4, 5.0)
+    ax._sym_mult = 1.4                 # the bridge printed 8 pt (2026-10-04)
     xe = _mains_bridge(ax, 0.4, 4.1, 1.6, 4.0, -0.6)
     S.wire(ax, [(xe, 4.0), (11.6, 4.0)])
     S.wire(ax, [(xe, -0.6), (11.6, -0.6)])
@@ -490,6 +494,9 @@ def an_pfc_boost(save, foot):
              'switch OFF - the inductor delivers to C, in series with the '
              'line'))):
         ax = _ax(fig, rect, -1.8, 14.6, -3.0, 6.2)
+        ax._sym_mult = 1.5             # two panels on one width: by the
+        #                                 rules the diodes printed 8 pt,
+        #                                 half the mode sheets' (2026-10-04)
         S.label(ax, 6.4, 5.80, ttl, size=11, color=MAG if on else GRN)
         xe = _mains_bridge(ax, 0.4, 4.1, 1.6, 4.0, -0.6)
 
@@ -507,7 +514,9 @@ def an_pfc_boost(save, foot):
         S.wire(ax, [(9.6, 4.0), (9.6, 2.70)])
         S.wire(ax, [(9.6, 1.30), (9.6, -0.6)])
         S.wire(ax, [(xe, -0.6), (13.4, -0.6)])
-        S.shunt(ax, 12.0, 4.0, -0.6, 'cap', 'C', frac=0.30)
+        S.shunt(ax, 12.0, 4.0, -0.6, 'cap', None, frac=0.30)
+        S.label(ax, 11.45, 1.7, 'C', size=10.5, ha='right')  # left: the
+        #                                   load resistor is beside it
         S.shunt(ax, 13.4, 4.0, -0.6, 'res', None, frac=0.46)
         for xd, yd in ((9.6, -0.6), (12.0, 4.0), (12.0, -0.6)):
             S.dot(ax, xd, yd)

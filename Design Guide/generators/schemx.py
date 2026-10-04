@@ -227,7 +227,7 @@ def hcoil(ax, x, y, s=0.90, n=4, color=NAVY, lw=2.0, z=4):
     ax.plot(xs, ys, color=color, lw=lw, zorder=z, solid_capstyle='round')
 
 
-def vdiode(ax, x, y, s=0.52, up=True, color=NAVY, lw=2.2, z=4):
+def vdiode(ax, x, y, s=0.52, up=True, color=NAVY, lw=2.2, z=4, kind='diode'):
     """Triangle and bar on a vertical branch; `up` = conducts upward.
 
     0.52 since 2026-09-21: at 0.26 a rectifier printed about two points
@@ -236,6 +236,8 @@ def vdiode(ax, x, y, s=0.52, up=True, color=NAVY, lw=2.2, z=4):
     switch it belongs to, and the reviewer asked for it to stay so.
     """
     d = 1 if up else -1
+    if kind:                       # the MOSFET's body diode passes None
+        note_symbol(ax, kind, x, y, 2 * s * 0.72, 2 * s * 0.62)
     tri = [(x - s * 0.72, y - d * s * 0.62), (x + s * 0.72, y - d * s * 0.62),
            (x, y + d * s * 0.62)]
     ax.fill(*zip(*tri), color=color, zorder=z)
@@ -364,7 +366,7 @@ def mosfet(ax, x, y, name, state='on', h=1.80, gate=1.00,
     if body:
         wire(ax, [(xd, yb), (xd, yt)], cd,
              2.0 if cd == GRN else 1.4, gid='symbol')
-        vdiode(ax, xd, y, 0.26 * u, up=not flip, color=cd,
+        vdiode(ax, xd, y, 0.26 * u, up=not flip, color=cd, kind=None,
                lw=2.2 if cd == GRN else 1.6)
     if coss:
         wire(ax, [(xk, yb), (xk, y - sgn * 0.12 * u)], cc, 1.4,

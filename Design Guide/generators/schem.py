@@ -172,6 +172,8 @@ def diode(ax, x, y, t=None, horiz=True, s=None, flip=False, color=NAVY):
     s = (0.56 * X.scale(ax) * getattr(ax, '_diode_k', 1.0)) if s is None else s
     d = -1 if flip else 1
     a, w = 0.62 * s, 0.72 * s                     # half-length, half-width
+    X.note_symbol(ax, 'diode', x, y, 2 * a if horiz else 2 * w,
+                  2 * w if horiz else 2 * a)
     if horiz:
         tri = [(x - d * a, y - w), (x - d * a, y + w), (x + d * a, y)]
         ax.fill(*zip(*tri), color=color, zorder=3)
