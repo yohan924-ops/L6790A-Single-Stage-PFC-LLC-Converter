@@ -464,7 +464,8 @@ def an_pfc_cap(save, foot):
     for sp in aw.spines.values():
         sp.set_visible(False)
     aw.axhline(0, color=GREY, lw=0.9)
-    aw.legend(loc='lower right', frameon=False, fontsize=10, ncol=4)
+    aw.legend(loc='lower center', bbox_to_anchor=(0.5, 1.0), frameon=False,
+              fontsize=10, ncol=4)       # above the traces, not on them
     for xc in (0.5, 2.5):
         _call(aw, (xc - 0.02, 0.30), (xc + 0.16, 1.24),
               'conducts only here', size=10)
@@ -1486,13 +1487,15 @@ def an_core_section(save, foot):
     #  everything on it - core, winding and lettering - prints 15 % larger
     #  (2026-09-22, user: the drawing and its text were too small).
     kp = w['k']                               # winding pitch / bundle
-    fig = plt.figure(figsize=(9.3 / 1.15, 6.6 / 1.15))
+    fig = plt.figure(figsize=(9.3 / 1.15, 4.6 / 1.15))   # 6.6 left a sixth
+    #                                                     blank top and bottom
     S1, S2 = 22.5, 9.4                        # mm per inch on the two scaled panels
     ax = _mm_ax(fig, [0.006, 0.030, 0.430, 0.940], 1.6, -2.0, S1)
     #  the unrolled winding: its scale and centre follow the winding width,
     #  so a wider former is not cut off at the panel edge
     S2 = (w['wind_w'] + 2 * w['flange'] + 9.0) / (0.550 * 9.3 / 1.15)
-    ax2 = _mm_ax(fig, [0.445, 0.265, 0.550, 0.470],
+    ax2 = _mm_ax(fig, [0.445, 0.12, 0.550, 0.66],   # tall enough for the
+    #                                                 base plate at 4.6 in
                  2.0 + w['wind_w'] / 2.0, 4.6, S2)
     #  (the core seen from above is its own figure now, an_core_plan)
 

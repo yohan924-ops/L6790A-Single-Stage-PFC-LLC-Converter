@@ -1258,9 +1258,12 @@ def legal():
                     'the transformer for household AV equipment in the US, '
                     'EU, Japan, Korea and China. Text shortened throughout. '
                     'Parts fitted: STO60N045DM9 primary switches, two L6498LD '
-                    'gate drivers with external bootstrap diodes and a '
-                    'TEA2095TE SR controller, with the V<sub>CC</sub> start-up '
-                    're-sized for them.'
+                    'gate drivers with ES1J bootstrap diodes and a separate '
+                    'turn-off path at each gate, STL160N10F8 synchronous '
+                    'rectifiers under a TEA2095TE fed by a Zener follower '
+                    'through an RC filter, FZT651 pass transistors, a second '
+                    'TL431 as the LED rail, with the V<sub>CC</sub> start-up '
+                    're-sized for them; the whole circuit on one page.'
                     % (__import__('cores').CHOSEN, V['Lr'], V['Lm'], V['Cr']),
                     S['tc'])]],
         colWidths=[70, 90, CW - 160],
@@ -1271,7 +1274,7 @@ def legal():
                           ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
                           ('LEFTPADDING', (0, 0), (-1, -1), 5)])))
 
-    s.append(Spacer(1, 18))
+    s.append(PageBreak())                  # four bullets spilled on their own
     s.append(Paragraph('Conventions', S['h2']))
     s.extend(bullets([
         'Frequencies are switching frequencies unless written '

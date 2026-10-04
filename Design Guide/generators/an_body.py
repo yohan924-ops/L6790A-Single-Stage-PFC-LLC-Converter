@@ -1886,13 +1886,27 @@ def build(A):
           'resistances of the output, taken as V<sub>CC</sub> over the '
           'short-circuit currents when the datasheet gives nothing better, '
           'and I<sub>QCC</sub>, I<sub>QBO</sub> the quiescent currents of the '
-          'low and floating sections.'))
+          'low and floating sections. With a separate turn-off path '
+          '(below) the R<sub>G</sub> of the sink term is R<sub>G,off</sub>.'))
     add(p('<b>Timing.</b> The dead time reaches the gates shortened by the '
           'driver&rsquo;s delay mismatch MT, so (t<sub>D</sub> &minus; MT) '
           'must still cover the swing T<sub>T</sub>. And the midpoint slope '
           'S<sub>mid</sub> during the swing, the commutation current over the '
           'output capacitance at the top of the swing, must stay under the '
           'driver&rsquo;s allowed OUT slew rate S<sub>OUT,max</sub>.'))
+    add(p('<b>Turn-off has its own path.</b> One gate resistor sets both '
+          'edges. A diode anti-parallel to R<sub>G</sub>, in series with a '
+          'smaller R<sub>G,off</sub>, lets the gate discharge faster than it '
+          'charges, and that is what holds the gate down when the other '
+          'switch of the leg turns on and dv/dt pushes charge through the '
+          'Miller capacitance. Its checks: the peak discharge current '
+          '(V<sub>CC</sub> &minus; V<sub>F</sub>)/(R<sub>G,off</sub> + '
+          'R<sub>si</sub> + R<sub>g,int</sub>) under the driver&rsquo;s sink '
+          'rating and the diode&rsquo;s surge rating; the average '
+          'Q<sub>g</sub>f<sub>sw</sub> under the diode&rsquo;s continuous '
+          'rating; and the fall time from the rail to the Miller plateau, '
+          'which the internal and sink resistances bound however small '
+          'R<sub>G,off</sub> is made.'))
 
     add(h2('Controller network'))
     add(fig('bom_pin_config',
@@ -2123,10 +2137,14 @@ def build(A):
     add(eq(r'V_{out}=V_{R}\left(1+\frac{R_{I}}{R_{O}}\right)', key='RoVout'))
     add(p('When the output rises the TL431 sinks more cathode current '
           'through the LED, which R<sub>B</sub> feeds from a regulated rail '
-          'V<sub>Z</sub>; the optocoupler transistor pulls FB down against '
+          'V<sub>Z</sub> (a shunt regulator, not a Zener: the window on '
+          'R<sub>B</sub> below is too narrow for a Zener&rsquo;s tolerance; '
+          'Section&nbsp;%s builds it from a second TL431); the optocoupler '
+          'transistor pulls FB down against '
           'the internal pull-up R<sub>FB</sub> and the power command falls. '
           'R<sub>P</sub> across the LED carries the minimum cathode current '
-          'the TL431 needs, so it has an upper limit:'))
+          'the TL431 needs, so it has an upper limit:'
+          % SR('The voltage loop, as built')))
     add(eq(r'R_{P}\leq\frac{V_{Fo}}{I_{min}}', key='RPmax'))
     add(p('with V<sub>Fo</sub> the LED forward voltage and I<sub>min</sub> '
           'the least cathode current the TL431 needs. Because the LED is fed from V<sub>Z</sub>, the output ripple '
@@ -2385,8 +2403,8 @@ def build(A):
               'Q<sub>g</sub> sets the V<sub>CC</sub> load, C<sub>o(tr)</sub> '
               'the swing the dead time must cover'],
              ['Gate drivers', '&mdash;',
-              '2 &times; L6498LD (SO-14), one per leg, external bootstrap '
-              'diodes', 'chosen',
+              '2 &times; L6498LD (SO-14), one per leg, ES1J bootstrap '
+              'diodes, a 1N4148W turn-off diode at each gate', 'chosen',
               'the controller has no driver of its own (Section&nbsp;%s)'
               % SR('The gate drivers: two L6498LD')],
              ['SR MOSFETs', '&mdash;',
@@ -2401,7 +2419,9 @@ def build(A):
               '&beta;<sub>min</sub>, I<sub>Z,min</sub>',
               '%(VFj).1f V, %(VFj).1f V, %(bmin).0f, %(IDZmin).0f mA' % V,
               'assumed', 'junction drops assumed; gain and bias are '
-              'requirements put on the parts'],
+              'requirements put on the parts, met by the FZT651 and '
+              'BZT52H-C15 fitted (Section&nbsp;%s)'
+              % SR('V<sub>CC</sub> from the auxiliary winding, as built')],
              ['Safety conditions', '&mdash;',
               'US, EU, Japan, Korea, China; household AV; %d m'
               % _INS_ALT, 'given',
@@ -2455,13 +2475,26 @@ def build(A):
               '&Phi;<sub>M</sub> %(PM).1f&deg;, '
               'third harmonic %(D3).2f %%' % V],
              ['Switches', 'STO60N045DM9 &times; 4; 2 &times; L6498LD, '
-              'R<sub>G</sub> %(RG).1f &Omega;, C<sub>BOOT</sub> %(CBOOT).0f nF '
-              'with an external diode; TEA2095TE, %(nSR).0f STL160N10F8 per '
-              'leg' % V],
+              'R<sub>G</sub> %(RG).1f &Omega; on, 1N4148W + R<sub>G,off</sub> '
+              '%(RGo).1f &Omega; off, C<sub>BOOT</sub> %(CBOOT).0f nF with an '
+              'ES1J; TEA2095TE, %(nSR).0f STL160N10F8 per leg'
+              % dict(V, RGo=A._builder_const('R.G_off'))],
              ['V<sub>CC</sub>', 'N<sub>aux</sub> %d T, Zener %.0f V, '
               'R<sub>BZ</sub> %.0f &Omega;, C<sub>VCC</sub> %.0f &micro;F, '
               'V<sub>CC,reg</sub> %.2f V'
               % (V['Naux'], V['DZ'], V['RBZ'], V['CVCC'], A.SH['V.CC_reg'])],
+             ['V<sub>CC,SR</sub>', 'Zener %.0f V on an FZT651 follower from '
+              'the output, R<sub>BSR</sub> %.0f &Omega;, R<sub>SR</sub> '
+              '%.0f &Omega; with %.0f nF and %.1f &micro;F in parallel at the pin, '
+              'V<sub>CC,SR</sub> %.1f V'
+              % (A._builder_const('V.DZSR_sel'), A._builder_const('R.BSR_sel'),
+                 A._builder_const('R.SR'), A._builder_const('C.SR'),
+                 A._builder_const('C.SRb'), A.SH['V.SR'])],
+             ['V<sub>Z</sub>', 'TL431B shunt regulator Q6 fed through '
+              'R<sub>Z</sub> %.1f k&Omega;, divider %.1f / %.0f k&Omega;, '
+              '%.2f V' % (A._builder_const('R.Z_sel') / 1e3,
+                           A._builder_const('R.Z1'), A._builder_const('R.Z2'),
+                           A.SH['V.Z'])],
              ['Insulation', 'reinforced, primary to secondary, carried by '
               'triple-insulated NP1 and NAUX; clearance %.1f mm and creepage '
               '%.1f mm at the pins, %d V ac for 60 s'
@@ -3900,9 +3933,15 @@ def build(A):
               'I<sub>VCC</sub>V<sub>CC,reg</sub> = %(g).2f W at f<sub>Max</sub>, '
               'is spent in the drivers and gate resistors and is not in the '
               'total' % dict(g=A.SH['I.VCC'] * 1e-3 * A.SH['V.CC_reg'])],
+             ['V<sub>CC,SR</sub> pass transistor and the SR controller',
+              '%(a).2f W' % dict(a=A.SH['P.QSR_run'] + A.SH['P.SR_run']),
+              '%(q).2f W in Q<sub>SR</sub> and %(c).3f W in the TEA2095TE at '
+              'the nominal output; the SR gate charge itself is in them'
+              % dict(q=A.SH['P.QSR_run'], c=A.SH['P.SR_run'])],
              ['<b>Itemised total</b>', '<b>%(t).2f W</b>'
               % dict(t=A.SH['P.pri_tot'] + A.SH['P.SR']
-                     + A.SH['P.RCS'] + A.SH['P.Cout'] + A.SH['P.Qpass_nom']),
+                     + A.SH['P.RCS'] + A.SH['P.Cout'] + A.SH['P.Qpass_nom']
+                     + A.SH['P.QSR_run'] + A.SH['P.SR_run']),
               'devices only: the transformer windings add %.1f to %.1f W '
               '(dc and strand loss, Section&nbsp;%s); the core loss is not '
               'computed here'
@@ -3939,7 +3978,8 @@ def build(A):
              'the transformer. Nothing electrical depends on it; the thermal '
              'design does, and that is settled by measurement.'
              % dict(V, t=A.SH['P.pri_tot'] + A.SH['P.SR']
-                    + A.SH['P.RCS'] + A.SH['P.Cout'] + A.SH['P.Qpass_nom'],
+                    + A.SH['P.RCS'] + A.SH['P.Cout'] + A.SH['P.Qpass_nom']
+                    + A.SH['P.QSR_run'] + A.SH['P.SR_run'],
                     b=A.SH['P.d_LLC'])))
 
     # ------------------------------------------------ the loop as built
@@ -3965,7 +4005,8 @@ def build(A):
               '%(tD).0f ns less the driver mismatch' % V],
              ['Gate drivers',
               'one half-bridge driver per leg, floating side above the bus '
-              'peak; bootstrap diode rated like the primary switches'],
+              'peak; bootstrap diode rated like the primary switches; a '
+              'turn-off diode per gate rated for the sink peak'],
              ['Secondary drain-source voltage',
               '&ge; %(VDSs).0f V including the centre-tap doubling' % V],
              ['Secondary rectifier current',
@@ -5251,6 +5292,36 @@ def build(A):
         'and size C<sub>VCC</sub> for the start-up hand-over, not for the '
         'steady state.']))
 
+    add(p('<b>Layout rules the parts fitted ask for.</b> Each is a datasheet '
+          'instruction or follows from where a current flows:'))
+    ext(bullets([
+        '<b>R<sub>CS</sub>:</b> ISEN and the controller ground each on '
+        'their own trace to the ends of the sense resistors, nothing in '
+        'series and no filter; the bridge return current must not share '
+        'the ISEN trace.',
+        '<b>Gate loops:</b> R<sub>G</sub>, the turn-off diode and '
+        'R<sub>G,off</sub> at the gate, returned to the driver-source pin '
+        'of the STO60N045DM9 and from there to PGND (low side) or OUT '
+        '(high side); the power source current does not pass through the '
+        'gate loop.',
+        '<b>Driver decoupling:</b> C<sub>BOOT</sub> between BOOT and OUT at '
+        'the pins, the local ceramic between VCC and PGND at the pins, '
+        'D<sub>BS</sub> beside C<sub>BOOT</sub>.',
+        '<b>L6790A supply:</b> 100&nbsp;nF between VCC and GND at the pin, '
+        'C<sub>VCC</sub> beside it; HVSU from the ac side of the bridge.',
+        '<b>SR sense:</b> DSA/DSB and SSA/SSB as separate traces to the '
+        'drains and sources of their pair, not along the power ground; the '
+        'controller&rsquo;s GND at the SR sources, where the two source '
+        'buses meet; R<sub>SR</sub>, C<sub>SR</sub> and the %(cb).1f&nbsp;'
+        '&micro;F at the VCC pin.' % dict(cb=A._builder_const('C.SRb')),
+        '<b>Pass transistors:</b> the collector tab of each FZT651 on the '
+        '50&nbsp;&times;&nbsp;50&nbsp;mm copper its rating assumes; the '
+        'Zener&rsquo;s cathode on 1&nbsp;cm&sup2;.',
+        '<b>Feedback:</b> the TL431 network and R<sub>I</sub>, R<sub>O</sub> '
+        'returned to the secondary ground at one point near the output '
+        'terminals, away from the SR source buses; C<sub>fx</sub> at the FB '
+        'pin.']))
+
     add(h2('What to measure first on hardware'))
     add(p('In order; the first four decide whether the design is sound.'))
     ext(bullets([
@@ -5331,6 +5402,102 @@ def build(A):
                   'it and the rectifier&rsquo;s negative, where ISEN reads it; '
                   'the SR source buses meet at the one secondary ground.'
                   % FR('an_xfmr_pins')))
+    _k = A._builder_const
+
+    def _ohm(v):
+        if v >= 1e3:
+            return ('%.1f' % (v / 1e3)).rstrip('0').rstrip('.') + ' k&Omega;'
+        return ('%.1f' % v).rstrip('0').rstrip('.') + ' &Omega;'
+
+    def _nf(v):
+        if v < 1:
+            return '%.0f pF' % (v * 1e3)
+        if v < 1e3:
+            return ('%.2f' % v).rstrip('0').rstrip('.') + ' nF'
+        return ('%.1f' % (v / 1e3)).rstrip('0').rstrip('.') + ' &micro;F'
+    add(p('Table&nbsp;%s lists the same parts by reference designator, with '
+          'the section that sizes each one. What a part must survive '
+          '(voltage, power, temperature) is in that section; the table '
+          'gives the value and the device.' % TR('bom')))
+    ext(tbl('The parts of Figure&nbsp;%s. Values are the selected values of '
+            'the sheet; a part the note does not size says so.'
+            % FR('an_full'),
+            [['Designator', 'Part', 'Sized in'],
+             ['EMI filter, BR1', 'not sized here; BR1 carries %.1f A rms at '
+              '%.0f Vac and blocks the mains peak' % (A.SH['I.in_max'],
+                                                         V['Vacmin']), '&mdash;'],
+             ['D<sub>HV</sub> &times; 2', 'S1M, 1000 V, 1 A, from each ac '
+              'line to HVSU', '%s' % SR('V<sub>CC</sub> from the auxiliary '
+                                       'winding, as built')],
+             ['C<sub>in</sub>', '%s film, rated for the full input voltage'
+              % _nf(A.SH['C.in_sel']), '%s' % SR('The input capacitor')],
+             ['R<sub>CS</sub>', '%.0f &times; %.0f m&Omega; in parallel = '
+              '%.1f m&Omega;, %.0f W parts' % (A.SH['N.RCS'], A.SH['R.CS_single'],
+                                             A.SH['R.CS'], 1),
+              '%s' % SR('The current-sense resistor, which sets three things '
+                        'at once')],
+             ['S1&ndash;S4', 'STO60N045DM9, one per position', '%s'
+              % SR('The primary switches: STO60N045DM9')],
+             ['U1 and its network', 'L6790A; R<sub>T</sub> %s, '
+              'C<sub>T</sub> %s C0G, R<sub>CFG</sub> %s, R<sub>BM</sub> %s, '
+              'R<sub>ZCD,H</sub> %s, R<sub>ZCD,L</sub> %s, C<sub>fx</sub> %s, '
+              '100 nF at VCC'
+              % (_ohm(A.SH['R.T'] * 1e3), _nf(A.SH['C.T'] / 1e3),
+                 _ohm(A.SH['R.CFG_sel'] * 1e3), _ohm(A.SH['R.BM_sel'] * 1e3),
+                 _ohm(A.SH['R.ZCD_H_sel'] * 1e3), _ohm(A.SH['R.ZCD_L_sel'] * 1e3),
+                 _nf(A.SH['C.fx'])),
+              '%s to %s' % (SR('The parts around the controller'),
+                            SR('Output sensing and over-voltage: the ZCD '
+                               'divider'))],
+             ['U2, U3 and the gate networks', 'L6498LD (SO-14); per driver '
+              'C<sub>BOOT</sub> %s and D<sub>BS</sub> ES1J (600 V, 1 A); per '
+              'gate R<sub>G</sub> %s, D<sub>G,off</sub> 1N4148W, '
+              'R<sub>G,off</sub> %s'
+              % (_nf(_k('C.BOOT')), _ohm(_k('R.G')), _ohm(_k('R.G_off'))),
+              '%s' % SR('The gate drivers: two L6498LD')],
+             ['C<sub>r</sub>', '%s; its voltage and current rating follow '
+              'from the tank peak and are not fixed here' % _nf(A.SH['C.r']),
+              '%s' % SR('Following the numbers through')],
+             ['T1', 'TDK PQ 50/50, N97, former B65982E with a 3.0 mm '
+              'partition; Table&nbsp;%s' % TR('spec-out'),
+              '%s' % SR('Checking the flux, and the specification')],
+             ['D<sub>aux</sub>, D<sub>byp</sub>, C<sub>aux</sub>, '
+              'R<sub>BZ</sub>, D<sub>Z</sub>, Q<sub>VCC</sub>, C<sub>VCC</sub>',
+              '1N4148W &times; 2; %s; %s; BZT52H-C15 (%.0f V); FZT651 on '
+              '50 &times; 50 mm copper; %.0f &micro;F + 100 nF'
+              % (_nf(_k('C.aux') * 1e3), _ohm(V['RBZ']), V['DZ'],
+                 V['CVCC']),
+              '%s' % SR('V<sub>CC</sub> from the auxiliary winding, as built')],
+             ['Q<sub>A1</sub>&ndash;Q<sub>B2</sub>, R<sub>G,SR</sub>',
+              'STL160N10F8, %.0f per leg; gate resistors %s positions as on '
+              'ST&rsquo;s board' % (V['nSR'], _ohm(_k('R.G_SR'))),
+              '%s' % SR('The SR MOSFETs: STL160N10F8')],
+             ['U7, R<sub>SR</sub>, C<sub>SR</sub>', 'TEA2095TE (HSO8); %s; '
+              '%s and %s in parallel at the VCC pin'
+              % (_ohm(_k('R.SR')), _nf(_k('C.SR')), _nf(_k('C.SRb') * 1e3)),
+              '%s' % SR('Synchronous rectification: TEA2095TE')],
+             ['R<sub>BSR</sub>, D<sub>ZSR</sub>, Q<sub>SR</sub>', '%s; '
+              'BZT52H-C15 (%.0f V); FZT651 on 50 &times; 50 mm copper'
+              % (_ohm(_k('R.BSR_sel')), _k('V.DZSR_sel')),
+              '%s' % SR('Synchronous rectification: TEA2095TE')],
+             ['C<sub>out</sub>, C<sub>HF</sub>', '%.0f &times; %.0f &micro;F '
+              '= %.1f mF; %.0f &micro;F ceramic'
+              % (A.SH['n.C'], A.SH['C.single'], A.SH['C.out'],
+                 A.SH['C.ceramic']),
+              '%s' % SR('The output bank, as sized')],
+             ['R<sub>I</sub>, R<sub>O</sub>, Q5, C<sub>Fo</sub>, R<sub>F</sub>, '
+              'C<sub>F</sub>, R<sub>P</sub>, R<sub>B</sub>, Q4',
+              '%s, %s; TL431B; %s, %s, %s; %s, %s; SFH617A-2'
+              % (_ohm(V['RI'] * 1e3), _ohm(V['Ro'] * 1e3), _nf(V['CFo']),
+                 _ohm(V['RF'] * 1e3), _nf(V['CF']), _ohm(V['RP'] * 1e3),
+                 _ohm(V['RB'] * 1e3)),
+              '%s' % SR('The voltage loop, as built')],
+             ['R<sub>Z</sub>, R<sub>Z1</sub>, R<sub>Z2</sub>, Q6, C<sub>Z</sub>',
+              '%s; %s, %s; TL431B; %s'
+              % (_ohm(_k('R.Z_sel')), _ohm(_k('R.Z1') * 1e3),
+                 _ohm(_k('R.Z2') * 1e3), _nf(_k('C.Z') * 1e3)),
+              '%s' % SR('The voltage loop, as built')]],
+            widths=[CW * 0.24, CW * 0.58, CW * 0.18], key='bom', split=True))
 
     # =============================================================== 8
     add(h1('List of symbols'))
@@ -5483,7 +5650,7 @@ def build(A):
         ('R<sub>G</sub>, R<sub>g,int</sub>, R<sub>so</sub>, R<sub>si</sub>, s<sub>drv</sub>, P<sub>drv</sub>', 'external and internal gate resistance, driver source and sink resistance, the driver&rsquo;s share of the gate power, and its dissipation'),
         ('D<sub>G,off</sub>, R<sub>G,off</sub>, V<sub>pl</sub>, t<sub>off,pl</sub>', 'the turn-off diode and resistor anti-parallel to R<sub>G</sub>, the Miller plateau of the primary MOSFET, and the gate fall time from the rail to it'),
         ('MT', 'delay mismatch of the gate driver between its channels'),
-        ('D<sub>BS</sub>, Q<sub>A1</sub>, Q<sub>A2</sub>, Q<sub>B1</sub>, Q<sub>B2</sub>', 'the external bootstrap diode; the SR MOSFETs, two per centre-tap leg'),
+        ('D<sub>BS</sub>, Q<sub>A1</sub>, Q<sub>A2</sub>, Q<sub>B1</sub>, Q<sub>B2</sub>, R<sub>G,SR</sub>', 'the external bootstrap diode; the SR MOSFETs, two per centre-tap leg'),
         ('D<sub>HV</sub>, D<sub>aux</sub>, C<sub>aux</sub>, Q<sub>VCC</sub>, D<sub>Z</sub>, D<sub>byp</sub>', 'the start-up diodes to HVSU; the rectifier and capacitor on the auxiliary winding; the V<sub>CC</sub> pass transistor, its base Zener and the bypass diode on its emitter'),
         ('C<sub>HF</sub>', 'the ceramic capacitor beside the output bank'),
         ('V<sub>CC,SR</sub>, R<sub>BSR</sub>, D<sub>ZSR</sub>, Q<sub>SR</sub>, R<sub>SR</sub>, C<sub>SR</sub>', 'the SR controller supply, and the feed resistor, Zener, pass transistor, series resistor and pin capacitors of the follower that makes it'),
@@ -5592,7 +5759,21 @@ def build(A):
         '5x6 package</i>, DS14249 Rev&nbsp;5, July 2024.',
         '[TEA] NXP Semiconductors, <i>TEA2095TE, GreenChip dual synchronous '
         'rectifier controller</i>, product data sheet Rev.&nbsp;1.3, '
-        '20&nbsp;October 2025.']))
+        '20&nbsp;October 2025.',
+        '[FZT] Diodes Incorporated, <i>FZT651, NPN silicon planar medium '
+        'power transistor</i>, DS33149 Rev.&nbsp;7-2, March 2022 (thermal '
+        'resistance on 25 &times; 25 and 50 &times; 50 mm copper).',
+        '[1N4148W] Diodes Incorporated, <i>1N4148W, surface mount fast '
+        'switching diode</i>, DS30086 Rev.&nbsp;31.',
+        '[ES1J] Diodes Incorporated, <i>ES1A&ndash;ES1J, 1.0 A surface mount '
+        'super-fast rectifier</i>, DS39406 Rev.&nbsp;2.',
+        '[BZT] Nexperia, <i>BZT52H series, 375 mW Zener diodes in SOD123F</i>, '
+        'product data sheet.',
+        '[TL431] Texas Instruments, <i>TL431 / TL432 precision programmable '
+        'reference</i>, SLVS543 (grades, cathode-current and stability '
+        'figures).',
+        '[SFH] Vishay Semiconductors, <i>SFH617A, optocoupler, phototransistor '
+        'output, with base connection</i>, data sheet (CTR bins).']))
 
     # =============================================================== 10
     add(h1('Errata and open items'))
@@ -5788,6 +5969,33 @@ def build(A):
               'ES1J, V<sub>F</sub> = %(VFbs).2f V, its datasheet maximum at 1 A' % V,
               'Measure the charging current and the drop on the prototype; '
               'V<sub>CC,floor</sub> and C<sub>VCC</sub> follow the drop'],
+             ['Gate turn-off diode',
+              '1N4148W: peak %.2f A against a 1 &micro;s non-repetitive '
+              'surge rating of %.0f A (k = %.2f); no repetitive-peak rating '
+              'in its datasheet'
+              % (A.SH['I.Goff_pk'], A._builder_const('I.FSM_Goff'),
+                 A.SH['k.Goff_D']),
+              'Measure the gate current and the diode temperature; a 1 A '
+              'Schottky in the same footprint is the fallback'],
+             ['Pass transistors',
+              'FZT651: allowed ambient %.0f &deg;C (Q<sub>VCC</sub>) and '
+              '%.0f &deg;C (Q<sub>SR</sub>) on 50 &times; 50 mm of 2 oz copper; '
+              'h<sub>FE</sub> &ge; 70 read from the table, its test current '
+              'not matched to I<sub>VCC</sub>'
+              % (A.SH['T.aQVCC'], A.SH['T.aQSR']),
+              'Measure the tab temperature on the real copper and the base '
+              'current at I<sub>VCC</sub>'],
+             ['SR gate resistors',
+              '%.0f &Omega; positions, as on ST&rsquo;s board'
+              % A._builder_const('R.G_SR'),
+              'Ringing on the SR gates on the prototype decides whether a '
+              'few ohms are fitted'],
+             ['Optocoupler CTR',
+              'CTR<sub>s</sub> %.2f, CTR<sub>m</sub> %.2f taken as design '
+              'picks for the SFH617A-2' % (V['CTRs'], V['CTRm']),
+              'Read the bin&rsquo;s curve at the LED currents in use and '
+              're-check the R<sub>B</sub> window and the crossover at both '
+              'ends of the bin'],
              ['Dead time at the gates',
               '(t<sub>D</sub> &minus; MT)/T<sub>T</sub> = %.3f; 1 at '
               'L<sub>r</sub> &asymp; %.1f &micro;H'

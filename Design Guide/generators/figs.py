@@ -373,7 +373,7 @@ def f04_three_regions():
 
     cards = [
         (MAG, '(3)   f < capacitive edge',
-         'CAPACITIVE. The body diode is\nhard reverse-recovered ->\n'
+         'CAPACITIVE. The body diode is\nhard reverse-recovered →\n'
          'shoot-through current and\nDESTROYED devices. The edge\n'
          'is at f$_o$ at no load only.'),
         (GRN, '(2)   edge < f < f$_r$   gain > 1',
@@ -645,7 +645,7 @@ def f13_morphing():
     aE.set_ylim(140, 392)
     aE.set_xlabel('mains voltage  [Vac]')
     aE.set_ylabel('what the TANK sees  [Vac]')
-    aE.set_title('mains %.2f:1  ->  tank %.2f:1' % (rm, rt), fontsize=11,
+    aE.set_title('mains %.2f:1  →  tank %.2f:1' % (rm, rt), fontsize=11,
                  color=NAVY)
     #  Notes in the corners the curve does not visit.  Placed beside the
     #  two branches they sat ON them, and the reader could not see which
