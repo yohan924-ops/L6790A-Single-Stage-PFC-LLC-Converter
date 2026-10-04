@@ -4844,15 +4844,15 @@ def an_full(save, foot):
     #  bulk to ground, R_SR in the run out to the net flag: the RC filter
     #  at the pin (14c.3), with air round every part
     vx, vy = c['VCC']
-    YVS = 41.4
+    YVS = 41.9
     XSRb, XSR, XRS_, XFL = TX0 + 1.2, TX0 - 0.4, TX0 - 2.8, TX0 - 4.8
     S.wire(ax, [(vx, vy), (vx, YVS), (XSR, YVS)])
-    for xc_ in (XSRb, XSR):
+    for xc_ in (XSRb, XSR):                # each on a lead of its own
         S.dot(ax, xc_, YVS)
-        vcap(xc_, YVS, YVS - 0.8)
-        sg(xc_, YVS - 0.8, 0.3)
-    S.label(ax, (XSR + XSRb) / 2.0, YVS - 1.9, 'C$_{SR}$ ' + _c(_sv('C.SR'))
-            + ' $\\parallel$ ' + _c(_sv('C.SRb') * 1e3), size=SN)
+        vcap(xc_, YVS, YVS - 1.6)
+        sg(xc_, YVS - 1.6, 0.3)
+    S.label(ax, XSR - 0.6, YVS - 0.8, 'C$_{SR}$ ' + _c(_sv('C.SR'))
+            + ' $\\parallel$ ' + _c(_sv('C.SRb') * 1e3), size=SN, ha='right')
     ra_, rb_ = S.res(ax, XRS_, YVS)
     S.wire(ax, [(XSR, YVS), rb_])
     S.wire(ax, [ra_, (XFL, YVS)])
