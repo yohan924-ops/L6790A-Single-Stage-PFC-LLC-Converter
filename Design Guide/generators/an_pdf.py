@@ -930,6 +930,54 @@ class FigBlock(Flowable):
                             self.ch + 5, self.w, self.h, mask='auto')
 
 
+class FigPage(Flowable):
+    """A landscape drawing on a page of its own, turned 90 degrees.
+
+    Its long side runs up the text frame with the top of the drawing at
+    the left, so the reader turns the page clockwise.  The caption runs
+    up the right margin, 6 pt past the drawing's bottom edge - where a
+    caption sits under a figure once the page is turned.  The drawing is
+    fitted to the frame, so it is designed to the frame's ratio (the
+    whole-circuit schematic: 672 x 471 pt, 1.426).
+    """
+
+    def __init__(self, path, iw, ih, cap):
+        Flowable.__init__(self)
+        self.path, self.iw, self.ih, self.cap = path, iw, ih, cap
+
+    def wrap(self, aw, ah):
+        #  ask for the whole frame, whatever is left on this page: a
+        #  shorter answer would fit the drawing into the remnant under the
+        #  text above it (it did: 187 pt tall, 2026-10-04)
+        self.aw, self.ah = aw, PH - TM - BM - DESC
+        s = min(self.ah / float(self.iw), aw / float(self.ih))
+        self.w, self.h = self.iw * s, self.ih * s      # w runs up the page
+        return aw, self.ah
+
+    def draw(self):
+        c = self.canv
+        c.saveState()
+        c.translate((self.aw + self.h) / 2.0, (self.ah - self.w) / 2.0)
+        c.rotate(90)                        # x up the page, y to the left
+        c.drawImage(self.path, 0, 0, self.w, self.h, mask='auto')
+        ch = self.cap.wrap(self.w, 100)[1]
+        self.cap.drawOn(c, 0, -(6 + ch))
+        c.restoreState()
+
+
+def figpage(name, caption):
+    """a landscape figure turned 90 degrees on a page of its own"""
+    from PIL import Image as PIm
+    p = os.path.join(FIGS, name + '.png')
+    if not os.path.exists(p):
+        raise SystemExit('그림이 없다: %s   (figs.py --plain %s)' % (p, name))
+    iw, ih = PIm.open(p).size
+    n = _FIG.setdefault(name, len(_FIG) + 1)
+    REFS['fig'][name] = n
+    return FigPage(p, iw, ih,
+                   Paragraph(T('%s %d:  %s' % (FIGWORD, n, caption)), S['cap']))
+
+
 def fig(name, caption, width=None, sec=None, shrink=True):
     """a centred figure with a numbered caption
 

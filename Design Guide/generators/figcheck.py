@@ -256,6 +256,7 @@ def check(fig, name, margin=3.0):
 #  A4 text column, the same arithmetic an_pdf.py does.
 _CW_PT = 595.276 - 62 - 62
 _HCAP_PT = 560.0                 # an_pdf keeps one figure to a page
+_FRAME_H_PT = 841.89 - 108 - 62 - 5   # the frame's height, less its padding
 _PLACE = None
 
 
@@ -283,6 +284,10 @@ def _placement(name):
                 i += 1
             w = re.search(r"width=CW \* ([0-9.]+)", s[m.end():i])
             out[m.group(1)] = _CW_PT * float(w.group(1)) if w else _CW_PT
+        #  a figpage() is turned 90 degrees on a page of its own: its
+        #  width prints at the frame's height (an_pdf.FigPage)
+        for m in re.finditer(r"figpage\('([a-z0-9_]+)'", s):
+            out[m.group(1)] = _FRAME_H_PT
         _PLACE = out
     return _PLACE.get(name, _CW_PT)
 

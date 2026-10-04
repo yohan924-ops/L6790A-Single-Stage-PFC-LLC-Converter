@@ -72,7 +72,21 @@ def main(path):
         if n == 1:
             continue                       # the cover is laid out by hand
 
+        #  a page that holds a drawing turned 90 degrees (an_pdf.FigPage):
+        #  the image's box is the file's box on its side, and its caption
+        #  runs up the right margin
+        turned = False
+        for x0, y0, x1, y1, xref in im:
+            src = doc.extract_image(xref)
+            ar_page = (x1 - x0) / max(y1 - y0, 1e-6)
+            ar_src = src['width'] / float(src['height'])
+            if abs(ar_page - 1.0 / ar_src) / (1.0 / ar_src) <= 0.02 \
+                    and y1 - y0 > 400:
+                turned = True
+
         for x0, y0, x1, y1, txt in tb:
+            if turned and x0 >= PW - RM - SLACK:
+                continue                   # the turned page's caption
             if x0 < LM - SLACK or x1 > PW - RM + SLACK:
                 say(n, 'outside', 'text x %.0f..%.0f outside %.0f..%.0f: %r'
                     % (x0, x1, LM, PW - RM, txt[:40]))
@@ -93,6 +107,13 @@ def main(path):
                     % (px, w, dpi))
             ar_page = w / max(y1 - y0, 1e-6)
             ar_src = src['width'] / float(src['height'])
+            if turned and abs(ar_page - 1.0 / ar_src) / (1.0 / ar_src) <= 0.02:
+                px = src['height']         # the long side runs up the page
+                dpi = px / ((y1 - y0) / 72.0)
+                if dpi < MIN_DPI:
+                    say(n, 'thin', 'image %d px over %.0f pt = %.0f dpi'
+                        % (px, y1 - y0, dpi))
+                continue
             if abs(ar_page - ar_src) / ar_src > 0.02:
                 say(n, 'stretch', 'aspect %.3f drawn, %.3f in the file'
                     % (ar_page, ar_src))
