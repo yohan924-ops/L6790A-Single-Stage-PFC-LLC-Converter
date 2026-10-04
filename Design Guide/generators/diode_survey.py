@@ -9,6 +9,7 @@ out on purpose (it is drawn small by design).
 
     python diode_survey.py              # every figure
     python diode_survey.py an_full f04  # a few
+    python diode_survey.py --kind mosfet   # the switches instead
 
 One line per figure: how many diodes, the smallest and the largest in
 points on the page, and the drawn size at scale 1 behind them.
@@ -16,6 +17,12 @@ points on the page, and the drawn size at scale 1 behind them.
 import sys
 
 import matplotlib
+
+KIND = 'diode'
+if '--kind' in sys.argv:
+    i = sys.argv.index('--kind')
+    KIND = sys.argv[i + 1]
+    del sys.argv[i:i + 2]
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt                                  # noqa: E402
 
@@ -30,7 +37,7 @@ def spy(fig, nm):
     fig.canvas.draw()
     out = []
     for ax in fig.axes:
-        recs = [r for r in getattr(ax, '_syms', []) if r[0] == 'diode']
+        recs = [r for r in getattr(ax, '_syms', []) if r[0] == KIND]
         if not recs:
             continue
         ppd = figcheck._page_pt(fig, nm, ax)
@@ -68,5 +75,5 @@ for nm in sorted(rows):
     print('%-22s %3d  %7.1f %7.1f   %.3f..%.3f' % (nm, len(r), min(pts),
                                                   max(pts), min(sc), max(sc)))
 if allpt:
-    print('\nall figures: %d diodes, %.1f to %.1f pt on the page'
-          % (len(allpt), min(allpt), max(allpt)))
+    print('\nall figures: %d %ss, %.1f to %.1f pt on the page'
+          % (len(allpt), KIND, min(allpt), max(allpt)))

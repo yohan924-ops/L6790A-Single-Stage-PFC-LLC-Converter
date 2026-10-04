@@ -47,7 +47,8 @@ from matplotlib.patches import Rectangle, FancyArrowPatch, FancyBboxPatch
 #  MOSFET, the same windings and the same current highlight as these panels.
 from schemx import (NAVY, YEL, MAG, CYA, GRN, PUR, GREY, LT, OFF_C, LW, BRK,
                     wire, dot, txt, vcap, hcap, coil_pts, hcoil_pts, coil,
-                    hcoil, vdiode, resbox, hop, mosfet, path, register, nodot)
+                    hcoil, vdiode, resbox, hop, mosfet, path, register, nodot,
+                    MOS_SHAPE)
 
 # ------------------------------------------------------------- the geometry
 #  One proportion table.  Nothing below computes a coordinate twice, and the
@@ -56,7 +57,12 @@ from schemx import (NAVY, YEL, MAG, CYA, GRN, PUR, GREY, LT, OFF_C, LW, BRK,
 HI, LO = 7.70, 0.30                 # primary rails
 XL, XR = 1.95, 5.80                 # the two leg wires
 SH = (6.20, 1.70)                   # switch centres, high and low
-DEVH = 1.80                         # drain node to source node
+#  Every device on the panel - switch cluster, rectifiers, capacitors, the
+#  load - is drawn at four fifths of its 2026-09 size (2026-10-04, user,
+#  of Figure 1 and the panels that share this drawing: too big).  The
+#  magnetics are not: L_m and the windings are sized by the two tank
+#  rails they stand between, and L_r keeps the turn radius they set.
+DEVH = 1.44                         # drain node to source node (was 1.80)
 YT, YB = 4.75, 2.95                 # tank goes out on YT, comes back on YB
 XCR, XLR, XLM, XTR = 8.70, 10.05, 11.30, 12.75
 YMID = (YT + YB) / 2.0
@@ -93,23 +99,25 @@ XQ1, XCT, XQ2 = 15.10, 16.50, 17.90
 XCO, XLD = 19.60, 21.00
 XEND = 20.65
 
-DX_D, DX_C = 0.80, 1.50             # body diode and C_oss, right of the leg
-XGATE = 1.00                        # gate lead reaches this far left
+DX_D, DX_C = 0.64, 1.20             # body diode and C_oss, right of the leg
+XGATE = 0.80                        # gate lead reaches this far left
 
 
-def _skeleton(ax, states, parts=True, lm_dy=0.0):
+def _skeleton(ax, states, parts=True, lm_dy=0.0, body=None):
     """Everything that is the same in every panel.
 
     `parts` draws each switch's body diode and C_oss beside it.  The mode
     panels need them, because intervals 3, 4, 7 and 8 are about nothing
-    else.  A figure that is only saying what an LLC stage IS does not, and
-    showing them there raises a question chapter 2 has not reached yet - so
-    that figure reuses this drawing with parts off rather than keeping a
-    second, half-bridge copy of the same converter.
+    else.  `body` overrides the body diode alone: Figure 1 reuses this
+    drawing with parts off (C_oss raises a question chapter 2 has not
+    reached) but the body diode on, because every MOSFET in the note
+    carries one (2026-10-04, user) - rather than keeping a second,
+    half-bridge copy of the same converter.
 
     `lm_dy` lifts the L_m name off the middle of its coil, for a figure
     that marks i_Lm under it.
     """
+    body = parts if body is None else body
     ax.set_xlim(-0.75, XEND + 2.05)
     ax.set_ylim(-1.75, 10.30)
     ax.set_xticks([])
@@ -119,7 +127,7 @@ def _skeleton(ax, states, parts=True, lm_dy=0.0):
         sp.set_visible(False)
 
     # ---- primary rails and the two legs
-    x_rail = (XR + DX_C if parts else XR) + 0.85
+    x_rail = XR + (DX_C if parts else DX_D if body else 0.0) + 0.85
     wire(ax, [(0.25, HI), (x_rail, HI)])
     wire(ax, [(0.25, LO), (x_rail, LO)])
     dot(ax, 0.25, HI)
@@ -128,10 +136,12 @@ def _skeleton(ax, states, parts=True, lm_dy=0.0):
     txt(ax, 0.10, LO - 0.38, '0', size=11.5, ha='left')
 
     for x, hi_name, lo_name in ((XL, 'S1', 'S2'), (XR, 'S3', 'S4')):
-        dh, _ = mosfet(ax, x, SH[0], hi_name, states[hi_name],
-                       body=parts, coss=parts)
-        _, sl = mosfet(ax, x, SH[1], lo_name, states[lo_name],
-                       body=parts, coss=parts)
+        dh, _ = mosfet(ax, x, SH[0], hi_name, states[hi_name], h=DEVH,
+                       gate=XGATE, dx_d=DX_D, dx_c=DX_C, body=body,
+                       coss=parts, **MOS_SHAPE)
+        _, sl = mosfet(ax, x, SH[1], lo_name, states[lo_name], h=DEVH,
+                       gate=XGATE, dx_d=DX_D, dx_c=DX_C, body=body,
+                       coss=parts, **MOS_SHAPE)
         wire(ax, [(x, HI), dh])
         wire(ax, [sl, (x, LO)])
         wire(ax, [(x, SH[0] - DEVH / 2), (x, SH[1] + DEVH / 2)])
@@ -145,10 +155,10 @@ def _skeleton(ax, states, parts=True, lm_dy=0.0):
     # ---- the tank: out of the left junction, over the right leg, and back
     wire(ax, [(XL, YT), (XR - 0.20, YT)])
     hop(ax, XR, YT)
-    wire(ax, [(XR + 0.20, YT), (XCR - 0.11, YT)])
-    hcap(ax, XCR, YT, 0.30)
+    wire(ax, [(XR + 0.20, YT), (XCR - 0.09, YT)])
+    hcap(ax, XCR, YT, 0.24, 0.09)
     txt(ax, XCR, YT + 0.66, 'C$_r$', size=11.5)
-    wire(ax, [(XCR + 0.11, YT), (XLR - 0.63, YT)])
+    wire(ax, [(XCR + 0.09, YT), (XLR - 0.63, YT)])
     #  0.90 over 3 turns gave a 0.15 radius against the transformer's
     #  0.21, so the tank inductor read as the fine one.  1.26 over 3
     #  is 0.21, and it still clears C_r at 8.70 and L_m at 11.30.
@@ -236,23 +246,23 @@ def _skeleton(ax, states, parts=True, lm_dy=0.0):
         on = bool(states[nm])
         c = NAVY if on else OFF_C
         wire(ax, [(x, VN), (x, ytop)], c, 2.0 if on else 1.4)
-        vdiode(ax, x, y_d, 0.56, up=True, color=c)
-        #  0.60 out: the diode is 0.40 wide each side now, and at 0.38
-        #  the name sat on the triangle
-        txt(ax, x + side * 0.60, y_d, nm, size=11,
+        vdiode(ax, x, y_d, 0.448, up=True, color=c)
+        #  0.50 out: the diode is 0.32 wide each side, and with the name
+        #  any closer it sat on the triangle
+        txt(ax, x + side * 0.50, y_d, nm, size=11,
             ha='left' if side > 0 else 'right', color=NAVY if on else GREY)
 
-    wire(ax, [(XCO, VN), (XCO, YMID - 0.12)])
-    wire(ax, [(XCO, YMID + 0.12), (XCO, VP)])
-    vcap(ax, XCO, YMID, 0.32)
-    txt(ax, XCO - 0.48, YMID, 'C$_{out}$', size=11.5, ha='right')
+    wire(ax, [(XCO, VN), (XCO, YMID - 0.10)])
+    wire(ax, [(XCO, YMID + 0.10), (XCO, VP)])
+    vcap(ax, XCO, YMID, 0.256, 0.10)
+    txt(ax, XCO - 0.42, YMID, 'C$_{out}$', size=11.5, ha='right')
     dot(ax, XCO, VP)
     dot(ax, XCO, VN)
 
-    wire(ax, [(XLD, VN), (XLD, YMID - 0.58)])
-    wire(ax, [(XLD, YMID + 0.58), (XLD, VP)])
-    resbox(ax, XLD, YMID)
-    txt(ax, XLD + 0.38, YMID, 'R$_L$', size=11.5, ha='left')
+    wire(ax, [(XLD, VN), (XLD, YMID - 0.46)])
+    wire(ax, [(XLD, YMID + 0.46), (XLD, VP)])
+    resbox(ax, XLD, YMID, w=0.37, h=0.92)
+    txt(ax, XLD + 0.33, YMID, 'R$_L$', size=11.5, ha='left')
     xv = XLD + 1.10
     ax.add_patch(FancyArrowPatch((xv, VN), (xv, VP), arrowstyle='<|-|>',
                                  mutation_scale=12, color=GREY, lw=1.4,

@@ -29,14 +29,16 @@ def an_llc_stage(save, foot):
     drawings of one circuit drift apart, and this one had, down to a ground
     symbol the panels do not use - the panels name the return rail 0, which
     is what it is.  So this figure is now that drawing, with the switches
-    at rest and the group names written above it.
+    at rest and the group names written above it.  Each switch carries its
+    body diode, as every MOSFET in the note does (2026-10-04, user), but
+    not the C_oss the mode panels add - that belongs to the dead time.
     """
     import figs_modes8 as F
     fig, ax = plt.subplots(figsize=(9.35, 4.60))
     fig.subplots_adjust(left=0.01, right=0.99, top=0.99, bottom=0.10)
     rest = dict(S1='plain', S2='plain', S3='plain', S4='plain',
                 D1=True, D2=True)
-    F._skeleton(ax, rest, parts=False, lm_dy=0.42)
+    F._skeleton(ax, rest, parts=False, body=True, lm_dy=0.42)
 
     #  Group names go ABOVE the rails, in the band the panels leave empty
     #  for their step number and title.  Nothing of the circuit is up there.
@@ -84,10 +86,11 @@ def an_llc_stage(save, foot):
         F.txt(ax, at[0], at[1], name, size=11, color=col, ha=ha)
 
     #  Alongside the device, not on the short lead under it: there the
-    #  arrow was all head.  The switch symbol is drawn left of its leg, so
-    #  the right side is free.
-    cur((F.XL + 0.30, F.SH[0] + 0.62), (F.XL + 0.30, F.SH[0] - 0.62),
-        'i$_{S1}$', NAVY, (F.XL + 0.48, F.SH[0]), 'left')
+    #  arrow was all head.  Beyond the body diode, which hangs on the
+    #  right of the leg; the symbol itself is drawn on the left.
+    xs1 = F.XL + F.DX_D + 0.30
+    cur((xs1, F.SH[0] + 0.50), (xs1, F.SH[0] - 0.50),
+        'i$_{S1}$', NAVY, (xs1 + 0.18, F.SH[0]), 'left')
     xi = (F.XR + 0.20 + F.XCR - 0.30) / 2.0 + 0.45
     cur((xi - 0.32, F.YT + 0.30), (xi + 0.32, F.YT + 0.30), 'i$_{Lr}$', MAG,
         (xi, F.YT + 0.66), 'center')

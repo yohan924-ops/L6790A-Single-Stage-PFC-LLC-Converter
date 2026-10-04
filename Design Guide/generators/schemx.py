@@ -263,6 +263,16 @@ def hop(ax, x, y, r=0.20, color=NAVY, lw=LW, z=5):
     ax.plot(x + r * np.cos(a), y + r * np.sin(a), color=color, lw=lw, zorder=z)
 
 
+#  The MOSFET as the whole-circuit schematic draws it (2026-10-04, user:
+#  take that symbol everywhere a MOSFET had no body diode): body diode in,
+#  C_oss out, and the proportions settled there on 2026-10-02 - a wider
+#  oxide gap, a longer bulk stub, a bulk arrow half as big again.
+#  MOS_SHAPE is the proportions alone, for a drawing that decides body and
+#  C_oss itself (the mode panels, which need both).
+MOS_SHAPE = dict(ox=1.35, wx=1.7, arrow=1.5)
+MOS_PLAIN = dict(body=True, coss=False, **MOS_SHAPE)
+
+
 def mosfet(ax, x, y, name, state='on', h=1.80, gate=1.00,
            dx_d=0.80, dx_c=1.50, halo=True, body=True, coss=True,
            name_at='gate', size=11.5, lws=1.0, arrow=1.0, ox=1.0, wx=1.0,
@@ -329,9 +339,14 @@ def mosfet(ax, x, y, name, state='on', h=1.80, gate=1.00,
          gid='symbol')                                            # gate lead
     ax.plot([xg, xg], [y - 0.58 * u, y + 0.58 * u], color=cm,
             lw=2.3 * lws * min(u, 1.0) ** 0.4, zorder=4)
+    #  Butt caps: a projecting cap adds half the stroke at each end, and
+    #  on a device printed small (a 26 pt switch with a 2.3 pt stroke)
+    #  that closed the 0.16 u gaps and the three bars read as one
+    #  column again (2026-10-04, user).
     for y0, y1 in ((0.30, 0.58), (-0.14, 0.14), (-0.58, -0.30)):
         ax.plot([xc, xc], [y + y0 * u, y + y1 * u], color=cm,
-                lw=2.3 * lws * min(u, 1.0) ** 0.4, zorder=4)     # three bars
+                lw=2.3 * lws * min(u, 1.0) ** 0.4, zorder=4,
+                solid_capstyle='butt')                           # three bars
     #  gid='symbol': figcheck reads these as part of the device, not as
     #  wiring - the bulk tie lands on the source lead's corner and the
     #  parasitics hang off the drain and source nodes without dots, both
@@ -382,6 +397,9 @@ def mosfet(ax, x, y, name, state='on', h=1.80, gate=1.00,
         else:                                   # clear of the whole cluster
             txt(ax, far + sx * 0.22, y, name, size=size, weight='bold',
                 color=nc, ha='left' if not mirror else 'right')
+    #  recorded, so figcheck and diode_survey can measure the device on
+    #  the page (2026-10-04, user: a switch whose bars had merged again)
+    note_symbol(ax, 'mosfet', x, y, abs(far - (x - sx * gate)), h)
     return (x, yt), (x, yb)
 
 

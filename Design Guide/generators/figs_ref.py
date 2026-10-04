@@ -169,7 +169,8 @@ def an_rac(save, foot):
     fig = plt.figure(figsize=(9.35, 4.44))
 
     ax = _ax(fig, [0.02, 0.30, 0.62, 0.66], -1.2, 14.6, -2.3, 4.6)
-    ax._sym_mult = 1.3                 # D1, D2 printed 10.5 pt (2026-10-04)
+    ax._sym_mult = 1.04                # D1, D2 printed 10.5 pt; 1.3 was
+    #                                    too big (2026-10-04, user, twice)
     # the tank, standing in as a current source
     S.acsrc(ax, 0.3, 1.5, None)
     S.label(ax, 0.06, 0.76, 'i$_{RI}$', size=11, color=MAG, ha='right')
@@ -387,7 +388,8 @@ def an_integrated(save, foot):
     save(fig, 'an_integrated')
 
 
-def _mains_bridge(ax, xs=0.4, xm=4.1, ym=1.6, ytop=4.0, ybot=-0.6):
+def _mains_bridge(ax, xs=0.4, xm=4.1, ym=1.6, ytop=4.0, ybot=-0.6,
+                  bridge_mult=None):
     """Mains, a bridge, and the two dc rails leaving it.
 
     The ac source belongs across the bridge's two AC corners, not across
@@ -395,11 +397,18 @@ def _mains_bridge(ax, xs=0.4, xm=4.1, ym=1.6, ytop=4.0, ybot=-0.6):
     it is the kind of mistake a reader checks a note for.  Reaching the far
     ac corner costs exactly one crossing, and the dc return hops it.
 
+    `bridge_mult` draws the bridge at that symbol multiplier and the rest
+    of the figure at its own (2026-10-04, user: the enlarged symbols were
+    too big, the bridge diodes were not).
     -> (x of the + rail start, x of the - rail start, x where they are free)
     """
     S.acsrc(ax, xs, ym, None)
     S.label(ax, xs - 0.52, ym, 'mains', size=10.5, color=GREY, ha='right')
+    keep = getattr(ax, '_sym_mult', 1.0)
+    if bridge_mult is not None:
+        ax._sym_mult = bridge_mult
     L, Rt, P, Mn = _bridge(ax, xm, ym)
+    ax._sym_mult = keep
     S.wire(ax, [(xs, ym + 0.36), (xs, ym + 1.9), (L[0] - 0.9, ym + 1.9),
                 (L[0] - 0.9, ym), L])
     #  the far ac corner, round the bottom
@@ -419,8 +428,10 @@ def an_pfc_cap(save, foot):
     fig = plt.figure(figsize=(9.35, 5.41))
 
     ax = _ax(fig, [0.05, 0.50, 0.90, 0.46], -1.4, 13.6, -2.4, 5.0)
-    ax._sym_mult = 1.4                 # the bridge printed 8 pt (2026-10-04)
-    xe = _mains_bridge(ax, 0.4, 4.1, 1.6, 4.0, -0.6)
+    #  The bridge printed 8 pt by the rules, so it is drawn at 1.4; the
+    #  rest at four fifths of that (2026-10-04, user, twice).
+    ax._sym_mult = 1.12
+    xe = _mains_bridge(ax, 0.4, 4.1, 1.6, 4.0, -0.6, bridge_mult=1.4)
     S.wire(ax, [(xe, 4.0), (11.6, 4.0)])
     S.wire(ax, [(xe, -0.6), (11.6, -0.6)])
     S.shunt(ax, 9.9, 4.0, -0.6, 'cap', 'C', frac=0.30)
@@ -494,11 +505,12 @@ def an_pfc_boost(save, foot):
              'switch OFF - the inductor delivers to C, in series with the '
              'line'))):
         ax = _ax(fig, rect, -1.8, 14.6, -3.0, 6.2)
-        ax._sym_mult = 1.5             # two panels on one width: by the
-        #                                 rules the diodes printed 8 pt,
-        #                                 half the mode sheets' (2026-10-04)
+        #  Two panels on one width: by the rules the bridge printed 8 pt,
+        #  half the mode sheets', so it is drawn at 1.5; the rest at four
+        #  fifths of that (2026-10-04, user, twice).
+        ax._sym_mult = 1.2
         S.label(ax, 6.4, 5.80, ttl, size=11, color=MAG if on else GRN)
-        xe = _mains_bridge(ax, 0.4, 4.1, 1.6, 4.0, -0.6)
+        xe = _mains_bridge(ax, 0.4, 4.1, 1.6, 4.0, -0.6, bridge_mult=1.5)
 
         c, d = S.ind(ax, 8.0, 4.0, 'L', s=1.00, tdy=0.62)
         S.wire(ax, [(xe, 4.0), c])
@@ -509,10 +521,13 @@ def an_pfc_boost(save, foot):
         #  on past C to the load: stopped at C, the load's top lead ended
         #  in the air, which figcheck was the first to notice
         S.wire(ax, [do, (13.4, 4.0)])
-        X.mosfet(ax, 9.6, 2.0, 'Q', 'on' if on else 'off', h=1.40,
-                 gate=0.78, body=False, coss=False, name_at='gate', size=10)
-        S.wire(ax, [(9.6, 4.0), (9.6, 2.70)])
-        S.wire(ax, [(9.6, 1.30), (9.6, -0.6)])
+        #  At 1.40 the device printed two thirds the size of the mode
+        #  panels' and its three bars merged (2026-10-04, user); 2.0 is
+        #  the kit's size on this half-width panel.
+        qd, qs = X.mosfet(ax, 9.6, 1.7, 'Q', 'on' if on else 'off', h=2.0,
+                          gate=1.25, name_at='gate', size=10, **X.MOS_PLAIN)
+        S.wire(ax, [(9.6, 4.0), qd])
+        S.wire(ax, [qs, (9.6, -0.6)])
         S.wire(ax, [(xe, -0.6), (13.4, -0.6)])
         S.shunt(ax, 12.0, 4.0, -0.6, 'cap', None, frac=0.30)
         S.label(ax, 11.45, 1.7, 'C', size=10.5, ha='right')  # left: the
@@ -532,7 +547,7 @@ def an_pfc_boost(save, foot):
         #  it does not shrink with a half-width panel: at 18 it swallowed
         #  the reactor's first turn whole.
         if on:
-            X.path(ax, [(xe, 4.0), (9.6, 4.0), (9.6, 2.70), (9.6, 1.30),
+            X.path(ax, [(xe, 4.0), (9.6, 4.0), qd, qs,
                         (9.6, -0.6), (xe, -0.6)],
                    load=True, head=13, heads=((1, 0.08), (5, 0.45)))
         else:
@@ -2263,13 +2278,14 @@ def an_flyback_llc(save, foot):
     #  so the two panels disagreed about what the return rail was.  Same
     #  symbol, same place on both: under the source's negative terminal.
     S.gnd(ax, 0.80, YB, lead=0.45)
-    #  The switch sits between the primary's lower terminal and the rail,
-    #  so its height is what that gap allows: 0.9 down to -1.7 leaves 2.0
-    #  with a short lead each end.
-    X.mosfet(ax, XP_F, -0.40, 'S', state='plain', h=2.0, gate=1.5,
-             body=False, coss=False, size=FS)
-    S.wire(ax, [t1['p_bot'], (XP_F, 0.60)])
-    S.wire(ax, [(XP_F, -1.40), (XP_F, YB)])
+    #  The switch sits between the primary's lower terminal and the rail:
+    #  0.9 down to -1.7.  At 2.0 it left 0.3 of lead to the rail and its
+    #  body-diode frame sat on the ground symbol (2026-10-04, user); 1.6
+    #  leaves half a unit of clear lead at each end.
+    sd, ss = X.mosfet(ax, XP_F, -0.40, 'S', state='plain', h=1.6, gate=1.4,
+                      size=FS, **X.MOS_PLAIN)
+    S.wire(ax, [t1['p_bot'], sd])
+    S.wire(ax, [ss, (XP_F, YB)])
     _sec(ax, t1['s_top'], t1['s_bot'], YS, 6.80, 8.60, 10.20,
          t1['s_top'][1], size=FS)
     #  Mid-coil, not at the top: the top turn is where the polarity dot is.
@@ -2307,15 +2323,17 @@ def an_flyback_llc(save, foot):
     #  Below the rail, not on it.  Drawn at the rail's own height the
     #  widest bar lies along the wire and the symbol reads as a blob.
     S.gnd(ax2, XRAIL, YB, lead=0.45)
-    #  Two switches of 2.0 between rails 6.1 apart: 0.1 of lead at each
-    #  rail and 0.5 either side of the midpoint node.
-    X.mosfet(ax2, XLEG, 3.30, 'S$_1$', state='plain', h=2.0, gate=1.5,
-             body=False, coss=False, size=FS)
-    X.mosfet(ax2, XLEG, 0.00, 'S$_2$', state='plain', h=2.0, gate=1.5,
-             body=False, coss=False, size=FS)
-    S.wire(ax2, [(XLEG, YT), (XLEG, 4.30)])
-    S.wire(ax2, [(XLEG, 2.30), (XLEG, 1.00)])          # the midpoint leg
-    S.wire(ax2, [(XLEG, -1.00), (XLEG, YB)])
+    #  Two switches of 1.6 between rails 6.1 apart, each centred in its
+    #  own half of the leg: at 2.0 the upper one had 0.1 of lead to the
+    #  V_in rail and its body-diode frame lay on it (2026-10-04, user).
+    HSW = 1.6
+    s1d, s1s = X.mosfet(ax2, XLEG, (YT + YM) / 2.0, 'S$_1$', state='plain',
+                        h=HSW, gate=1.4, size=FS, **X.MOS_PLAIN)
+    s2d, s2s = X.mosfet(ax2, XLEG, (YM + YB) / 2.0, 'S$_2$', state='plain',
+                        h=HSW, gate=1.4, size=FS, **X.MOS_PLAIN)
+    S.wire(ax2, [(XLEG, YT), s1d])
+    S.wire(ax2, [s1s, s2d])                            # the midpoint leg
+    S.wire(ax2, [s2s, (XLEG, YB)])
     S.dot(ax2, XLEG, YB)
 
     c, d = S.cap(ax2, 1.30, YM, None)
@@ -3334,13 +3352,18 @@ def an_dc_overlap(save, foot):
     ax = _ax(fig, [0.030, 0.10, 0.44, 0.84], -0.6, 12.6, -0.4, 7.6)
     t1 = X.xfmr(ax, 7.6, 3.8, hp=3.0, hs=3.0, gap=0.52)
     XP, XS = t1['p_top'][0], t1['s_top'][0]
-    _, bm = S.box(ax, 1.7, 5.4, 2.6, 1.7, 'LCR meter\nsmall ac,\ne.g. 100 kHz', size=9.6)
-    _, bs = S.box(ax, 1.7, 2.2, 2.6, 1.7, 'dc bias\nsource\nI$_{dc}$ 0 $\\to$ I$_{sat}$', size=9.6)
-    S.wire(ax, [t1['p_top'], (XP, 6.4), (3.7, 6.4), (3.7, bm[1]), bm])
-    S.wire(ax, [t1['p_bot'], (XP, 1.2), (3.7, 1.2), (3.7, bs[1]), bs])
+    #  Each instrument sits level with the winding end it drives, so its
+    #  lead is one straight run (2026-10-04, user: the four right angles
+    #  each lead used to turn through said nothing).
+    YM_, YS_ = t1['p_top'][1], t1['p_bot'][1]
+    BH = 1.7
+    _, bm = S.box(ax, 1.7, YM_, 2.6, BH, 'LCR meter\nsmall ac,\ne.g. 100 kHz', size=9.6)
+    _, bs = S.box(ax, 1.7, YS_, 2.6, BH, 'dc bias\nsource\nI$_{dc}$ 0 $\\to$ I$_{sat}$', size=9.6)
+    S.wire(ax, [bm, t1['p_top']])
+    S.wire(ax, [bs, t1['p_bot']])
     #  the two instruments share the winding: series, the meter's ac on top
     #  of the source's dc
-    S.wire(ax, [(1.7, 4.55), (1.7, 3.05)])
+    S.wire(ax, [(1.7, YM_ - BH / 2), (1.7, YS_ + BH / 2)])
     S.label(ax, 4.6, 7.05, 'primary: N$_p$, all of I$_{dc}$ magnetises', size=9.6,
             color=MAG, ha='center')
     #  every other winding open, and said so
@@ -3563,9 +3586,9 @@ def an_gate_drive(save, foot):
     #                                         drawing: room for the gate
     #                                         networks, 2026-10-04)
     s1d, s1s = X.mosfet(ax, XS, 14.2, None, 'plain', h=1.8, gate=1.4,
-                        body=True, coss=False)
+                        **X.MOS_PLAIN)
     s2d, s2s = X.mosfet(ax, XS, 8.6, None, 'plain', h=1.8, gate=1.4,
-                        body=True, coss=False)
+                        **X.MOS_PLAIN)
     S.label(ax, XS + 1.15, 14.2, 'S1', size=11, weight='bold', ha='left')
     S.label(ax, XS + 1.15, 8.6, 'S2', size=11, weight='bold', ha='left')
     S.label(ax, XS + 1.15, 13.45, 'STO60N045DM9', size=8.6, ha='left',
@@ -3900,8 +3923,7 @@ def an_sr_ctrl(save, foot):
     R = 0.16
     SZ, SN = 10.2, 10.0                    # prints at 8.2 / 8.0 pt
     MS = 6.5
-    MOS = dict(h=2.0, gate=1.7, body=True, coss=False, lws=0.72, arrow=1.5,
-               ox=1.35, wx=1.7)
+    MOS = dict(h=2.0, gate=1.7, lws=0.72, **X.MOS_PLAIN)
     BJ = dict(h=1.2, arrow=1.3)
     K = _kit(ax, SN, SZ, MS)
     # ------------------------------------------------- T1: NP1 and the two
@@ -4074,8 +4096,7 @@ def an_full(save, foot):
     #                                      figcheck's floor (2026-10-04)
     MS = 5.2                             # flag circles, 0.8 x the default
     MH, MG = 2.0, 1.7                    # MOSFET height and gate lead
-    MOS = dict(h=MH, gate=MG, body=True, coss=False, lws=0.72, arrow=1.5,
-               ox=1.35, wx=1.7)
+    MOS = dict(h=MH, gate=MG, lws=0.72, **X.MOS_PLAIN)
     BJ = dict(h=1.2, arrow=1.3)
 
     K = _kit(ax, SN, SZ, MS)
