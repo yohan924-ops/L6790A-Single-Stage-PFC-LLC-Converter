@@ -3380,14 +3380,16 @@ def an_dc_overlap(save, foot):
 
 # ------------------------------------------------- gate drive and SR (81)
 def _ic(ax, x0, y0, x1, y1, part, pins, stub=0.55, size=9.6, psize=8.4,
-        ref=None, tsize=10.5, tpad=0.30, title=True):
+        ref=None, tsize=10.5, tpad=0.30, title=True, pdy=0.0):
     """An IC as a box with numbered pins.  -> {pin name: wire end point}
 
     pins: (side, position, number, name).  side is 'L', 'R', 'T' or 'B';
     position is the y of a side pin or the x of a top / bottom pin.  The
     name is written inside the box against its edge, the number outside
     beside the stub, as a datasheet draws it.  The returned point is the
-    outer end of the stub, where the wiring attaches.
+    outer end of the stub, where the wiring attaches.  pdy lifts the side
+    pins' numbers off the stub (a drawing whose numbers are large against
+    its scale).
     """
     ax.add_patch(Rectangle((x0, y0), x1 - x0, y1 - y0, fc='#F4F5F7', ec=NAVY,
                            lw=1.8, zorder=3))
@@ -3406,7 +3408,7 @@ def _ic(ax, x0, y0, x1, y1, part, pins, stub=0.55, size=9.6, psize=8.4,
             S.wire(ax, [(xe, pos), (xo, pos)])
             S.label(ax, xe - d * 0.16, pos, name, size=size,
                     ha='left' if side == 'L' else 'right')
-            S.label(ax, xe + d * st / 2.0, pos + 0.24 * k, str(num),
+            S.label(ax, xe + d * st / 2.0, pos + 0.24 * k + pdy, str(num),
                     size=psize, color=GREY)
             out[name] = (xo, pos)
         else:
@@ -4427,7 +4429,10 @@ def an_full(save, foot):
     ax._xf_clear = 0.45
     ax._diode_k = 0.8
     R = 0.16
-    SZ, SN = 8.6, 8.4                    # value and name lettering
+    SZ, SN = 9.3, 9.1                    # value and name lettering: the
+    #                                      page prints this drawing at
+    #                                      0.72, so 9.1 pt lands at 6.5,
+    #                                      figcheck's floor (2026-10-04)
     MS = 5.2                             # flag circles, 0.8 x the default
     MH, MG = 2.0, 1.7                    # MOSFET height and gate lead
     MOS = dict(h=MH, gate=MG, body=True, coss=False, lws=0.72, arrow=1.5,
@@ -4570,9 +4575,9 @@ def an_full(save, foot):
         S.wire(ax, [d1, (x, YL)])
         S.wire(ax, [s1, d2])
         S.wire(ax, [s2, (x, YG)])
-        S.label(ax, x + 1.15, YH + 0.65, nh, size=9.0, weight='bold',
+        S.label(ax, x + 1.15, YH + 0.65, nh, size=9.7, weight='bold',
                 ha='left')
-        S.label(ax, x + 1.15, YLO - 0.65, nl, size=9.0, weight='bold',
+        S.label(ax, x + 1.15, YLO - 0.65, nl, size=9.7, weight='bold',
                 ha='left')
         flag(x - MG, YH, 'HVG' + leg, side='l')
         flag(x - MG, YLO, 'LVG' + leg, side='l')
@@ -4581,7 +4586,7 @@ def an_full(save, foot):
     S.label(ax, (X1 + X2) / 2.0, 40.6, 'S1–S4  STO60N045DM9', size=SN,
             color=GREY)
     S.dot(ax, X1, YA)
-    S.label(ax, X1 - 0.4, YA, 'A', size=9.0, weight='bold', ha='right')
+    S.label(ax, X1 - 0.4, YA, 'A', size=9.7, weight='bold', ha='right')
     S.wire(ax, [(X1, YA), (X2 - R, YA)])
     X.hop(ax, X2, YA, r=R)
     XCR, XCN = 28.8, 30.4
@@ -4589,7 +4594,7 @@ def an_full(save, foot):
     S.wire(ax, [(X2 + R, YA), ca])
     S.label(ax, XCR - 0.2, YA + 0.65, 'C$_r$ ' + _c(_sv('C.r')), size=SZ)
     S.dot(ax, X2, YB)
-    S.label(ax, X2 - 0.4, YB - 0.05, 'B', size=9.0, weight='bold',
+    S.label(ax, X2 - 0.4, YB - 0.05, 'B', size=9.7, weight='bold',
             ha='right')
 
     # ================================================= T1
@@ -4618,7 +4623,7 @@ def an_full(save, foot):
             color=GREY, ha='right')
     S.label(ax, xs + 0.3, s12[1] - 0.3, str(_pm['NS3'][1][0]), size=SN,
             color=GREY, ha='left')
-    S.label(ax, XC, 39.75, 'T1  PQ 50/50, N97', size=9.0, weight='bold')
+    S.label(ax, XC, 39.75, 'T1  PQ 50/50, N97', size=9.7, weight='bold')
     S.label(ax, XC, 39.15, 'L$_m$ %.0f $\\mu$H, L$_r$ %.0f $\\mu$H'
             % (_sv('L.m'), _sv('L.r')), size=SN, color=GREY)
     S.label(ax, (XCN + xw) / 2.0, 35.7, 'NP1\n%.0f T' % _sv('N.p'), size=SN)
@@ -4654,7 +4659,7 @@ def an_full(save, foot):
               ('B', 11.0, 10, 'BM'),
               ('L', 25.2, 3, 'DRV_EN'), ('L', 21.8, 7, 'RT'),
               ('L', 18.4, 8, 'CT'), ('L', 15.4, 5, 'GND'),
-              ('L', 11.6, 9, 'FB')], ref=18.8, size=SN, psize=SN,
+              ('L', 11.6, 9, 'FB')], ref=18.8, size=SN, psize=SN, pdy=0.1,
              tsize=9.4, tpad=0.45)
     S.label(ax, 8.3, 18.0, 'U1', size=SN, color=GREY)
     S.wire(ax, [k1, U1['HVSU']])
@@ -4681,7 +4686,7 @@ def an_full(save, foot):
     S.wire(ax, [a_, (0.5, y_)])
     pg(0.5, y_, 0.3)
     pulldown(x_, y_, 3.6, '< 0.5 V: off')
-    S.label(ax, 2.0, y_ + 0.85, 'R$_T$\n' + _r(_sv('R.T') * 1e3), size=SZ)
+    S.label(ax, 2.0, y_ + 0.95, 'R$_T$\n' + _r(_sv('R.T') * 1e3), size=SZ)
     x_, y_ = U1['CT']
     a_, b_ = S.cap(ax, 2.0, y_)
     S.wire(ax, [(x_, y_), b_])
@@ -4744,7 +4749,7 @@ def an_full(save, foot):
                  ('B', x0 + 1.1, 3, 'SGND'), ('B', x0 + 2.9, 5, 'PGND'),
                  ('R', y0 + 8.6, 13, 'BOOT'), ('R', y0 + 7.2, 11, 'OUT'),
                  ('R', y0 + 5.8, 12, 'HVG'), ('R', y0 + 1.6, 6, 'LVG')],
-                size=SN, psize=SN, tpad=0.45, title=False)
+                size=SN, psize=SN, tpad=0.45, title=False, pdy=0.1)
         S.label(ax, x0 - 0.35, y0 + 4.3, nm, size=SN, weight='bold',
                 ha='right')
         S.label(ax, x0 - 0.35, y0 + 3.7, 'L6498LD', size=SN, ha='right')
@@ -4887,11 +4892,11 @@ def an_full(save, foot):
              ('L', YSA, 5, 'SSA'), ('L', YSB, 4, 'SSB'),
              ('L', YCB, 1, 'GDB'), ('L', YDB, 3, 'DSB'),
              ('T', TX0 + 3.6, 7, 'VCC'), ('B', TX0 + 3.6, 2, 'GND')],
-            size=SN, psize=SN, tpad=0.45, title=False)
+            size=SN, psize=SN, tpad=0.45, title=False, pdy=0.1)
     #  name in the box's free right half, between the SSA and SSB rows
     S.label(ax, TX0 + 3.1, (YSA + YSB) / 2.0 + 0.3, 'U7', size=SN,
             weight='bold')
-    S.label(ax, TX0 + 3.1, (YSA + YSB) / 2.0 - 0.3, 'TEA2095TE', size=8.2)
+    S.label(ax, TX0 + 3.1, (YSA + YSB) / 2.0 - 0.3, 'TEA2095TE', size=SN)
     gx_, gy_ = c['GND']
     S.wire(ax, [(gx_, gy_), (gx_, gy_ - 0.4)])
     sg(gx_, gy_ - 0.4, 0.0)
@@ -4911,7 +4916,7 @@ def an_full(save, foot):
     ra_, rb_ = S.res(ax, XRS_, YVS)
     S.wire(ax, [(XSR, YVS), rb_])
     S.wire(ax, [ra_, (XFL, YVS)])
-    S.label(ax, XRS_, YVS + 0.6, 'R$_{SR}$ ' + _r(_sv('R.SR')), size=SN)
+    S.label(ax, XRS_, YVS + 0.7, 'R$_{SR}$ ' + _r(_sv('R.SR')), size=SN)
     flag(XFL, YVS, 'V$_{CC,SR}$', side='l')
 
     def pair(yc, ydrain, ysrc, flip, leg, hop_y, ds, gd, ss, xgnd):
@@ -5063,7 +5068,7 @@ def an_full(save, foot):
     S.wire(ax, [(XK, YLC), (XPr, YLC)])
     vres(XPr, YLA, YLC, 'R$_P$\n' + _r(_sv('R.P') * 1e3), side='l')
     # the LED rail V_Z: R_Z from V_out, Q6 as a shunt regulator (16.1b)
-    XRB_, XRZ_, XU6, XCZ = 49.8, 52.8, 56.0, 59.6
+    XRB_, XRZ_, XU6, XCZ = 49.8, 52.8, 56.4, 59.8
     XZD = XRZ_                             # R_Z1 straight under R_Z
     S.wire(ax, [(XV, YT), (XRZ_, YT)])
     ra, rb = S.res(ax, XRB_, YLA)
@@ -5076,7 +5081,7 @@ def an_full(save, foot):
     S.label(ax, XRZ_ + 0.45, YLA + 0.5, 'V$_Z$ %.1f V' % _sv('V.Z'),
             size=SZ, ha='left')
     YRZ = 6.8
-    vres(XZD, YLA, YRZ, 'R$_{Z1}$\n' + _r(_sv('R.Z1') * 1e3), side='l')
+    vres(XZD, YLA, YRZ, 'R$_{Z1}$\n' + _r(_sv('R.Z1') * 1e3), side='r')
     vres(XZD, YRZ, YGR, 'R$_{Z2}$\n' + _r(_sv('R.Z2') * 1e3), side='l')
     sg(XZD, YGR, 0.4)
     S.dot(ax, XZD, YRZ)
