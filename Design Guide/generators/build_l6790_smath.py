@@ -1169,10 +1169,46 @@ S.row('- Driver source resistance, VCC 15 V / I.so:', 'R.so', "15*'V/I.so",
 S.row('- Driver sink resistance, VCC 15 V / I.si:', 'R.si', "15*'V/I.si",
       'ohm', 2)
 S.const('[DS] MOSFET internal gate resistance:', 'R.g_int', "4.5*'ohm", 'ohm', 1)
-S.const('[PICK] External gate resistor, one per switch:', 'R.G', "4.7*'ohm",
-        'ohm', 1, note='the switching-time test value of the MOSFET datasheet.')
-S.row('- Driver share of the gate power:', 's.drv',
-      '(R.so/(R.so+R.G+R.g_int)+R.si/(R.si+R.G+R.g_int))/2', None, 3)
+S.const('[PICK] External gate resistor, turn-on, one per switch:', 'R.G',
+        "4.7*'ohm", 'ohm', 1,
+        note='the switching-time test value of the MOSFET datasheet.')
+S.note('TURN-OFF PATH (2026-10-04 user). A diode D.Goff anti-parallel to R.G, '
+       'with its own resistor R.G_off, lets the gate discharge faster than it '
+       'charges: the off edge then depends on R.G_off, the driver sink and '
+       'R.g_int, not on R.G. The ADT of the L6790A ends the dead time when the '
+       'midpoint has swung, so a slow gate fall is not a shoot-through but it '
+       'eats dead time; the rows size the path by the driver sink current and '
+       'the diode surge rating.')
+S.const('[PICK] Turn-off gate resistor, in series with D.Goff:', 'R.G_off',
+        "2.2*'ohm", 'ohm', 1)
+S.const('[DS] D.Goff 1N4148W non-repetitive surge, 1 us:', 'I.FSM_Goff',
+        "2*'A", 'A', 1, note='Diodes DS30086 Rev. 31: IFSM 2.0 A at 1 us, '
+                             '1.0 A at 1 s; IFM 300 mA.')
+S.const('[DS] D.Goff 1N4148W forward current, continuous:', 'I.FM_Goff',
+        "300*'mA", 'mA', 0)
+S.row('- Peak turn-off current, gate at V.CC_reg_max less the diode drop:',
+      'I.Goff_pk', '(V.CC_reg_max-V.F_j)/(R.G_off+R.si+R.g_int)', 'A', 2)
+S.row('- under the driver sink current (>1):', 'k.Goff_si', 'I.si/I.Goff_pk',
+      None, 2)
+S.row('- under the diode surge rating (>1):', 'k.Goff_D',
+      'I.FSM_Goff/I.Goff_pk', None, 2)
+S.row('- Average current in D.Goff at f.Max:', 'I.Goff_avg',
+      "Q.g_run*10^(-9)*'A*'s*f.Max", 'mA', 1)
+S.row('- under its continuous rating (>1):', 'k.Goff_avg',
+      'I.FM_Goff/I.Goff_avg', None, 1)
+S.const('[DS] Primary MOSFET Miller plateau:', 'V.pl', "6.3*'V", 'V', 1,
+        note='STO60N045DM9 Fig. 5, the plateau the gate-charge note above reads.')
+S.row('- Gate fall from V.CC_reg_max to the plateau through the diode path:',
+      't.off_pl', "(R.G_off+R.si+R.g_int)*C.g_hi*ln(V.CC_reg_max/V.pl)", 'ns', 0,
+      note='C.g_hi, the gate capacitance above the plateau; the channel is '
+           'off once the gate is at V.pl and the midpoint swing (T.T) starts.')
+S.row('- the same through R.G alone, no diode:', 't.off_RG',
+      "(R.G+R.si+R.g_int)*C.g_hi*ln(V.CC_reg_max/V.pl)", 'ns', 0)
+S.row('- turn-off faster by the diode path:', 'k.Goff_t', 't.off_RG/t.off_pl',
+      None, 2)
+S.row('- Driver share of the gate power (source through R.G, sink through '
+      'R.G_off):', 's.drv',
+      '(R.so/(R.so+R.G+R.g_int)+R.si/(R.si+R.G_off+R.g_int))/2', None, 3)
 S.row('- Dissipation in ONE driver, at f.Max and V.CC_reg_max:', 'P.drv',
       "2*Q.g_run*10^(-9)*'A*'s*V.CC_reg_max*f.Max*s.drv+(I.QCC+I.QBO)*V.CC_reg_max",
       'W', 3)
@@ -2206,7 +2242,8 @@ S.show('- VCC capacitor, SELECTED:', 'C.VCC_sel', 'μF', 0)
 S.show('- VCC pin ceramic:', 'C.VCC_hf', 'nF', 0)
 S.show('- Auxiliary rectifier capacitor C.aux (50 V):', 'C.aux', 'μF', 0)
 S.show('- Bootstrap capacitor, per leg:', 'C.BOOT', 'nF', 0)
-S.show('- Gate resistor, per switch:', 'R.G', 'ohm', 1)
+S.show('- Gate resistor, turn-on, per switch:', 'R.G', 'ohm', 1)
+S.show('- Gate resistor, turn-off, per switch:', 'R.G_off', 'ohm', 1)
 S.show('- SR supply Zener, SELECTED:', 'V.DZSR_sel', 'V', 1)
 S.show('- SR supply Zener feed resistor, SELECTED:', 'R.BSR_sel', 'ohm', 0)
 S.show('- SR supply Zener power rating, at least:', 'P.DZSR', 'mW', 0)
@@ -2234,6 +2271,7 @@ S.table(['function', 'designator', 'device class and count'],
           '1 x FZT651, SOT-223, collector on 50 x 50 mm copper - 14c.5'],
          ['VCC Zener', 'D.Z', '1 x BZT52H-C15, 1 cm2 cathode pad - 14c.5'],
          ['Gate drivers', 'U2 U3', '2 x L6498LD, SO-14 - 14c.1'],
+         ['Gate turn-off diodes', 'D.Goff', '4 x 1N4148W - 14c.1'],
          ['Bootstrap diodes', 'D.BS1 D.BS2', '2 x ES1J (600 V, 1 A, 35 ns)'],
          ['SR controller', 'U7', '1 x TEA2095TE, HSO8 - 14c.3'],
          ['SR supply pass transistor', 'Q.SR',
