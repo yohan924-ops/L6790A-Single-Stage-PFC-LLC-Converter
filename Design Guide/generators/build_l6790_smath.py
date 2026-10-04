@@ -1421,17 +1421,23 @@ S.note('Both followers are sized at f.Max, the oscillator ceiling, which bounds 
        'the gate current; the dissipations above are therefore upper bounds. '
        'Each part is rated by the highest ambient it allows at that bound, '
        'T.a = T.j,max - R.th(j-a) x P, on the copper its datasheet quotes.')
-S.const('[DS] PHPT61003NY (Q.VCC, Q.SR), 6 cm2 collector pad [C/W]:', 'R.thQ',
-        '50', None, 0, note='Nexperia, LFPAK56, 100 V 3 A; 115 C/W on the '
-                            'standard footprint.')
-S.const('[DS] PHPT61003NY junction temperature, max. [C]:', 'T.jQ', '175', None, 0)
-S.const('[DS] the same transistor on its standard footprint [C/W]:', 'R.thQ_std',
-        '115', None, 0)
+S.const('[DS] FZT651 (Q.VCC, Q.SR), collector on 50 x 50 mm 2 oz copper [C/W]:',
+        'R.thQ', '41.7', None, 1,
+        note='Diodes DS33149 Rev. 7-2 (2022-03), SOT-223, 60 V 3 A, note 6; '
+             '2026-10-04 user: a more common part than the PHPT61003NY '
+             '(LFPAK56, 50 C/W on 6 cm2, Tj 175 C) it replaces.')
+S.const('[DS] FZT651 junction temperature, max. [C]:', 'T.jQ', '150', None, 0)
+S.const('[DS] the same on 25 x 25 mm 2 oz copper [C/W]:', 'R.thQ_std', '62.5',
+        None, 1, note='note 5 of the same sheet.')
+S.const('[DS] FZT651 collector-emitter voltage, open base:', 'V.CEO_Q', "60*'V",
+        'V', 0)
+S.row('- V.CEO over C.aux at OVP2, the most Q.VCC sees (>1):', 'k.VCEOQ',
+      'V.CEO_Q/V.Caux_OVP2', None, 2)
 S.row('- Q.VCC: highest ambient at P.Qpass [C]:', 'T.aQVCC',
       "T.jQ-R.thQ*P.Qpass/'W", None, 0)
-S.row('- Q.VCC: the same on the standard footprint [C]:', 'T.aQVCC_std',
+S.row('- Q.VCC: the same on the 25 x 25 mm pad [C]:', 'T.aQVCC_std',
       "T.jQ-R.thQ_std*P.Qpass/'W", None, 0,
-      note='why the collector needs its 6 cm2 of copper.')
+      note='why the collector pad is the larger one.')
 S.row('- Q.SR: highest ambient at P.QSR (sized current) [C]:', 'T.aQSR',
       "T.jQ-R.thQ*P.QSR/'W", None, 0)
 S.row('- Q.SR at OVP1 with the STL160N10F8 charge:', 'P.QSR_ovp',
@@ -2225,13 +2231,13 @@ S.table(['function', 'designator', 'device class and count'],
          ['VCC rectifier and bypass diodes', 'D.aux D.byp',
           '2 x 1N4148W (100 V, 300 mA) - 14c.5'],
          ['VCC pass transistor', 'Q.VCC',
-          '1 x PHPT61003NY, 6 cm2 collector pad - 14c.5'],
+          '1 x FZT651, SOT-223, collector on 50 x 50 mm copper - 14c.5'],
          ['VCC Zener', 'D.Z', '1 x BZT52H-C15, 1 cm2 cathode pad - 14c.5'],
          ['Gate drivers', 'U2 U3', '2 x L6498LD, SO-14 - 14c.1'],
          ['Bootstrap diodes', 'D.BS1 D.BS2', '2 x ES1J (600 V, 1 A, 35 ns)'],
          ['SR controller', 'U7', '1 x TEA2095TE, HSO8 - 14c.3'],
          ['SR supply pass transistor', 'Q.SR',
-          '1 x PHPT61003NY, 6 cm2 collector pad - 14c.5'],
+          '1 x FZT651, SOT-223, collector on 50 x 50 mm copper - 14c.5'],
          ['SR supply Zener', 'D.ZSR', '1 x BZT52H-C15, 1 cm2 cathode pad'],
          ['LED rail regulator', 'Q6', '1 x TL431B, SOT-23 - 16.1b'],
          ['Feedback optocoupler', 'Q4',

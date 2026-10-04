@@ -135,12 +135,12 @@ audit_md   no problems found
 **빌드 후 `check_sm.py`를 반드시 돌릴 것.** 현재 상태:
 
 ```
-paper A3 Landscape 1654 x 1169 · regions 2468 · overlaps 0 · right overflow 0
+paper A3 Landscape 1654 x 1169 · regions 2473 · overlaps 0 · right overflow 0
 page straddles 0 (한 쪽이 1120 px · 접힘 25개가 23511 px 을 숨긴다)
 seam clearance 가장 아슬아슬한 곳 61 px · 여백 띠 위 60 / 아래 60
 text re-wrap 0 · functions [abs atan augment cos el eval ln range sin sqrt vectorize] (전부 허용 집합)
-height 90073 px, 그중 66562 px 이 인쇄됨 = 60 pages · plots 0 · zedgraph 7 · pictures 3
-yellow inputs 202 · VERDICT OK
+height 91169 px, 그중 67682 px 이 인쇄됨 = 61 pages · plots 0 · zedgraph 7 · pictures 3
+yellow inputs 203 · VERDICT OK
 ```
 
 > **"몇 쪽"은 접힘을 뺀 높이로 센다.** 접힌 영역은 종이를 안 먹으므로 파일 높이를

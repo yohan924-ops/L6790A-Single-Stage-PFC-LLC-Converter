@@ -4787,7 +4787,7 @@ def an_full(save, foot):
     S.wire(ax, [za, (XRZ, 20.2)])
     pg(XRZ, 20.2, 0.4)
     S.label(ax, XRZ + 0.75, 21.0, 'D$_Z$\nBZT52H-C15', size=SN, ha='left')
-    S.label(ax, cq[0] - 0.45, 22.8, 'Q$_{VCC}$\nPHPT61003NY', size=SN,
+    S.label(ax, cq[0] - 0.45, 22.8, 'Q$_{VCC}$\nFZT651', size=SN,
             ha='right')
     ya, yk = S.diode(ax, eq_[0], 19.0, horiz=False, flip=True)
     S.wire(ax, [eq_, ya])
@@ -4957,7 +4957,7 @@ def an_full(save, foot):
             + ' $\\parallel$ ' + _c(_sv('C.SRb') * 1e3), size=SN)
     S.wire(ax, [(xe_, YNS), (xe_, YNS - 1.1)])
     flag(xe_, YNS - 1.1, 'V$_{CC,SR}$ %.1f V' % _sv('V.SR'), side='l')
-    S.label(ax, eq_[0] + 0.45, 21.3, 'Q$_{SR}$\nPHPT61003NY', size=SN,
+    S.label(ax, eq_[0] + 0.45, 21.3, 'Q$_{SR}$\nFZT651', size=SN,
             ha='left')
 
     # ================================================= voltage loop
