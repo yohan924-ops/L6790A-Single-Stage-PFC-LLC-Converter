@@ -2548,7 +2548,7 @@ def build(A):
              ['C<sub>VCC</sub> bridges the start-up hand-over',
               'C<sub>VCC</sub> / C<sub>VCC,req</sub>',
               '%.0f &micro;F / %.0f &micro;F' % (V['CVCC'], A.SH['C.VCC_req']),
-              '%.3f' % A.SH['k.CVCC']],
+              '<b>%.3f</b>' % A.SH['k.CVCC']],
              ['The high-side driver supply stays in its range',
               'V<sub>BO</sub> / V<sub>BO,min</sub>',
               '%.2f V / %.1f V' % (A.SH['V.BO_run'], V['VBOrec']),
@@ -2576,13 +2576,15 @@ def build(A):
              'against a %(b).0f&nbsp;W budget; no single 600&nbsp;V device meets '
              'that budget in the standing position, so the design goes ahead '
              'on a heatsink (Section&nbsp;%(hs)s) and the rest is settled by '
-             'measurement (Section&nbsp;%(ref)s). %(thin)s It is thin by construction: '
+             'measurement (Section&nbsp;%(ref)s). %(thin)s The SR gate drive, '
+             'k = %(kvg).3f, is thin by construction: '
              'the SR controller clamps its gate drive at %(vg).1f&nbsp;V and '
              'the SR R<sub>DS(on)</sub> is quoted at 10&nbsp;V, so the clamp '
              'only has to clear the test voltage. k<sub>floor</sub> = %(kfloor).3f rests on '
              'unknowns: the transformer tolerance and the idle time both move '
              'it, and neither is measured yet.'
              % dict(V, a=A.SH['P.mos_dc'], b=_kb, vg=V['VGSR'],
+                    kvg=A.SH['k.VGSR'],
                     hs=SR('The primary switches: STO60N045DM9'),
                     thin=_thinnest_text(V, A),
                     ref=SR('What to measure first on hardware'))))
@@ -3721,12 +3723,16 @@ def build(A):
           'number to hold against the hot B<sub>s</sub> of %(mat)s from '
           'the material data. The line on the specification reads: DC '
           'overlap, inductance at least 90&nbsp;%% of initial at '
-          '%(isat).0f&nbsp;A (%(calc).1f&nbsp;A rounded up), normal '
+          '%(isat).0f&nbsp;A%(rnd)s, normal '
           'temperature (Table&nbsp;%(t)s).'
           % dict(o1=V['OVP1'], r1=_r1, o2=V['OVP2'], r2=_r2,
                  b1=V['Bpk'] * _r1, b2=V['Bpk'] * _r2,
                  mat=_CORE.CORES[_CORE.CHOSEN]['material'],
-                 isat=V['IsatTest'], calc=V['Isatspec'],
+                 isat=V['IsatTest'],
+                 #  the parenthesis only when a whole ampere was actually
+                 #  rounded to: '14 A (14.0 A rounded up)' said nothing
+                 rnd=(' (%.1f&nbsp;A rounded up)' % V['Isatspec']
+                      if V['IsatTest'] - V['Isatspec'] >= 0.05 else ''),
                  t=TR('spec-out'))))
     add(p('<b>How to run it on this part.</b> LCR meter across the primary '
           '(NP1, the pins of Table&nbsp;%(t)s) with both secondaries, the '
@@ -4641,7 +4647,7 @@ def build(A):
           % dict(V, f0=V['w0'] / (2 * pi))))
     add(eqagain('wc'))
     add(calc(r'\omega_{c}=\mathbf{%.1f\ rad/s},\qquad f_{c}=\frac{%.1f}{2\pi}'
-             r'=\mathbf{%.2f\ Hz},\qquad |T(\omega_{c})|=%.4f\ \ (\mathrm{check:}\ 1)'
+             r'=\mathbf{%.2f\ Hz},\qquad |T(\omega_{c})|=%.4f\ \ (\mathrm{must\ be\ 1})'
              % (V['wc'], V['wc'], V['fcross'], V['Tres'])))
     add(eqagain('PMeq'))
     add(calc(r'\Phi_{M}=\arctan\frac{%.1f}{%.1f}-\arctan\frac{%.1f}{%.1f}'

@@ -2185,10 +2185,17 @@ def _batt(ax, x, ytop, ybot, t=None, size=11):
 
 def _sec(ax, top, bot, ys, xd, xc, xr, yt, size=10.5):
     """rectifier, output capacitor and load, hung on one secondary"""
+    #  The rectifier at four fifths of the panel's symbol size: at the
+    #  panel's own 2x it printed 16.5 pt, as big as the switch's gate
+    #  (2026-10-04, user).  Only the diode; the capacitor and load keep
+    #  the panel's size.
+    keep = getattr(ax, '_sym_mult', 1.0)
+    ax._sym_mult = keep * 0.8
     di, do = S.diode(ax, xd, yt, None, horiz=True)
-    S.wire(ax, [top, di])
     S.label(ax, xd, yt + 0.55 * X.scale(ax) + 0.30, 'D', size=size,
             color=GREY)
+    ax._sym_mult = keep
+    S.wire(ax, [top, di])
     S.wire(ax, [do, (xr, yt)])
     S.wire(ax, [bot, (bot[0], ys), (xr, ys)])
     S.shunt(ax, xc, yt, ys, 'cap', None)
