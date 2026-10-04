@@ -3536,7 +3536,7 @@ def an_gate_drive(save, foot):
     da, db = S.diode(ax, XB, 17.1, horiz=False, flip=True)   # VCC -> BOOT
     S.wire(ax, [(XB, YV), da])                     # anode on the rail
     S.wire(ax, [db, (XB, 15.6)])                   # cathode on BOOT
-    S.label(ax, XB + 0.55, 17.1, 'D$_{BS}$', size=10, ha='left')
+    S.label(ax, XB - 0.55, 17.1, 'D$_{BS}$', size=10, ha='right')
     ca, cb = S.cap(ax, XB, 13.3, horiz=False)
     S.wire(ax, [(XB, 15.6), cb])
     S.wire(ax, [ca, (XB, 12.6)])
@@ -3544,7 +3544,10 @@ def an_gate_drive(save, foot):
     S.label(ax, XB + 0.50, 13.3, 'C$_{BOOT}$', size=10, ha='left')
 
     # ------------------------------------------------- the two switches
-    XS = 20.4                               # drain-source line
+    XS = 22.0                               # drain-source line (1.6 to
+    #                                         the right of the first
+    #                                         drawing: room for the gate
+    #                                         networks, 2026-10-04)
     s1d, s1s = X.mosfet(ax, XS, 14.2, None, 'plain', h=1.8, gate=1.4,
                         body=True, coss=False)
     s2d, s2s = X.mosfet(ax, XS, 8.6, None, 'plain', h=1.8, gate=1.4,
@@ -3559,31 +3562,33 @@ def an_gate_drive(save, foot):
     xh = XS - 1.4
     S.wire(ax, [d['HVG'], (XB - R, 14.2)])
     X.hop(ax, XB, 14.2, r=R)
-    ra, rb = S.res(ax, 17.3, 14.2, 'R$_G$', tdy=0.55)
+    ra, rb = S.res(ax, 17.8, 14.2, 'R$_G$', tdy=0.55)
     S.wire(ax, [(XB + R, 14.2), ra])
     S.wire(ax, [rb, (xh, 14.2)])
     S.wire(ax, [d['LVG'], (15.0, 10.6), (15.0, 8.6)])
-    ra2, rb2 = S.res(ax, 17.3, 8.6, 'R$_G$', tdy=-0.65)
+    ra2, rb2 = S.res(ax, 17.8, 8.6, 'R$_G$', tdy=-0.65)
     S.wire(ax, [(15.0, 8.6), ra2])
     S.wire(ax, [rb2, (xh, 8.6)])
 
     def goff(yy, up, xn1):
         """the turn-off path anti-parallel to R_G: D_Goff pointing at the
-        driver, R_G,off in series - above each run (below the LVG run the
-        PGND return passes)"""
+        driver, R_G,off in series - above each run (below the HVG run the
+        OUT return passes, below the LVG run the PGND return), 1.8 off it
+        and the two parts a wire's length apart (2026-10-04 user: the
+        first drawing had them touching, 1.3 off the run)"""
         xn2 = xh - 0.2
-        yb = yy + up * 1.3
+        yb = yy + up * 1.8
         for xx in (xn1, xn2):
             S.dot(ax, xx, yy)
             S.wire(ax, [(xx, yy), (xx, yb)])
-        xd_, xr_ = xn1 + 0.6, xn2 - 0.85
+        xd_, xr_ = xn1 + 1.0, xn2 - 1.2
         da_, dk_ = S.diode(ax, xd_, yb, flip=True)
         S.wire(ax, [(xn1, yb), dk_])
         r3a, r3b = S.res(ax, xr_, yb)
         S.wire(ax, [da_, r3a])
         S.wire(ax, [r3b, (xn2, yb)])
-        S.label(ax, xd_ - 0.3, yb + up * 0.75, 'D$_{G,off}$', size=10)
-        S.label(ax, xr_ + 0.3, yb + up * 0.75, 'R$_{G,off}$', size=10)
+        S.label(ax, xd_, yb + up * 0.75, 'D$_{G,off}$', size=10)
+        S.label(ax, xr_, yb + up * 0.75, 'R$_{G,off}$', size=10)
     goff(14.2, 1, XB + 1.0)
     goff(8.6, 1, 16.2)
     # S1 drain to the bus; S1 source = A = S2 drain
@@ -3606,11 +3611,11 @@ def an_gate_drive(save, foot):
     S.dot(ax, XS, YG)
     S.wire(ax, [(XS, YG), (XS, 4.9)])
     _pgnd(ax, XS, 4.9)
-    ra3, rb3 = S.res(ax, 22.6, YG, 'R$_{CS}$', tdy=0.55)
+    ra3, rb3 = S.res(ax, 23.6, YG, 'R$_{CS}$', tdy=0.55)
     S.wire(ax, [(XS, YG), ra3])
-    S.wire(ax, [rb3, (24.6, YG)])
-    _term(ax, 24.6, YG)
-    S.label(ax, 24.95, YG, 'ISEN and\nrectifier (−)', size=10, ha='left')
+    S.wire(ax, [rb3, (25.2, YG)])
+    _term(ax, 25.2, YG)
+    S.label(ax, 25.55, YG, 'ISEN and\nrectifier (−)', size=10, ha='left')
 
     # ------------------------------------------------- rails
     S.wire(ax, [(0.2, YV), (XB, YV)])
@@ -4638,7 +4643,7 @@ def an_full(save, foot):
              [('T', XHV, 1, 'HVSU'), ('T', 8.6, 6, 'ISEN'),
               ('T', 10.4, 4, 'VCC'),
               ('R', 24.8, 16, 'HOUT1'), ('R', 23.7, 15, 'LOUT1'),
-              ('R', 12.4, 14, 'HOUT2'), ('R', 11.3, 13, 'LOUT2'),
+              ('R', 12.2, 14, 'HOUT2'), ('R', 11.1, 13, 'LOUT2'),
               ('B', XHV, 12, 'ZCD'), ('B', 8.6, 11, 'CFG'),
               ('B', 11.0, 10, 'BM'),
               ('L', 25.2, 3, 'DRV_EN'), ('L', 21.8, 7, 'RT'),
@@ -4719,8 +4724,8 @@ def an_full(save, foot):
         pg(x_, 3.8)
 
     # ================================================= drivers U2, U3
-    YV, XO, YO = 28.0, 27.0, 15.4
-    W_, H_ = 4.0, 9.6                      # 0.9 x the first drawing's width;
+    YV, XO, YO = 28.0, 27.8, 15.4
+    W_, H_ = 4.0, 9.8                      # 0.9 x the first drawing's width;
     #                                        tall enough for the gate networks
     #                                        (R_G and the turn-off path) to
     #                                        sit apart from each other
@@ -4731,8 +4736,8 @@ def an_full(save, foot):
                 [('L', y0 + 7.6, 1, 'HIN'), ('L', y0 + 6.5, 2, 'LIN'),
                  ('T', x0 + 2.0, 7, 'VCC'),
                  ('B', x0 + 1.1, 3, 'SGND'), ('B', x0 + 2.9, 5, 'PGND'),
-                 ('R', y0 + 8.4, 13, 'BOOT'), ('R', y0 + 7.0, 11, 'OUT'),
-                 ('R', y0 + 4.8, 12, 'HVG'), ('R', y0 + 1.6, 6, 'LVG')],
+                 ('R', y0 + 8.6, 13, 'BOOT'), ('R', y0 + 7.2, 11, 'OUT'),
+                 ('R', y0 + 5.8, 12, 'HVG'), ('R', y0 + 1.6, 6, 'LVG')],
                 size=SN, psize=SN, tpad=0.45, title=False)
         S.label(ax, x0 - 0.35, y0 + 4.3, nm, size=SN, weight='bold',
                 ha='right')
@@ -4753,36 +4758,40 @@ def an_full(save, foot):
         S.dot(ax, xb, oy)
         S.label(ax, xb + 0.45, (by + oy) / 2.0 + 0.05,
                 'C$_{BOOT}$ ' + _c(_sv('C.BOOT')), size=SN, ha='left')
-        xr, xf = xb + 1.35, xb + 2.7
+        xf = xb + 4.3                        # the flags; the gate runs
+        #                                        between the box and here
         S.wire(ax, [(ox, oy), (xf, oy)])
         flag(xf, oy, 'A' if leg == '1' else 'B')
-        #  each gate: R_G on the straight run, and anti-parallel to it the
-        #  turn-off path D_Goff + R_G,off - above for HVG, below for LVG.
-        #  The diode points at the driver: the gate discharges through it.
-        for yy, nmg, up in ((hy, 'HVG', 1), (ly, 'LVG', -1)):
-            xn1, xn2 = hx + 0.35, xf - 0.35
+        #  each gate: R_G on the straight run, its value above; below the
+        #  run, anti-parallel to it, the turn-off path D_Goff + R_G,off with
+        #  the diode pointing at the driver (the gate discharges through
+        #  it) and the parts a wire's length apart (2026-10-04 user: the
+        #  first drawing had them touching, 1.3 under the run)
+        for yy, nmg in ((hy, 'HVG'), (ly, 'LVG')):
+            xn1, xn2 = hx + 0.5, xf - 0.5
+            xr = (xn1 + xn2) / 2.0
             ra_, rb_ = S.res(ax, xr, yy)
             S.wire(ax, [(hx, yy), ra_])
             S.wire(ax, [rb_, (xf, yy)])
             flag(xf, yy, nmg + leg)
             S.dot(ax, xn1, yy)
             S.dot(ax, xn2, yy)
-            S.label(ax, xr, yy - up * 0.65, 'R$_G$ ' + _r(_sv('R.G')), size=SN)
-            yb = yy + up * 1.3
+            S.label(ax, xr, yy + 0.65, 'R$_G$ ' + _r(_sv('R.G')), size=SN)
+            yb = yy - 2.0
             S.wire(ax, [(xn1, yy), (xn1, yb)])
             S.wire(ax, [(xn2, yy), (xn2, yb)])
-            xd_, xr2 = xn1 + 0.6, xn2 - 0.75
+            xd_, xr2 = xn1 + 0.95, xn2 - 1.2
             da_, dk_ = S.diode(ax, xd_, yb, flip=True)
             S.wire(ax, [(xn1, yb), dk_])
             r2a, r2b = S.res(ax, xr2, yb)
             S.wire(ax, [da_, r2a])
             S.wire(ax, [r2b, (xn2, yb)])
-            S.label(ax, xf + 0.35, yb, 'R$_{G,off}$ ' + _r(_sv('R.G_off')),
-                    size=SN, ha='left')
+            S.label(ax, xr2, yb - 0.65, 'R$_{G,off}$ ' + _r(_sv('R.G_off')),
+                    size=SN)
         return u, xb, by
     u2, xb2, by2 = driver(XD, 17.2, 'U2', '1')    # HIN level with HOUT1
-    u3, xb3, by3 = driver(XD, 4.8, 'U3', '2')
-    S.label(ax, XD + 2.0, 3.0, 'D$_{G,off}$ 1N4148W, one per gate', size=SN,
+    u3, xb3, by3 = driver(XD, 4.6, 'U3', '2')
+    S.label(ax, XD + 2.0, 2.3, 'D$_{G,off}$ 1N4148W, one per gate', size=SN,
             color=GREY)
     for a_, b_ in ((U1['HOUT1'], u2['HIN']), (U1['LOUT1'], u2['LIN']),
                    (U1['HOUT2'], u3['HIN']), (U1['LOUT2'], u3['LIN'])):
