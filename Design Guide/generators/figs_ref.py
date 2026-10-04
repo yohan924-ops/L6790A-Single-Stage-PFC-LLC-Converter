@@ -4413,11 +4413,17 @@ def an_full(save, foot):
     import cores
     V = an_pdf.V
     _pm = cores.PINMAP
-    fig = plt.figure(figsize=(12.0, 9.1))
-    W, H = 56.7, 43.0                      # the top band holds U7's RC filter
-    ax = _ax(fig, [0.005, 0.005, 0.99, 0.99], 0.0, W, 0.0, H)
-    ax._sym_mult = 0.47
-    ax._xf_mult = 0.37                   # turns 0.8 x the two-sheet drawing's
+    #  A4 turned landscape: the text frame is 672 x 471 pt (1.426).  The
+    #  PNG is the axes box plus save()'s 0.14 in pad, and that is what the
+    #  page turns 90 degrees, so it is the PNG that keeps the ratio
+    #  (2026-10-04 user): (0.99 W_in + 0.28) / (0.99 x 9.1 + 0.28) = 1.426.
+    #  0.2116 in per unit; the drawing runs 0.1 to 61.1, centred by xlim.
+    W, H = 61.9, 43.0                      # the top band holds U7's RC filter
+    fig = plt.figure(figsize=(W * 12.0 / 56.7, 9.1))
+    ax = _ax(fig, [0.005, 0.005, 0.99, 0.99], -0.35, W - 0.35, 0.0, H)
+    ax._sym_mult = 0.47 * 56.7 / W        # symbols scale with the width;
+    #                                        keep the size drawn at 56.7
+    ax._xf_mult = 0.37 * 56.7 / W                   # turns 0.8 x the two-sheet drawing's
     ax._xf_clear = 0.45
     ax._diode_k = 0.8
     R = 0.16
@@ -4578,7 +4584,7 @@ def an_full(save, foot):
     S.label(ax, X1 - 0.4, YA, 'A', size=9.0, weight='bold', ha='right')
     S.wire(ax, [(X1, YA), (X2 - R, YA)])
     X.hop(ax, X2, YA, r=R)
-    XCR, XCN = 26.8, 28.4
+    XCR, XCN = 28.8, 30.4
     ca, cb = S.cap(ax, XCR, YA)
     S.wire(ax, [(X2 + R, YA), ca])
     S.label(ax, XCR - 0.2, YA + 0.65, 'C$_r$ ' + _c(_sv('C.r')), size=SZ)
@@ -4587,7 +4593,7 @@ def an_full(save, foot):
             ha='right')
 
     # ================================================= T1
-    XC = 33.8                              # T1: the line between the sides
+    XC = 35.8                              # T1: the line between the sides
     YT1 = 37.8                             # pin 1
     YS7 = 34.5                             # pin 7: NS2 + NS3 centred between
     #                                        the two SR drain buses (37.8, YG)
@@ -4724,12 +4730,12 @@ def an_full(save, foot):
         pg(x_, 3.8)
 
     # ================================================= drivers U2, U3
-    YV, XO, YO = 28.0, 27.8, 15.4
+    YV, XO, YO = 28.0, 29.8, 15.4
     W_, H_ = 4.0, 9.8                      # 0.9 x the first drawing's width;
     #                                        tall enough for the gate networks
     #                                        (R_G and the turn-off path) to
     #                                        sit apart from each other
-    XD = 15.4                              # everything hung off the box
+    XD = 16.4                              # everything hung off the box
 
     def driver(x0, y0, nm, leg):
         u = _ic(ax, x0, y0, x0 + W_, y0 + H_, 'L6498LD',
@@ -4802,7 +4808,7 @@ def an_full(save, foot):
     S.wire(ax, [u2['VCC'], (u2['VCC'][0], YV)])
     S.dot(ax, u2['VCC'][0], YV)
     S.wire(ax, [u3['VCC'], (u3['VCC'][0], YO), (XO, YO)])
-    S.label(ax, 23.2, YV + 0.45, 'V$_{CC}$ %.1f V' % _sv('V.CC_reg'), size=SZ)
+    S.label(ax, 24.2, YV + 0.45, 'V$_{CC}$ %.1f V' % _sv('V.CC_reg'), size=SZ)
     for xb_, ytop, by_ in ((xb2, YV, by2), (xb3, YO, by3)):
         yd = (ytop + by_) / 2.0
         da, dk = S.diode(ax, xb_, yd, horiz=False, flip=True)
@@ -4861,20 +4867,20 @@ def an_full(save, foot):
     #  pins sit at the bus heights and its SS pins at the source-bus
     #  heights, so each Kelvin wire is one straight run to the nearer
     #  MOSFET (Q_A2, Q_B2).
-    XV = 37.6                              # V_out: centre tap straight down
+    XV = 40.0                              # V_out: centre tap straight down
     S.wire(ax, [(xs, YCT), (XV, YCT)])
     S.label(ax, XV - 0.15, YCT + 0.4, '%d, %d' % (_pm['NS2'][1][0],
                                                    _pm['NS3'][0][0]),
             size=SN, color=GREY, ha='right')
     YDA, YCA_, YSA, HOPA = YT1, 35.7, 33.2, 34.0
     YDB, YCB, YSB, HOPB = 27.0, 29.1, 31.6, 30.8
-    XQ1, XQ2 = 40.5, 46.1
+    XQ1, XQ2 = 43.6, 49.6
     MGS = 2.1                              # gate lead: the resistor clear
     #                                        of the gate
     MOSS = dict(MOS, gate=MGS)
     xr1, xr2 = XQ1 + MGS + 0.9, XQ2 + MGS + 0.9
     XG = xr2 + 1.1                         # where the gate run splits
-    TX0, TX1 = XG + 1.2, XG + 6.3
+    TX0, TX1 = XG + 1.6, XG + 6.7
     TY0, TY1 = YDB - 1.0, YDA + 1.0        # room for the supply pins' names
     c = _ic(ax, TX0, TY0, TX1, TY1, 'TEA2095TE',
             [('L', YDA, 6, 'DSA'), ('L', YCA_, 8, 'GDA'),
@@ -4965,17 +4971,18 @@ def an_full(save, foot):
     YO2, YT = 23.0, 15.2
     S.wire(ax, [(XV, YCT), (XV, YT)])      # on down to R_I
     S.dot(ax, XV, YO2)
-    S.wire(ax, [(XV, YO2), (55.8, YO2)])
-    _term(ax, 55.8, YO2, MS)
-    S.label(ax, 55.6, YO2 + 0.6, 'V$_{out}$ +%.0f V, %.1f A'
+    XVT = 60.9                             # the output terminals
+    S.wire(ax, [(XV, YO2), (XVT, YO2)])
+    _term(ax, XVT, YO2, MS)
+    S.label(ax, XVT - 0.2, YO2 + 0.6, 'V$_{out}$ +%.0f V, %.1f A'
             % (V['Vout'], V['Iout']), size=SN, ha='right')
-    _term(ax, 55.8, 20.0, MS)
-    S.wire(ax, [(55.8, 20.0), (55.8, 19.3)])
-    sg(55.8, 19.3, 0.0)
-    S.label(ax, 55.3, 20.0, 'return', size=SN, ha='right')
-    for x, fn_, txt_ in ((40.6, ecap, 'C$_{out}$ %.1f mF\n%.0f × %.0f $\\mu$F'
+    _term(ax, XVT, 20.0, MS)
+    S.wire(ax, [(XVT, 20.0), (XVT, 19.3)])
+    sg(XVT, 19.3, 0.0)
+    S.label(ax, XVT - 0.5, 20.0, 'return', size=SN, ha='right')
+    for x, fn_, txt_ in ((43.2, ecap, 'C$_{out}$ %.1f mF\n%.0f × %.0f $\\mu$F'
                           % (_sv('C.out'), _sv('n.C'), _sv('C.single'))),
-                         (45.2, vcap, 'C$_{HF}$\n%.0f $\\mu$F'
+                         (48.2, vcap, 'C$_{HF}$\n%.0f $\\mu$F'
                           % _sv('C.ceramic'))):
         S.dot(ax, x, YO2)
         fn_(x, YO2, 20.2)
@@ -4983,7 +4990,7 @@ def an_full(save, foot):
         S.label(ax, x + (0.65 if fn_ is ecap else 0.5), 21.6, txt_, size=SZ,
                 ha='left')
     # the SR supply follower (14c.4)
-    XRB, XQB, YBS = 49.4, 50.6, 20.0
+    XRB, XQB, YBS = 52.8, 54.0, 20.0
     S.dot(ax, XRB, YO2)
     vres(XRB, YO2, YBS, 'R$_{BSR}$\n' + _r(_sv('R.BSR_sel')), side='l',
          yl=21.5)
@@ -5013,9 +5020,9 @@ def an_full(save, foot):
     vres(XRI, YREF, YGR, 'R$_O$\n' + _r(_sv('R.o') * 1e3), side='l')
     sg(XRI, YGR, 0.4)
     S.dot(ax, XRI, YREF)
-    XK = 44.6
+    XK = 47.0
     ta, tc, tr = _tl431(ax, XK, YREF)
-    XL_, YF1, YF2 = 40.2, 7.9, 6.4
+    XL_, YF1, YF2 = 42.6, 7.9, 6.4
     S.wire(ax, [(XRI, YREF), tr])
     S.dot(ax, XL_, YREF)
     S.wire(ax, [ta, (XK, YGR)])
@@ -5023,17 +5030,17 @@ def an_full(save, foot):
     S.label(ax, XK + 0.5, YREF - 0.7, 'Q5\nTL431B', size=SN, ha='left')
     S.wire(ax, [(XL_, YREF), (XL_, YF1)])
     S.dot(ax, XL_, YF2)
-    ca, cb = S.cap(ax, 42.5, YF1)
+    ca, cb = S.cap(ax, 44.9, YF1)
     S.wire(ax, [(XL_, YF1), ca])
     S.wire(ax, [cb, (XK, YF1)])
-    S.label(ax, 42.5, YF1 + 0.6, 'C$_{Fo}$ ' + _c(_sv('C.Fo')), size=SZ)
-    ra, rb = S.res(ax, 41.6, YF2)
-    ca, cb = S.cap(ax, 43.6, YF2)
+    S.label(ax, 44.9, YF1 + 0.6, 'C$_{Fo}$ ' + _c(_sv('C.Fo')), size=SZ)
+    ra, rb = S.res(ax, 44.0, YF2)
+    ca, cb = S.cap(ax, 46.0, YF2)
     S.wire(ax, [(XL_, YF2), ra])
     S.wire(ax, [rb, ca])
     S.wire(ax, [cb, (XK, YF2)])
-    S.label(ax, 41.9, YF2 - 0.65, 'R$_F$ ' + _r(_sv('R.F') * 1e3), size=SZ)
-    S.label(ax, 43.2, YF2 + 0.62, 'C$_F$ ' + _c(_sv('C.F')), size=SZ)
+    S.label(ax, 44.3, YF2 - 0.65, 'R$_F$ ' + _r(_sv('R.F') * 1e3), size=SZ)
+    S.label(ax, 45.6, YF2 + 0.62, 'C$_F$ ' + _c(_sv('C.F')), size=SZ)
     YLC, YLA = 9.4, 11.6
     S.wire(ax, [tc, (XK, YLC)])
     S.dot(ax, XK, YF1)
@@ -5056,7 +5063,7 @@ def an_full(save, foot):
     S.wire(ax, [(XK, YLC), (XPr, YLC)])
     vres(XPr, YLA, YLC, 'R$_P$\n' + _r(_sv('R.P') * 1e3), side='l')
     # the LED rail V_Z: R_Z from V_out, Q6 as a shunt regulator (16.1b)
-    XRB_, XRZ_, XU6, XCZ = 46.8, 49.4, 52.2, 55.4
+    XRB_, XRZ_, XU6, XCZ = 49.8, 52.8, 56.0, 59.6
     XZD = XRZ_                             # R_Z1 straight under R_Z
     S.wire(ax, [(XV, YT), (XRZ_, YT)])
     ra, rb = S.res(ax, XRB_, YLA)
