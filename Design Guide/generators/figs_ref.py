@@ -4388,8 +4388,8 @@ def an_full(save, foot):
     import cores
     V = an_pdf.V
     _pm = cores.PINMAP
-    fig = plt.figure(figsize=(12.0, 8.7))
-    W, H = 56.7, 41.1
+    fig = plt.figure(figsize=(12.0, 9.1))
+    W, H = 56.7, 43.0                      # the top band holds U7's RC filter
     ax = _ax(fig, [0.005, 0.005, 0.99, 0.99], 0.0, W, 0.0, H)
     ax._sym_mult = 0.47
     ax._xf_mult = 0.37                   # turns 0.8 x the two-sheet drawing's
@@ -4840,12 +4840,24 @@ def an_full(save, foot):
     gx_, gy_ = c['GND']
     S.wire(ax, [(gx_, gy_), (gx_, gy_ - 0.4)])
     sg(gx_, gy_ - 0.4, 0.0)
-    #  VCC: a short stub up from the top pin to the net flag.  The RC
-    #  filter R_SR / C_SR sits at the follower (lower right), where there
-    #  is room; the an_sr_ctrl figure draws it at the pin.
+    #  VCC: up from the top pin into the band above the box - C_SR and its
+    #  bulk to ground, R_SR in the run out to the net flag: the RC filter
+    #  at the pin (14c.3), with air round every part
     vx, vy = c['VCC']
-    S.wire(ax, [(vx, vy), (vx, vy + 0.5)])
-    flag(vx, vy + 0.5, 'V$_{CC,SR}$', side='u')
+    YVS = 41.4
+    XSRb, XSR, XRS_, XFL = TX0 + 1.2, TX0 - 0.4, TX0 - 2.8, TX0 - 4.8
+    S.wire(ax, [(vx, vy), (vx, YVS), (XSR, YVS)])
+    for xc_ in (XSRb, XSR):
+        S.dot(ax, xc_, YVS)
+        vcap(xc_, YVS, YVS - 0.8)
+        sg(xc_, YVS - 0.8, 0.3)
+    S.label(ax, (XSR + XSRb) / 2.0, YVS - 1.9, 'C$_{SR}$ ' + _c(_sv('C.SR'))
+            + ' $\\parallel$ ' + _c(_sv('C.SRb') * 1e3), size=SN)
+    ra_, rb_ = S.res(ax, XRS_, YVS)
+    S.wire(ax, [(XSR, YVS), rb_])
+    S.wire(ax, [ra_, (XFL, YVS)])
+    S.label(ax, XRS_, YVS + 0.6, 'R$_{SR}$ ' + _r(_sv('R.SR')), size=SN)
+    flag(XFL, YVS, 'V$_{CC,SR}$', side='l')
 
     def pair(yc, ydrain, ysrc, flip, leg, hop_y, ds, gd, ss, xgnd):
         """two MOSFETs, each with its gate resistor on its own gate lead.
@@ -4937,26 +4949,8 @@ def an_full(save, foot):
     sg(XRB, 18.0, 0.4)
     S.label(ax, XRB - 0.75, 18.8, 'D$_{ZSR}$\nBZT52H-C15', size=SN,
             ha='right')
-    #  the RC filter of the SR supply (14c.3): R_SR in the emitter run, then
-    #  C_SR and its bulk to ground, the net on to U7's VCC pin
-    xe_, YNS = eq_[0], 16.9
-    ra_, rb_ = S.res(ax, xe_, (eq_[1] + YNS) / 2.0, horiz=False)
-    S.wire(ax, [eq_, rb_])
-    S.wire(ax, [ra_, (xe_, YNS)])
-    S.label(ax, xe_ + 0.45, (eq_[1] + YNS) / 2.0, 'R$_{SR}$ ' + _r(_sv('R.SR')),
-            size=SN, ha='left')
-    S.dot(ax, xe_, YNS)
-    XC1, XC2 = xe_ + 1.6, xe_ + 3.0
-    S.wire(ax, [(xe_, YNS), (XC2, YNS)])
-    for xc_ in (XC1, XC2):
-        if xc_ != XC2:
-            S.dot(ax, xc_, YNS)
-        vcap(xc_, YNS, YNS - 1.5)
-        sg(xc_, YNS - 1.5, 0.3)
-    S.label(ax, (XC1 + XC2) / 2.0, YNS - 2.55, 'C$_{SR}$ ' + _c(_sv('C.SR'))
-            + ' $\\parallel$ ' + _c(_sv('C.SRb') * 1e3), size=SN)
-    S.wire(ax, [(xe_, YNS), (xe_, YNS - 1.1)])
-    flag(xe_, YNS - 1.1, 'V$_{CC,SR}$ %.1f V' % _sv('V.SR'), side='l')
+    S.wire(ax, [eq_, (eq_[0], 17.8)])
+    flag(eq_[0], 17.8, 'V$_{CC,SR}$ %.1f V' % _sv('V.SR'))
     S.label(ax, eq_[0] + 0.45, 21.3, 'Q$_{SR}$\nFZT651', size=SN,
             ha='left')
 
