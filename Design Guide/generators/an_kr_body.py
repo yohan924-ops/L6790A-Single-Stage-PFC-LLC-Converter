@@ -165,7 +165,9 @@ def build(A):
     add(p('유니버설 입력 LLC 전원은 보통 two-stage 다. 400&nbsp;V 버스를 만드는 '
           'boost PFC 단과, 그 버스를 내리는 LLC 단. 버스 커패시터는 역률 1 에서 라인 주파수 2배로 변하는 입력 전력의 변동분을 저장하고, LLC 에는 거의 일정한 전압을 공급한다. 그래서 탱크는 좁은 게인 범위만 커버하면 된다.'))
     add(p('<b>single-stage PFC LLC</b> 는 boost 단과 버스 커패시터를 없앤다. '
-          '정류된 상용전원이 공진 탱크로 바로 들어간다. 입력은 100/120&nbsp;Hz 정류 사인파가 되고, 탱크가 내야 하는 게인이 라인 주기 동안 입력을 따라 바뀌며, 버스 커패시터가 하던 일은 출력 커패시터가 맡는다. two-stage 설계 습관은 '
+          '정류된 상용전원이 공진 탱크로 바로 들어간다. 입력은 100/120&nbsp;Hz '
+          '정류 사인파가 된다. 탱크가 내야 하는 게인은 라인 주기 동안 입력을 '
+          '따라 바뀐다. 버스 커패시터가 하던 일은 출력 커패시터가 맡는다. two-stage 설계 습관은 '
           '대부분 여기에 맞지 않는다.'))
     add(p('이 문서는 이 컨버터가 어떻게 동작하는지, 그리고 STMicroelectronics '
           '<b>L6790A</b> 로 어떻게 설계하는지를 다룬다. 설계 예제 하나를 문서 전체에서 쓴다: <b>90 ~ 264&nbsp;Vac 입력, %(Vout).0f&nbsp;V / '
@@ -202,8 +204,8 @@ def build(A):
         '부품과 필터가 작아진다.',
         '<b>누설 인덕턴스를 스너버로 억제하는 대신 L<sub>r</sub> 로 쓰고</b>, '
         '출력 인덕터가 없다.']))
-    add(p('대가도 있다. 주파수가 입력과 부하에 따라 움직이고, 자화 전류가 '
-          '부하와 무관하게 순환하므로 Light load 효율이 떨어지며, 설계가 듀티 '
+    add(p('대가도 있다. 주파수가 입력과 부하에 따라 움직인다. 자화 전류가 '
+          '부하와 무관하게 순환하므로 Light load 효율이 떨어진다. 설계는 듀티 '
           '식이 아니라 게인 곡선에서 나온다.'))
     add(h2('공진으로 무엇을 얻나'))
     add(p('하드 스위칭 컨버터에서는 스위치 출력 커패시턴스의 에너지가 매 '
@@ -357,10 +359,10 @@ def build(A):
             '세 영역. Full load 곡선 기준으로 색칠했다. 쓸 수 있는 것은 '
             'inductive 두 영역뿐이다. 영역 구분은 ROHM TechWeb 을 따랐다.'))
     add(p('<b>어느 쪽에서 도는지는 파형 없이 차트로 읽는다.</b> 요구 게인을 '
-          '수평선으로 긋고 현재 부하의 곡선과 만나는 점을 찾는다. 1 보다 크면 '
-          '교차점은 f<sub>n</sub>&nbsp;=&nbsp;1 의 왼쪽(below, 그림&nbsp;%s 의 '
-          '왼쪽 열), 1 이면 부하와 무관하게 f<sub>r</sub>, 1 보다 작으면 '
-          '오른쪽(above)이다.' % FR('an_three_cases')))
+          '수평선으로 긋고 현재 부하의 곡선과 만나는 점을 찾는다. 요구 게인이 '
+          '1 보다 크면 교차점은 f<sub>n</sub>&nbsp;=&nbsp;1 의 왼쪽이다(below, '
+          '그림&nbsp;%s 의 왼쪽 열). 1 이면 부하와 무관하게 f<sub>r</sub> 이다. '
+          '1 보다 작으면 오른쪽이다(above).' % FR('an_three_cases')))
     add(p('따라서 어느 쪽인지는 부하가 아니라 입력 전압이 정한다. 요구 게인은 '
           '반사된 출력 전압을 탱크가 보는 입력으로 나눈 값이고, 부하는 곡선만 '
           '고른다. 입력이 높아지면 수평선이 내려가고 교차점은 오른쪽으로 간다. '
@@ -423,10 +425,10 @@ def build(A):
               'boost 냐 buck 이냐, 그리고 <b>2차</b>의 ZCS 여부'],
              ['어느 쪽이 허용되나', 'inductive 만, 언제나', '양쪽 다 정상 동작']],
             widths=[CW * 0.19, CW * 0.40, CW * 0.41], key='capind', split=True))
-    add(p('capacitive 경계는 <b>부하와 함께 올라간다</b>. No load 의 '
-          'f<sub>o</sub> 에서 부하가 커질수록 f<sub>r</sub> 쪽으로 올라가므로, '
-          'Light load 에서 inductive 이던 주파수가 Overload 에서는 capacitive '
-          '일 수 있다.'))
+    add(p('capacitive 경계는 <b>부하와 함께 올라간다</b>. No load 에서는 '
+          'f<sub>o</sub> 에 있고, 부하가 커질수록 f<sub>r</sub> 쪽으로 올라간다. '
+          '그래서 Light load 에서 inductive 이던 주파수가 Overload 에서는 '
+          'capacitive 일 수 있다.'))
     add(note('<b>경계는 게인 피크가 아니다.</b> <b>arg Z<sub>in</sub> = 0</b> '
              '인 곳이고, 피크보다 조금 <i>위</i>다. 피크를 쓰면 위험한 쪽으로 낙관적인 판정이 된다. 이 설계의 두 주파수는 %(ref)s 절에 있고, 판정은 '
              '%(zvsref)s 절의 ZVS 검사에서 온다.'
@@ -500,9 +502,9 @@ def build(A):
             '플라이백에서는 기자력이 더해진다. 맨 아래 행: 점선은 각 권선이 혼자 만들 자속, 실선은 그 '
             '합, 색칠한 띠는 2차가 만드는 차이.'
             % _nj(FR('an_flux_steps'), '과', '와')))
-    add(p('그림&nbsp;%s 두 컨버터의 한 주기를 구간별로 따라간다: 어느 '
-          '권선이 도통하고, 그 권선에 어떤 전압이 걸리며, 그래서 자속이 어느 '
-          '쪽으로 움직이고 무엇이 그것을 멈추는가.'
+    add(p('그림&nbsp;%s 두 컨버터의 한 주기를 구간별로 따라간다. 어느 '
+          '권선이 도통하는가. 그 권선에 어떤 전압이 걸리는가. 그래서 자속이 어느 '
+          '쪽으로 움직이고, 무엇이 그것을 멈추는가.'
           % _nj(FR('an_flux_steps'), '은', '는')))
     add(fig('an_flux_steps',
             '자속이 만들어지는 과정. 왼쪽은 불연속 도통의 플라이백, 오른쪽은 '
@@ -636,7 +638,9 @@ def build(A):
             'STEP 4: 피크 게인은 m 과 Q 둘 다에 달렸으므로, 요구 게인과 Q 를 '
             '정하면 쓸 수 있는 m 은 좁은 범위로 한정된다.'))
     add(h2('역률 보정이란 무엇인가'))
-    add(p('커패시터 부하가 걸린 브리지 정류기는 버스 전압을 상용전원 피크 근처로 유지하므로, 다이오드는 상용전원이 커패시터 전압보다 높은 짧은 구간에서만 도통한다. 한 주기의 전하가 전부 그 구간에 몰린다.'))
+    add(p('커패시터 부하가 걸린 브리지 정류기는 버스 전압을 상용전원 피크 근처에 '
+          '유지한다. 그래서 다이오드는 상용전원이 커패시터 전압보다 높은 짧은 '
+          '구간에서만 도통한다. 한 주기의 전하가 전부 그 구간에 몰린다.'))
     add(fig('an_pfc_cap',
             '커패시터 입력 정류기: v<sub>C</sub> 는 피크 근처에 머물고, '
             '다이오드는 좁은 구간에서만 도통하며, 그 안의 전류는 높다.'))
@@ -701,8 +705,8 @@ def build(A):
           '&omega;<sub>l</sub> = 2&pi;f<sub>l</sub> 이다. '
           '부하는 일정한 전력을 요구하므로, 토폴로지가 무엇이든 그 차이를 '
           '저장했다가 몇 ms 뒤에 되돌려 줘야 한다.'))
-    add(p('그림&nbsp;%s 의 패널 2 가 그것이다: 평평한 부하 위로 남는 에너지와 '
-          '아래로 모자라는 에너지가 같고, 어딘가의 커패시터가 남는 것을 '
+    add(p('그림&nbsp;%s 의 패널 2 가 그것이다. 평평한 부하 위로 남는 에너지와 '
+          '아래로 모자라는 에너지가 같다. 어딘가의 커패시터가 남는 것을 '
           '흡수했다가 모자랄 때 되돌려 줘야 한다.' % FR('an_pf_chain')))
     add(h2('버퍼를 400 V 에서 출력으로 옮기기'))
     add(p('two-stage 에서는 버퍼가 400&nbsp;V 버스 커패시터다. 여기는 버스가 '
@@ -710,9 +714,9 @@ def build(A):
     add(eq(r'E=\frac{1}{2}C\left(V^{2}-V_{min}^{2}\right)'))
     add(p('hold-up 을 계산해 보면 그 대가가 보인다. 두 구조 모두 같은 T<sub>hold</sub> '
           '동안 같은 에너지를 저장해야 한다. 320&nbsp;V 까지 내려가도 되는 '
-          '400&nbsp;V 버스에서는 쓸 수 있는 전압 구간이 400&sup2;&nbsp;&minus;&nbsp;320&sup2; 이고, '
+          '400&nbsp;V 버스에서는 쓸 수 있는 전압 구간이 400&sup2;&nbsp;&minus;&nbsp;320&sup2; 이다. '
           '수십 V 출력에서는 V<sub>out</sub>&sup2;&nbsp;&minus;&nbsp;'
-          'V<sub>o,min</sub>&sup2; 으로 수백 배 작으므로 커패시턴스가 그만큼 '
+          'V<sub>o,min</sub>&sup2; 으로 수백 배 작다. 그래서 커패시턴스가 그만큼 '
           '커진다. 이것부터 확인할 것: 뱅크가 제품 케이스에 들어가지 않으면 출력 전압을 '
           '바꿔야 한다. %(ref)s 절이 이 설계의 뱅크를 정하는데, 거기서는 '
           'hold-up 이 아니라 리플이 결정한다.'
@@ -865,7 +869,7 @@ def build(A):
            r'\;=\;0.5\,\mathrm{V}+0.167\,'
            r'\frac{\mathrm{V}}{\Omega\cdot\mathrm{W}}\,R_{CS}\,P_{in,LLC}', key='VFB'))
     add(p('P<sub>in,LLC</sub> 는 브리지가 끌어가는 전력이다. R<sub>CS</sub> 가 브리지 귀환 경로에 있으므로 '
-          '컨트롤러가 검출하는 것이 이 전력이다. V<sub>os</sub> 는 전력 지령이 없을 때 핀이 머무는 0.5&nbsp;V 이고, '
+          '컨트롤러가 검출하는 것이 이 전력이다. V<sub>os</sub> 는 전력 지령이 없을 때 핀이 머무는 0.5&nbsp;V 다. '
           'K<sub>HV</sub>, K<sub>M</sub>, K<sub>FF</sub> 는 블록도의 입력 전압 sensing, multiplier, 피드포워드 게인이다. 피드백 폭 2.8&nbsp;V 에서 '
           '2.8/0.167 = 16.8&nbsp;&Omega;&middot;W, 데이터시트의 최대 전력 '
           '규칙이 나온다. <b>최대 전력, 버스트 진입, Overload 검출이 전부 '
@@ -982,8 +986,9 @@ def build(A):
     add(note('공칭 상용전원 전압 중 166 ~ 173&nbsp;Vrms 에 드는 것은 없다. 이 구간은 sag 가 왔을 때, 그리고 프로그래머블 AC 소스를 쓴 시험이나 dip·surge 시험에서 나타난다. 램프가 아니라 '
              'threshold 를 가로지르는 <b>스텝</b>으로 시험할 것.'))
     add(note('<b>전환 시 과도 응답.</b> threshold 를 넘으면 한 라인 주기 안에 구동이 2:1 로 '
-             '바뀌는데, 루프는 수십 Hz 에서 교차하므로 루프가 회복할 때까지 '
-             '출력이 내려가거나(상용전원이 올라갈 때) 오버슈트한다(내려올 때). '
+             '바뀐다. 루프는 수십 Hz 에서 교차하므로 바로 따라가지 못한다. 루프가 '
+             '회복할 때까지 출력이 내려가거나(상용전원이 올라갈 때) '
+             '오버슈트한다(내려올 때). '
              '내려가는 쪽은 이미 만족한 hold-up 보다 덜 심하므로 '
              'C<sub>out</sub> 을 키울 이유는 아니다. 둘 다 시간 영역에서 '
              '검사하지는 않았다.'))
@@ -1015,9 +1020,9 @@ def build(A):
     add(p('하프브리지 경계(245&nbsp;V<sub>pk</sub>)에서 탱크는 '
           '%(Veqlo).1f&nbsp;Vac 를 보고, 풀브리지 경계(235&nbsp;V<sub>pk</sub>)'
           '에서는 %(Veqhi).1f&nbsp;Vac 를 본다. <b>이 두 경계가 설계 코너다</b>: '
-          '낮은 쪽은 게인과 ZVS, 높은 쪽은 스위칭 주파수. 실제 상용전원 전압도 같은 축에 놓인다: 풀브리지의 90 과 110&nbsp;Vac 는 '
-          '등가 180 과 220&nbsp;Vac 가 되고, 하프브리지의 230 과 264&nbsp;Vac '
-          '는 230 과 264 그대로다. 넷 다 두 경계 안에 있고, 이 문서는 여섯 조건 전부의 결과를 제시한다.' % V))
+          '낮은 쪽은 게인과 ZVS, 높은 쪽은 스위칭 주파수. 실제 상용전원 전압도 같은 축에 놓인다. 풀브리지의 90 과 110&nbsp;Vac 는 '
+          '등가 180 과 220&nbsp;Vac 가 된다. 하프브리지의 230 과 264&nbsp;Vac '
+          '는 230 과 264 그대로다. 넷 다 두 경계 안에 있다. 이 문서는 여섯 조건 전부의 결과를 제시한다.' % V))
     add(h2('권선비와 반사 전압'))
     add(p('권선비는 언제나 유효 출력 전압에 곱해진 꼴로만 나오므로, 중요한 '
           '것은 <b>반사 전압</b> V<sub>refl</sub> 이다.'))
@@ -1033,9 +1038,9 @@ def build(A):
           '같다.'))
     add(eq(r'R_{ac}=\frac{4}{\pi^{2}}\,'
            r'\frac{n^{2}V_{o,eff}^{2}}{P_{in,LLC}}', key='Rac'))
-    add(p('P<sub>in,LLC</sub> 는 공진단으로 들어가는 전력이다. 일반적인 LLC 식은 8/&pi;&sup2; 계수와 two-stage 컨버터의 출력 전력을 쓴다. 여기서 입력 전력은 2P&thinsp;sin&sup2;&thinsp;&theta; 이므로 '
-          'R<sub>ac</sub> 는 p = 2P 인 라인 피크에 고정한다: 8 이 4 가 되고, '
-          'Q 는 피크에서의 품질계수이며 다른 곳에서는 Q(&theta;) = '
+    add(p('P<sub>in,LLC</sub> 는 공진단으로 들어가는 전력이다. 일반적인 LLC 식은 8/&pi;&sup2; 계수와 two-stage 컨버터의 출력 전력을 쓴다. 여기서 입력 전력은 2P&thinsp;sin&sup2;&thinsp;&theta; 다. 그래서 '
+          'R<sub>ac</sub> 는 p = 2P 인 라인 피크에 고정하고, 8 은 4 가 된다. '
+          'Q 는 피크에서의 품질계수다. 다른 위상에서는 Q(&theta;) = '
           'Q<sub>pk</sub>sin&sup2;&thinsp;&theta; 다. two-stage 값을 쓰면 부하를 '
           '절반으로 잘못 본다.'))
     add(p('낮은 코너의 게인 요구와 ZVS 요구가 품질계수를 Q<sub>ZVS</sub> 로 '
@@ -1178,13 +1183,13 @@ def build(A):
            r'{L_{\mu}+n_{T}^{2}L_{L2}}=L_{r}', key='Lopen'))
     add(p('둘 다 1차 단자에서 읽는다. L<sub>open</sub> 은 나머지 권선을 모두 Open 으로 '
           '두고, L<sub>short</sub> 는 2차를 Short, 보조 권선을 Open 으로 둔다. 센터탭이면 '
-          '<b>반쪽씩 하나만</b> Short 한다: 실제 동작에서는 반쪽 하나만 도통하므로 탱크가 '
+          '<b>반쪽씩 하나만</b> Short 한다. 실제 동작에서는 반쪽 하나만 도통하므로 탱크가 '
           '보는 것은 반쪽마다의 값이다. 두 반쪽이 같은 자리에 있지 않으면 둘 다 Short 한 '
           '값은 더 낮게 나온다. 그 값은 기록만 하고 L<sub>r</sub> 기준으로 판정하지 않는다. '
           '<b>이 둘과 턴수를 적고, L<sub>&mu;</sub> '
           '는 적지 말 것</b>: 그것을 잴 수 있는 단자 쌍은 없다. 턴수는 숫자로 '
           '적는다. 2차가 한두 턴이면 리드선 루프가 그 권선의 인덕턴스를 '
-          '지배하므로, 1차와 2차 한 권선에서 각각 잰 Open 인덕턴스의 비의 제곱근 '
+          '지배한다. 그래서 1차와 2차 한 권선에서 각각 잰 Open 인덕턴스의 비의 제곱근 '
           '&radic;(L<sub>1</sub>/L<sub>2</sub>) 로는 권선비가 안 나온다.'))
     add(h2('자속은 1차가 아니라 2차가 정한다'))
     add(p('그림&nbsp;%(f)s 의 표시 <b>6</b>: 2차 권선 전압은 높이 '
@@ -1300,10 +1305,10 @@ def build(A):
     add(h2('안전 절연: 권선이 갖춰야 할 것'))
     add(p('트랜스포머가 절연 경계다. 여러 시장에 파는 제품이라면 모든 시장을 '
           '통과하는 구조 하나가 필요하다. 그래서 요구 조건마다 가장 엄격한 '
-          '시장을 기준으로 잡는다: 절연 등급은 Class&nbsp;II 제품 기준으로 상용전원 쪽 '
-          '전부와 2차 사이를 <b>강화 절연</b>(Class&nbsp;I 도 이것으로 충족된다), '
-          '고도는 어느 시장이 가정하는 가장 높은 값(clearance 가 고도와 함께 '
-          '커지므로), 작업 전압은 입력 범위의 최고값.'))
+          '시장을 기준으로 잡는다. 절연 등급은 Class&nbsp;II 제품 기준으로, 상용전원 쪽 '
+          '전부와 2차 사이를 <b>강화 절연</b>한다(Class&nbsp;I 도 이것으로 충족된다). '
+          '고도는 어느 시장이 가정하는 가장 높은 값이다. clearance 가 고도와 함께 '
+          '커지기 때문이다. 작업 전압은 입력 범위의 최고값이다.'))
     ext(bullets([
         '<b>Clearance</b> 는 과전압 범주 II 의 상용전원 서지로 정한다. 강화 '
         '절연은 내전압 등급을 한 단계 올려 잡고, 2000&nbsp;m 를 넘으면 그 '
@@ -1315,18 +1320,18 @@ def build(A):
         '여러 층으로 하되 층마다 강화 절연 내전압 시험을 통과해야 한다.',
         '<b>칸 사이의 강화 절연은 거리나 전선 중 하나가 맡는다.</b> 거리로 '
         '맡기면 1차 칸과 2차 칸 사이 간격이 튜브를 따라가는 creepage 이자 '
-        '튜브 위를 건너는 clearance 이므로, 강화 절연 creepage 보다 좁을 수 '
+        '튜브 위를 건너는 clearance 다. 그래서 강화 절연 creepage 보다 좁을 수 '
         '없다. 그 간격은 누설이기도 하므로 절연이 L<sub>short</sub> 의 하한을 '
         '정하게 된다: 결정하기 전에 식&nbsp;%s 그 하한을 확인한다. '
         '전선으로 맡기면 삼중 절연선(TIW, Litz 로도 만든다)이 강화 절연을 '
         '스스로 갖추므로, 간격은 누설이 요구하는 대로 정하면 된다.'
         % _nj(ER('leak'), '으로', '로'),
         '<b>코어는 가장 가까이 붙은 쪽에 속한다고 본다.</b> 일반 전선이면 1차가 '
-        '권선창을 바깥다리 근처까지 채우므로 코어는 1차 쪽이고, 2차는 코어까지 '
-        '강화 절연 거리가 필요하다: 튜브 벽을 지나, 플랜지를 넘어, 바깥다리까지, '
-        '그리고 리드에서. 1차가 삼중 절연선이면 코어는 2차 쪽이 되고, 남는 '
-        '확인 대상은 절연이 끝나는 곳이다: 1차 핀에서 피복을 벗긴 선 끝과 코어, '
-        '2차 리드 사이.',
+        '권선창을 바깥다리 근처까지 채우므로 코어는 1차 쪽이다. 그러면 2차는 '
+        '코어까지 강화 절연 거리가 필요하다: 튜브 벽을 지나, 플랜지를 넘어, '
+        '바깥다리까지, 그리고 리드에서. 1차가 삼중 절연선이면 코어는 2차 쪽이 '
+        '된다. 남는 확인 대상은 절연이 끝나는 곳이다: 1차 핀에서 피복을 벗긴 선 '
+        '끝과 코어, 2차 리드 사이.',
         '<b>V<sub>CC</sub> 를 공급하고 출력을 sense 하는 보조 권선은 2차 위에 '
         '감는다.</b> 그래야 출력을 따라간다. 보조 권선은 상용전원 쪽 회로이므로 '
         '그 자리에서 스스로 강화 절연을 갖춰야 하고, 삼중 절연선이면 테이프 '
@@ -1344,8 +1349,8 @@ def build(A):
     add(p('<b>사양서의 DC overlap 항목.</b> 트랜스포머 사양서에는 보통 "DC '
           'overlap: 초기 인덕턴스의 90&nbsp;% 이상, 시험 전류 I<sub>sat</sub>, '
           '상온" 형식의 항목이 있다. 이름이 곧 측정 방법이다. LCR 미터가 작은 AC '
-          '신호(100&nbsp;kHz, 1&nbsp;V 가 흔한 설정이고 누설 시험과 같다)로 '
-          '1차 인덕턴스를 읽는 동안, 바이어스 전원이 같은 권선에 DC 전류를 '
+          '신호로 1차 인덕턴스를 읽는다(100&nbsp;kHz, 1&nbsp;V 가 흔한 설정이고 '
+          '누설 시험과 같다). 그동안 바이어스 전원이 같은 권선에 DC 전류를 '
           '겹쳐(overlap) 흘린다. 다른 권선은 전부 Open 이다. DC 전류를 단계로 '
           '올리며 단계마다 인덕턴스를 읽는다. 같은 시험을 DC bias, DC '
           'superposition 이라고도 부른다.'))
@@ -1358,8 +1363,8 @@ def build(A):
           '자속을 정하므로, 코어가 선형인 동안 인덕턴스는 평평하고 포화에 '
           '다가가면 떨어진다. 90&nbsp;% 점이 knee 점이다. 단자에서 자속 '
           '여유를 읽는 시험은 이것뿐이다. 턴수와 A<sub>L</sub> 은 그것을 '
-          '말해 주지 않는다: 같은 A<sub>L</sub> 이 다른 갭, 다른 '
-          'A<sub>min</sub>, 다른 재료에서도 나오고, L<sub>open</sub> 은 '
+          '말해 주지 않는다. 같은 A<sub>L</sub> 이 다른 갭, 다른 '
+          'A<sub>min</sub>, 다른 재료에서도 나온다. L<sub>open</sub> 은 '
           '인덕턴스를 확인할 뿐 여유를 확인하지 않는다. L<sub>open</sub> 은 '
           '맞는데 코어가 틀린 부품은 여기서만 잡힌다.'))
     add(p('<b>어떤 전류를 적어야 하나.</b> 그림&nbsp;%(f)s 의 표시 <b>3</b> 과 '
@@ -1411,8 +1416,8 @@ def build(A):
           '틀린다.' % _nj(ER('Isatspec'), '은', '는')))
     add(p('Overload, 기동, 버스트 모드, 스위칭 주파수는 자속을 올리지 '
           '않는다(%s 절). 출력 과전압은 자속을 올리고, 온도는 상한을 낮춘다. MnZn 파워 페라이트의 B<sub>s</sub> 는 25 &deg;C 에서 '
-          '100&nbsp;&deg;C 사이에 약 1/5 떨어지므로, 상온에서 한 시험은 '
-          '재료의 고온 B<sub>s</sub> 에 대해 읽고, OVP2 에서의 설계 자속이 그 '
+          '100&nbsp;&deg;C 사이에 약 1/5 떨어진다. 그래서 상온에서 한 시험은 '
+          '재료의 고온 B<sub>s</sub> 에 대해 읽는다. OVP2 에서의 설계 자속은 그 '
           '아래에 여유를 두고 있어야 한다. 90&nbsp;%% 기준이 그 여유다.'
           % SR('플라이백이 아니다, 그래서 코어가 달라진다')))
     add(p('<b>컨트롤러에 OVP2 같은 상한이 없으면.</b> 그때는 다른 무언가가 '
@@ -1426,9 +1431,9 @@ def build(A):
         '채로 출력이 거기 머물 수 있다. 쓰지 않는다.',
         '<b>전압 상한이 아예 없으면.</b> 출력을 제한하는 것은 오실레이터 하한에서 '
         '가장 가벼운 부하로 탱크가 낼 수 있는 값뿐인데, 하한이 f<sub>o</sub> '
-        '근처이면 그 한계는 쓸모가 없다. 남는 것은 전류 제한이다: 2차를 '
-        '클램프하는 것이 없으면 1차 전류가 곧 자화 전류이므로, 컨트롤러가 1차에 '
-        '허용하는 가장 큰 전류에서 코어가 포화하지 않아야 한다, '
+        '근처이면 그 한계는 쓸모가 없다. 남는 것은 전류 제한이다. 2차를 '
+        '클램프하는 것이 없으면 1차 전류가 곧 자화 전류다. 그러므로 컨트롤러가 '
+        '1차에 허용하는 가장 큰 전류에서 코어가 포화하지 않아야 한다: '
         'I<sub>sat</sub>&nbsp;=&nbsp;I<sub>OCP1</sub>. 안전하지만 비싸다. '
         '%s 절에 이 설계의 비가 있다.' % SR('자속 확인과 사양서'),
         '<b>관행값</b>, 즉 상온에서 i<sub>&mu;,pk</sub> 나 권선 피크의 1.2 ~ '
@@ -1500,6 +1505,56 @@ def build(A):
     add(note('하프브리지 모핑에서 고정된 소자(%s 절)는 스위칭하지 않으면서 '
              '탱크 전류 전부를 흘린다. 여기서 그 대가가 얼마인지는 %s 절에 '
              '있다.' % (SR('하프브리지'), SR('손실 분배'))))
+    add(h2('브리지 구동: 외부 게이트 드라이버'))
+    add(p('컨트롤러의 HOUTx 와 LOUTx 는 로직 출력이다. 레그마다 하프브리지 '
+          '드라이버가 필요하고, 그 드라이버가 검사 항목 넷을 더한다.'))
+    add(p('<b>하이사이드는 부트스트랩으로 산다.</b> 그 커패시터 C<sub>BOOT</sub> '
+          '는 같은 레그의 로우사이드가 켜져 있는 T<sub>charge</sub> 동안 '
+          'V<sub>CC</sub> 에서 다시 충전된다. 저항 R<sub>BS</sub> 의 내장 스위치로 '
+          '충전하는 드라이버는'))
+    add(eq(r'V_{drop}=\frac{Q_{g}\,R_{BS}}{T_{charge}}', key='bsdrop'))
+    add(p('만큼 잃는다. 이 값은 주파수와 함께 커진다. V<sub>CC</sub> 의 큰 몫이 '
+          '되면 V<sub>CC</sub> 에서 BOOT 로 외부 고속 다이오드를 단다. 그러면 '
+          '하이사이드 전원은 레일보다 다이오드 전압 V<sub>F</sub> 와 주기마다의 '
+          '리플만큼 낮다. 리플은 게이트 전하에, 플로팅부가 가장 긴 하이사이드 펄스 '
+          'T<sub>on,max</sub> 동안 끄는 I<sub>QBO</sub> 를 더한 것이다:'))
+    add(eq([r'\Delta V_{boot}=\frac{Q_{g}+I_{QBO}\,T_{on,max}}{C_{BOOT}}',
+            r'V_{BO}=V_{CC}-V_{F}-\Delta V_{boot}'], key='vbo'))
+    add(p('<b>드라이버가 V<sub>CC</sub> 의 하한을 정한다.</b> 드라이버 자체 전원과 '
+          '플로팅 전원에는 권장 최소값이 있다. 그 아래에서도 스위칭은 할 수 있지만 '
+          '데이터시트가 보증하는 것은 없다. 그래서 기동 설계는 이 값을 쓴다:'))
+    add(eq(r'V_{CC,floor}=\max\left(V_{CCoff},\;V_{CC,drv,min},\;'
+           r'V_{BO,min}+V_{F}+\Delta V_{boot}\right)', key='vccfloor'))
+    add(p('<b>게이트 전력은 나눠 갖는다.</b> 드라이버 하나가 주기마다 스위치 둘의 '
+          '전하를 옮긴다. 전력 Q<sub>g</sub>V<sub>CC</sub>f 는 드라이버 출력 '
+          'R<sub>drv</sub>, 게이트 저항 R<sub>G</sub>, MOSFET 내부 R<sub>g,int</sub> '
+          '에 나뉘므로 드라이버 몫은'))
+    add(eq([r's_{drv}=\frac{1}{2}\left(\frac{R_{so}}{R_{so}+R_{G}+R_{g,int}}'
+            r'+\frac{R_{si}}{R_{si}+R_{G}+R_{g,int}}\right)',
+            r'P_{drv}=2\,Q_{g}V_{CC}f_{sw}\,s_{drv}+(I_{QCC}+I_{QBO})\,V_{CC}'],
+           key='pdrv'))
+    add(p('R<sub>so</sub> 와 R<sub>si</sub> 는 출력의 소스·싱크 저항이다. '
+          '데이터시트에 더 나은 값이 없으면 V<sub>CC</sub> 를 단락 전류로 나눠 쓴다. '
+          'I<sub>QCC</sub> 와 I<sub>QBO</sub> 는 로우사이드부와 플로팅부의 대기 '
+          '전류다. 턴오프 경로를 따로 두면(아래) 싱크 항의 R<sub>G</sub> 는 '
+          'R<sub>G,off</sub> 다.'))
+    add(p('<b>타이밍.</b> 데드타임은 드라이버의 지연 편차 MT 만큼 줄어서 게이트에 '
+          '닿는다. 그래서 (t<sub>D</sub> &minus; MT) 가 스윙 T<sub>T</sub> 를 '
+          '덮어야 한다. 스윙 중의 중점 기울기 S<sub>mid</sub> 도 검사한다. 스윙 '
+          '꼭대기에서 전류 전환 전류가 출력 커패시턴스에 흐르며 만드는 기울기이고, '
+          '드라이버가 허용하는 OUT 슬루율 S<sub>OUT,max</sub> 아래여야 한다.'))
+    add(p('<b>턴오프 경로는 따로 둔다.</b> 게이트 저항 하나가 두 에지를 다 정한다. '
+          'R<sub>G</sub> 에 역병렬로 다이오드를 달고 더 작은 R<sub>G,off</sub> 를 '
+          '직렬로 두면 게이트가 충전보다 빨리 방전된다. 같은 레그의 다른 스위치가 '
+          '켜질 때 그 dv/dt 가 Miller 커패시턴스로 전하를 밀어 넣는다. 그때 게이트를 '
+          '붙잡아 두는 것이 이 경로다. 검사는 셋이다. 피크 방전 전류 '
+          '(V<sub>CC</sub> &minus; V<sub>F</sub>)/(R<sub>G,off</sub> + '
+          'R<sub>si</sub> + R<sub>g,int</sub>) 는 드라이버 싱크 정격과 다이오드 '
+          '서지 정격 아래여야 한다. 평균 Q<sub>g</sub>f<sub>sw</sub> 는 다이오드의 '
+          '연속 정격 아래여야 한다. 그리고 레일에서 Miller 평탄부까지의 하강 시간에는 '
+          '하한이 있다. R<sub>G,off</sub> 를 아무리 작게 해도 내부 저항과 싱크 '
+          '저항이 그 하한을 정한다.'))
+
     add(h2('컨트롤러 주변 회로'))
     add(fig('bom_pin_config',
             '컨트롤러와 주변 수동 소자. HVSU 는 브리지의 AC 쪽에서 받고, 보조 '
@@ -1523,9 +1578,9 @@ def build(A):
     add(p('트랜스포머 공차도 같은 여유 안에 들어가야 한다. L<sub>open</sub> 이 '
           '<b>낮으면</b> f<sub>o</sub> 가 오른다. 허용되는 인덕턴스 감소는'))
     add(eq(r'\frac{\Delta L}{L}\;=\;1-\frac{1}{k_{floor}^{2}}', key='Ldrop'))
-    add(p('k<sub>floor</sub> = f<sub>Min</sub>/f<sub>o</sub> 는 하한 여유다. 하한 여유가 몇 %% 뿐이면 허용 하락도 몇 %% 뿐이고, 그러면 흔한 '
-          '&plusmn;10&nbsp;%% 는 <b>안 들어간다</b>: 공차 아래쪽 끝에서 '
-          'f<sub>o</sub> 가 f<sub>Min</sub> 위로 올라가 영교차 근처에서 하드 '
+    add(p('k<sub>floor</sub> = f<sub>Min</sub>/f<sub>o</sub> 는 하한 여유다. 하한 여유가 몇 %% 뿐이면 허용 하락도 몇 %% 뿐이다. 그러면 흔한 '
+          '&plusmn;10&nbsp;%% 는 <b>안 들어간다</b>. 공차 아래쪽 끝에서 '
+          'f<sub>o</sub> 가 f<sub>Min</sub> 위로 올라가, 영교차 근처에서 하드 '
           '스위칭할 수 있다. 아래쪽 공차를 조이거나 R<sub>T</sub> 를 낮춰 '
           'f<sub>Min</sub> 을 올린다. 하한을 올리면 영교차 dead zone 이 '
           '넓어진다(%s 절). <b>트랜스포머를 발주하기 전에 확인할 것.</b>'
@@ -1543,13 +1598,19 @@ def build(A):
           '충전 전류를 다시 켜는데, 초안 데이터시트는 기동 timeout 이 지난 '
           '뒤에도 그런지 적지 않았다. 그 레벨 위에 있으면 이 문제는 생기지 '
           '않는다. 위쪽 끝은 핀의 동작 한계 아래여야 한다. 부하 I<sub>VCC</sub> '
-          '는 컨트롤러 자체의 I<sub>CC</sub> 와 게이트 드라이버 전류의 합이고, '
-          '드라이버 몫은 스위치 자리 N<sub>sw</sub> 개 각각의 게이트 전하 '
-          'Q<sub>g</sub> 를 주기마다 한 번씩 채우는 것이다:'))
-    add(eq(r'I_{VCC}=I_{CC}+N_{sw}\,Q_{g}\,f_{sw}', key='ivcc'))
+          '는 셋의 합이다: 컨트롤러 자체의 I<sub>CC</sub>, 게이트 드라이버의 대기 '
+          '전류 I<sub>drv,q</sub>, 그리고 스위치 자리 N<sub>sw</sub> 개 각각의 '
+          '게이트 전하 Q<sub>g</sub> 를 주기마다 한 번씩 채우는 전류:'))
+    add(eq(r'I_{VCC}=I_{CC}+I_{drv,q}+N_{sw}\,Q_{g}\,f_{sw}', key='ivcc'))
+    add(p('Q<sub>g</sub> 는 드라이버가 실제로 거는 전압, 곧 레일 전압에서의 '
+          '전하다. 데이터시트 표제의 10&nbsp;V 값이 아니다. Miller 평탄부를 지나면 '
+          '드레인은 이미 내려와 있고 게이트는 고정 커패시턴스로 보인다. 거기서 '
+          '게이트 전하 곡선은 직선이다. 그 위의 두 점이면 어느 구동 전압의 전하든 '
+          '나온다:'))
+    add(eq(r'Q_{g}(V)=Q_{g,10}+C_{g}\,(V-10\;\mathrm{V})', key='qgv'))
     add(p('<b>권선비에는 하한과 비용이 있다.</b> hold-up 끝에서 출력이 '
           'V<sub>o,min</sub> 일 때도 권선은 베이스를 가장 높은 제너 전압 '
-          'V<sub>DZ,max</sub> 위로 올려야 하고, 베이스 전류 '
+          'V<sub>DZ,max</sub> 위로 올려야 한다. 그러고도 베이스 전류 '
           'I<sub>VCC</sub>/&beta;<sub>min</sub> 과 제너 바이어스 '
           'I<sub>Z,min</sub> 을 댈 전류가 남아 있어야 한다. 이것이 공급 저항 '
           'R<sub>BZ</sub> 의 상한을 정한다:'))
@@ -1559,26 +1620,33 @@ def build(A):
           'I<sub>VCC</sub> 를 곱한 만큼을 소모한다. 그러므로 하한을 만족하는 '
           '가장 작은 정수 턴의 권선비가 비용도 가장 작다.'))
     add(p('<b>기동이 또 하나의 크기 결정 조건이다.</b> 기동 회로가 C<sub>VCC</sub> '
-          '를 V<sub>CCon</sub> 까지 채우면 스위칭이 시작된다. 그 뒤 출력이 올라와 '
-          '권선이 핀을 유지할 수 있을 때까지는 C<sub>VCC</sub> 가 드라이버를 '
-          '먹인다: V<sub>CC,HVSUon</sub> 까지는 혼자, 그 아래 V<sub>CCoff</sub> '
-          '까지는 기동 충전 전류 I<sub>HVSU</sub> 의 도움을 받아. 이 시간이 '
+          '를 V<sub>CCon</sub> 까지 채우면 스위칭이 시작된다. 출력이 올라와 권선이 '
+          '핀을 유지할 수 있을 때까지는 C<sub>VCC</sub> 가 컨트롤러와 드라이버를 '
+          '먹인다. V<sub>CC,HVSUon</sub> 까지는 혼자, 그 아래 V<sub>CC,floor</sub> '
+          '까지는 기동 충전 전류 I<sub>HVSU</sub> 의 도움을 받는다. 하한은 '
+          '컨트롤러의 V<sub>CCoff</sub> 가 아니다. 그것과 게이트 드라이버의 최저 '
+          '보증 전원 중 높은 쪽이다(식&nbsp;' + ER('vccfloor') + '). 이 시간이 '
           't<sub>hand</sub> 를 버텨야 한다. t<sub>hand</sub> 는 출력이 '
-          'V<sub>out,UV</sub>, 곧 권선이 핀을 V<sub>CCoff</sub> 에 붙잡아 둘 수 '
-          '있는 레벨에 닿을 때까지의 시간이다. 출력 뱅크를 정격 전류로, No load '
-          '로 충전한다고 보고, 기동 주파수에서의 공급 전류를 I<sub>VCC,SU</sub> '
-          '라 하면'))
+          'V<sub>out,UV</sub>, 곧 권선이 핀을 하한에 붙잡아 둘 수 있는 레벨에 '
+          '닿을 때까지의 시간이다. 구동 전류는 레일과 함께 떨어진다: '
+          'I<sub>VCC</sub>(V) = I<sub>VCC,SU</sub> &minus; B(V<sub>CCon</sub> '
+          '&minus; V), B = N<sub>sw</sub>C<sub>g</sub>f<sub>sw</sub>(식&nbsp;'
+          + ER('qgv') + '). 동작 범위 위에서 기동하는 오실레이터는 처음에 전하 '
+          '&Delta;Q<sub>OSC</sub> 를 더 쓴다. 출력 뱅크를 정격 전류로, No load 로 '
+          '충전한다고 보고 C<sub>VCC</sub>dV/dt = &minus;I<sub>VCC</sub>(V) 를 두 '
+          '구간에서 적분하면'))
     add(eq([r't_{hand}=\frac{C_{out}V_{out,UV}}{I_{out}}',
-            r'C_{VCC}\geq\frac{t_{hand}}'
-            r'{\dfrac{V_{CCon}-V_{CC,HVSUon}}{I_{VCC,SU}}'
-            r'+\dfrac{V_{CC,HVSUon}-V_{CCoff}}{I_{VCC,SU}-I_{HVSU}}}'],
+            r'C_{VCC}\geq\frac{B\left(t_{hand}+\Delta Q_{OSC}/I_{VCC,SU}'
+            r'\right)}{\ln\dfrac{I_{VCC}(V_{CCon})}{I_{VCC}(V_{CC,HVSUon})}'
+            r'+\ln\dfrac{I_{VCC}(V_{CC,HVSUon})-I_{HVSU}}'
+            r'{I_{VCC}(V_{CC,floor})-I_{HVSU}}}'],
            key='cvcc'))
     add(p('C<sub>VCC</sub> 를 크게 잡은 대가는 첫 펄스까지의 지연 '
           'C<sub>VCC</sub>V<sub>CCon</sub>/I<sub>HVSU</sub> 이다.'))
     add(h2('전압 루프와 보상'))
-    add(p('루프는 그림&nbsp;%(f)s 처럼 이어진다: 분압기가 출력을 검출하고, TL431 이 '
-          '기준과 비교해 옵토커플러 LED 를 구동하고, 옵토커플러 트랜지스터가 '
-          'FB 핀을 끌어내리고, FB 전압이 전력을 지령하며(%(s)s 절), 그 전력이 '
+    add(p('루프는 그림&nbsp;%(f)s 처럼 이어진다. 분압기가 출력을 검출한다. TL431 이 '
+          '기준과 비교해 옵토커플러 LED 를 구동한다. 옵토커플러 트랜지스터가 '
+          'FB 핀을 끌어내린다. FB 전압이 전력을 지령하고(%(s)s 절), 그 전력이 '
           '출력 커패시터로 들어간다.'
           % dict(f=FR('an_loop_blocks'), s=SR('피드백 핀은 전력 지령이다'))))
     add(fig('an_loop_blocks',
@@ -1607,9 +1675,9 @@ def build(A):
           '낮으며, crossover 에서 위상이 최대 90&deg; 덜 음수다. 그러므로 적분기가 '
           'phase margin 의 최악 조건이다.'))
     add(h2('루프 설계 목표와 벗어났을 때의 결과'))
-    add(p('T(s) 의 Bode plot 에서 숫자 셋을 읽는다: |T| = 1 인 <b>crossover 주파수</b> f<sub>c</sub>, f<sub>c</sub> 에서의 <b>phase margin</b> '
-          '180&deg; + arg&nbsp;T, 그리고 arg&nbsp;T = &minus;180&deg; 인 '
-          'f<sub>180</sub> 에서 |T| 가 0&nbsp;dB 아래로 얼마나 있는가, 곧 <b>gain margin</b>. 목표는 표&nbsp;%(t)s 에 있다.'
+    add(p('T(s) 의 Bode plot 에서 숫자 셋을 읽는다. |T| = 1 인 <b>crossover 주파수</b> f<sub>c</sub>. f<sub>c</sub> 에서의 <b>phase margin</b> '
+          '180&deg; + arg&nbsp;T. 그리고 <b>gain margin</b>: arg&nbsp;T = &minus;180&deg; 인 '
+          'f<sub>180</sub> 에서 |T| 가 0&nbsp;dB 아래로 얼마나 있는가. 목표는 표&nbsp;%(t)s 에 있다.'
           % dict(t=TR('loop-aims'))))
     ext(tbl('루프가 이뤄야 할 것.',
             [['항목', '목표', '너무 낮으면', '너무 높으면'],
@@ -1669,11 +1737,14 @@ def build(A):
             'ST L6790A 설계 스프레드시트의 도면이다.'))
     add(p('분압기 R<sub>I</sub>, R<sub>O</sub> 가 출력을 분압해 TL431 기준 전압 V<sub>R</sub>&nbsp;=&nbsp;2.495&nbsp;V 와 비교한다.'))
     add(eq(r'V_{out}=V_{R}\left(1+\frac{R_{I}}{R_{O}}\right)', key='RoVout'))
-    add(p('출력이 오르면 TL431 이 LED 를 통해 더 많은 캐소드 전류를 흘리고'
-          '(LED 전류는 R<sub>B</sub> 를 통해 안정화 레일 V<sub>Z</sub> 에서 온다), '
-          '옵토커플러 트랜지스터가 내부 풀업 R<sub>FB</sub> 에 맞서 FB 를 '
+    add(p('출력이 오르면 TL431 이 LED 를 통해 더 많은 캐소드 전류를 흘린다. '
+          'R<sub>B</sub> 는 안정화 레일 V<sub>Z</sub> 에서 LED 에 전류를 준다. '
+          '이 레일은 제너가 아니라 shunt 레귤레이터다. 아래의 R<sub>B</sub> 허용 '
+          '범위가 제너 공차에 비해 너무 좁기 때문이고, %s 절에서 둘째 TL431 로 '
+          '만든다. 옵토커플러 트랜지스터가 내부 풀업 R<sub>FB</sub> 에 맞서 FB 를 '
           '끌어내려 전력 지령이 떨어진다. LED 에 병렬인 R<sub>P</sub> 는 TL431 '
-          '이 필요로 하는 최소 캐소드 전류를 흘리므로 상한이 있다.'))
+          '이 필요로 하는 최소 캐소드 전류를 흘리므로 상한이 있다.'
+          % SR('전압 루프 설계 결과')))
     add(eq(r'R_{P}\leq\frac{V_{Fo}}{I_{min}}', key='RPmax'))
     add(p('V<sub>Fo</sub> 는 LED 순방향 전압, I<sub>min</sub> 은 TL431 에 필요한 최소 캐소드 전류다. '
           'LED 를 V<sub>Z</sub> 에서 공급하므로 출력 리플은 TL431 을 통해서만 '
@@ -1685,8 +1756,8 @@ def build(A):
           '증폭기다. R<sub>I</sub> 가 입력 저항이고 R<sub>F</sub> + '
           'C<sub>F</sub> 에 병렬인 C<sub>Fo</sub> 가 피드백 임피던스 '
           'Z<sub>f</sub> 이므로, 캐소드는 출력 변화의 '
-          '&minus;Z<sub>f</sub>/R<sub>I</sub> 배만큼 움직인다. R<sub>O</sub> 는 DC 동작점만 정한다. 캐소드 전류가 LED 전류이고, 옵토커플러 '
-          '트랜지스터는 FB 노드에서 CTR&thinsp;i<sub>LED</sub> 를 흘리는 전류 제어 전류원이며, R<sub>FB</sub> 와 C<sub>opto</sub> + '
+          '&minus;Z<sub>f</sub>/R<sub>I</sub> 배만큼 움직인다. R<sub>O</sub> 는 DC 동작점만 정한다. 캐소드 전류가 LED 전류다. 옵토커플러 '
+          '트랜지스터는 FB 노드에서 CTR&thinsp;i<sub>LED</sub> 를 흘리는 전류 제어 전류원이고, R<sub>FB</sub> 와 C<sub>opto</sub> + '
           'C<sub>fx</sub> 의 pole 을 갖는다. 세 블록을 곱하면 음의 게인이 되고, 그것이 '
           '음귀환이다. G<sub>EA</sub> 는 그 부호를 뺀 값으로 쓴다: G<sub>EA</sub> = '
           '&minus;v<sub>FB</sub>/v<sub>out</sub>.' % dict(f=FR('an_comp_opamp'))))
@@ -1706,12 +1777,12 @@ def build(A):
             r'\qquad f_{px}=\frac{1}{2\pi R_{FB}\,(C_{opto}+C_{fx})}'],
            key='fzp'))
     add(p('전체에서 &omega; = 2&pi;f 이고, C<sub>ser</sub> 는 C<sub>F</sub> 와 '
-          'C<sub>Fo</sub> 의 직렬이다. C<sub>F</sub> + C<sub>Fo</sub> 가 원점 pole(정상 상태 오차 0)을 만들고, R<sub>F</sub>C<sub>F</sub> 가 위상을 회복시키는 zero f<sub>z</sub> 를, R<sub>F</sub> 와 C<sub>Fo</sub> 가 '
-          '2f<sub>l</sub> 에서 게인을 낮추는 pole f<sub>p</sub> 를, '
-          'C<sub>opto</sub> + C<sub>fx</sub> 와 R<sub>FB</sub> 가 스위칭 노이즈를 거르는 kHz 근처의 셋째 pole f<sub>px</sub> 를 만든다. CTR 이 게인 전체에 '
+          'C<sub>Fo</sub> 의 직렬이다. C<sub>F</sub> + C<sub>Fo</sub> 가 원점 pole 을 만든다(정상 상태 오차 0). R<sub>F</sub>C<sub>F</sub> 가 위상을 회복시키는 zero f<sub>z</sub> 를 만든다. R<sub>F</sub> 와 C<sub>Fo</sub> 가 '
+          '2f<sub>l</sub> 에서 게인을 낮추는 pole f<sub>p</sub> 를 만든다. '
+          'C<sub>opto</sub> + C<sub>fx</sub> 와 R<sub>FB</sub> 가 kHz 근처의 셋째 pole f<sub>px</sub> 를 만들어 스위칭 노이즈를 거른다. CTR 이 게인 전체에 '
           '곱해지므로 그 편차가 중요하다.'))
     add(p('<b>바이어스 허용 범위.</b> LED 는 CTR 이 가장 낮을 때도 FB 핀을 정상 상태 '
-          '전류로 구동해야 하고(상한), TL431 이 완전히 켜졌을 때 CTR 이 가장 '
+          '전류로 구동해야 한다(상한). TL431 이 완전히 켜졌을 때 CTR 이 가장 '
           '높아도 핀의 최대 전류를 넘지 않아야 한다(하한). I<sub>FB,steady</sub> 와 '
           'I<sub>FB,max</sub> 가 그 두 FB 핀 전류다.'))
     add(eq([r'R_{B,max}=\frac{V_{Z}-(V_{R}+V_{Fo})}'
@@ -1720,14 +1791,14 @@ def build(A):
             r'{V_{Fo}/R_{P}+I_{FB,max}/CTR_{m}}'], key='RBwin'))
     add(note('EA<sub>o</sub> 는 정상 상태 LED 전류에서의 CTR, CTR<sub>s</sub> '
              '를 쓴다. R<sub>B</sub> 의 하한은 최대 LED 전류에서의 CTR, '
-             'CTR<sub>m</sub> 을 쓴다. 둘 다 실제로 실장할 랭크에서 가져오고, '
-             '랭크의 위쪽 끝에서 루프를 다시 검사할 것: 그 근처에서 루프가 decade 당 '
-             '20&nbsp;dB 에 가깝게 떨어지므로 crossover 주파수는 CTR 에 거의 '
+             'CTR<sub>m</sub> 을 쓴다. 둘 다 실제로 실장할 랭크에서 가져온다. '
+             '랭크의 위쪽 끝에서 루프를 다시 검사할 것. 그 근처에서 루프는 decade 당 '
+             '20&nbsp;dB 에 가깝게 떨어진다. 그래서 crossover 주파수는 CTR 에 거의 '
              '비례해 오르고, phase margin 은 떨어진다.'))
     add(h2('zero 와 pole 배치: K-factor 법'))
-    add(p('Venable 의 K-factor 법은 목표 둘, 곧 phase margin &Phi;<sub>M</sub> '
-          '과 2f<sub>l</sub> 에서 허용되는 게인에서 EA<sub>o</sub>, zero, '
-          'pole 을 정한다. phase margin 에서 K factor K<sub>v</sub> 가 나오고, '
+    add(p('Venable 의 K-factor 법은 목표 둘에서 EA<sub>o</sub>, zero, pole 을 '
+          '정한다. 목표는 phase margin &Phi;<sub>M</sub> 과 2f<sub>l</sub> 에서 '
+          '허용되는 게인이다. phase margin 에서 K factor K<sub>v</sub> 가 나오고, '
           '&alpha;<sub>v</sub> 는 가중 상수다(ST 툴에서 1.2).'))
     add(eq(r'K_{v}=\frac{1}{2\alpha_{v}}\left[(1+\alpha_{v}^{2})\tan\Phi_{M}'
            r'+\sqrt{(1+\alpha_{v}^{2}\tan\Phi_{M})^{2}'
@@ -1816,7 +1887,9 @@ def build(A):
           '%(Iout).1f&nbsp;A = %(Pout).1f&nbsp;W 출력</b>, 센터탭 동기 정류, '
           '벌크 커패시터 없음, boost 단 없음.' % V))
     add(h2('사양과 값의 종류'))
-    add(p('각 값은 부하와 상용전원이 <b>주는</b> 값, 설계자가 <b>고르는</b> 값, 측정 전이라 <b>가정한</b> 값 중 하나다.'))
+    add(p('각 값은 넷 중 하나다: 부하와 상용전원이 <b>주는</b> 값, 설계자가 '
+          '<b>고르는</b> 값, 부품 <b>데이터시트</b>에서 읽은 값, 측정 전이라 '
+          '<b>가정한</b> 값.'))
     ext(tbl('사양. 이 장의 나머지는 전부 여기서 계산한다.',
             [['항목', '기호', '값', '종류', '비고'],
              ['상용전원 입력', 'V<sub>ac</sub>, f<sub>l</sub>',
@@ -1860,22 +1933,42 @@ def build(A):
               '초안 데이터시트에서는 350 ns 와 700 ns 도 나온다. %s '
               '&mdash; 가장 먼저 잴 것' % _idle700_kr(V)],
              ['R<sub>DS(on)</sub> 온도 계수', 'k<sub>T</sub>',
-              '%(Rdpk).1f / %(Rdsk).1f' % V, '가정',
-              '1차 / 2차, T<sub>j,max</sub> 에서 데이터시트 곡선을 읽음'],
+              '%(Rdpk).1f / %(Rdsk).1f' % V, '데이터시트',
+              '1차 / 2차, T<sub>j</sub> = 125&nbsp;&deg;C. 둘 다 데이터시트 '
+              '곡선을 벡터로 읽음'],
              ['버스트 진입점', 'r<sub>BM</sub>',
               'P<sub>in</sub> 의 %(rBM).0f %% (%(PinBM).0f W)'
               % dict(V, rBM=A.SH['r.BM'] * 100), '가정',
               'R<sub>BM</sub> 을 정하고, 피드백 리플에 대해 검사'],
-             ['1차 MOSFET 게이트 전하', 'Q<sub>g</sub>',
-              '%(Qg).1f nC' % V, '가정',
-              '후보 부품의 typical 값(부품 목록에서 읽음). V<sub>CC</sub> 부하를 '
-              '정한다(%s 절)'
-              % SR('보조 권선 V<sub>CC</sub> 설계 결과')],
+             ['1차 스위치', '&mdash;',
+              'STO60N045DM9, 자리마다 1개, 모두 4개', '선택',
+              '고속 회복 바디 다이오드를 가진 600&nbsp;V 슈퍼정션(%s 절)'
+              % SR('1차 스위치: STO60N045DM9')],
+             ['1차 게이트 전하와 출력 전하', 'Q<sub>g,10</sub>, '
+              'C<sub>o(tr)</sub>',
+              '%(Qg10).0f nC (0&ndash;10 V), %(Cosstr).0f pF (0&ndash;%(Vosstr).0f V)'
+              % V, '데이터시트',
+              'Q<sub>g</sub> 는 V<sub>CC</sub> 부하를, C<sub>o(tr)</sub> 는 '
+              '데드타임이 덮어야 할 스윙을 정한다'],
+             ['게이트 드라이버', '&mdash;',
+              'L6498LD(SO-14) 2개, 레그당 1개, ES1J 부트스트랩 다이오드, '
+              '게이트마다 1N4148W 턴오프 다이오드', '선택',
+              '컨트롤러에는 드라이버가 없다(%s 절)'
+              % SR('게이트 드라이버: L6498LD 2개')],
+             ['SR MOSFET', '&mdash;',
+              'STL160N10F8, 레그당 %(nSR).0f개, 모두 4개' % V, '선택',
+              '100&nbsp;V STripFET F8(%s 절)'
+              % SR('SR MOSFET: STL160N10F8')],
+             ['동기 정류기', '&mdash;',
+              'TEA2095TE', '선택',
+              '연결과 한계만(%s 절)'
+              % SR('동기 정류: TEA2095TE')],
              ['레귤레이터 부품', 'V<sub>BE</sub>, V<sub>D</sub>, '
               '&beta;<sub>min</sub>, I<sub>Z,min</sub>',
               '%(VFj).1f V, %(VFj).1f V, %(bmin).0f, %(IDZmin).0f mA' % V,
               '가정', '접합 전압은 가정값. 게인과 바이어스는 부품에 거는 '
-              '요구 조건'],
+              '요구 조건이고, 실장한 FZT651 과 BZT52H-C15 가 만족한다(%s 절)'
+              % SR('보조 권선 V<sub>CC</sub> 설계 결과')],
              ['안전 조건', '&mdash;',
               '미국, EU, 일본, 한국, 중국; 가정용 AV; %d m'
               % _INS_ALT, '주어짐',
@@ -1922,10 +2015,26 @@ def build(A):
              ['루프', 'f<sub>c</sub> %(fcross).2f Hz, '
               '&Phi;<sub>M</sub> %(PM).1f&deg;, '
               '3차 고조파 %(D3).2f %%' % V],
+             ['스위치', 'STO60N045DM9 &times; 4; L6498LD 2개, 턴온 '
+              'R<sub>G</sub> %(RG).1f &Omega;, 턴오프 1N4148W + R<sub>G,off</sub> '
+              '%(RGo).1f &Omega;, C<sub>BOOT</sub> %(CBOOT).0f nF 와 ES1J; '
+              'TEA2095TE, 레그당 STL160N10F8 %(nSR).0f개'
+              % dict(V, RGo=A._builder_const('R.G_off'))],
              ['V<sub>CC</sub>', 'N<sub>aux</sub> %d T, 제너 %.0f V, '
               'R<sub>BZ</sub> %.0f &Omega;, C<sub>VCC</sub> %.0f &micro;F, '
               'V<sub>CC,reg</sub> %.2f V'
               % (V['Naux'], V['DZ'], V['RBZ'], V['CVCC'], A.SH['V.CC_reg'])],
+             ['V<sub>CC,SR</sub>', '출력에서 FZT651 팔로워로, 제너 %.0f V, '
+              'R<sub>BSR</sub> %.0f &Omega;, R<sub>SR</sub> %.0f &Omega; 과 핀의 '
+              '%.0f nF + %.1f &micro;F 병렬, V<sub>CC,SR</sub> %.1f V'
+              % (A._builder_const('V.DZSR_sel'), A._builder_const('R.BSR_sel'),
+                 A._builder_const('R.SR'), A._builder_const('C.SR'),
+                 A._builder_const('C.SRb'), A.SH['V.SR'])],
+             ['V<sub>Z</sub>', 'TL431B shunt 레귤레이터 Q6, R<sub>Z</sub> '
+              '%.1f k&Omega; 로 공급, 분압기 %.1f / %.0f k&Omega;, %.2f V'
+              % (A._builder_const('R.Z_sel') / 1e3,
+                 A._builder_const('R.Z1'), A._builder_const('R.Z2'),
+                 A.SH['V.Z'])],
              ['절연', '1차와 2차 사이 강화 절연, 삼중 절연선 NP1 과 NAUX 가 '
               '맡는다. 핀에서 clearance %.1f mm, creepage %.1f mm, '
               '%d V ac 60 s'
@@ -1974,25 +2083,48 @@ def build(A):
              ['hold-up 끝에서도 제너 공급이 레귤레이션하는가',
               'R<sub>BZ,max</sub> / R<sub>BZ</sub>',
               '%.0f &Omega; / %.0f &Omega;' % (A.SH['R.BZ_max'], V['RBZ']),
-              '<b>%.3f</b>' % A.SH['k.RBZ']],
+              '%.3f' % A.SH['k.RBZ']],
              ['C<sub>VCC</sub> 가 기동 인계 구간을 버티는가',
               'C<sub>VCC</sub> / C<sub>VCC,req</sub>',
               '%.0f &micro;F / %.0f &micro;F' % (V['CVCC'], A.SH['C.VCC_req']),
-              '%.3f' % A.SH['k.CVCC']]],
+              '<b>%.3f</b>' % A.SH['k.CVCC']],
+             ['하이사이드 드라이버 전원이 범위 안에 머무는가',
+              'V<sub>BO</sub> / V<sub>BO,min</sub>',
+              '%.2f V / %.1f V' % (A.SH['V.BO_run'], V['VBOrec']),
+              '%.3f' % A.SH['k.VBO']],
+             ['게이트에 남는 데드타임이 스윙을 덮는가',
+              '(t<sub>D</sub> &minus; MT) / T<sub>T</sub>',
+              '%.0f ns / %.0f ns' % (V['tD'] - V['MT'], A.SH['T.T']),
+              '%.3f' % A.SH['k.TTd']],
+             ['중점 기울기가 드라이버 한계 아래인가',
+              'S<sub>OUT,max</sub> / S<sub>mid</sub>',
+              '%.0f V/ns / %.1f V/ns' % (V['dvmax'], A.SH['dv.dt']),
+              '%.3f' % A.SH['k.dvdt']],
+             ['게이트 드라이버 손실이 정격 안인가',
+              'P<sub>drv,max</sub> / P<sub>drv</sub>',
+              '%.0f W / %.3f W' % (V['Pdrvmax'], A.SH['P.drv']),
+              '%.3f' % A.SH['k.Pdrv']],
+             ['SR 게이트 구동이 R<sub>DS(on)</sub> 시험 전압에 닿는가',
+              'V<sub>G,SR</sub> / 10 V',
+              '%.1f V / 10 V' % V['VGSR'],
+              '<b>%.3f</b>' % A.SH['k.VGSR']]],
             widths=[CW * 0.34, CW * 0.18, CW * 0.26, CW * 0.10],
             key='margins', split=True))
-    add(note('k<sub>Ploss</sub> = %(kPl)s 계산 실패가 아니라 결과다: '
-             '고정된 1차 소자가 %(b).0f&nbsp;W budget 에 대해 %(a).2f&nbsp;W 를 소모한다. '
-             '고정 소자 위치에서 그 budget 을 만족하는 단일 600&nbsp;V 소자는 '
-             '없으므로 설계는 그대로 진행하고, 히트싱크 문제는 실측으로 정한다'
-             '(%(ref)s 절). %(thin)s k<sub>RBZ</sub> = %(krbz)s 작지만, 그 '
-             '입력은 이미 전부 최악값이다(공차 위쪽 끝의 제너, 가장 낮은 전류 '
-             '게인, hold-up 의 끝). k<sub>floor</sub> = %(kfl)s 모르는 값에 '
-             '기대고 있다: 트랜스포머 공차와 idle 시간이 둘 다 이 값을 움직이는데, '
-             '어느 쪽도 아직 재지 않았다.'
-             % dict(V, a=A.SH['P.mos_dc'], b=_kb,
+    add(note('k<sub>Ploss</sub> = %(kPl)s 계산 실패가 아니라 결과다. '
+             '고정된 1차 소자가 %(b).0f&nbsp;W budget 에 대해 %(a).2f&nbsp;W 를 '
+             '소모한다. 고정 소자 위치에서 그 budget 을 만족하는 단일 600&nbsp;V '
+             '소자는 없다. 그래서 설계는 히트싱크를 전제로 진행하고(%(hs)s 절), '
+             '나머지는 실측으로 정한다(%(ref)s 절). %(thin)s SR 게이트 구동의 '
+             'k = %(kvg)s 구조상 작다. SR 컨트롤러가 게이트 구동을 '
+             '%(vg).1f&nbsp;V 에 클램프하고 SR R<sub>DS(on)</sub> 은 10&nbsp;V '
+             '에서 주어지므로, 클램프가 시험 전압만 넘으면 된다. '
+             'k<sub>floor</sub> = %(kfl)s 모르는 값에 기대고 있다. 트랜스포머 '
+             '공차와 idle 시간이 둘 다 이 값을 움직이는데, 어느 쪽도 아직 재지 '
+             '않았다.'
+             % dict(V, a=A.SH['P.mos_dc'], b=_kb, vg=V['VGSR'],
+                    kvg=_nj('%.3f' % A.SH['k.VGSR'], '은', '는'),
+                    hs=SR('1차 스위치: STO60N045DM9'),
                     thin=_thinnest_kr(V, A),
-                    krbz=_nj('%.3f' % A.SH['k.RBZ'], '도', '도'),
                     ref=SR('하드웨어에서 먼저 잴 것'),
                     kPl=_nj('%.3f' % V['kPloss'], '은', '는'),
                     kfl=_nj('%.3f' % V['kfloor'], '은', '는'))))
@@ -2169,8 +2301,8 @@ def build(A):
                  lamreq=A.SH['λ'], act=_minus(V['TzcCFact'], '%.0f'),
                  la=_nj('%.3f' % V['lam'], '으로', '로'))))
     add(p('Full load 곡선의 capacitive 경계(arg Z<sub>in</sub> = 0)는 '
-          '%(fnEdge).1f&nbsp;kHz 이고, 게인 피크는 그보다 낮은 '
-          '%(fnPk).1f&nbsp;kHz 로 거기에는 아직 %(phPk).1f&deg; 의 capacitive '
+          '%(fnEdge).1f&nbsp;kHz 다. 게인 피크는 그보다 낮은 '
+          '%(fnPk).1f&nbsp;kHz 이고, 거기에는 아직 %(phPk).1f&deg; 의 capacitive '
           '위상이 남아 있다(%(ref)s 절). 어느 쪽도 판정에는 쓰지 않는다.'
           % dict(V, ref=SR('두 경계는 같은 경계가 아니다'),
                  **_edge_numbers(A))))
@@ -2262,9 +2394,9 @@ def build(A):
                o=SR('오실레이터: C<sub>T</sub> 먼저, 그다음 R<sub>T</sub>')),
         '<b>상용전원 전압 넷은 두 경계 사이에 있다.</b> 풀브리지의 90&nbsp;Vac'
         '는 탱크에 2 &times; 90 = 180&nbsp;Vac 를 걸고, HB 경계보다 '
-        '%(p90).0f&nbsp;%% 위일 뿐이라 90&nbsp;Vac 쪽은 게인 최악 조건 가까이에서 '
+        '%(p90).0f&nbsp;%% 위일 뿐이다. 그래서 90&nbsp;Vac 쪽은 게인 최악 조건 가까이에서 '
         '돈다. 풀브리지의 110&nbsp;Vac(탱크에는 220&nbsp;Vac)와 하프브리지의 '
-        '230&nbsp;Vac(탱크에도 230&nbsp;Vac)는 %(p23).0f&nbsp;%% 차이다: 모핑 '
+        '230&nbsp;Vac(탱크에도 230&nbsp;Vac)는 %(p23).0f&nbsp;%% 차이다. 모핑 '
         '덕분에 두 상용전원 계통이 탱크에는 거의 같게 보인다. 하프브리지의 '
         '264&nbsp;Vac 는 FB 경계에서 탱크가 보는 전압보다 아직 %(p264).0f&nbsp;%% '
         '아래다.'
@@ -2284,20 +2416,51 @@ def build(A):
     add(p('n<sub>T</sub> = %(nT).2f 에서는 입력 전압 %(nc)d 개 중 %(nAbove)d 개에서 '
           '탱크가 라인 주기의 일부 구간에서 f<sub>r</sub> 위로 동작한다. 거기서는 '
           '2차 정류기가 ZCS 를 잃으므로, 정류기의 바디 다이오드와 SR '
-          '데드타임을 검사해야 한다.' % dict(V, nc=len(V['fswPk']))))
+          '데드타임을 검사해야 한다. 그림&nbsp;%(f)s 와 표&nbsp;%(t)s 는 Full '
+          'load 에서 그렸다. <b>어디서 넘어가는지는 부하와 무관하다.</b> Q 가 '
+          '무엇이든 f<sub>sw</sub> = f<sub>r</sub> 에서 M = 1 이다(식&nbsp;%(e)s). '
+          '그러므로 컨버터는 M<sub>req</sub>(&theta;) = M<sub>pk</sub>/sin&theta; '
+          '= 1 인 곳, 곧 sin&theta; = M<sub>pk</sub> 인 곳에서 f<sub>r</sub> 을 '
+          '지난다. M<sub>pk</sub> 가 1 보다 작은 입력은 &theta;<sub>0</sub> = '
+          'arcsin M<sub>pk</sub> 와 180&deg; &minus; &theta;<sub>0</sub> 사이에서 '
+          'buck 하고, 그 창 밖에서 boost 한다. M<sub>pk</sub> 가 1 보다 큰 입력은 '
+          '반주기 내내 boost 한다. 부하는 창 안에서 주파수가 f<sub>r</sub> 위로 '
+          '얼마나 올라가는지만 정한다.'
+          % dict(V, nc=len(V['fswPk']), f=FR('an_above_below'),
+                 t=TR('fswside'), e=ER('M'))))
     add(fig('an_above_below',
             '라인 반주기에 걸쳐 컨버터가 f<sub>r</sub> 의 어느 쪽에 있는가, '
             '여섯 입력 전압에서. 모든 곡선이 영교차에서 f<sub>o</sub> 로 '
             '모인다. 범례의 백분율은 반주기 중 f<sub>r</sub> 위에서, 즉 정류기 ZCS 없이 동작하는 시간의 비율이다.', width=CW))
-    ext(tbl('반주기 동안의 피크 f<sub>sw</sub>, f<sub>r</sub> = %(fr).1f kHz 에 '
-            '대해. 여섯 입력 전압 중 %(nAbove)d 개가 주기의 일부에서 above 로 '
-            '넘어간다.' % dict(V, nc=len(V['fswPk'])),
+    ext(tbl('Full load 에서 반주기 동안의 피크 f<sub>sw</sub>, f<sub>r</sub> = '
+            '%(fr).1f kHz 에 대해, 그리고 sin&theta; = M<sub>pk</sub> 로 구한 창, '
+            '곧 컨버터가 f<sub>r</sub> 위에서(buck) 도는 라인 위상 구간. 여섯 입력 '
+            '전압 중 %(nAbove)d 개가 주기의 일부에서 above 로 넘어간다.'
+            % dict(V, nc=len(V['fswPk'])),
             [['입력 전압과 브리지', '탱크가 보는 전압 (Vac rms)',
-              '피크 f<sub>sw</sub>', 'f<sub>r</sub> 의 어느 쪽']]
-            + [[_kc(nm), '%.0f Vac' % veq, '%.1f kHz' % pk,
-                '<b>above</b>' if ab else 'below']
-               for nm, veq, pk, ab in V['fswPk']],
-            widths=[CW * 0.36, CW * 0.16, CW * 0.20, CW * 0.28], split=True))
+              'M<sub>pk</sub>', '피크 f<sub>sw</sub>',
+              'f<sub>r</sub> 위(buck)인 &theta;', '반주기의 비율']]
+            + [[_kc(nm), '%.0f Vac' % veq, '%.3f' % mpk, '%.1f kHz' % pk,
+                ('<b>%.0f&deg; ~ %.0f&deg;</b>' % (th0, 180 - th0))
+                if th0 is not None else '없음: 내내 boost',
+                '%.0f %%' % sh]
+               for (nm, veq, pk, ab), (_n, _v, mpk, th0, sh)
+               in zip(V['fswPk'], V['fswCross'])],
+            widths=[CW * 0.27, CW * 0.13, CW * 0.10, CW * 0.14, CW * 0.22,
+                    CW * 0.14], key='fswside', split=True))
+    add(p('<b>부하가 바꾸는 것.</b> 부하를 줄이면 모든 위상에서 Q 가 내려가지만 '
+          'M<sub>req</sub>(&theta;) 는 그대로다. 그래서 표&nbsp;%(t)s 의 창은 '
+          '움직이지 않는다. 그림&nbsp;%(f)s 의 곡선은 창 안에서만 올라간다. '
+          '%(l).0f&nbsp;%% 부하에서 가장 높은 피크는 FB 경계의 %(pk).0f&nbsp;kHz '
+          '다. Full load 의 %(pk1).1f&nbsp;kHz 보다 높지만, 지정 최대 '
+          '%(spec).0f&nbsp;kHz 아래다. No load 에서도 창은 같다. '
+          'M<sub>&infin;</sub> 아래에서는 해가 아예 없다(%(s)s 절). 가장 낮은 '
+          '입력 둘은 어느 부하에서도 buck 하지 않는다.'
+          % dict(t=TR('fswside'), f=FR('an_above_below'),
+                 l=100 * V['loadLight'], pk=V['fswPkLight'],
+                 pk1=max(p for _n, _v, p, _a in V['fswPk']),
+                 spec=V['fswspec'],
+                 s=SR('&lambda; 의 반대쪽 한계, 그리고 해가 없는 경우'))))
     add(fig('f12_two_divergences',
             '영교차 근처에서 요구 게인이 발산하고 부하가 사라지는 일이 함께 '
             '일어나므로, 동작점은 f<sub>o</sub> = %(fo).1f&nbsp;kHz 로 모인다'
@@ -2508,11 +2671,11 @@ def build(A):
     add(p('<b>배치.</b> L<sub>short</sub> 는 %(Ls).1f&nbsp;&micro;H 가 나와야 한다. '
           '먼저 일반 전선으로 나란히 배치하고 칸 사이 간격이 강화 절연을 맡는 '
           '경우를 본다: 그러면 간격은 적어도 creepage %(sep).1f&nbsp;mm 다'
-          '(%(ins)s 절). 아래에서 고르는 권선창(깊이 h<sub>w</sub> = '
+          '(%(ins)s 절). 식&nbsp;%(e)s N<sub>B</sub>&nbsp;=&nbsp;0 으로 쓴다. '
+          '넣는 값은 아래에서 고르는 권선창(깊이 h<sub>w</sub> = '
           '%(hw).2f&nbsp;mm, 평균 턴 길이 l<sub>N</sub> = %(ln).1f&nbsp;mm), '
           '세 층으로 감은 일반 Litz 다발 하나의 1차(w<sub>A</sub> = '
-          '%(wa).2f&nbsp;mm), 그리고 2차 묶음(w<sub>S</sub> = %(ws).2f&nbsp;mm)을 '
-          '넣고 N<sub>B</sub>&nbsp;=&nbsp;0 으로 식&nbsp;%(e)s 쓰면'
+          '%(wa).2f&nbsp;mm), 그리고 2차 묶음(w<sub>S</sub> = %(ws).2f&nbsp;mm)이다:'
           % dict(Ls=V['Lshort'], sep=_sep, e=_nj(ER('leak'), '을', '를'), wa=_wsb,
                  ws=_w['w_S'], hw=_hw, ln=_R['lN'],
                  ins=SR('이 트랜스포머의 안전 절연'))))
@@ -2524,8 +2687,8 @@ def build(A):
                     ws=_w['w_S'], L=_L1)))
     add(p('목표의 %(r).1f 배다. 그래서 <b>절연을 전선에 넣는다</b>: NP1 은 삼중 '
           '절연 Litz, NAUX 는 삼중 절연선이다. 그러면 권선은 흔한 LLC 레퍼런스 '
-          '트랜스포머의 <b>칸 권선</b>이 된다: 두 칸짜리 코일 포머의 한 칸에 '
-          'NP1, 다른 칸에 2차 묶음, 그 사이에 <b>칸막이</b>, 그리고 층마다 '
+          '트랜스포머의 <b>칸 권선</b>이 된다. 두 칸짜리 코일 포머의 한 칸에 '
+          'NP1, 다른 칸에 2차 묶음을 감는다. 그 사이에 <b>칸막이</b>, 층마다 '
           '테이프 한 겹.'
           % dict(r=_L1 / V['Lshort'])))
     add(p('<b>이 권선에 필요한 권선창.</b> 칸마다 권선창 깊이를 채우면 그 폭은 '
@@ -2541,9 +2704,9 @@ def build(A):
           '넣어 쌓는다. k<sub>w</sub> 는 가정값이고 첫 샘플의 실측 구성으로 바꾼다. '
           'NP1 은 %(per)d 턴씩 %(lp)d 층, NS2 는 %(sp)d 턴을 나란히 한 층, NS3 은 '
           '그다음 층, NAUX(&oslash;%(tiw).1f&nbsp;mm TIW)가 마지막이다. 두 칸의 '
-          '깊이는 거의 같고(NP1 은 h<sub>A</sub>, NAUX 를 포함한 2차 칸은 '
-          'h<sub>S</sub>), 튜브에서 바깥다리 원호까지의 반경 공간 h<sub>r</sub> '
-          '는 %(hr).2f&nbsp;mm, 공차 끝(원호는 가장 작게, 튜브는 가장 크게)에서 '
+          '깊이는 거의 같다(NP1 은 h<sub>A</sub>, NAUX 를 포함한 2차 칸은 '
+          'h<sub>S</sub>). 튜브에서 바깥다리 원호까지의 반경 공간 h<sub>r</sub> '
+          '는 %(hr).2f&nbsp;mm 다. 공차 끝(원호는 가장 작게, 튜브는 가장 크게)에서는 '
           '%(hm).2f&nbsp;mm 다. 층을 따라서는 피치 k<sub>ax</sub> 로 두 칸을 '
           '권선 폭에서 칸막이 %(g).1f&nbsp;mm 를 뺀 만큼에 펼쳐, 빈 곳을 남기지 '
           '않는다:'
@@ -2589,14 +2752,15 @@ def build(A):
              % dict(ln=_R['lN'], hw=_hw, np=V['Np'], wa=_w['w_A'],
                     g=_w['sep'], ws=_w['w_S'], L=_L2)))
     add(p('이 값을 낮추는 것이 둘 있다. PQ 코어의 뒤판은 직사각형이 아니라 '
-          '중앙다리 쪽이 좁은 나비넥타이 모양이다(그림&nbsp;%(f)s): 권선 '
-          '가운데에서 한 턴 중 바깥다리가 옆에 있는 것은 %(zl).0f&nbsp;%% 뿐이고, '
-          '%(zy).0f&nbsp;%% 는 바깥다리 없이 뒤판 아래에 있으며, %(zo).0f&nbsp;%% '
+          '중앙다리 쪽이 좁은 나비넥타이 모양이다(그림&nbsp;%(f)s). 권선 '
+          '가운데에서 한 턴 중 바깥다리가 옆에 있는 것은 %(zl).0f&nbsp;%% 뿐이다. '
+          '%(zy).0f&nbsp;%% 는 바깥다리 없이 뒤판 아래에 있고, %(zo).0f&nbsp;%% '
           '는 코어 밖에 있다. 또 권선이 깊다: 2차 바깥 층의 한 턴은 안쪽 층보다 '
-          '%(rr).0f&nbsp;%% 길다. 그린 배치의 자계 풀이는 둘 다 반영한다: 단면을 '
-          '바깥다리를 지나는 경우(페라이트, 갭, 뒤판)와 턴이 코어를 벗어나는 '
-          '경우(중앙다리만)로 풀고, 각 부분에 그 반경에서 각 경우에 해당하는 턴 '
-          '길이를 가중치로 준다. 뒤판 아래만 있는 부분은 양쪽에 절반씩 넣는다.'
+          '%(rr).0f&nbsp;%% 길다. 그린 배치의 자계 풀이는 둘 다 반영한다. 단면을 '
+          '두 경우로 푼다: 바깥다리를 지나는 경우(페라이트, 갭, 뒤판)와 턴이 '
+          '코어를 벗어나는 경우(중앙다리만). 그리고 각 부분에 그 반경에서 각 '
+          '경우에 해당하는 턴 길이를 가중치로 준다. 뒤판 아래만 있는 부분은 '
+          '양쪽에 절반씩 넣는다.'
           % dict(f=FR('an_core_plan'), zl=_zp[0], zy=_zp[1], zo=_zp[2],
                  rr=100 * (_rout / _rin - 1))))
     add(fig('an_core_plan',
@@ -2639,8 +2803,8 @@ def build(A):
           '안에 있고, 그 자계는 1차 칸에서 최대 %(bp).1f&nbsp;mT rms, 2차 칸에서 '
           '%(bs).1f mT rms 다. 피크 B 의 자계 안에 있는 지름 d<sub>s</sub> 의 '
           '소선은 미터당 &pi;&omega;&sup2;&sigma;d<sub>s</sub>&#8308;B&sup2;/128 '
-          '을 잃는다. 그린 배치의 소선 전부에 대해 더하고 라인 사이클 실효 '
-          '전류를 사인파로 보면, %(fa).0f&nbsp;kHz(하프브리지 경계의 라인 '
+          '을 잃는다. 그린 배치의 소선 전부에 대해 더한다. 라인 사이클 실효 '
+          '전류는 사인파로 본다. 그러면 %(fa).0f&nbsp;kHz(하프브리지 경계의 라인 '
           '피크)와 f<sub>r</sub> 사이에서 NP1 %(pa).1f ~ %(pb).1f&nbsp;W, NS2·NS3 '
           '%(sa).1f ~ %(sb).1f&nbsp;W 다. 1차 근사로 <b>DC 손실의 %(ra).1f ~ '
           '%(rb).1f 배</b>다. 누설 자계를 공진 인덕터로 쓰는 대가이고, 소선이 '
@@ -2807,8 +2971,8 @@ def build(A):
           '열로 있고, 열 사이는 %(rows).2f&nbsp;mm 다. 한 열은 세 개씩 두 묶음으로, '
           '묶음 안에서는 %(pitch).2f&nbsp;mm, 묶음 사이는 %(pb).1f&nbsp;mm 다. '
           '데이터시트는 핀 1, 6, 7, 12 의 번호를 <b>아래에서 본</b> 그림, 곧 핀 '
-          '쪽에서 본 그림에 적었다. 도면에 그렇게 적혀 있지는 않지만, 핀 끝이 '
-          '보이는 것은 그 그림이고 위에서 본 그림에는 핀이 보이지 않는다. '
+          '쪽에서 본 그림에 적었다. 도면에 그렇게 적혀 있지는 않다. 그러나 핀 '
+          '끝이 보이는 것은 그 그림이고, 위에서 본 그림에는 핀이 보이지 않는다. '
           '풋프린트를 그리는 보드 부품면에서 보면 좌우가 바뀐다: '
           '그림&nbsp;%(fig)s 둘 다 그렸다. NP1 과 보조 권선 NAUX 는 1번 핀 열, '
           'NS2 와 NS3 은 반대쪽 열을 쓴다. 권선마다 도체 하나이고 끝 하나가 핀 '
@@ -2870,19 +3034,19 @@ def build(A):
     _IR = _INS.req()
     _ck, _cw2 = _INS.checks(V)
     add(p('미국, EU, 일본, 한국, 중국에 파는 TV 이므로 요구 조건마다 가장 엄격한 '
-          '쪽을 잡는다: <b>강화 절연</b>(Class&nbsp;II 제품에 필요하고 Class&nbsp;I '
-          '도 충족한다), <b>%(alt)d&nbsp;m</b>(GB&nbsp;4943.1-2022 는 제조사가 따로 '
-          '정하지 않으면 이 고도를 가정한다 [GB]), 그리고 설계 범위의 최고값인 '
-          '<b>%(vm).0f&nbsp;Vac</b> 에서의 작업 전압. 1차는 NP1 과 NAUX, 2차는 '
+          '쪽을 잡는다. <b>강화 절연</b>: Class&nbsp;II 제품에 필요하고 Class&nbsp;I '
+          '도 충족한다. <b>%(alt)d&nbsp;m</b>: GB&nbsp;4943.1-2022 는 제조사가 따로 '
+          '정하지 않으면 이 고도를 가정한다 [GB]. 작업 전압: 설계 범위의 최고값인 '
+          '<b>%(vm).0f&nbsp;Vac</b> 에서. 1차는 NP1 과 NAUX, 2차는 '
           'NS2, NS3, 그리고 코어다. 1차가 스스로 절연을 갖추므로 코어는 2차 쪽에 '
           '속한다(%(s)s 절).'
           % dict(alt=_INS.ALTITUDE_M, vm=_INS.V_MAINS_DESIGN,
                  s=SR('안전 절연: 권선이 갖춰야 할 것'))))
-    add(p('1차 권선과 2차 사이의 <b>작업 전압</b>은 설계에서 추정한다: 상용전원 '
-          '중성선과 2차는 접지 전위에 있고, 브리지는 반주기마다 1차 접지를 라인 '
-          '쪽으로 옮기며, 여기에 라인 주기의 모든 점에서 스윕한 레그 전압과 '
+    add(p('1차 권선과 2차 사이의 <b>작업 전압</b>은 설계에서 추정한다. 상용전원 '
+          '중성선과 2차는 접지 전위에 있다. 브리지는 반주기마다 1차 접지를 라인 '
+          '쪽으로 옮긴다. 여기에 라인 주기의 모든 점에서 스윕한 레그 전압과 '
           'C<sub>r</sub> 스윙이 더해진다. %(vm).0f&nbsp;Vac 에서 %(ur).0f&nbsp;V '
-          'rms, %(up).0f&nbsp;V 피크로 상용전원 자체보다 낮으므로, creepage 행은 '
+          'rms, %(up).0f&nbsp;V 피크다. 상용전원 자체보다 낮으므로 creepage 행은 '
           '상용전원이 정한다. 인증 기관이 실측하며, 고른 행은 %(row)d&nbsp;V 까지 '
           '덮는다.'
           % dict(vm=_INS.V_MAINS_DESIGN, ur=_IR['u_rms'], up=_IR['u_pk'],
@@ -2997,12 +3161,14 @@ def build(A):
           '%(b1).0f&nbsp;mT 까지 갈 수 있다. OVP2 에서는 멈추므로 %(b2).0f&nbsp;mT '
           '가 이 코어가 겪는 가장 큰 자속이다. 이 숫자를 재료 데이터의 %(mat)s '
           '고온 B<sub>s</sub> 와 비교한다. 사양서의 항목은 이렇다: DC overlap, '
-          '%(isat).0f&nbsp;A(%(calc).1f&nbsp;A 를 올림)에서 초기 인덕턴스의 '
+          '%(isat).0f&nbsp;A%(rnd)s에서 초기 인덕턴스의 '
           '90&nbsp;%% 이상, 상온(표&nbsp;%(t)s).'
           % dict(o1=V['OVP1'], r1=_r1, o2=V['OVP2'], r2=_r2,
                  b1=V['Bpk'] * _r1, b2=V['Bpk'] * _r2,
                  mat=_CORE.CORES[_CORE.CHOSEN]['material'],
-                 isat=V['IsatTest'], calc=V['Isatspec'],
+                 isat=V['IsatTest'],
+                 rnd=('(%.1f&nbsp;A 를 올림)' % V['Isatspec']
+                      if V['IsatTest'] - V['Isatspec'] >= 0.05 else ''),
                  t=TR('spec-out'))))
     add(p('<b>이 부품에서 시험하는 법.</b> LCR 미터를 1차(NP1, 표&nbsp;%(t)s '
           '핀)에 걸고, 2차 둘과 센터탭과 보조 권선은 모두 Open. 소신호는 누설 '
@@ -3176,17 +3342,23 @@ def build(A):
               'I<sub>VCC</sub>V<sub>CC,reg</sub> = %(g).2f W 로, 드라이버와 게이트 '
               '저항에서 소모되며 합계에 넣지 않았다'
               % dict(g=A.SH['I.VCC'] * 1e-3 * A.SH['V.CC_reg'])],
+             ['V<sub>CC,SR</sub> 패스 트랜지스터와 SR 컨트롤러',
+              '%(a).2f W' % dict(a=A.SH['P.QSR_run'] + A.SH['P.SR_run']),
+              '공칭 출력에서 Q<sub>SR</sub> 에 %(q).2f W, TEA2095TE 에 %(c).3f W. '
+              'SR 게이트 전하 자체가 이 안에 들어 있다'
+              % dict(q=A.SH['P.QSR_run'], c=A.SH['P.SR_run'])],
              ['<b>항목 합계</b>', '<b>%(t).2f W</b>'
               % dict(t=A.SH['P.pri_tot'] + A.SH['P.SR']
-                     + A.SH['P.RCS'] + A.SH['P.Cout'] + A.SH['P.Qpass_nom']),
+                     + A.SH['P.RCS'] + A.SH['P.Cout'] + A.SH['P.Qpass_nom']
+                     + A.SH['P.QSR_run'] + A.SH['P.SR_run']),
               '소자만이다: 트랜스포머 권선이 %.1f ~ %.1f W 를 더한다(DC 와 소선 '
               '손실, %s 절). 코어 손실은 여기서 계산하지 않았다'
               % (_pdc + _pa['P_pri'] + _pa['P_sec'],
                  _pdc + _pb['P_pri'] + _pb['P_sec'],
                  SR('코어 고르기'))]],
             widths=[CW * 0.34, CW * 0.14, CW * 0.52], key='loss', split=True))
-    add(p('<b>고정된 1차 소자</b>, 하프브리지 모핑에서 스위칭하지 않는 레그의 로우사이드 '
-          '스위치는 라인 사이클 실효 전류 전부를 계속 흘리고, R<sub>DS(on)</sub> 은 25&nbsp;&deg;C 값 %(R25).0f&nbsp;m&Omega; 에 '
+    add(p('<b>고정된 1차 소자</b>는 하프브리지 모핑에서 스위칭하지 않는 레그의 로우사이드 '
+          '스위치다. 라인 사이클 실효 전류 전부를 계속 흘린다. R<sub>DS(on)</sub> 은 25&nbsp;&deg;C 값 %(R25).0f&nbsp;m&Omega; 에 '
           'k<sub>T</sub>&nbsp;=&nbsp;%(kT)s 곱한 <b>고온</b> 값이다(%(ref)s 절).'
           % dict(V, kT=_nj('%.1f' % V['Rdpk'], '을', '를'), R25=V['Rdp'],
                  ref=SR('반도체 요구조건'))))
@@ -3197,7 +3369,9 @@ def build(A):
                     P=A.SH['P.mos_dc'])))
     add(p('<b>2차 정류기</b> 각각은 병렬 %(nSR).0f 개로 레그 전류를 나눠 '
           '흘리고, %(Rs).1f&nbsp;m&Omega; 에 k<sub>T</sub>&nbsp;=&nbsp;%(kTs).1f '
-          '이다.' % dict(V, kTs=V['Rdsk'], Rs=V['Rds'])))
+          '이다(STL160N10F8, %(ref)s 절).'
+          % dict(V, kTs=V['Rdsk'], Rs=V['Rds'],
+                 ref=SR('SR MOSFET: STL160N10F8'))))
     add(calc(r'P_{SR}=\left(\frac{%(I).2f}{%(n).0f}\right)^{2}'
              r'\cdot%(kT).1f\cdot%(R).1f\times10^{-3}'
              r'=%(P).3f\;\mathrm{W\;per\;device}'
@@ -3207,12 +3381,14 @@ def build(A):
              '&eta;<sub>HB</sub> = %(etaHB).0f&nbsp;%% 가 허용하는 '
              '%(b).1f&nbsp;W 를 트랜스포머 전에 이미 넘는다. 전기적 설계는 이 차이에 영향받지 않는다. 열 설계는 영향을 받으며, 실측으로 정한다.'
              % dict(V, t=A.SH['P.pri_tot'] + A.SH['P.SR']
-                    + A.SH['P.RCS'] + A.SH['P.Cout'] + A.SH['P.Qpass_nom'],
+                    + A.SH['P.RCS'] + A.SH['P.Cout'] + A.SH['P.Qpass_nom']
+                    + A.SH['P.QSR_run'] + A.SH['P.SR_run'],
                     b=A.SH['P.d_LLC'])))
 
     # ------------------------------------------------ 만든 루프
     add(h2('이 설계의 반도체 요구조건'))
-    add(p('부품 번호가 아니라 요구조건으로 적는다(%s 절).' % SR('반도체 요구조건')))
+    add(p('%s 절의 요구조건을 이 설계의 숫자로 적는다. 이어지는 절들이 실장 '
+          '부품을 이 요구조건에 대조한다.' % SR('반도체 요구조건')))
     ext(tbl('설계 예제의 반도체 요구조건.',
             [['항목', '요구조건'],
              ['1차 드레인-소스 전압',
@@ -3225,7 +3401,12 @@ def build(A):
               '손실 budget 을 맞추려면 <b>고온</b>에서 &le; %(Rdreq).1f m&Omega;'
               % V],
              ['1차 C<sub>o(tr)</sub>',
-              '탱크가 %(tD).0f ns 안에 노드 전압을 스윙시킬 수 있을 만큼 작게' % V],
+              '탱크가 %(tD).0f ns 에서 드라이버 지연 편차를 뺀 시간 안에 노드 '
+              '전압을 스윙시킬 수 있을 만큼 작게' % V],
+             ['게이트 드라이버',
+              '레그당 하프브리지 드라이버 하나, 플로팅부는 버스 피크 위까지. '
+              '부트스트랩 다이오드는 1차 스위치와 같은 정격. 게이트마다 싱크 '
+              '피크를 견디는 턴오프 다이오드'],
              ['2차 드레인-소스 전압',
               '센터탭의 두 배를 포함해 &ge; %(VDSs).0f V' % V],
              ['2차 정류기 전류',
@@ -3244,6 +3425,452 @@ def build(A):
               '역전압 정격이 %.1f V 에 권선 스파이크를 더한 값 이상'
               % A.SH['V.Caux_OVP2']]],
             widths=[CW * 0.36, CW * 0.64], split=True))
+    # ------------------------------------------------ 실장 부품
+    _sh = A.SH
+    _Pdc = _sh['P.mos_dc']
+    add(h2('1차 스위치: STO60N045DM9'))
+    add(p('자리마다 ST STO60N045DM9 하나, 풀브리지에 넷이다. 600&nbsp;V, '
+          '25&nbsp;&deg;C 와 V<sub>GS</sub> = 10&nbsp;V 에서 최대 '
+          '%(Rdp).0f&nbsp;m&Omega;, 고속 회복 바디 다이오드, 그리고 드라이버 소스 '
+          '핀이 따로 있는 TO-LL 패키지 [STO]. 그 핀 덕에 게이트 루프가 전력 소스 '
+          '리드 밖으로 나온다. 데이터시트의 세 줄이 설계에 들어간다.' % V))
+    add(p('<b>고온 R<sub>DS(on)</sub>.</b> 데이터시트 벡터 도면에서 읽은 정규화 '
+          '곡선은 125&nbsp;&deg;C 에서 k<sub>T</sub> = %(Rdpk).1f 를 준다. 고정 '
+          '소자는 %(P).2f&nbsp;W 를 소모한다(%(ref)s 절). 이것은 히트싱크 '
+          '문제다. 접합-케이스는 %(rjc).1f&nbsp;&deg;C/W 이지만, 같은 부품을 '
+          '2&nbsp;oz 동박 40&nbsp;&times;&nbsp;40&nbsp;mm 에 올리면 '
+          '%(rja).0f&nbsp;&deg;C/W 로 적혀 있다. 이 손실에서 %(dT).0f&nbsp;&deg;C '
+          '상승이다. 워크북처럼 접합 125&nbsp;&deg;C, 주위 %(ta).0f&nbsp;&deg;C '
+          '로 잡으면 케이스-주위 경로에 허용되는 값은 %(rca).1f&nbsp;&deg;C/W 다. '
+          '실제 주위 온도가 10&nbsp;&deg;C 오를 때마다 %(d10).2f&nbsp;&deg;C/W 씩 '
+          '줄어든다. 노출 패드가 히트싱크에 닿아야 한다.'
+          % dict(V, P=_Pdc, rjc=V['RthJC'], rja=V['RthJApcb'],
+                 dT=_sh['ΔT.pcb'], ta=V['Tamb'], rca=_sh['R.thCA_max'],
+                 d10=10.0 / _Pdc, ref=SR('손실 분배'))))
+    add(p('<b>출력 전하.</b> C<sub>o(tr)</sub> = %(C).0f&nbsp;pF 는 0 에서 '
+          '%(Vt).0f&nbsp;V 까지 C<sub>oss</sub> 와 같은 시간에 충전되는 고정 '
+          '커패시턴스다. 그러므로 소자당 %(Q).0f&nbsp;nC 의 전하를 뜻한다. ZVS '
+          '경계에서 스윙은 %(Vb).0f&nbsp;V 뿐이지만, 그 위에서 C<sub>oss</sub> 는 '
+          '적어도 %(C4).0f&nbsp;pF 다. 그래서 전체 전하는 경계를 몇 %% '
+          '과대평가하고, 그대로 쓴다. 소자 둘이 함께 스윙하므로 중점이 보는 값은'
+          % dict(C=V['Cosstr'], Vt=V['Vosstr'], Q=V['Cosstr'] * V['Vosstr'] / 1e3,
+                 Vb=2 ** 0.5 * V['Veqlo'], C4=V['Coss400'])))
+    add(calc(r'c_{HB}=\frac{2\cdot%(C).0f\,\mathrm{pF}\cdot%(Vt).0f}'
+             r'{\sqrt{2}\cdot%(Vm).2f}+%(Cp).0f\,\mathrm{pF}'
+             r'=%(c).0f\;\mathrm{pF}'
+             % dict(C=V['Cosstr'], Vt=V['Vosstr'], Vm=V['Veqlo'],
+                    Cp=V['Cpar'], c=_sh['c.HB'])))
+    add(p('이다. 부품을 고르기 전에 가정한 %(old).0f&nbsp;pF 대신이다. Q 의 '
+          '데드타임 한계는 Q<sub>ZVS2</sub> = %(q2).2f 로 옮겨 가는데, 게인 '
+          '피크 한계 %(q1).3f 보다 여전히 위이므로 탱크는 바뀌지 않는다. 스윙은 '
+          '%(tD).0f&nbsp;ns 데드타임 중 T<sub>T</sub> = %(tt).0f&nbsp;ns 를 '
+          '쓴다.'
+          % dict(V, old=800, q2=_sh['Q.ZVS2'], q1=_sh['Q.ZVS1'],
+                 tt=_sh['T.T'])))
+    add(p('<b>게이트 전하.</b> 데이터시트는 0 에서 10&nbsp;V 까지 '
+          '%(q10).0f&nbsp;nC 를, 그 곡선은 12&nbsp;V 에서 %(q12).0f&nbsp;nC 를 '
+          '준다. 둘 사이는 식&nbsp;%(e)s 의 직선이고 C<sub>g</sub> = '
+          '%(cg).1f&nbsp;nF 다. 가장 높은 레귤레이션 레일에서, 그리고 기동이 '
+          '시작되는 V<sub>CCon</sub> 에서 전하 Q<sub>g,run</sub> 과 '
+          'Q<sub>g,SU</sub> 는'
+          % dict(q10=V['Qg10'], q12=V['Qg12'], cg=_sh['C.g_hi'],
+                 e=ER('qgv'))))
+    add(calc(r'Q_{g,run}=%(q10).0f+%(cg).1f\,(%(vm).2f-10)=%(qr).1f\;\mathrm{nC}'
+             r'\,,\qquad Q_{g,SU}=%(q10).0f+%(cg).1f\,(%(von).0f-10)'
+             r'=%(qs).1f\;\mathrm{nC}'
+             % dict(q10=V['Qg10'], cg=_sh['C.g_hi'], vm=_sh['V.CC_reg_max'],
+                    von=V['VCCon'], qr=_sh['Q.g_run'], qs=_sh['Q.g_SU'])))
+    add(note('두 값 모두 V<sub>DD</sub> = 400&nbsp;V 하드 스위칭에서 잰 것이다. '
+             'ZVS 에서는 Miller 몫(33&nbsp;nC)이 흐르지 않으므로 운전 전류를 '
+             '과대평가한다. 그래도 그대로 둔다. 기동의 첫 펄스들은 하드 '
+             '스위칭이기 때문이다.'))
+
+    add(h2('게이트 드라이버: L6498LD 2개'))
+    add(p('L6790A 는 게이트를 직접 구동하지 않는다. 레그마다 L6498LD 하나를 둔다. '
+          'ST L6498 고전압 하프브리지 게이트 드라이버의 SO-14 판이고 [L6498], '
+          '레귤레이션된 V<sub>CC</sub> 에서 전원을 받는다(그림&nbsp;%s).'
+          % FR('an_gate_drive')))
+    add(fig('an_gate_drive',
+            '실장한 레그 하나. 핀 번호는 L6790A 는 ST EVL6790_670W 제어 보드의 '
+            '번호, L6498LD 는 SO-14 의 번호다. 레그 2(S3, S4)는 HOUT2 와 LOUT2 에 '
+            '같은 회로다. 브리지 귀환은 컨트롤러 접지다. R<sub>CS</sub> 는 그 '
+            '접지와 입력 정류기 음극 사이에 있고 ISEN 이 거기서 읽는다(L6790A '
+            '데이터시트 블록도). D<sub>BS</sub> 는 외부 부트스트랩 다이오드다. '
+            '각 R<sub>G</sub> 에 역병렬인 D<sub>G,off</sub> 와 R<sub>G,off</sub> '
+            '가 턴오프를 맡는다.'))
+    add(tbl('L6498LD 연결, 레그마다 하나(x = 1, 2).',
+            [['핀', '이름', '연결'],
+             ['1', 'HIN', 'L6790A 의 HOUTx'],
+             ['2', 'LIN', 'L6790A 의 LOUTx'],
+             ['3', 'SGND', '컨트롤러 접지'],
+             ['5', 'PGND', '로우사이드 스위치의 드라이버 소스 핀. SGND 에서 '
+              '&plusmn;5&nbsp;V 까지 허용되므로 sense 저항 전압 강하를 덮는다'],
+             ['6', 'LVG', '로우사이드 게이트, R<sub>G</sub> 경유. 역병렬인 '
+              'D<sub>G,off</sub> 와 R<sub>G,off</sub> 가 턴오프를 맡는다'],
+             ['7', 'VCC', '레귤레이션된 V<sub>CC</sub>. C<sub>BOOT</sub> 의 몇 '
+              '배인 세라믹 커패시터를 바로 옆에. 부트스트랩 재충전은 매번 '
+              '여기서 끌어간다'],
+             ['11', 'OUT', '레그 중점, 하이사이드 스위치의 드라이버 소스 핀'],
+             ['12', 'HVG', '하이사이드 게이트, R<sub>G</sub> 와 같은 턴오프 경로 '
+              '경유'],
+             ['13', 'BOOT', 'C<sub>BOOT</sub> 를 OUT 으로. VCC 에서 외부 고속 '
+              '다이오드'],
+             ['4, 8, 9, 10, 14', 'NC', '연결하지 않음']],
+            widths=[CW * 0.16, CW * 0.12, CW * 0.72], key='l6498pins'))
+    add(p('<b>로직.</b> 컨트롤러 출력은 high 에서 적어도 %(oh).0f&nbsp;V, low '
+          '에서 많아야 %(ol).1f&nbsp;V 다. 드라이버는 %(ih).1f&nbsp;V 위를 high, '
+          '%(il).2f&nbsp;V 아래를 low 로 읽는다(k = %(k1).2f 과 %(k2).2f). 두 '
+          '입력이 다 high 이면 두 출력이 다 low 다. L6498 에는 enable 입력이 '
+          '없으므로 DRV_EN 은 비워 둔다. 연결 하나는 다시 봐야 한다. 기동 때 '
+          'L6790A 는 LOUT2 로 %(i).0f&nbsp;&micro;A 를 흘려 보내고 '
+          '%(vt).1f&nbsp;V 와 비교해, 고정 하프브리지인지 모핑인지 가린다. LIN '
+          '풀다운은 적어도 %(r).0f&nbsp;k&Omega; 이고 %(vx).1f&nbsp;V 가 걸리므로 '
+          'LOUT2 는 여전히 Open 으로 읽힌다(k<sub>LOUT2</sub> = %(k3).2f).'
+          % dict(oh=V['VOH'], ol=V['VOL'], ih=V['Vih'], il=V['Vil'],
+                 k1=_sh['k.VIH'], k2=_sh['k.VIL'], i=V['IHBFB'],
+                 vt=V['VHBFB'], r=V['RPD'], vx=V['RPD'] * V['IHBFB'] / 1e3,
+                 k3=_sh['k.LOUT2'])))
+    add(p('<b>플로팅부.</b> OUT 정격은 %(vo).0f&nbsp;V dc(1&nbsp;ms 미만은 '
+          '600&nbsp;V)이고 버스 피크는 %(vb).0f&nbsp;V 다(k = %(k).3f).'
+          % dict(vo=V['VOUTdrv'], vb=_sh['V.bd_rr'], k=_sh['k.OUTdrv'])))
+    add(p('<b>전원.</b> 드라이버는 %(lo).0f ~ %(hi).0f&nbsp;V 에서 보증된다. '
+          '레귤레이션 범위 %(a).2f ~ %(b).2f&nbsp;V 는 그 안에 있다. 기동 회로가 '
+          '레일을 가장 높이 올리는 V<sub>CCon</sub> = %(on).0f&nbsp;V 도 안이다'
+          '(k = %(k).3f). 드라이버 둘의 대기 전류는 %(iq).2f&nbsp;mA 다. '
+          '플로팅부는 부트스트랩을 거쳐 V<sub>CC</sub> 에서 전원을 받으므로 그 '
+          '몫도 들어 있다.'
+          % dict(lo=V['VCCdlo'], hi=V['VCCdhi'], a=_sh['V.CC_reg_min'],
+                 b=_sh['V.CC_reg_max'], on=V['VCCon'], k=_sh['k.VCCdrv'],
+                 iq=_sh['I.drv_q'])))
+    add(p('<b>부트스트랩.</b> L6498 은 부트스트랩 다이오드 대신 약 '
+          '%(r).0f&nbsp;&Omega; 의 내장 스위치를 쓴다. f<sub>Max</sub> 에서 '
+          '로우사이드는 T<sub>charge</sub> = 1/(2f<sub>Max</sub>) &minus; '
+          't<sub>D</sub> = %(tc).0f&nbsp;ns 동안 켜져 있고, 식&nbsp;%(e)s 은'
+          % dict(r=V['RBS'], tc=_sh['T.chg'], e=ER('bsdrop'))))
+    add(calc(r'V_{drop}=\frac{%(q).1f\,\mathrm{nC}\cdot%(r).0f\,\Omega}'
+             r'{%(tc).0f\,\mathrm{ns}}=%(vd).1f\;\mathrm{V}'
+             % dict(q=_sh['Q.g_run'], r=V['RBS'], tc=_sh['T.chg'],
+                    vd=_sh['V.drop_int'])))
+    add(p('를 준다. 레일 거의 전부다. 그래서 드라이버 데이터시트가 허용하는 대로 '
+          'VCC 에서 BOOT 로 외부 고속 다이오드가 충전을 맡는다. 이 다이오드는 '
+          '버스를 막으므로 1차 스위치와 같은 정격이다: ES1J, 600&nbsp;V, '
+          '1&nbsp;A. 전압 강하를 데이터시트의 1&nbsp;A 최대값 %(vf).2f&nbsp;V 로, '
+          'C<sub>BOOT</sub> = %(cb).0f&nbsp;nF, 가장 긴 하이사이드 펄스를 '
+          '1/(2f<sub>Min</sub>) = %(ton).2f&nbsp;&micro;s 로 잡으면 '
+          '식&nbsp;%(e)s 은'
+          % dict(vf=V['VFbs'], cb=V['CBOOT'], ton=_sh['T.on_max'],
+                 e=ER('vbo'))))
+    add(calc(r'\Delta V_{boot}=\frac{%(q).1f\,\mathrm{nC}+%(i).0f\,\mathrm{\mu A}'
+             r'\cdot%(ton).2f\,\mathrm{\mu s}}{%(cb).0f\,\mathrm{nF}}'
+             r'=%(dv).2f\;\mathrm{V}\,,\qquad V_{BO}=%(vl).2f-%(vf).1f-%(dv).2f'
+             r'=%(vbo).2f\;\mathrm{V}'
+             % dict(q=_sh['Q.g_SU'], i=V['IQBO'], ton=_sh['T.on_max'],
+                    cb=V['CBOOT'], dv=_sh['ΔV.boot'], vl=_sh['V.CC_reg_min'],
+                    vf=V['VFbs'], vbo=_sh['V.BO_run'])))
+    add(p('를 준다. 권장 최소 %(m).1f&nbsp;V 에 대해 k = %(k).3f 이다. '
+          '하프브리지 모핑에서 쉬는 레그는 로우사이드를 켜 두므로 그 부트스트랩은 '
+          '충전된 채다. 버스트 휴지 뒤에는 컨트롤러가 둘 다 재충전하는 패턴으로 '
+          '다시 시작한다.'
+          % dict(m=V['VBOrec'], k=_sh['k.VBO'])))
+    add(p('<b>드라이버가 V<sub>CC</sub> 아래에 두는 하한</b>은 식&nbsp;%(e)s 에서 '
+          '나온다:' % dict(e=ER('vccfloor'))))
+    add(calc(r'V_{CC,floor}=\max\left(%(off).0f,\;%(lo).0f,\;%(bo).1f+%(vf).1f'
+             r'+%(dv).2f\right)=%(fl).2f\;\mathrm{V}'
+             % dict(off=V['VCCoff'], lo=V['VCCdlo'], bo=V['VBOrec'],
+                    vf=V['VFbs'], dv=_sh['ΔV.boot'], fl=_sh['V.CC_floor'])))
+    add(p('기동 때 C<sub>VCC</sub> 가 어디까지 내려가도 되는지는 컨트롤러의 '
+          '%(off).0f&nbsp;V lockout 이 아니라 하이사이드 전원이 정한다'
+          '(%(ref)s 절).'
+          % dict(off=V['VCCoff'],
+                 ref=SR('보조 권선 V<sub>CC</sub> 설계 결과'))))
+    _rso, _rsi = _sh['R.so'], _sh['R.si']
+    add(p('<b>손실.</b> 데이터시트는 출력을 단락 전류로만 준다. 15&nbsp;V 에서 '
+          '전 온도에 걸쳐 소스 적어도 %(so).1f&nbsp;A, 싱크 적어도 '
+          '%(si).2f&nbsp;A 다. 그래서 출력을 %(rso).1f 과 %(rsi).1f&nbsp;&Omega; '
+          '로 잡는다. 들어갈 때는 R<sub>G</sub> = %(rg).1f&nbsp;&Omega;, 나올 '
+          '때는 R<sub>G,off</sub> = %(rgo).1f&nbsp;&Omega; 이고(아래), MOSFET '
+          '자체의 %(rgi).1f&nbsp;&Omega; 은 양쪽에 다 있다. 그러므로 드라이버는 '
+          '게이트 전력의 s<sub>drv</sub> = %(sh).3f 을 갖는다. f<sub>Max</sub> '
+          '와 레일 위쪽 끝에서(식&nbsp;%(e)s)'
+          % dict(so=V['Iso'], si=V['Isi'], rso=_rso, rsi=_rsi, rg=V['RG'],
+                 rgo=A._builder_const('R.G_off'),
+                 rgi=V['Rgint'], sh=_sh['s.drv'], e=ER('pdrv'))))
+    add(calc(r'P_{drv}=2\cdot%(q).1f\,\mathrm{nC}\cdot%(v).2f\cdot%(f).1f'
+             r'\,\mathrm{kHz}\cdot%(sh).3f+%(iq).0f\,\mathrm{\mu A}\cdot%(v).2f'
+             r'=%(p).3f\;\mathrm{W}'
+             % dict(q=_sh['Q.g_run'], v=_sh['V.CC_reg_max'], f=_sh['f.Max'],
+                    sh=_sh['s.drv'], iq=V['IQCC'] + V['IQBO'],
+                    p=_sh['P.drv'])))
+    add(p('드라이버 하나당이고, SO-14 의 %(pm).0f&nbsp;W 에 대해 k = %(k).3f '
+          '이다. %(rth).0f&nbsp;&deg;C/W 에서 %(dt).0f&nbsp;&deg;C 상승이다. '
+          'f<sub>Max</sub> 는 Light load 에서만 닿으므로 이 상한은 일부러 높게 '
+          '잡은 것이다.'
+          % dict(pm=V['Pdrvmax'], k=_sh['k.Pdrv'], dt=_sh['ΔT.drv'],
+                 rth=V['Rthdrv'])))
+    _g = dict(_sh)
+    for _k in ('R.G_off', 'I.FSM_Goff', 'I.FM_Goff', 'V.pl'):
+        if _k not in _g:
+            _g[_k] = A._builder_const(_k)
+    add(p('<b>턴오프 경로.</b> 게이트마다 R<sub>G</sub> 에 역병렬인 1N4148W, '
+          'D<sub>G,off</sub> 와 직렬 R<sub>G,off</sub> = %(rgo).1f&nbsp;&Omega; '
+          '로 방전한다. 그래서 off 에지는 R<sub>G</sub> 가 아니라 '
+          'R<sub>G,off</sub>, 드라이버 싱크, R<sub>g,int</sub> 에 달려 있다. '
+          '레일 위쪽 끝에서 피크는 (%(vm).2f &minus; %(vf).1f)/(%(rgo).1f + '
+          '%(rsi).1f + %(rgi).1f) = %(ip).2f&nbsp;A 다. 드라이버 싱크 전류 '
+          '아래이고(k = %(ks).2f), 다이오드의 1&nbsp;&micro;s 서지 정격 '
+          '%(fsm).0f&nbsp;A 아래다(k = %(kd).2f). 평균 '
+          'Q<sub>g,run</sub>f<sub>Max</sub> = %(ia).0f&nbsp;mA 는 다이오드의 '
+          '%(fm).0f&nbsp;mA 아래다(k = %(ka).1f). Miller 평탄부는 V<sub>pl</sub> '
+          '= %(vpl).1f&nbsp;V 다. 거기서 채널이 꺼지고 중점이 스윙을 시작한다. '
+          '게이트는 다이오드 경로로 레일에서 평탄부까지 t<sub>off,pl</sub> = '
+          '%(tp).0f&nbsp;ns 에 떨어진다. R<sub>G</sub> 만으로는 %(tr).0f&nbsp;ns '
+          '이므로 %(kt).2f 배 빠르다. 이 시간의 대부분은 R<sub>G</sub> 가 아니라 '
+          '내부 저항과 싱크 저항이 정한다. 컨트롤러의 적응 데드타임은 중점이 '
+          '스윙을 마치면 끝난다. 그러므로 느린 하강은 shoot-through 가 아니라 '
+          '잃어버린 데드타임이 된다. 낮은 턴오프 임피던스는 다른 스위치의 dv/dt '
+          '에 맞서 게이트를 붙잡아 두는 것이기도 하다.'
+          % dict(rgo=_g['R.G_off'], vm=_sh['V.CC_reg_max'], vf=V['VFj'],
+                 rsi=_rsi, rgi=V['Rgint'], ip=_g['I.Goff_pk'],
+                 ks=_g['k.Goff_si'], fsm=_g['I.FSM_Goff'], kd=_g['k.Goff_D'],
+                 ia=_g['I.Goff_avg'], fm=_g['I.FM_Goff'], ka=_g['k.Goff_avg'],
+                 vpl=_g['V.pl'], tp=_g['t.off_pl'], tr=_g['t.off_RG'],
+                 kt=_g['k.Goff_t'])))
+    add(p('<b>타이밍.</b> 드라이버의 지연 편차는 많아야 %(mt).0f&nbsp;ns 다. '
+          '그래서 게이트에 남는 데드타임은 (t<sub>D</sub> &minus; MT)/T<sub>T</sub> '
+          '= %(k).3f 로 스윙을 덮는다. 이 비는 L<sub>r</sub> 과 함께 떨어진다. '
+          'C<sub>r</sub>, L<sub>m</sub>, R<sub>T</sub> 를 고정하면 L<sub>r</sub> '
+          '&asymp; %(lr).1f&nbsp;&micro;H 에서 1 이 된다. 자계 풀이가 허용하는 '
+          '누설 하한 바로 위다(%(ref)s 절). c<sub>HB</sub> 는 상한값이고, '
+          '컨트롤러는 데드타임을 40 ~ 420&nbsp;ns 사이에서 맞춘다. 그래도 첫 '
+          '샘플이 낮게 나오면 t<sub>D</sub> 를 먼저 올린다. MOSFET 자체의 '
+          '턴오프·턴온 지연(%(toff).0f, %(ton).0f&nbsp;ns)은 28&nbsp;A 하드 '
+          '스위칭 값이라 ZVS 에는 맞지 않는다. 게이트-중점 타이밍을 잰다.'
+          % dict(mt=V['MT'], k=_sh['k.TTd'], lr=_ttd_lr_edge(V, A),
+                 toff=109, ton=38, ref=SR('코어 고르기'))))
+    add(p('<b>기울기.</b> 드라이버의 OUT 은 많아야 %(dm).0f&nbsp;V/ns 로 '
+          '움직여도 된다. 스윙 꼭대기 근처에서 C<sub>oss</sub> 는 '
+          '%(c4).0f&nbsp;pF 뿐이므로, 전류 전환 전류 I<sub>Lm,pk</sub> = '
+          '%(il).2f&nbsp;A 가 만드는 기울기는'
+          % dict(dm=V['dvmax'], c4=V['Coss400'], il=_sh['I.Lm_pk'])))
+    add(calc(r'S_{mid}=\frac{%(il).2f\,\mathrm{A}}{2\cdot%(c4).0f'
+             r'+%(cp).0f\,\mathrm{pF}}=%(dv).1f\;\mathrm{V/ns}'
+             % dict(il=_sh['I.Lm_pk'], c4=V['Coss400'], cp=V['Cpar'],
+                    dv=_sh['dv.dt'])))
+    add(p('(k = %(k).3f). 공진 위에서는 스위칭되는 전류가 I<sub>Lm,pk</sub> 를 '
+          '넘을 수 있다. 실측이 요구하면 스위치마다 작은 커패시터를 병렬로 '
+          '다는 것이 대책이고, 대가는 T<sub>T</sub> 다.'
+          % dict(k=_sh['k.dvdt'])))
+    add(note('<b>ST EVL6790_670W 가 다르게 한 것.</b> 그 회로도에서 세 가지는 '
+             '맞는 곳에 가져다 쓸 만하다. 드라이버 전원을 DRV_EN 으로 P-MOSFET'
+             '(BSS84, 2N7002 로 레벨 시프트)을 거쳐 끊어, idle 에서 드라이버가 '
+             '전류를 쓰지 않게 한다. 하프브리지 보드는 부트스트랩을 다이오드'
+             '(STTH1R06)와 직렬 3.3&nbsp;&Omega; 으로 충전해 첫 충전 전류를 '
+             '제한한다. 그리고 게이트마다 소스로 10&nbsp;k&Omega; 을 둔다. L6498 '
+             '은 자체 V<sub>CC</sub> 가 3&nbsp;V 를 넘어야 출력을 low 로 '
+             '붙잡으므로, 그 전까지를 저항이 덮는다.'))
+
+    add(h2('SR MOSFET: STL160N10F8'))
+    _f = dict(A.SH)
+    for _k in ('V.DS_SR', 'R.thJA_SR', 'Q.g_sync', 'C.g_SR', 'V.G_SRmax',
+               'C.iss_SR', 'P.SR_budget'):
+        if _k not in _f:
+            _f[_k] = A._builder_const(_k)
+    add(p('센터탭 레그마다 STMicroelectronics STL160N10F8 %(n).0f개를 병렬로 '
+          '둔다 [STL]. PowerFLAT 5&times;6 의 100&nbsp;V STripFET F8 이고, '
+          '드레인은 핀 5&ndash;8, 게이트는 4, 소스는 1&ndash;3 이다. %(s)s 절이 '
+          '요구하는 것과 대조하면:'
+          % dict(n=V['nSR'], s=SR('이 설계의 반도체 요구조건'))))
+    add(tbl('STL160N10F8 과 2차 요구조건(DS14249 Rev 5).',
+            [['항목', '데이터시트', '요구', '여유'],
+             ['V<sub>DS</sub>', '%.0f V' % _f['V.DS_SR'],
+              '%.0f V' % _f['V.DS_sec_rec'], '%.3f' % _f['k.VDSsec']],
+             ['R<sub>DS(on)</sub> 최대, 25&nbsp;&deg;C, V<sub>GS</sub> = 10 V',
+              '%.1f m&Omega;' % V['Rds'],
+              '%.2f m&Omega;' % _f['R.dson_req_25_s'], '%.3f' % _f['k.RDSsec']],
+             ['k<sub>T</sub>, 25 ~ 125&nbsp;&deg;C (Fig.&nbsp;13)',
+              '%.1f' % V['Rdsk'], '&mdash;', '&mdash;'],
+             ['소자당 손실, 레그당 budget',
+              '%.3f W' % _f['P.SR_dev'],
+              '레그당 %.1f W' % _f['P.SR_budget'], '%.3f' % _f['k.PSR']],
+             ['최고 구동 전압에서의 게이트 전하',
+              '%.1f nC' % _f['Q.g_SR'], '%.1f nC' % _f['Q.g_SR_max'],
+              '%.3f' % _f['k.QgSR']]],
+            widths=[CW * 0.42, CW * 0.18, CW * 0.22, CW * 0.18],
+            key='stl160'))
+    add(p('k<sub>T</sub> 는 Fig.&nbsp;13 의 벡터 곡선에서 읽었다'
+          '(125&nbsp;&deg;C 에서 1.504, typical). 그러므로 고온 R<sub>DS(on)</sub> '
+          '은 %(rh).1f&nbsp;m&Omega; 이고 소자 넷이 함께 %(p).2f&nbsp;W 를 '
+          '잃는다. 데이터시트의 2s2p 보드 %(rt).0f&nbsp;&deg;C/W 에서 소자 하나는 '
+          '%(dt).0f&nbsp;&deg;C 오른다. 실제 보드가 정한다.'
+          % dict(rh=_f['R.dson_s'], p=_f['P.SR'], rt=_f['R.thJA_SR'],
+                 dt=_f['ΔT.SR_dev'])))
+    add(p('SR MOSFET 에서 중요한 게이트 전하는 드레인이 이미 바디 다이오드 전압에 '
+          '있는 채로 켜질 때의 값이다: Q<sub>g,sync</sub> = %(q).0f&nbsp;nC, '
+          '10&nbsp;V, typical. 컨트롤러는 %(vg).1f&nbsp;V 까지 구동하고, 평탄부를 '
+          '지난 게이트 전하 곡선(Fig.&nbsp;8, 벡터로 읽음)은 V 당 '
+          'C<sub>g,SR</sub> = %(cg).2f&nbsp;nC 씩 오르므로'
+          % dict(q=_f['Q.g_sync'], vg=_f['V.G_SRmax'], cg=_f['C.g_SR'])))
+    add(calc(r'Q_{g,SR}=%(q).0f+%(cg).2f\cdot(%(vg).1f-10)=%(r).1f\;\mathrm{nC}'
+             % dict(q=_f['Q.g_sync'], cg=_f['C.g_SR'], vg=_f['V.G_SRmax'],
+                    r=_f['Q.g_SR'])))
+    add(p('소자당이다. 게이트 핀 하나에 둘이 달리므로 C<sub>iss</sub> = '
+          '%(n).0f &times; %(c).1f = %(cp).1f&nbsp;nF(50&nbsp;V, typical)다. '
+          'TEA2095TE 데이터시트가 드라이버를 특성화한 10&nbsp;nF 정도다. 바디 '
+          '다이오드는 60&nbsp;A 에서 V<sub>SD</sub> 최대 1.2&nbsp;V, Q<sub>rr</sub> '
+          '160&nbsp;nC typical 이고, 컨트롤러가 남기는 데드타임에만 도통한다.'
+          % dict(n=V['nSR'], c=_f['C.iss_SR'], cp=_f['C.iss_pin'])))
+
+    add(h2('동기 정류: TEA2095TE'))
+    add(p('NXP TEA2095TE 하나가 센터탭 두 레그를 구동하고, 레그마다 MOSFET '
+          '%(nSR).0f개가 병렬이다 [TEA](그림&nbsp;%(f)s). 여기서 설계할 것은 '
+          '연결과 한계뿐이다. 게이트 구동, 조절, 타이밍은 이 부품 자체의 몫이다.'
+          % dict(V, f=FR('an_sr_ctrl'))))
+    add(fig('an_sr_ctrl',
+            '실장한 동기 정류기: 레그 A 의 Q<sub>A1</sub>, Q<sub>A2</sub> 와 레그 '
+            'B 의 Q<sub>B1</sub>, Q<sub>B2</sub>. V<sub>CC,SR</sub> 은 제너 '
+            '팔로워 R<sub>BSR</sub>, D<sub>ZSR</sub>, Q<sub>SR</sub> 에서 핀의 '
+            'R<sub>SR</sub>&ndash;C<sub>SR</sub> 필터를 거쳐 오고, 크기는 아래에서 '
+            '정한다. MOSFET 마다 게이트 저항이 따로 있다. DSx 와 SSx 는 짝의 '
+            '드레인과 소스로 가는 별도의 sense 선이고, 전력 접지를 따라가지 '
+            '않는다. 트랜스포머 핀은 그림&nbsp;%s 와 같다. 센터탭이 출력이다.'
+            % FR('an_xfmr_pins')))
+    add(tbl('TEA2095TE 연결(HSO8).',
+            [['핀', '이름', '연결'],
+             ['1, 8', 'GDB, GDA', '레그 B 와 레그 A 짝의 게이트'],
+             ['2', 'GND', 'SR 소스의 2차 접지'],
+             ['3, 6', 'DSB, DSA', '드레인 sense, 각 짝의 드레인으로 별도 배선'],
+             ['4, 5', 'SSB, SSA', '소스 sense, 각 짝의 소스로 별도 배선, 전력 '
+              '접지를 따라가지 않는다'],
+             ['7', 'VCC', '아래의 12&nbsp;V 급 팔로워, 핀의 '
+              'R<sub>SR</sub>&ndash;C<sub>SR</sub> 필터 경유']],
+            widths=[CW * 0.12, CW * 0.18, CW * 0.70], key='tea2095pins'))
+    _q = dict(A.SH)
+    for _k in ('V.SR_char', 'I.SR_max', 'I.SR_q', 'I.SR_dch', 'R.thSR',
+               'V.DZSR_sel', 'R.BSR_sel', 'C.SR', 'C.SRb', 'R.SR', 'ΔV.RSR',
+               'ΔV.CSR', 'k.SRpin'):
+        if _k not in _q:
+            _q[_k] = A._builder_const(_k)
+    add(p('<b>전원.</b> %(vo).0f&nbsp;V 출력에서 바로 받으면 컨트롤러가 자체 '
+          '게이트 구동 전원까지의 차이를 떨어뜨려야 한다. 그 전압 강하에 SR '
+          '게이트 전류를 곱한 만큼이 HSO8 안의 열이다. 12&nbsp;V 급 제너 팔로워, '
+          '곧 식&nbsp;%(e)s 의 회로에서 바이패스 다이오드를 뺀 것이 그 전압 '
+          '강하를 밖으로 꺼낸다. R<sub>BSR</sub> 은 출력에서 베이스의 제너 '
+          'D<sub>ZSR</sub> 로 간다. 컬렉터는 출력에 있다. 이미터는 R<sub>SR</sub> '
+          '= %(rs).0f&nbsp;&Omega; 을 거쳐 VCC 를 먹이고, 핀에는 C<sub>SR</sub> = '
+          '%(c).0f&nbsp;nF 와 %(cb).1f&nbsp;&micro;F 벌크가 있다. RC 필터다'
+          '(ST 보드는 거기에 10&nbsp;&micro;F 를 둔다). 저항은 f<sub>Max</sub> '
+          '전류에서 %(dr).2f&nbsp;V 를 떨어뜨리고, 한 레그의 짝이 충전될 때 핀은 '
+          '%(dc).2f&nbsp;V 꺼진다. 특성화된 12&nbsp;V 에 대해 k = %(kp).3f 이다. '
+          '데이터시트는 게이트 구동을 V<sub>CC</sub> = %(ch).0f&nbsp;V 에서 '
+          '주므로, 범위의 가운데가 아니라 아래쪽 끝을 거기에 둔다. '
+          '&plusmn;%(tp).0f&nbsp;%% 의 %(z).0f&nbsp;V 제너와 V<sub>BE</sub> = '
+          '%(VFj).1f&nbsp;V 로'
+          % dict(V, vo=V['Vout'], e=ER('vccreg'), c=_q['C.SR'],
+                 rs=_q['R.SR'], cb=_q['C.SRb'], dr=_q['ΔV.RSR'],
+                 dc=_q['ΔV.CSR'], kp=_q['k.SRpin'],
+                 ch=_q['V.SR_char'], z=_q['V.DZSR_sel'],
+                 tp=100 * V['tolDZ'])))
+    add(calc(r'V_{CC,SR}=%(z).0f-%(VFj).1f=%(r).2f\;\mathrm{V}'
+             r'\,,\qquad %(lo).2f\ldots%(hi).2f\;\mathrm{V}'
+             % dict(V, z=_q['V.DZSR_sel'], r=_q['V.SR'], lo=_q['V.SR_min'],
+                    hi=_q['V.SR_max'])))
+    add(p('%(ch).0f&nbsp;V 에 대해 k = %(k).3f 이다. 13&nbsp;V 제너라면 범위의 '
+          '가운데가 12&nbsp;V 근처가 되지만 아래쪽 끝은 %(l13).2f&nbsp;V 가 된다. '
+          '거기서는 게이트 구동이 보증되지 않는다. 팔로워는 전류 I<sub>SR,max</sub> '
+          '= %(im).0f&nbsp;mA 에 맞춰 설계한다. 이 값이 SR MOSFET 이 가져와도 '
+          '되는 최대 게이트 전하를 정한다. 주기마다 MOSFET %(n).0f개가 스위칭하고 '
+          '운전 주파수 상한을 1차와 같이 f<sub>Max</sub> 로 잡으면'
+          % dict(k=_q['k.SRlo'], ch=_q['V.SR_char'], im=_q['I.SR_max'],
+                 n=_q['N.SRsw'],
+                 l13=13 * (1 - V['tolDZ']) - V['VFj'])))
+    add(calc(r'Q_{g,SR}\leq\frac{%(im).0f\,\mathrm{mA}-%(iq).2f\,\mathrm{mA}}'
+             r'{%(n).0f\cdot%(fk).1f\,\mathrm{kHz}}=%(q).1f\;\mathrm{nC}'
+             % dict(im=_q['I.SR_max'], iq=_q['I.SR_q'], n=_q['N.SRsw'],
+                    fk=_q['f.Max'], q=_q['Q.g_SR_max'])))
+    add(p('MOSFET 당이다. STL160N10F8 의 %(qg).1f&nbsp;nC 에 대해 k = %(kq).3f '
+          '이다. 그러면 f<sub>Max</sub> 에서 팔로워가 흘리는 전류는'
+          % dict(qg=_q['Q.g_SR'], kq=_q['k.QgSR'])))
+    add(calc(r'I_{SR}=%(iq).2f+%(n).0f\cdot%(qg).1f\,\mathrm{nC}\cdot'
+             r'%(fk).1f\,\mathrm{kHz}=%(i).1f\;\mathrm{mA}'
+             % dict(iq=_q['I.SR_q'], n=_q['N.SRsw'], qg=_q['Q.g_SR'],
+                    fk=_q['f.Max'], i=_q['I.SR'])))
+    add(p('이고, I<sub>SR,q</sub> = %(iq).2f&nbsp;mA 는 컨트롤러 자체의 전류다. '
+          '방전 모드 전류는 12&nbsp;V 에서 많아야 %(id).0f&nbsp;mA, 그 위에서는 '
+          '더 작으므로 넉넉히 안이다(k = %(kd).3f). R<sub>BSR</sub> 은 '
+          '식&nbsp;%(e)s 에서 나온다. 출력은 hold-up 끝의 값이고, '
+          '&beta;<sub>min</sub> 과 I<sub>Z,min</sub> 은 같다:'
+          % dict(iq=_q['I.SR_q'], id=_q['I.SR_dch'], kd=_q['k.SRdch'],
+                 e=ER('rbz'))))
+    add(calc(r'R_{BSR}\leq\frac{%(vm).0f-%(zm).2f}{%(im).0f/%(b).0f+%(iz).0f}'
+             r'=%(r).0f\;\Omega\;\rightarrow\;%(rs).0f\;\Omega'
+             % dict(vm=V['Vomin'], zm=_q['V.DZSR_sel'] * (1 + V['tolDZ']),
+                    im=_q['I.SR_max'], b=V['bmin'], iz=V['IDZmin'],
+                    r=_q['R.BSR_max'], rs=_q['R.BSR_sel'])))
+    add(p('살 때의 정격은 OVP1(%(o1).2f&nbsp;V)에서 정한다. 제너는 No load 에서 '
+          '%(pz).0f&nbsp;mW, R<sub>BSR</sub> 은 %(pr).3f&nbsp;W, 패스 '
+          '트랜지스터는 I<sub>SR,max</sub> 에서 %(pq).2f&nbsp;W(공칭 출력에서 '
+          '%(pn).2f&nbsp;W)다. 트랜지스터 몫은 실제 게이트 전류 '
+          '%(n).0f&nbsp;&middot;&nbsp;Q<sub>g</sub>&nbsp;&middot;&nbsp;f<sub>sw</sub> '
+          '에 비례한다. OVP2 출력 %(o2).2f&nbsp;V 를 막아야 한다. 이 회로가 사 '
+          '주는 것: I<sub>SR,max</sub> 에서 컨트롤러 자체의 전압 강하는 '
+          '(%(sx).2f &minus; %(vg).1f)&nbsp;V &times; %(ig).0f&nbsp;mA = '
+          '%(pi).3f&nbsp;W 다. 데이터시트가 4층 보드에서 주는 '
+          '%(rt).0f&nbsp;&deg;C/W 로 %(ti).0f&nbsp;&deg;C 상승이다. 출력에서 바로 '
+          '받으면 OVP1 에서 %(pd).2f&nbsp;W, %(td).0f&nbsp;&deg;C 가 된다. 실제 '
+          'I<sub>SR</sub> 에서 두 값은 공칭 출력의 패스 트랜지스터 '
+          '%(prun).2f&nbsp;W 와 컨트롤러 %(ir).3f&nbsp;W 다.'
+          % dict(o1=_sh['V.OVP1_act'], prun=_q['P.QSR_run'],
+                 ir=_q['P.SR_run'], pz=_q['P.DZSR'], pr=_q['P.RBSR'],
+                 pq=_q['P.QSR'], pn=_q['P.QSR_nom'], n=_q['N.SRsw'],
+                 o2=_sh['V.OVP2_act'], sx=_q['V.SR_max'], vg=V['VGSR'],
+                 ig=_q['I.SR_max'] - _q['I.SR_q'], pi=_q['P.SR_int'],
+                 ti=_q['ΔT.SR'], rt=_q['R.thSR'], pd=_q['P.SR_dir'],
+                 td=_q['ΔT.SR_dir'])))
+    for _k in ('R.thQ', 'T.jQ', 'R.thDZ'):
+        if _k not in _q:
+            _q[_k] = A._builder_const(_k)
+    add(p('Q<sub>SR</sub> 은 Q<sub>VCC</sub> 와 같은 FZT651 이고, 같은 '
+          '50&nbsp;&times;&nbsp;50&nbsp;mm 컬렉터 패드에 있다'
+          '(%(rth).1f&nbsp;&deg;C/W, T<sub>j,max</sub> %(tj).0f&nbsp;&deg;C). '
+          '설계 전류 I<sub>SR,max</sub> 에서 주위 온도 %(ta).0f&nbsp;&deg;C 까지 '
+          '허용한다. OVP1 에서 STL160N10F8 의 전하로는 %(po).2f&nbsp;W 를 '
+          '소모하고 %(tar).0f&nbsp;&deg;C 까지 허용한다. D<sub>ZSR</sub> 은 같은 '
+          'BZT52H-C15 이고, 1&nbsp;cm&sup2; 패드에서 P<sub>DZSR</sub> 로 '
+          '%(tad).0f&nbsp;&deg;C 까지다.'
+          % dict(rth=_q['R.thQ'], tj=_q['T.jQ'], ta=_q['T.aQSR'],
+                 po=_q['P.QSR_ovp'], tar=_q['T.aQSR_run'],
+                 tad=_q['T.aDZSR'])))
+    add(p('그 밖의 한계. V<sub>CC</sub> 는 최대 %(m).0f&nbsp;V 다. OVP2 출력 '
+          '%(o2).2f&nbsp;V 는 패스 트랜지스터가 단락됐을 때만 본다'
+          '(k = %(k1).3f). 드레인 sense 입력은 %(ds).0f&nbsp;V 까지 받고, SR '
+          'MOSFET 에 요구한 %(vr).0f&nbsp;V 위다(k = %(k2).2f). 게이트 구동은 '
+          '전원이 12&nbsp;V 이상이면 %(vg).1f ~ 11.2&nbsp;V 사이에 유지되므로, '
+          'SR R<sub>DS(on)</sub> 을 주는 10&nbsp;V 를 넘는다(k = %(k3).3f). 전원 '
+          '%(st).2f&nbsp;V 아래에서는 꺼지고 바디 다이오드가 정류한다.'
+          % dict(o2=_sh['V.OVP2_act'], m=V['SRcc'], k1=_sh['k.SRVCC'],
+                 ds=V['DSsense'], vr=V['VDSs'], k2=_sh['k.DSsense'],
+                 vg=V['VGSR'], k3=_sh['k.VGSR'], st=V['SRstart'])))
+    _pd = 0.4 * V['Vout'] / _q['V.SR']
+    add(p('이 부품의 기능 둘이 이 설계와 만난다. 게이트 핀마다 MOSFET 둘을 '
+          '구동하므로 전하가 하나의 두 배인데, 데이터시트는 드라이버를 '
+          '10&nbsp;nF 로 특성화했다. 시제품에서 턴온·턴오프 시간을 확인한다. '
+          '그리고 정류 동작이 1.4&nbsp;s(적어도 1.1&nbsp;s) 없으면 출력을 '
+          '방전하려고 0.4&nbsp;W / V<sub>CC</sub> 를 끈다. 팔로워를 거치므로 그 '
+          '전류는 출력에서 오고, 출력은 %(vo).0f/%(vs).1f &times; 0.4 = '
+          '%(pd).2f&nbsp;W 를 내놓는다. 상용전원이 끊긴 뒤 %(co).1f&nbsp;mF '
+          '뱅크, %(vo).0f&nbsp;V 에서 %(e).1f&nbsp;J 은 약 %(t).0f&nbsp;s 에 '
+          '비워진다. 그러나 No load 에서 1.1&nbsp;s 보다 긴 깊은 버스트 휴지도 '
+          '이 기능을 켜고, 대기 전력에 %(pd).2f&nbsp;W 를 더한다. No load 의 가장 '
+          '긴 burst-off 시간을 잰다.'
+          % dict(V, co=V['Cout'], e=0.5 * V['Cout'] * 1e-3 * V['Vout'] ** 2,
+                 vo=V['Vout'], vs=_q['V.SR'], pd=_pd,
+                 t=0.5 * V['Cout'] * 1e-3 * V['Vout'] ** 2 / _pd)))
+    add(note('<b>ST EVL6790_670W 의 SR 보드</b>는 같은 핀 배치의 TEA2096 을 '
+             '쓰고, 레그당 ISC079N15NM6 둘이다. 게이트마다 0&nbsp;&Omega; 자리를, '
+             '드레인 sense 선마다 직렬 220&nbsp;&Omega; 을 둔다. V<sub>CC</sub> 는 '
+             '보조 레일에서 10&nbsp;&Omega; 을 거쳐 오고 핀에 10&nbsp;&micro;F 가 '
+             '있다.'))
+
     add(h2('전압 루프 설계 결과'))
     from math import atan, degrees, sqrt, pi
     _at = lambda w, w0: degrees(atan(w / w0))
@@ -3499,13 +4126,14 @@ def build(A):
            r'\left(\frac{1}{2f_{sw,min}}-T_{idle}\right)', key='CT'))
     add(eq(r'R_{T,ceil}=\frac{1}{C_{T}}'
            r'\left(\frac{1}{2f_{sw,min}}-T_{idle}\right)', key='RTceil'))
-    add(p('f<sub>sw,min</sub> = f<sub>o</sub>&nbsp;=&nbsp;%(fo).1f&nbsp;kHz, '
-          'f<sub>sw,des</sub>&nbsp;=&nbsp;%(fop).1f&nbsp;kHz(오실레이터 범위를 '
-          '설계하는 주파수: 컨버터가 실제로 도는 최고 주파수 %(fmx).1f&nbsp;kHz'
-          '(라인 피크의 풀브리지 경계)의 1.5 배이되 사양 %(fswspec).0f&nbsp;kHz '
-          '이하), I<sub>EA,max</sub>&nbsp;=&nbsp;400&nbsp;&micro;A, V<sub>ref</sub>'
+    add(p('f<sub>sw,des</sub> 는 오실레이터 범위를 설계하는 주파수다. 컨버터가 '
+          '실제로 도는 최고 주파수 %(fmx).1f&nbsp;kHz(라인 피크의 풀브리지 경계)의 '
+          '1.5 배이되, 사양 %(fswspec).0f&nbsp;kHz 를 넘지 않는다. 넣는 값은 '
+          'f<sub>sw,min</sub> = f<sub>o</sub>&nbsp;=&nbsp;%(fo).1f&nbsp;kHz, '
+          'f<sub>sw,des</sub>&nbsp;=&nbsp;%(fop).1f&nbsp;kHz, '
+          'I<sub>EA,max</sub>&nbsp;=&nbsp;400&nbsp;&micro;A, V<sub>ref</sub>'
           '&nbsp;=&nbsp;1.5&nbsp;V, T<sub>idle</sub>&nbsp;=&nbsp;%(Tidle).0f'
-          '&nbsp;ns 로:' % dict(V, fop=A.SH['f.sw_max_des'], fmx=V['fswmaxop'])))
+          '&nbsp;ns 다:' % dict(V, fop=A.SH['f.sw_max_des'], fmx=V['fswmaxop'])))
     add(calc(r'C_{T,max}=\frac{400\times10^{-6}}{2\cdot1.5}\cdot'
              r'\frac{(1-2\cdot%(t).0f\!\times\!10^{-9}\cdot'
              r'%(fmx).1f\!\times\!10^{3})'
@@ -3669,6 +4297,42 @@ def build(A):
     add(note('유니버설 입력이면 선택 범위는 15&nbsp;k&Omega; ~ %(max).1f&nbsp;k&Omega; '
              '이고, 모핑 한계 47&nbsp;k&Omega; 에는 이를 일이 없다. LOUT2 에는 아무 부품도 연결하지 말 것: 약 8&nbsp;k&Omega; 아래의 풀다운은 고정 '
              '하프브리지로 읽힌다.' % dict(max=A.SH['R.CFG_max'] / 1e3)))
+
+    _z = dict(A.SH)
+    for _k in ('R.Z_sel', 'R.Z1', 'R.Z2', 'C.Z', 'tol.VR', 'tol.RZ', 'R.thQ6',
+               'I.KA_min'):
+        if _k not in _z:
+            _z[_k] = A._builder_const(_k)
+    add(p('<b>LED 레일 V<sub>Z</sub>.</b> STEP 7 은 V<sub>Z</sub> 를 주어진 '
+          '값으로 썼다. 이 레일은 둘째 TL431, Q6 를 shunt 레귤레이터로 써서 '
+          '만든다. R<sub>Z</sub> 는 출력에서 V<sub>Z</sub> 노드로 가고, 노드는 '
+          'C<sub>Z</sub> 가 붙잡는다. 캐소드가 노드에 있고 기준은 R<sub>Z1</sub> '
+          '과 R<sub>Z2</sub> 의 분압에서 받으므로 V<sub>Z</sub> = '
+          'V<sub>R</sub>(1 + %(r1).1f/%(r2).0f) = %(vz).2f&nbsp;V 다. STEP 7 의 '
+          'R<sub>B</sub> 허용 범위가 좁으므로 레일은 값을 지켜야 한다. B 등급'
+          '(기준 &plusmn;%(tv).1f&nbsp;%%, Q5 도 같은 등급으로 산다)과 1&nbsp;%% '
+          '저항으로 %(lo).2f ~ %(hi).2f&nbsp;V 이고, 허용 범위는 여전히 '
+          'R<sub>B</sub> 를 품는다(위로 k = %(kh).3f, 아래로 %(kl).3f). 그 자리에 '
+          '&plusmn;5&nbsp;%% 12&nbsp;V 제너를 쓰면 상한이 %(z5).2f R<sub>B</sub> '
+          '가 되어 범위 밖이다. R<sub>Z</sub> 는 R<sub>B</sub> 가 끌 수 있는 최대 '
+          '%(ib).2f&nbsp;mA(Q5 가 기준에 있을 때)에 Q6 의 %(ik).0f&nbsp;mA 와 '
+          '분압기의 %(id).2f&nbsp;mA 를 더한 전류를 hold-up 끝에서 대야 한다. '
+          '그래서 최대 %(rm).0f&nbsp;&Omega; 이고 %(rz).0f&nbsp;&Omega; 을 '
+          '실장한다(k = %(kr).3f). LED 가 꺼진 OVP1 에서 R<sub>Z</sub> 는 '
+          '%(prz).2f&nbsp;W, Q6 는 %(pq).0f&nbsp;mW 를 소모한다. SOT-23 에서 '
+          '%(dt).0f&nbsp;&deg;C 상승이다. C<sub>Z</sub> = %(cz).0f&nbsp;&micro;F '
+          '는 TL431 이 커패시터 부하에 불안정한 띠(이 캐소드 전압에서 약 0.01 ~ '
+          '2&nbsp;&micro;F) 위에 있고, 바이어스로 줄어드는 용량까지 여유가 있다. '
+          '옵토커플러 Q4 는 ST 툴과 보드의 SFH617A-2 다. STEP 7 의 CTR 값은 이 '
+          '설계의 선택값이고, 쓰는 LED 전류에서 그 곡선과 대조해야 한다.'
+          % dict(r1=_z['R.Z1'], r2=_z['R.Z2'], vz=_z['V.Z'],
+                 tv=100 * _z['tol.VR'], lo=_z['V.Z_min'], hi=_z['V.Z_max'],
+                 kh=_z['k.RBZ_hi'], kl=_z['k.RBZ_lo'], z5=_z['r.RB_zener5'],
+                 ib=_z['I.RB_max'], ik=_z['I.KA_min'], id=_z['I.Zdiv'],
+                 rm=_z['R.Z_max'], rz=_z['R.Z_sel'], kr=_z['k.RZ'],
+                 prz=_z['P.RZ'], pq=_z['P.Q6'], dt=_z['ΔT.Q6'],
+                 cz=_z['C.Z'])))
+
     add(h2('출력 sensing 과 과전압: ZCD 분압기'))
     add(p('분압비만으로 두 과전압 threshold 가 정해진다. 저항의 절대값은 바이어스 전류로 정한다.'))
     add(eq(r'R_{ZCD,L}=\frac{2.3\,\mathrm{V}}{I_{bias}}\,,\qquad '
@@ -3729,15 +4393,20 @@ def build(A):
                     hi=A.SH['V.CC_reg_max'])))
     add(p('범위의 아래쪽 끝은 V<sub>CC,HVSUon</sub> = %(hv).0f&nbsp;V 를 '
           '%(k1).3f 배로 넘고, 위쪽 끝은 동작 한계 %(mx).0f&nbsp;V 아래에 %(k2).3f '
-          '배 여유로 머문다. 부하는 컨트롤러 %(ICC).0f&nbsp;mA 와, 후보 MOSFET 의 '
-          '게이트 전하 typical %(Qg).1f&nbsp;nC 를 갖는 스위치 자리 %(Nsw).0f 개다. '
-          'f<sub>Max</sub> 에서 상한을 잡는다(식&nbsp;%(e)s):'
+          '배 여유로 머문다. 부하는 컨트롤러 %(ICC).0f&nbsp;mA, 드라이버 둘 '
+          '%(iq).2f&nbsp;mA, 그리고 Q<sub>g,run</sub> = %(qr).1f&nbsp;nC 의 '
+          '스위치 자리 %(Nsw).0f 개다(%(s)s 절). f<sub>Max</sub> 에서 상한을 '
+          '잡는다(식&nbsp;%(e)s):'
           % dict(V, hv=V['VCCHV'], mx=V['VCCmax'], k1=A.SH['k.VCClo'],
-                 k2=A.SH['k.VCC'], e=ER('ivcc'))))
-    add(calc(r'I_{VCC}=%(ICC).0f\,\mathrm{mA}+%(Nsw).0f\cdot%(Qg).1f'
+                 k2=A.SH['k.VCC'], e=ER('ivcc'), iq=A.SH['I.drv_q'],
+                 qr=A.SH['Q.g_run'],
+                 s=SR('1차 스위치: STO60N045DM9'))))
+    add(calc(r'I_{VCC}=%(ICC).0f\,\mathrm{mA}+%(iq).2f\,\mathrm{mA}'
+             r'+%(Nsw).0f\cdot%(qr).1f'
              r'\,\mathrm{nC}\cdot%(fk).1f\,\mathrm{kHz}'
              r'=%(I).1f\;\mathrm{mA}'
-             % dict(V, fk=A.SH['f.Max'], I=A.SH['I.VCC'])))
+             % dict(V, fk=A.SH['f.Max'], I=A.SH['I.VCC'],
+                    iq=A.SH['I.drv_q'], qr=A.SH['Q.g_run'])))
     add(p('공급 저항은 hold-up 끝에서 식&nbsp;%(e)s 정한다. &beta;<sub>min</sub> '
           '= %(bj)s I<sub>Z,min</sub> = %(iz).0f&nbsp;mA 는 부품에 거는 요구 '
           '조건이다:' % dict(e=_nj(ER('rbz'), '으로', '로'),
@@ -3750,35 +4419,84 @@ def build(A):
                     I=A.SH['I.VCC'], b=V['bmin'], iz=V['IDZmin'],
                     r=A.SH['R.BZ_max'] / 1e3)))
     add(p('두 부품의 소모는 커패시터 전압이 가장 높게 머무는 OVP1, '
-          '%(c1).2f&nbsp;V 에서 정해진다: 제너는 공급 전류를 나눠 줄 부하가 없을 '
-          '때 %(pz).0f&nbsp;mW, 패스 트랜지스터는 I<sub>VCC</sub> 에서 '
-          '%(pq).2f&nbsp;W(공칭 출력에서는 %(pn).2f&nbsp;W 로, 손실표에 들어가는 '
+          '%(c1).2f&nbsp;V 에서 정해진다. 제너는 공급 전류를 나눠 줄 부하가 없을 '
+          '때 %(pz).0f&nbsp;mW 를 소모한다. 패스 트랜지스터는 I<sub>VCC</sub> 에서 '
+          '%(pq).2f&nbsp;W 다(공칭 출력에서는 %(pn).2f&nbsp;W 로, 손실표에 들어가는 '
           '값). 둘 다 여유가 아니라 부품을 살 때의 정격이다. 트랜지스터는 OVP2 '
-          '에서 %(c2).2f&nbsp;V 에 권선 스파이크를 더한 전압도 견뎌야 하는데, '
+          '에서 %(c2).2f&nbsp;V 에 권선 스파이크를 더한 전압도 견뎌야 한다. '
           '스파이크는 실측으로만 알 수 있다.'
           % dict(c1=A.SH['V.Caux_OVP1'], pz=A.SH['P.DZ'],
                  pq=A.SH['P.Qpass'], c2=A.SH['V.Caux_OVP2'],
                  pn=A.SH['P.Qpass_nom'])))
-    add(p('<b>기동.</b> 기동 주파수, 풀브리지에서 드라이버 전류는'))
-    add(calc(r'I_{VCC,SU}=%(ICC).0f\,\mathrm{mA}+%(Nsw).0f\cdot%(Qg).1f'
+    _t = dict(A.SH)
+    for _k in ('R.thQ', 'R.thQ_std', 'T.jQ', 'V.CEO_Q', 'R.thDZ', 'T.jDZ'):
+        if _k not in _t:
+            _t[_k] = A._builder_const(_k)
+    add(p('<b>부품.</b> Q<sub>VCC</sub> 는 FZT651 이다. SOT-223 의 NPN 으로 '
+          '%(vceo).0f&nbsp;V, 3&nbsp;A 정격이고, 데이터시트 최소 h<sub>FE</sub> '
+          '70 이 &beta;<sub>min</sub> = %(b).0f 을 덮는다. %(vceo).0f&nbsp;V 는 '
+          'OVP2 커패시터 전압의 %(kv).2f 배다. 정격은 P<sub>Qpass</sub> 에서 '
+          '허용하는 주위 온도로 본다: T<sub>a</sub> = T<sub>j,max</sub> &minus; '
+          'R<sub>th(j-a)</sub>P. 컬렉터 탭을 2&nbsp;oz 동박 '
+          '50&nbsp;&times;&nbsp;50&nbsp;mm, %(rth).1f&nbsp;&deg;C/W 에 올리면 '
+          '%(ta).0f&nbsp;&deg;C 다. 25&nbsp;&times;&nbsp;25&nbsp;mm 패드'
+          '(%(rts).1f&nbsp;&deg;C/W)에서는 %(tas).0f&nbsp;&deg;C 뿐이다. 그래서 '
+          '패드는 큰 쪽이다. D<sub>Z</sub> 는 BZT52H-C15(%(DZ).0f&nbsp;V '
+          '&plusmn;%(tp).0f&nbsp;%%, SOD-123F)다. 1&nbsp;cm&sup2; 캐소드 패드, '
+          '%(rtd).0f&nbsp;&deg;C/W 에서 P<sub>DZ</sub> 로 %(tad).0f&nbsp;&deg;C '
+          '까지 허용한다. D<sub>aux</sub> 와 D<sub>byp</sub> 는 1N4148W 다. '
+          'D<sub>aux</sub> 는 I<sub>VCC</sub> 와 제너 공급 전류를 펄스로 '
+          '흘리므로 손실은 V<sub>F</sub> 에 평균을 곱한 것보다 크고, 실측할 '
+          '값이다. 두 OVP 값은 이중 최악이다: OVP1 의 레귤레이터에 f<sub>Max</sub> '
+          '의 게이트 전류. 공칭 출력과 스위칭 주파수에서 트랜지스터는 '
+          '%(pn).2f&nbsp;W 를 소모한다.'
+          % dict(vceo=_t['V.CEO_Q'], b=V['bmin'], kv=_t['k.VCEOQ'],
+                 rth=_t['R.thQ'], ta=_t['T.aQVCC'], rts=_t['R.thQ_std'],
+                 tas=_t['T.aQVCC_std'], DZ=V['DZ'], tp=100 * V['tolDZ'],
+                 rtd=_t['R.thDZ'], tad=_t['T.aDZ'], pn=A.SH['P.Qpass_nom'])))
+    add(p('<b>기동.</b> 풀브리지에서 오실레이터는 처음 %(to).0f&nbsp;ms 동안만 '
+          'f<sub>SU</sub> = %(fs).1f&nbsp;kHz 로 돌고, 그 뒤에는 f<sub>Max</sub> '
+          '아래에 머문다. V<sub>CCon</sub> 에서의 게이트 전하로 드라이버가 끄는 '
+          '전류, 그리고 C<sub>VCC</sub> 가 내려갈 때 V 당 잃는 B 는'
+          % dict(fs=A.SH['f.SU'], to=V['TOSC'])))
+    add(calc(r'I_{VCC,SU}=%(ICC).0f+%(iq).2f+%(Nsw).0f\cdot%(qs).1f'
              r'\,\mathrm{nC}\cdot%(fk).1f\,\mathrm{kHz}'
              r'=%(I).1f\;\mathrm{mA}'
-             % dict(V, fk=A.SH['f.SU'], I=A.SH['I.VCC_SU'])))
-    add(p('이고, 출력이 (V<sub>CCoff</sub> + 3V<sub>D</sub> + '
+             % dict(V, fk=A.SH['f.Max'], I=A.SH['I.VCC_SU'],
+                    iq=A.SH['I.drv_q'], qs=A.SH['Q.g_SU'])))
+    add(calc(r'B=%(Nsw).0f\cdot%(cg).1f\,\mathrm{nF}\cdot%(fk).1f'
+             r'\,\mathrm{kHz}=%(b).2f\;\mathrm{mA/V}'
+             % dict(V, fk=A.SH['f.Max'], cg=A.SH['C.g_hi'], b=A.SH['B.SU'])))
+    add(p('이다. 그러므로 V<sub>CC,HVSUon</sub> 에서 %(ih).1f&nbsp;mA, 하한 '
+          'V<sub>CC,floor</sub> = %(fl).2f&nbsp;V 에서 %(if).1f&nbsp;mA 다. 이 '
+          '하한은 하이사이드 드라이버 전원이 정한다(%(s)s 절). f<sub>SU</sub> 의 '
+          '첫 1&nbsp;ms 는 &Delta;Q<sub>OSC</sub> = %(to).0f&nbsp;ms &middot; '
+          '%(Nsw).0f &middot; %(qs).1f&nbsp;nC &middot; (%(fs).1f &minus; '
+          '%(fk).1f)&nbsp;kHz = %(dq).1f&nbsp;&micro;C 를 더 쓴다. 출력이 '
+          '(V<sub>CC,floor</sub> + 3V<sub>D</sub> + '
           'I<sub>VCC,SU</sub>R<sub>BZ</sub>/&beta;<sub>min</sub>)/'
-          'n<sub>aux</sub> = %(uv).2f&nbsp;V 에 닿으면 권선이 핀을 '
-          'V<sub>CCoff</sub> 에 붙잡아 둘 수 있다. 그러면 식&nbsp;%(e)s'
-          % dict(uv=A.SH['V.out_UV'], e=_nj(ER('cvcc'), '은', '는'))))
+          'n<sub>aux</sub> = %(uv).2f&nbsp;V 에 닿으면 권선이 핀을 하한에 붙잡아 '
+          '둔다. 그러면 식&nbsp;%(e)s'
+          % dict(V, ih=A.SH['I.VCC_hv'], fl=A.SH['V.CC_floor'],
+                 to=V['TOSC'], qs=A.SH['Q.g_SU'], fs=A.SH['f.SU'],
+                 fk=A.SH['f.Max'], dq=A.SH['ΔQ.OSC'],
+                 uv=A.SH['V.out_UV'], e=_nj(ER('cvcc'), '은', '는'),
+                 s=SR('게이트 드라이버: L6498LD 2개'),
+                 **{'if': A.SH['I.VCC_fl']})))
     add(calc(r't_{hand}=\frac{%(co).1f\cdot%(uv).2f}{%(Iout).1f}'
              r'=%(th).1f\;\mathrm{ms}'
              % dict(V, co=A.SH['C.out'], uv=A.SH['V.out_UV'],
                     th=A.SH['t.hand'])))
-    add(calc(r'C_{VCC}\geq\frac{%(th).1f}{\dfrac{%(VCCon).0f-%(VCCHV).0f}'
-             r'{%(I).1f}+\dfrac{%(VCCHV).0f-%(VCCoff).0f}{%(I).1f-%(IHVlo).0f}}'
+    add(calc(r'C_{VCC}\geq\frac{%(b).2f\cdot(%(th).1f+%(dq).1f/%(I).1f)}'
+             r'{\ln\dfrac{%(I).1f}{%(ih).1f}'
+             r'+\ln\dfrac{%(ih).1f-%(IHVlo).0f}{%(if).1f-%(IHVlo).0f}}'
              r'=%(cr).0f\;\mathrm{\mu F}\;\rightarrow\;%(CVCC).0f\;'
              r'\mathrm{\mu F}'
              % dict(V, th=A.SH['t.hand'], I=A.SH['I.VCC_SU'],
-                    cr=A.SH['C.VCC_req'])))
+                    b=A.SH['B.SU'], dq=A.SH['ΔQ.OSC'], ih=A.SH['I.VCC_hv'],
+                    cr=A.SH['C.VCC_req'], **{'if': A.SH['I.VCC_fl']})))
+    add(note('단위: mA/V 에 ms 를 곱하고 순수한 수로 나누면 &micro;F 다. '
+             '&micro;C 를 mA 로 나누면 ms 다.'))
     add(p('인계는 기동 회로가 살아 있는 %(t).0f&nbsp;ms 안에 넉넉히 끝난다. '
           '대가는 첫 펄스까지의 지연으로 230&nbsp;Vac 에서 %(d).2f&nbsp;s 이고, '
           '그동안 충전 전부를 기동 회로가 맡는다. 시제품에서 그 온도를 확인한다.'
@@ -3883,6 +4601,32 @@ def build(A):
         '<b>V<sub>CC</sub> 를 공급하는 보조 권선</b>: hold-up 끝에서도 레귤레이션되는 '
         '가장 작은 정수 턴의 권선비를 잡고, C<sub>VCC</sub> 는 정상 상태가 아니라 '
         '기동 인계 구간에 맞춰 정한다.']))
+
+    add(p('<b>실장 부품이 요구하는 배치 규칙.</b> 각각 데이터시트의 지시이거나 '
+          '전류가 흐르는 길에서 따라 나온다:'))
+    ext(bullets([
+        '<b>R<sub>CS</sub>:</b> ISEN 과 컨트롤러 접지는 각각 제 배선으로 sense '
+        '저항 양 끝까지. 직렬 소자도 필터도 없이. 브리지 귀환 전류가 ISEN 배선을 '
+        '같이 쓰면 안 된다.',
+        '<b>게이트 루프:</b> R<sub>G</sub>, 턴오프 다이오드, R<sub>G,off</sub> 를 '
+        '게이트 옆에 두고 STO60N045DM9 의 드라이버 소스 핀으로 돌려보낸다. '
+        '거기서 PGND(로우사이드) 또는 OUT(하이사이드)으로. 전력 소스 전류는 '
+        '게이트 루프를 지나지 않는다.',
+        '<b>드라이버 디커플링:</b> C<sub>BOOT</sub> 는 BOOT 와 OUT 핀 바로 옆에, '
+        '세라믹은 VCC 와 PGND 핀 바로 옆에, D<sub>BS</sub> 는 C<sub>BOOT</sub> '
+        '옆에.',
+        '<b>L6790A 전원:</b> VCC 와 GND 핀 사이에 100&nbsp;nF, 그 옆에 '
+        'C<sub>VCC</sub>. HVSU 는 브리지의 AC 쪽에서.',
+        '<b>SR sense:</b> DSA/DSB 와 SSA/SSB 는 짝의 드레인과 소스로 가는 별도 '
+        '배선, 전력 접지를 따라가지 않는다. 컨트롤러 GND 는 두 소스 버스가 '
+        '만나는 SR 소스에. R<sub>SR</sub>, C<sub>SR</sub>, %(cb).1f&nbsp;'
+        '&micro;F 는 VCC 핀에.' % dict(cb=A._builder_const('C.SRb')),
+        '<b>패스 트랜지스터:</b> FZT651 마다 컬렉터 탭을 정격이 가정하는 '
+        '50&nbsp;&times;&nbsp;50&nbsp;mm 동박에. 제너 캐소드는 1&nbsp;cm&sup2; 에.',
+        '<b>피드백:</b> TL431 회로와 R<sub>I</sub>, R<sub>O</sub> 는 출력 단자 '
+        '근처 한 점에서 2차 접지로, SR 소스 버스에서 떨어뜨려. C<sub>fx</sub> 는 '
+        'FB 핀에.']))
+
     add(h2('하드웨어에서 먼저 잴 것'))
     add(p('순서대로. 앞의 네 항목이 설계의 성립 여부를 판단한다.'))
     ext(bullets([
@@ -3914,8 +4658,129 @@ def build(A):
         '<b>출력에 대한 V<sub>CC</sub> 와 보조 권선 전압</b>: No load, Full load, '
         'cold start 에서. 권선이 출력을 따라가는지, 언제 C<sub>VCC</sub> 에게서 '
         '공급을 넘겨받는지.',
+        '<b>두 레그의 게이트와 중점 타이밍</b>: 게이트에 남는 데드타임, cold start '
+        '동안의 V<sub>BO</sub>(%(VBOrec).1f&nbsp;V 위에 머물러야 한다), 그리고 '
+        '%(dvmax).0f&nbsp;V/ns 에 대한 중점 dv/dt.' % V,
+        '<b>SR 게이트 파형</b>: 게이트 핀당 MOSFET 둘로, No load 의 가장 긴 '
+        'burst-off 시간, 그리고 Full load 에서 V<sub>CC,SR</sub> 과 '
+        'Q<sub>SR</sub>·TEA2095TE 의 온도.',
         '<b>트랜스포머의 작업 전압과 내전압 시험</b>: 첫 샘플로, 인증 기관에 '
         '보내기 전에.']))
+
+    add(h2('전체 회로와 이 설계의 값'))
+    add(p('그림&nbsp;%(f)s 는 이 장의 부품을 한 쪽에 모아 옆으로 눕혀 그렸다. '
+          '왼쪽이 1차, 오른쪽이 2차이고, 둘 사이의 선을 넘는 것은 트랜스포머뿐이다. '
+          '다른 곳으로 이어지는 net 은 이름표를 단다. 적힌 값은 전부 시트의 '
+          '선정값이다. 여기서 처음 이름을 붙인 부품은 AC 라인에서 HVSU 로 가는 '
+          '기동 다이오드 D<sub>HV</sub>, 부트스트랩 다이오드 D<sub>BS</sub>, 출력 '
+          '뱅크 옆의 세라믹 C<sub>HF</sub> 다. 나머지는 %(s1)s 절부터 %(s2)s 절까지의 '
+          '부품과 %(s3)s 절의 레귤레이터다: 보조 권선의 D<sub>aux</sub> 와 '
+          'C<sub>aux</sub>, 베이스에 D<sub>Z</sub> 를, 이미터에 D<sub>byp</sub> 를 '
+          '단 Q<sub>VCC</sub>.'
+          % dict(f=FR('an_full'),
+                 s1=SR('1차 스위치: STO60N045DM9'),
+                 s2=SR('전압 루프 설계 결과'),
+                 s3=SR('보조 권선 V<sub>CC</sub> 설계 결과'))))
+    add(p('이 문서가 크기를 정하지 않은 것은 블록으로, 또는 값 없이 그렸다: EMI '
+          '필터와 입력 브리지 BR1. SR 게이트 저항은 ST 보드의 0&nbsp;&Omega; '
+          '자리이고, C<sub>aux</sub> 는 임의로 고른 값이다. DRV_EN 과 RT 의 '
+          '풀다운 스위치는 실장하지 않는다. 컨트롤러를 끄는 방법을 보일 뿐이다.'))
+    add(A.figpage('an_full',
+                  '전체 회로. 핀 번호는 L6790A 는 ST EVL6790_670W 제어 보드의 '
+                  '번호, L6498LD 는 SO-14, TEA2095TE 는 HSO8, 트랜스포머는 '
+                  '그림&nbsp;%s 의 번호다. 브리지 귀환은 1차 접지이고, '
+                  'R<sub>CS</sub> 는 그 접지와 정류기 음극 사이에 있어 ISEN 이 '
+                  '거기서 읽는다. SR 소스 버스는 하나의 2차 접지에서 만난다.'
+                  % FR('an_xfmr_pins')))
+    _k = A._builder_const
+
+    def _ohm(v):
+        if v >= 1e3:
+            return ('%.1f' % (v / 1e3)).rstrip('0').rstrip('.') + ' k&Omega;'
+        return ('%.1f' % v).rstrip('0').rstrip('.') + ' &Omega;'
+
+    def _nf(v):
+        if v < 1:
+            return '%.0f pF' % (v * 1e3)
+        if v < 1e3:
+            return ('%.2f' % v).rstrip('0').rstrip('.') + ' nF'
+        return ('%.1f' % (v / 1e3)).rstrip('0').rstrip('.') + ' &micro;F'
+    add(p('표&nbsp;%s 는 같은 부품을 기호별로, 크기를 정한 절과 함께 적었다. '
+          '부품이 견뎌야 할 것(전압, 전력, 온도)은 그 절에 있다. 표는 값과 '
+          '부품만 준다.' % TR('bom')))
+    ext(tbl('그림&nbsp;%s 의 부품. 값은 시트의 선정값이다. 이 문서가 크기를 정하지 '
+            '않은 부품은 그렇게 적었다.' % FR('an_full'),
+            [['기호', '부품', '정한 절'],
+             ['EMI 필터, BR1', '여기서 정하지 않음. BR1 은 %.0f Vac 에서 %.1f A rms '
+              '를 흘리고 상용전원 피크를 막는다' % (V['Vacmin'], A.SH['I.in_max']),
+              '&mdash;'],
+             ['D<sub>HV</sub> &times; 2', 'S1M, 1000 V, 1 A, 각 AC 라인에서 HVSU '
+              '로', '%s' % SR('보조 권선 V<sub>CC</sub> 설계 결과')],
+             ['C<sub>in</sub>', '%s 필름, 입력 전압 전체 정격'
+              % _nf(A.SH['C.in_sel']), '%s' % SR('입력 커패시터')],
+             ['R<sub>CS</sub>', '%.0f m&Omega; &times; %.0f 병렬 = %.1f m&Omega;, '
+              '%.0f W 부품' % (A.SH['R.CS_single'], A.SH['N.RCS'],
+                             A.SH['R.CS'], 1),
+              '%s' % SR('전류 sense 저항: 저항 하나가 세 가지를 정한다')],
+             ['S1&ndash;S4', 'STO60N045DM9, 자리마다 1개', '%s'
+              % SR('1차 스위치: STO60N045DM9')],
+             ['U1 과 주변 회로', 'L6790A; R<sub>T</sub> %s, C<sub>T</sub> %s C0G, '
+              'R<sub>CFG</sub> %s, R<sub>BM</sub> %s, R<sub>ZCD,H</sub> %s, '
+              'R<sub>ZCD,L</sub> %s, C<sub>fx</sub> %s, VCC 에 100 nF'
+              % (_ohm(A.SH['R.T'] * 1e3), _nf(A.SH['C.T'] / 1e3),
+                 _ohm(A.SH['R.CFG_sel'] * 1e3), _ohm(A.SH['R.BM_sel'] * 1e3),
+                 _ohm(A.SH['R.ZCD_H_sel'] * 1e3), _ohm(A.SH['R.ZCD_L_sel'] * 1e3),
+                 _nf(A.SH['C.fx'])),
+              '%s ~ %s' % (SR('컨트롤러 주변 부품'),
+                           SR('출력 sensing 과 과전압: ZCD 분압기'))],
+             ['U2, U3 과 게이트 회로', 'L6498LD(SO-14); 드라이버마다 C<sub>BOOT</sub> '
+              '%s 와 D<sub>BS</sub> ES1J(600 V, 1 A); 게이트마다 R<sub>G</sub> %s, '
+              'D<sub>G,off</sub> 1N4148W, R<sub>G,off</sub> %s'
+              % (_nf(_k('C.BOOT')), _ohm(_k('R.G')), _ohm(_k('R.G_off'))),
+              '%s' % SR('게이트 드라이버: L6498LD 2개')],
+             ['C<sub>r</sub>', '%s. 전압·전류 정격은 탱크 피크에서 따라 나오고 '
+              '여기서 정하지 않았다' % _nf(A.SH['C.r']),
+              '%s' % SR('단계별 계산')],
+             ['T1', 'TDK PQ 50/50, N97, 코일 포머 B65982E 에 3.0 mm 칸막이; '
+              '표&nbsp;%s' % TR('spec-out'),
+              '%s' % SR('자속 확인과 사양서')],
+             ['D<sub>aux</sub>, D<sub>byp</sub>, C<sub>aux</sub>, '
+              'R<sub>BZ</sub>, D<sub>Z</sub>, Q<sub>VCC</sub>, C<sub>VCC</sub>',
+              '1N4148W &times; 2; %s; %s; BZT52H-C15(%.0f V); FZT651, 동박 '
+              '50 &times; 50 mm; %.0f &micro;F + 100 nF'
+              % (_nf(_k('C.aux') * 1e3), _ohm(V['RBZ']), V['DZ'],
+                 V['CVCC']),
+              '%s' % SR('보조 권선 V<sub>CC</sub> 설계 결과')],
+             ['Q<sub>A1</sub>&ndash;Q<sub>B2</sub>, R<sub>G,SR</sub>',
+              'STL160N10F8, 레그당 %.0f개; 게이트 저항은 ST 보드처럼 %s 자리'
+              % (V['nSR'], _ohm(_k('R.G_SR'))),
+              '%s' % SR('SR MOSFET: STL160N10F8')],
+             ['U7, R<sub>SR</sub>, C<sub>SR</sub>', 'TEA2095TE(HSO8); %s; VCC 핀에 '
+              '%s 와 %s 병렬'
+              % (_ohm(_k('R.SR')), _nf(_k('C.SR')), _nf(_k('C.SRb') * 1e3)),
+              '%s' % SR('동기 정류: TEA2095TE')],
+             ['R<sub>BSR</sub>, D<sub>ZSR</sub>, Q<sub>SR</sub>', '%s; '
+              'BZT52H-C15(%.0f V); FZT651, 동박 50 &times; 50 mm'
+              % (_ohm(_k('R.BSR_sel')), _k('V.DZSR_sel')),
+              '%s' % SR('동기 정류: TEA2095TE')],
+             ['C<sub>out</sub>, C<sub>HF</sub>', '%.0f &micro;F &times; %.0f = '
+              '%.1f mF; 세라믹 %.0f &micro;F'
+              % (A.SH['C.single'], A.SH['n.C'], A.SH['C.out'],
+                 A.SH['C.ceramic']),
+              '%s' % SR('출력 뱅크 설계 결과')],
+             ['R<sub>I</sub>, R<sub>O</sub>, Q5, C<sub>Fo</sub>, R<sub>F</sub>, '
+              'C<sub>F</sub>, R<sub>P</sub>, R<sub>B</sub>, Q4',
+              '%s, %s; TL431B; %s, %s, %s; %s, %s; SFH617A-2'
+              % (_ohm(V['RI'] * 1e3), _ohm(V['Ro'] * 1e3), _nf(V['CFo']),
+                 _ohm(V['RF'] * 1e3), _nf(V['CF']), _ohm(V['RP'] * 1e3),
+                 _ohm(V['RB'] * 1e3)),
+              '%s' % SR('전압 루프 설계 결과')],
+             ['R<sub>Z</sub>, R<sub>Z1</sub>, R<sub>Z2</sub>, Q6, C<sub>Z</sub>',
+              '%s; %s, %s; TL431B; %s'
+              % (_ohm(_k('R.Z_sel')), _ohm(_k('R.Z1') * 1e3),
+                 _ohm(_k('R.Z2') * 1e3), _nf(_k('C.Z') * 1e3)),
+              '%s' % SR('전압 루프 설계 결과')]],
+            widths=[CW * 0.24, CW * 0.58, CW * 0.18], key='bom', split=True))
 
     # =============================================================== 8
     add(h1('기호표'))
@@ -3954,6 +4819,7 @@ def build(A):
 
         ('<b>상용전원과 역률</b>', ''),
         ('&theta;', '라인 위상각'),
+        ('&theta;<sub>0</sub>', '컨버터가 f<sub>r</sub> 을 지나는 라인 위상: sin&theta;<sub>0</sub> = M<sub>pk</sub>. &theta;<sub>0</sub> 와 180&deg; &minus; &theta;<sub>0</sub> 사이에서 buck 한다'),
         ('f<sub>l</sub>, f<sub>l,min</sub>, &omega;<sub>l</sub>', '라인 주파수, 그 최저 규정값, 그리고 2&pi;f<sub>l</sub>'),
         ('v<sub>ac</sub>, V<sub>ac</sub>, I<sub>ac</sub>', '순시 상용전원 전압, 그리고 입력 실효 전압과 전류'),
         ('I<sub>1,rms</sub>', '입력 전류 기본파만의 실효값'),
@@ -4060,8 +4926,29 @@ def build(A):
         ('V<sub>CC,HVSUon</sub>', '그 아래로 내려가면 기동 회로가 충전 전류를 켜는 V<sub>CC</sub> 레벨'),
         ('V<sub>DZ</sub>, V<sub>DZ,max</sub>, V<sub>BE</sub>, V<sub>D</sub>', '레귤레이터 제너 전압과 그 공차 위쪽 끝, 패스 트랜지스터의 베이스-이미터 전압, 실리콘 다이오드 순방향 전압'),
         ('R<sub>BZ</sub>, R<sub>BZ,max</sub>, &beta;<sub>min</sub>, I<sub>Z,min</sub>', '제너 공급 저항과 레귤레이션이 유지되는 최대값, 패스 트랜지스터의 최소 전류 게인, 최소 제너 바이어스'),
-        ('I<sub>VCC</sub>, I<sub>VCC,SU</sub>, I<sub>CC</sub>', 'V<sub>CC</sub> 레일이 정상 동작과 기동 주파수에서 공급하는 전류, 그리고 컨트롤러 자체의 몫'),
-        ('N<sub>sw</sub>, Q<sub>g</sub>', '구동하는 스위치 자리 수, 그리고 1차 MOSFET 하나의 게이트 전하'),
+        ('I<sub>VCC</sub>, I<sub>VCC,SU</sub>, I<sub>CC</sub>, I<sub>drv,q</sub>', 'V<sub>CC</sub> 레일이 정상 동작과 스위칭 시작 때 공급하는 전류, 컨트롤러 자체의 몫, 그리고 게이트 드라이버의 대기 전류'),
+        ('N<sub>sw</sub>, Q<sub>g</sub>, Q<sub>g,10</sub>, C<sub>g</sub>', '구동하는 스위치 자리 수; 1차 MOSFET 하나의 게이트 전하, 구동 전압에서와 10&nbsp;V 에서, 그리고 Miller 평탄부를 지난 곡선의 기울기'),
+        ('B, &Delta;Q<sub>OSC</sub>, V<sub>CC,floor</sub>, I<sub>VCC</sub>(V)', 'V<sub>CC</sub> 1 V 당 줄어드는 구동 전류; 기동 오실레이터 구간의 추가 전하; 컨트롤러와 드라이버가 보증되는 최저 V<sub>CC</sub>; 레일 전압 V 에서의 공급 전류'),
+        ('C<sub>BOOT</sub>, V<sub>BO</sub>, &Delta;V<sub>boot</sub>, V<sub>drop</sub>, R<sub>BS</sub>', '부트스트랩 커패시터, 하이사이드 드라이버 전원과 주기마다의 리플, 저항 R<sub>BS</sub> 의 내장 부트스트랩 스위치에 걸리는 전압 강하'),
+        ('T<sub>charge</sub>, T<sub>on,max</sub>, I<sub>QCC</sub>, I<sub>QBO</sub>', '부트스트랩을 재충전하는 로우사이드 on 시간, 가장 긴 하이사이드 on 시간, 로우사이드부와 플로팅부의 대기 전류'),
+        ('R<sub>G</sub>, R<sub>g,int</sub>, R<sub>so</sub>, R<sub>si</sub>, s<sub>drv</sub>, P<sub>drv</sub>', '외부·내부 게이트 저항, 드라이버 소스·싱크 저항, 게이트 전력 중 드라이버 몫, 그리고 드라이버 손실'),
+        ('D<sub>G,off</sub>, R<sub>G,off</sub>, V<sub>pl</sub>, t<sub>off,pl</sub>', 'R<sub>G</sub> 에 역병렬인 턴오프 다이오드와 저항, 1차 MOSFET 의 Miller 평탄부, 레일에서 거기까지의 게이트 하강 시간'),
+        ('MT', '게이트 드라이버의 채널 사이 지연 편차'),
+        ('D<sub>BS</sub>, Q<sub>A1</sub>, Q<sub>A2</sub>, Q<sub>B1</sub>, Q<sub>B2</sub>, R<sub>G,SR</sub>', '외부 부트스트랩 다이오드; SR MOSFET, 센터탭 레그당 둘; 그 게이트 저항'),
+        ('D<sub>HV</sub>, D<sub>aux</sub>, C<sub>aux</sub>, Q<sub>VCC</sub>, D<sub>Z</sub>, D<sub>byp</sub>', 'HVSU 로 가는 기동 다이오드; 보조 권선의 정류 다이오드와 커패시터; V<sub>CC</sub> 패스 트랜지스터, 그 베이스 제너, 이미터의 바이패스 다이오드'),
+        ('C<sub>HF</sub>', '출력 뱅크 옆의 세라믹 커패시터'),
+        ('V<sub>CC,SR</sub>, R<sub>BSR</sub>, D<sub>ZSR</sub>, Q<sub>SR</sub>, R<sub>SR</sub>, C<sub>SR</sub>', 'SR 컨트롤러 전원, 그리고 그것을 만드는 팔로워의 공급 저항, 제너, 패스 트랜지스터, 직렬 저항, 핀 커패시터'),
+        ('P<sub>Qpass</sub>, P<sub>DZ</sub>, P<sub>DZSR</sub>', 'OVP1 에서 V<sub>CC</sub> 패스 트랜지스터, 그 제너, SR 팔로워 제너의 손실'),
+        ('T<sub>j,max</sub>, T<sub>a</sub>, R<sub>th(j-a)</sub>, h<sub>FE</sub>', '부품의 접합 한계, 그 손실에서 허용하는 주위 온도, 데이터시트가 주는 동박에서의 접합-주위 열저항, 트랜지스터의 전류 게인'),
+        ('I<sub>SR,max</sub>, I<sub>SR</sub>, I<sub>SR,q</sub>', 'SR 전원 팔로워의 설계 전류, 고른 MOSFET 으로 실제 흐르는 전류, SR 컨트롤러 자체의 전류'),
+        ('C<sub>iss</sub>, V<sub>SD</sub>, Q<sub>rr</sub>', 'MOSFET 입력 커패시턴스, 바디 다이오드의 순방향 전압과 역회복 전하'),
+        ('Q<sub>g,SR</sub>, Q<sub>g,sync</sub>, C<sub>g,SR</sub>', '최고 구동 전압에서 SR MOSFET 하나의 게이트 전하, 데이터시트의 10&nbsp;V 동기 정류 게이트 전하, 평탄부를 지난 게이트 전하 곡선의 기울기'),
+        ('Q<sub>g,run</sub>, Q<sub>g,SU</sub>', '가장 높은 레귤레이션 V<sub>CC</sub> 에서의 게이트 전하, 그리고 기동이 시작되는 V<sub>CCon</sub> 에서의 값'),
+        ('V<sub>BO,min</sub>, V<sub>CC,drv,min</sub>, P<sub>drv,max</sub>, R<sub>drv</sub>', '플로팅·로우사이드 드라이버 전원의 권장 최소값, 드라이버 패키지가 허용하는 손실, 그 출력 저항'),
+        ('S<sub>mid</sub>, S<sub>OUT,max</sub>', '스윙 중 브리지 중점의 기울기, 드라이버 OUT 핀이 허용하는 슬루율'),
+        ('c<sub>HB</sub>, Q<sub>ZVS2</sub>', '브리지 중점이 스윙시키는 커패시턴스(소자 둘과 배선), 그것이 정하는 Q 의 데드타임 한계'),
+        ('V<sub>GS</sub>, V<sub>DD</sub>, V<sub>G,SR</sub>', '게이트-소스 전압; 데이터시트 시험 회로의 드레인 전원; SR 컨트롤러의 게이트 구동 전압'),
+        ('k<sub>LOUT2</sub>', '드라이버 입력 풀다운이 LOUT2 를 고정 하프브리지로 읽히는 레벨에서 얼마나 위에 두는가'),
         ('I<sub>HVSU</sub>, t<sub>hand</sub>, V<sub>out,UV</sub>', '기동 회로 충전 전류; 첫 펄스부터 보조 권선이 V<sub>CC</sub> 를 붙잡을 때까지의 시간, 그리고 그때의 출력 전압'),
 
         ('<b>전압 루프</b>', ''),
@@ -4083,6 +4970,8 @@ def build(A):
         ('i<sub>FB</sub>', '옵토커플러가 FB 핀에서 끌어내는 소신호 전류, CTR&thinsp;i<sub>LED</sub>'),
         ('I<sub>FB,steady</sub>, I<sub>FB,max</sub>, I<sub>min</sub>', '정상 상태와 최대의 FB 핀 전류, 그리고 TL431 이 조절을 유지하는 데 필요한 최소 전류'),
         ('V<sub>R</sub>, V<sub>Z</sub>, V<sub>Fo</sub>', 'TL431 기준, LED 에 전류를 주는 안정화 레일, LED 순방향 전압'),
+        ('R<sub>Z</sub>, R<sub>Z1</sub>, R<sub>Z2</sub>, C<sub>Z</sub>', 'V<sub>Z</sub> shunt 레귤레이터의 공급 저항, 분압기, 커패시터'),
+        ('Q4, Q5, Q6', '옵토커플러(Q4A 는 LED, Q4B 는 트랜지스터), 루프의 TL431, V<sub>Z</sub> 의 TL431'),
         ('v<sub>out</sub>, i<sub>out</sub>, v<sub>C</sub>', '소신호 출력 전압과 컨버터가 뱅크로 보내는 전류, 그리고 파형에서 커패시터의 전압'),
         ('&Delta;V<sub>loop</sub>, &Delta;V<sub>FB</sub>', '루프가 보는 2f<sub>l</sub> 출력 리플, 그리고 그것이 FB 핀에 남기는 리플'),
 
@@ -4144,8 +5033,30 @@ def build(A):
         '(서문과 적용 범위).',
         '[TIW] Furukawa Electric, <i>TEX-E triple-insulated wire, safety '
         'approvals</i>.',
-        'DiscoverEE, STO60N045DM9 parameter listing(후보 1차 MOSFET 의 게이트 '
-        '전하. ST 데이터시트로 확인할 것).']))
+        '[STO] STMicroelectronics, <i>STO60N045DM9, N-channel 600 V, '
+        '35 m&Omega; typ., 56 A MDmesh DM9 Power MOSFET in a TO-LL '
+        'package</i>, DS14711 Rev&nbsp;4, 2026년 6월.',
+        '[L6498] STMicroelectronics, <i>L6498, high voltage high and '
+        'low-side 2 A gate driver</i>, DocID030318 Rev&nbsp;3, 2017년 9월.',
+        '[STL] STMicroelectronics, <i>STL160N10F8, N-channel 100 V, '
+        '3.2 m&Omega; max., 158 A STripFET F8 Power MOSFET in a PowerFLAT '
+        '5x6 package</i>, DS14249 Rev&nbsp;5, 2024년 7월.',
+        '[TEA] NXP Semiconductors, <i>TEA2095TE, GreenChip dual synchronous '
+        'rectifier controller</i>, product data sheet Rev.&nbsp;1.3, '
+        '2025년 10월 20일.',
+        '[FZT] Diodes Incorporated, <i>FZT651, NPN silicon planar medium '
+        'power transistor</i>, DS33149 Rev.&nbsp;7-2, 2022년 3월(동박 '
+        '25 &times; 25 와 50 &times; 50 mm 에서의 열저항).',
+        '[1N4148W] Diodes Incorporated, <i>1N4148W, surface mount fast '
+        'switching diode</i>, DS30086 Rev.&nbsp;31.',
+        '[ES1J] Diodes Incorporated, <i>ES1A&ndash;ES1J, 1.0 A surface mount '
+        'super-fast rectifier</i>, DS39406 Rev.&nbsp;2.',
+        '[BZT] Nexperia, <i>BZT52H series, 375 mW Zener diodes in SOD123F</i>, '
+        'product data sheet.',
+        '[TL431] Texas Instruments, <i>TL431 / TL432 precision programmable '
+        'reference</i>, SLVS543(등급, 캐소드 전류, 안정성 값).',
+        '[SFH] Vishay Semiconductors, <i>SFH617A, optocoupler, phototransistor '
+        'output, with base connection</i>, data sheet(CTR 랭크).']))
 
     # =============================================================== 10
     add(h1('정오표와 미결 항목'))
@@ -4242,7 +5153,11 @@ def build(A):
                    __import__('math').radians(45 + _PMT / 2)), '과', '와')),
         '최대 전력 상수 <b>16.8 &Omega;&middot;W</b> 는 피드백 폭과 '
         'multiplier 게인에서 나온다(2.8&nbsp;V / 0.167). 여기 적는 것은 그 '
-        '게인이 초안값이기 때문이다.']))
+        '게인이 초안값이기 때문이다.',
+        '<b>게이트 드라이버 출력 저항</b>은 15&nbsp;V 를 전 온도 최소 단락 '
+        '전류로 나눈 값이다. L6498 데이터시트는 출력 저항을 주지 않는다. 실제 '
+        '출력은 저항이 아니고, 이 선택은 게이트 전력의 큰 몫을 드라이버에 '
+        '둔다.']))
     add(h2('이 설계의 미결 항목'))
     ext(tbl('미결 항목과 확정 방법.',
             [['항목', '상태', '확정 방법'],
@@ -4251,7 +5166,11 @@ def build(A):
              ['1차 도통 손실',
               'budget 대비 %(kPloss).3f &mdash; <b>미달, 그리고 수용</b>' % V,
               '고정 소자 위치에서 %.0f W budget 을 만족하는 단일 600 V 소자는 없다. '
-              '히트싱크가 필요한지는 계산이 아니라 열 측정' % _kb],
+              '보드 동박만으로는 %.0f&nbsp;&deg;C 오르므로, %.0f&nbsp;&deg;C 주위에서 '
+              '케이스-주위 %.1f&nbsp;&deg;C/W 이하의 히트싱크가 필요하다(%s 절). '
+              '나머지는 열 측정'
+              % (_kb, A.SH['ΔT.pcb'], V['Tamb'], A.SH['R.thCA_max'],
+                 SR('1차 스위치: STO60N045DM9'))],
              ['2차 손실 budget',
               '%(kPSR).3f &mdash; 여유가 거의 없다' % V,
               '레그당 소자 하나 더 병렬이면 회복된다. 실측 온도를 보고 결정한다'],
@@ -4278,10 +5197,52 @@ def build(A):
               '&eta;<sub>HB</sub> = %(etaHB).0f %% 가정' % V,
               '낙관적이다. 95 %% 로 잡으면 R<sub>CS</sub> 와 R<sub>ac</sub> 가 약 %.0f %% '
               '움직일 뿐 이후 계산에 크게 영향을 주는 것은 없다 &mdash; 그래도 실측값으로 바꿔야 한다' % (100 * (V['etaHB'] / 95.0 - 1))],
-             ['게이트 전하 Q<sub>g</sub>',
-              '부품 목록에서 읽은 typical %(Qg).1f nC' % V,
-              '실장 부품의 데이터시트에서 읽는다. I<sub>VCC</sub>, R<sub>BZ</sub>, '
-              'C<sub>VCC</sub> 가 그에 비례해 움직인다'],
+             ['SR MOSFET 게이트 전하',
+              'typical 값뿐: STL160N10F8 의 Q<sub>g,sync</sub> 와 Fig.&nbsp;8 '
+              '기울기',
+              'Full load 에서 SR 전원 전류를 잰다. 팔로워는 소자당 %.1f&nbsp;nC '
+              '까지 허용한다. 게이트 핀당 둘이 SR 스위칭 시간을 정한다'
+              % A.SH['Q.g_SR_max']],
+             ['부트스트랩 다이오드',
+              'ES1J, V<sub>F</sub> = %(VFbs).2f V, 데이터시트의 1 A 최대값' % V,
+              '시제품에서 충전 전류와 전압 강하를 잰다. V<sub>CC,floor</sub> 와 '
+              'C<sub>VCC</sub> 가 그 전압 강하를 따라간다'],
+             ['게이트 턴오프 다이오드',
+              '1N4148W: 피크 %.2f A, 1 &micro;s 비반복 서지 정격 %.0f A 에 대해 '
+              'k = %.2f. 데이터시트에 반복 피크 정격은 없다'
+              % (A.SH['I.Goff_pk'], A._builder_const('I.FSM_Goff'),
+                 A.SH['k.Goff_D']),
+              '게이트 전류와 다이오드 온도를 잰다. 같은 footprint 의 1 A '
+              'Schottky 가 대안이다'],
+             ['패스 트랜지스터',
+              'FZT651: 2 oz 동박 50 &times; 50 mm 에서 허용 주위 온도 '
+              '%.0f &deg;C(Q<sub>VCC</sub>), %.0f &deg;C(Q<sub>SR</sub>). '
+              'h<sub>FE</sub> &ge; 70 은 표에서 읽은 값이고 시험 전류가 '
+              'I<sub>VCC</sub> 와 다르다'
+              % (A.SH['T.aQVCC'], A.SH['T.aQSR']),
+              '실제 동박에서 탭 온도를, I<sub>VCC</sub> 에서 베이스 전류를 잰다'],
+             ['SR 게이트 저항',
+              'ST 보드처럼 %.0f &Omega; 자리' % A._builder_const('R.G_SR'),
+              '시제품의 SR 게이트 링잉을 보고 몇 &Omega; 을 넣을지 정한다'],
+             ['옵토커플러 CTR',
+              'CTR<sub>s</sub> %.2f, CTR<sub>m</sub> %.2f 는 SFH617A-2 에 대한 '
+              '설계 선택값' % (V['CTRs'], V['CTRm']),
+              '쓰는 LED 전류에서 랭크의 곡선을 읽고, 랭크 양 끝에서 '
+              'R<sub>B</sub> 허용 범위와 crossover 주파수를 다시 검사한다'],
+             ['게이트에 남는 데드타임',
+              '(t<sub>D</sub> &minus; MT)/T<sub>T</sub> = %.3f. L<sub>r</sub> '
+              '&asymp; %.1f &micro;H 에서 1'
+              % (A.SH['k.TTd'], _ttd_lr_edge(V, A)),
+              '첫 샘플에서 L<sub>r</sub> 을, 시제품에서 게이트-중점 타이밍을 '
+              '잰다. L<sub>r</sub> 이 낮게 나오면 t<sub>D</sub> 를 올린다'],
+             ['공진 위의 중점 기울기',
+              'I<sub>Lm,pk</sub> 에서 %.1f V/ns. 스위칭되는 전류는 더 클 수 있다'
+              % A.SH['dv.dt'],
+              'OUT 핀의 dv/dt 를 드라이버의 %(dvmax).0f V/ns 에 대해 잰다' % V],
+             ['SR 방전 기능과 버스트',
+              '정류 동작이 1.1 ~ 1.7 s 없으면 동작',
+              'No load 의 가장 긴 burst-off 시간을 잰다. 더 긴 휴지는 대기 '
+              '전력에 0.4 W 를 더한다'],
              ['기동 인계',
               't<sub>hand</sub> %.1f ms 는 레일이 올라올 때까지 부하가 없다고 가정'
               % A.SH['t.hand'],
@@ -4359,7 +5320,8 @@ def build(A):
 
 
 # ZVS 스윕과 그 결과 사전은 영문판과 한 벌이다 - 숫자를 두 번 계산하지 않는다.
-from an_body import ZVS_WORST, _zvs_grid, _minus, _f_idle, _where      # noqa: E402
+from an_body import (ZVS_WORST, _zvs_grid, _minus, _f_idle, _where,     # noqa: E402
+                     _ttd_lr_edge)
 
 
 def _idle700_kr(V):
@@ -4382,7 +5344,12 @@ def _thinnest_kr(V, A):
             ('정류 레그당 2차 손실', V['kPSR']),
             ('기동 threshold 위의 V<sub>CC</sub>', A.SH['k.VCClo']),
             ('제너 공급', A.SH['k.RBZ']),
-            ('기동 인계의 C<sub>VCC</sub>', A.SH['k.CVCC'])]
+            ('기동 인계의 C<sub>VCC</sub>', A.SH['k.CVCC']),
+            ('하이사이드 드라이버 전원', A.SH['k.VBO']),
+            ('게이트에 남는 데드타임', A.SH['k.TTd']),
+            ('중점 기울기', A.SH['k.dvdt']),
+            ('게이트 드라이버 손실', A.SH['k.Pdrv']),
+            ('SR 게이트 구동', A.SH['k.VGSR'])]
     name, k = min(((n, k) for n, k in rows if k > 1.0), key=lambda r: r[1])
     return ('통과한 여유 중 가장 작은 것은 %s, k = %s.'
             % (name, _nj('%.3f' % k, '이다', '다').replace(' 이다', '이다')

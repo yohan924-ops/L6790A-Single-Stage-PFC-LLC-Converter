@@ -24,6 +24,7 @@ KR = os.path.join(HERE, '..', 'AN_L6790A_SingleStage_PFC_LLC_ApplicationNote_KR_
 args = [a for a in sys.argv[1:] if not a.startswith('--')]
 LIMIT = int(args[0]) if args else 40
 PDF = KR if '--kr' in sys.argv else EN
+KR = '--kr' in sys.argv
 
 doc = pymupdf.open(PDF)
 hist = {}
@@ -32,13 +33,18 @@ for pno, page in enumerate(doc, 1):
     blocks = page.get_text('blocks')
     for b in blocks:
         t = ' '.join(b[4].split())
-        if len(t) < 60 or re.match(r'^(Figure|Table|Equation) \d+', t):
+        if len(t) < 60 or re.match(r'^(Figure|Table|Equation|그림|표|식) \d+', t):
             continue
-        if re.match(r'^\d+(\.\d+)?\s+[A-Z]', t) and len(t) < 90:
+        if re.match(r'^\d+(\.\d+)?\s+[A-Z가-힣]', t) and len(t) < 90:
             continue
         #  split at . ! ? followed by a space and a capital, keeping
         #  decimals (2.5), abbreviations (e.g.) and section numbers whole
-        parts = re.split(r'(?<=[.!?])\s+(?=[A-Z"“(])', t)
+        if KR:
+            #  Korean: a sentence ends in 다/음/것 + full stop; a following
+            #  capital is no clue, so split at every stop followed by space
+            parts = re.split(r'(?<=[.!?])\s+(?=[^\d\)])', t)
+        else:
+            parts = re.split(r'(?<=[.!?])\s+(?=[A-Z"“(])', t)
         for s in parts:
             w = len(s.split())
             if w < 4:
