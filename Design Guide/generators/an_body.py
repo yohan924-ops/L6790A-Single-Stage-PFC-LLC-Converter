@@ -2916,24 +2916,62 @@ def build(A):
     add(p('With n<sub>T</sub> = %(nT).2f, at %(a)s of the %(b)s input '
           'voltages the tank spends part of every line cycle above '
           'f<sub>r</sub>, where the secondary loses zero-current turn-off, so '
-          'the rectifier body diode and the SR dead time need checking.'
-          % dict(V, a=_WORDS[V['nAbove']], b=_WORDS[len(V['fswPk'])])))
+          'the rectifier body diode and the SR dead time need checking. '
+          'Figure&nbsp;%(f)s and Table&nbsp;%(t)s are drawn at full load. '
+          '<b>Where the crossing falls does not depend on the load.</b> '
+          'M = 1 at f<sub>sw</sub> = f<sub>r</sub> whatever Q is '
+          '(Equation&nbsp;%(e)s), so the converter crosses f<sub>r</sub> '
+          'where M<sub>req</sub>(&theta;) = M<sub>pk</sub>/sin&theta; = 1, '
+          'that is at sin&theta; = M<sub>pk</sub>: an input whose '
+          'M<sub>pk</sub> is below 1 bucks between &theta;<sub>0</sub> = '
+          'arcsin M<sub>pk</sub> and 180&deg; &minus; &theta;<sub>0</sub> '
+          'and boosts outside that window; one whose M<sub>pk</sub> is '
+          'above 1 boosts for the whole half cycle. The load only sets how '
+          'far above f<sub>r</sub> the frequency goes inside the window.'
+          % dict(V, a=_WORDS[V['nAbove']], b=_WORDS[len(V['fswPk'])],
+                 f=FR('an_above_below'), t=TR('fswside'),
+                 e=ER('M'))))
     add(fig('an_above_below',
             'Which side of f<sub>r</sub> the converter is on over a line '
             'half cycle, at the six input voltages. Every curve converges '
             'on f<sub>o</sub> at the zero crossing. The percentage in each '
             'legend entry is the fraction of the half cycle spent above '
             'f<sub>r</sub>, without zero-current turn-off.', width=CW))
-    ext(tbl('Peak f<sub>sw</sub> over the half cycle against f<sub>r</sub> = '
-            '%(fr).1f kHz. %(nAbove)d of the %(nc)d input voltages cross into '
-            'above-resonance operation for part of the cycle.'
+    ext(tbl('Peak f<sub>sw</sub> over the half cycle at full load against '
+            'f<sub>r</sub> = %(fr).1f kHz, and the window of line phase in '
+            'which the converter is above f<sub>r</sub> (bucking), from '
+            'sin&theta; = M<sub>pk</sub>. %(nAbove)d of the %(nc)d input '
+            'voltages cross into above-resonance operation for part of the '
+            'cycle.'
             % dict(V, nc=len(V['fswPk'])),
             [['Input voltage and bridge', 'the tank sees (Vac rms)',
-              'peak f<sub>sw</sub>', 'side of f<sub>r</sub>']]
-            + [[nm, '%.0f Vac' % veq, '%.1f kHz' % pk,
-                '<b>above</b>' if ab else 'below']
-               for nm, veq, pk, ab in V['fswPk']],
-            widths=[CW * 0.36, CW * 0.16, CW * 0.20, CW * 0.28], split=True))
+              'M<sub>pk</sub>', 'peak f<sub>sw</sub>',
+              'above f<sub>r</sub> (bucks) for &theta;',
+              'share of the half cycle']]
+            + [[nm, '%.0f Vac' % veq, '%.3f' % mpk, '%.1f kHz' % pk,
+                ('<b>%.0f&deg; to %.0f&deg;</b>' % (th0, 180 - th0))
+                if th0 is not None else 'never: boosts throughout',
+                '%.0f %%' % sh]
+               for (nm, veq, pk, ab), (_n, _v, mpk, th0, sh)
+               in zip(V['fswPk'], V['fswCross'])],
+            widths=[CW * 0.27, CW * 0.13, CW * 0.10, CW * 0.14, CW * 0.22,
+                    CW * 0.14], key='fswside', split=True))
+    add(p('<b>What the load changes.</b> Lightening the load lowers Q at '
+          'every phase but leaves M<sub>req</sub>(&theta;) alone, so the '
+          'window of Table&nbsp;%(t)s stays where it is and the curves of '
+          'Figure&nbsp;%(f)s only rise inside it: at %(l).0f&nbsp;%% load '
+          'the highest peak, at the FB edge, is %(pk).0f&nbsp;kHz against '
+          '%(pk1).1f&nbsp;kHz at full load, still under the %(spec).0f&nbsp;kHz '
+          'specified maximum. At no load the window is the same again, '
+          'and below M<sub>&infin;</sub> there is no solution at all '
+          '(Section&nbsp;%(s)s). The two lowest inputs never buck at any '
+          'load.'
+          % dict(t=TR('fswside'), f=FR('an_above_below'),
+                 l=100 * V['loadLight'], pk=V['fswPkLight'],
+                 pk1=max(p for _n, _v, p, _a in V['fswPk']),
+                 spec=V['fswspec'],
+                 s=SR('The other bound on &lambda;, and where it has no '
+                      'solution'))))
     add(fig('f12_two_divergences',
             'Near the zero crossing the required gain diverges and the load '
             'vanishes together, so the operating point converges on '
@@ -5542,6 +5580,7 @@ def build(A):
 
         ('<b>The mains, and power factor</b>', ''),
         ('&theta;', 'line phase angle'),
+        ('&theta;<sub>0</sub>', 'the line phase at which the converter crosses f<sub>r</sub>: sin&theta;<sub>0</sub> = M<sub>pk</sub>, so it bucks between &theta;<sub>0</sub> and 180&deg; &minus; &theta;<sub>0</sub>'),
         ('f<sub>l</sub>, f<sub>l,min</sub>, &omega;<sub>l</sub>', 'line frequency, its lowest specified value, and 2&pi;f<sub>l</sub>'),
         ('v<sub>ac</sub>, V<sub>ac</sub>, I<sub>ac</sub>', 'the instantaneous mains voltage, and the rms voltage and current drawn'),
         ('I<sub>1,rms</sub>', 'the rms of the input current&rsquo;s fundamental alone'),

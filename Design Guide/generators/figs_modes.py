@@ -33,10 +33,25 @@ def an_above_below(save, foot, R, sweep, FR):
         ax.plot(t, y, color=col, lw=2.2)
         frac = 100.0 * np.trapezoid((y > 1.0).astype(float), t) / 180.0
         txt.append((lab, frac, col))
+        #  the two crossings of f_r, marked: that is where the tank stops
+        #  boosting and starts bucking, and back (2026-10-04, user: say
+        #  WHEN it is buck and when boost).  Read off the curve itself.
+        above = y > 1.0
+        if above.any():
+            for k in (above.argmax(), len(y) - 1 - above[::-1].argmax()):
+                ax.plot(t[k], 1.0, 'o', color=col, ms=6.5, mec='white',
+                        mew=1.2, zorder=6)
 
     ax.axhline(1.0, color=GREY, lw=1.8, ls='--')
     ax.text(2, 1.03, 'f$_r$  \u2014  the boundary', color=GREY, fontsize=10.5,
             va='bottom')
+    #  under the ABOVE box, left of where the highest curve climbs: on the
+    #  f_r line itself it lay across the two curves that peak just above it
+    ax.text(4, 1.72, 'dots: where a curve crosses f$_r$, at sin$\\theta$ = '
+            'M$_{pk}$\n\u2014 the same angles at any load',
+            color=GREY, fontsize=9.4, ha='left', va='center',
+            linespacing=1.3,
+            bbox=dict(boxstyle='round,pad=0.25', fc='white', ec='none'))
     ax.axhspan(1.0, 2.6, color=CYA, alpha=0.10)
     ax.axhspan(0.0, 1.0, color=YEL, alpha=0.13)
     ax.text(4, 2.08, 'ABOVE resonance\ntank BUCKS  \u00b7  M < 1\n'
@@ -64,7 +79,7 @@ def an_above_below(save, foot, R, sweep, FR):
     ax.legend(hs, ['%s  \u2014  %.0f %%' % (l, f) for l, f, _c in txt],
               loc='upper right', fontsize=9.4, ncol=1,
               title='input voltage and bridge, and the share of the\n'
-                    'half cycle it spends above f$_r$',
+                    'half cycle it spends above f$_r$ (full load)',
               title_fontsize=9.4)
     foot(fig, 'At the lowest input voltage the converter never leaves the boosting region. '
               'At the high morphing edge it crosses into the bucking region '

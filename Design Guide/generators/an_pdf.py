@@ -117,7 +117,28 @@ _, SA = l6790.sweep(R, R['Vin_min'], 1.0)          # HB corner, full load
 _, SB = l6790.sweep(R, R['Vin_FBmax'], 1.0)      # FB corner, full load
 
 
-def _fsw_peaks():
+def _fsw_crossings():
+    """where each line condition crosses f.r: (name, veq, M_pk, theta0, share)
+
+    M = 1 at f_n = 1 whatever Q is, so the crossing is where the required
+    gain M_pk / sin(theta) equals 1: sin(theta0) = M_pk, and the converter
+    is above f.r for theta0 .. 180 - theta0.  Nothing in that depends on
+    the load; the load only decides how high f.sw goes inside the window.
+    theta0 is None (share 0) when M_pk >= 1.
+    """
+    from math import asin, degrees, sqrt
+    out = []
+    for nm, veq, _mode in l6790.line_conditions(R):
+        mpk = 2 * R['n'] * R['Vo_eff'] / (sqrt(2) * veq)                # [57]
+        if mpk < 1.0:
+            th0 = degrees(asin(mpk))
+            out.append((nm, veq, mpk, th0, 100.0 * (180.0 - 2 * th0) / 180.0))
+        else:
+            out.append((nm, veq, mpk, None, 0.0))
+    return out
+
+
+def _fsw_peaks(load=1.0):
     """peak f.sw at each plotted line condition, and which run above f.r
 
     Whether the converter lives above or below series resonance is not a
@@ -128,7 +149,7 @@ def _fsw_peaks():
     fr = R['fr'] / 1e3
     out = []
     for nm, veq, _mode in l6790.line_conditions(R):
-        _q, S = l6790.sweep(R, veq, 1.0)
+        _q, S = l6790.sweep(R, veq, load)
         pk = S['fsw_max'] / 1e3
         out.append((nm, veq, pk, pk > fr))
     return out
@@ -220,6 +241,11 @@ V = dict(
     frt2=100 * (R['fr_t'] / R['fsw_max_spec']) ** 2,
     fswPk=_fsw_peaks(),
     nAbove=sum(1 for _n, _v, _p, a in _fsw_peaks() if a),
+    #  the crossing angles (load-independent) and the peak f.sw at a light
+    #  load, for the paragraph that says what the load does and does not
+    #  move (2026-10-04, user)
+    fswCross=_fsw_crossings(), loadLight=0.25,
+    fswPkLight=max(p for _n, _v, p, _a in _fsw_peaks(0.25)),
     kfloor=SH['k.floor'], kceil=SH['k.ceil'], kOCP=SH['k.OCP'],
     khold=SH['k.hold'], kPloss=SH['k.Ploss'], kPSR=SH['k.PSR'],
     # the standing device in half-bridge morphing, and what it demands of the
