@@ -3387,9 +3387,9 @@ def _ic(ax, x0, y0, x1, y1, part, pins, stub=0.55, size=9.6, psize=8.4,
     position is the y of a side pin or the x of a top / bottom pin.  The
     name is written inside the box against its edge, the number outside
     beside the stub, as a datasheet draws it.  The returned point is the
-    outer end of the stub, where the wiring attaches.  pdy lifts the side
-    pins' numbers off the stub (a drawing whose numbers are large against
-    its scale).
+    outer end of the stub, where the wiring attaches.  pdy moves every
+    pin number that much further off its stub and the box edge (a drawing
+    whose numbers are large against its scale).
     """
     ax.add_patch(Rectangle((x0, y0), x1 - x0, y1 - y0, fc='#F4F5F7', ec=NAVY,
                            lw=1.8, zorder=3))
@@ -3408,8 +3408,8 @@ def _ic(ax, x0, y0, x1, y1, part, pins, stub=0.55, size=9.6, psize=8.4,
             S.wire(ax, [(xe, pos), (xo, pos)])
             S.label(ax, xe - d * 0.16, pos, name, size=size,
                     ha='left' if side == 'L' else 'right')
-            S.label(ax, xe + d * st / 2.0, pos + 0.24 * k + pdy, str(num),
-                    size=psize, color=GREY)
+            S.label(ax, xe + d * (st / 2.0 + pdy), pos + 0.24 * k + pdy,
+                    str(num), size=psize, color=GREY)
             out[name] = (xo, pos)
         else:
             ye = y1 if side == 'T' else y0
@@ -3417,7 +3417,7 @@ def _ic(ax, x0, y0, x1, y1, part, pins, stub=0.55, size=9.6, psize=8.4,
             yo = ye + d * st
             S.wire(ax, [(pos, ye), (pos, yo)])
             S.label(ax, pos, ye - d * tpad, name, size=size)
-            S.label(ax, pos + 0.24 * k, ye + d * st / 2.0, str(num),
+            S.label(ax, pos + 0.24 * k, ye + d * (st / 2.0 + pdy), str(num),
                     size=psize, color=GREY, ha='left')
             out[name] = (pos, yo)
     return out
@@ -3645,200 +3645,298 @@ def an_gate_drive(save, foot):
     save(fig, 'an_gate_drive')
 
 
-def _sr_block(ax, full=False):
-    """the SR stage of an_sr_ctrl; full=True draws it for the whole-circuit
-    sheet: the secondary windings alone, and flags for V_out"""
-    R = 0.20
-    # ------------------------------------------------- transformer
-    if full:
-        #  the secondary windings alone; NP1 and NAUX are on sheet 1
-        (s7, s9), (s10, s12) = _xf(ax, 1.6, [('R', 13.2, 9.75, 4),
-                                             ('R', 9.25, 5.8, 4)])
-        xs = s7[0]
-        S.wire(ax, [s9, s10])
-        t = {'s_top': s7, 's_bot': s12, 's_tap': (xs, 9.5)}
-        S.dot(ax, xs, 9.5)
-        S.label(ax, xs + 0.55, 11.5, 'NS2\n%.0f T' % _sv('N.s'), size=10,
-                ha='left')
-        S.label(ax, xs + 0.55, 7.5, 'NS3\n%.0f T' % _sv('N.s'), size=10,
-                ha='left')
-        S.label(ax, -0.3, 15.0, 'T1\nNP1, NAUX:\nsheet 1', size=8.6,
-                color=GREY, ha='left')
-    else:
-        t = X.xfmr(ax, 2.4, 9.5, hp=5.0, hs=7.4, ct=True, lp='NP1',
-                   ls=('NS2', 'NS3'), size=10)
-        xs = t['s_top'][0]
-        for key, txt_ in (('p_top', '1'), ('p_bot', '3')):
-            px, py = t[key]
-            S.wire(ax, [(px, py), (0.2, py)])
-            _term(ax, 0.2, py)
-            S.label(ax, 0.2, py + 0.42, txt_, size=8.6, color=GREY)
-        S.label(ax, 0.2, 6.25, 'to the\ntank', size=9.0, color=GREY)
-    # ------------------------------------------------- the IC
-    XI0, XI1, YI0, YI1 = 8.6, 12.6, 7.0, 14.4
-    c = _ic(ax, XI0, YI0, XI1, YI1, 'TEA2095TE',
-            [('R', 13.2, 8, 'GDA'), ('R', 11.8, 5, 'SSA'),
-             ('T', 11.4, 6, 'DSA'), ('T', 9.6, 7, 'VCC'),
-             ('R', 9.6, 4, 'SSB'), ('R', 8.2, 1, 'GDB'),
-             ('B', 11.4, 3, 'DSB'), ('B', 9.6, 2, 'GND')], ref=10.7)
-    gx, gy = c['GND']
-    S.gnd(ax, gx, gy)
-    # VCC from a Zener follower on the output (sheet 14c.4), above the
-    # leg-A drain bus: R_BSR into the Zener and the base, collector on
-    # V_out, emitter down to the pin with C_SR beside it
-    vx, vy = c['VCC']
-    YR, XRB, YBN = 21.5, 6.4, 19.4
-    YDA_ = 16.8                       # the leg-A drain bus, drawn below
-    _term(ax, 3.6, YR)
-    S.label(ax, 3.25, YR, 'V$_{out}$', size=10, ha='right')
-    bq, cq, eq_ = _npn(ax, vx - 0.55 * 1.4, YBN, h=1.4)
-    S.wire(ax, [(3.6, YR), (vx, YR), cq])
-    S.dot(ax, XRB, YR)
-    ra, rb = S.res(ax, XRB, 20.25, horiz=False)
-    S.wire(ax, [(XRB, YR), rb])
-    S.wire(ax, [ra, (XRB, YBN)])
-    S.label(ax, XRB - 0.42, 20.25, 'R$_{BSR}$\n%.0f $\\Omega$'
-            % _sv('R.BSR_sel'), size=9.4, ha='right')
-    S.dot(ax, XRB, YBN)
-    S.wire(ax, [(XRB, YBN), bq])
-    za, zc = _zener(ax, XRB, 18.25)
-    S.wire(ax, [(XRB, YBN), zc])
-    S.wire(ax, [za, (XRB, 17.55)])
-    S.gnd(ax, XRB, 17.55)
-    S.label(ax, XRB - 0.95, 18.25, 'D$_{ZSR}$\n%.0f V' % _sv('V.DZSR_sel'),
-            size=9.4, ha='right')
-    S.label(ax, vx + 0.35, YBN + 0.15, 'Q$_{SR}$', size=10, ha='left',
-            weight='bold')
-    YVC = 15.8
-    #  the RC filter: R_SR in the emitter run, C_SR at the pin node
-    ra_, rb_ = S.res(ax, vx, eq_[1] - 0.85, horiz=False)   # above the hop
-    S.wire(ax, [eq_, rb_])
-    S.wire(ax, [ra_, (vx, vy)])       # the drain bus hops it, below
-    S.label(ax, vx + 0.3, eq_[1] + 0.1, 'V$_{CC,SR}$ %.1f V' % _sv('V.SR'),
-            size=9.0, ha='left', color=GREY)
-    S.label(ax, vx + 0.35, eq_[1] - 0.85, 'R$_{SR}$ %.0f $\\Omega$'
-            % _sv('R.SR'), size=9.4, ha='left')
-    XCD = 7.6
-    S.dot(ax, vx, YVC)
-    S.wire(ax, [(vx, YVC), (XCD, YVC)])
-    for xc_ in (XCD, XCD + 1.0):
-        if xc_ != XCD:
-            S.dot(ax, xc_, YVC)
-        ca, cb = S.cap(ax, xc_, 15.0, horiz=False)
-        S.wire(ax, [(xc_, YVC), cb])
-        S.wire(ax, [ca, (xc_, 14.4)])
-        S.gnd(ax, xc_, 14.4)
-    S.label(ax, XCD - 0.75, 15.0, 'C$_{SR}$\n%.0f nF\n$\\parallel$ %.1f $\\mu$F'
-            % (_sv('C.SR'), _sv('C.SRb')), size=9.4, ha='right')
-    # ------------------------------------------------- centre tap = V_out
-    S.wire(ax, [t['s_tap'], (6.0, 9.5)])
-    _term(ax, 6.0, 9.5)
-    S.label(ax, 6.0, 10.15, 'V$_{out}$' if full else 'V$_{out}$, C$_{out}$',
-            size=10)
+def _kit(ax, SN, SZ, MS):
+    """the small symbols the whole-circuit page and the figures drawn
+    like it share: vertical resistor and capacitors with a label, the
+    two grounds on short leads, a net flag.  SZ / SN are the value and
+    name lettering sizes, MS the flag circle."""
+    from types import SimpleNamespace
+
+    def vres(x, ytop, ybot, label=None, side='r', yl=None):
+        a_, b_ = S.res(ax, x, (ytop + ybot) / 2.0, horiz=False)
+        S.wire(ax, [(x, ytop), b_])
+        S.wire(ax, [a_, (x, ybot)])
+        if label:
+            yy = (ytop + ybot) / 2.0 if yl is None else yl
+            S.label(ax, x + (0.45 if side == 'r' else -0.45), yy, label,
+                    size=SZ, ha='left' if side == 'r' else 'right')
+
+    def vcap(x, ytop, ybot, label=None, side='r', yl=None):
+        a_, b_ = S.cap(ax, x, (ytop + ybot) / 2.0, horiz=False)
+        S.wire(ax, [(x, ytop), b_])
+        S.wire(ax, [a_, (x, ybot)])
+        if label:
+            yy = (ytop + ybot) / 2.0 if yl is None else yl
+            S.label(ax, x + (0.5 if side == 'r' else -0.5), yy, label,
+                    size=SZ, ha='left' if side == 'r' else 'right')
+
+    def ecap(x, ytop, ybot, label=None, side='r', yl=None):
+        """an electrolytic: straight plate on the + side (top), curved
+        plate below, a + sign beside the top plate"""
+        import numpy as np
+        yc_ = (ytop + ybot) / 2.0
+        s_, g_ = X._cap_size(ax, None, None)
+        ax.plot([x - s_, x + s_], [yc_ + g_] * 2, color=NAVY, lw=2.2,
+                zorder=4)
+        th = np.linspace(np.radians(35), np.radians(145), 30)
+        rr = s_ / np.cos(np.radians(35))
+        yc0 = yc_ - g_ - rr                # apex on the plate line
+        ax.plot(x + rr * np.cos(th), yc0 + rr * np.sin(th), color=NAVY,
+                lw=2.2, zorder=4)
+        X.note_symbol(ax, 'cap', x, yc_, 2 * s_, 2 * g_ + 0.25)
+        ax.text(x - s_ - 0.14, yc_ + g_ + 0.06, '+', size=9.5, color=NAVY,
+                ha='right', va='bottom', zorder=5)
+        S.wire(ax, [(x, ytop), (x, yc_ + g_)])
+        S.wire(ax, [(x, yc_ - g_), (x, ybot)])
+        if label:
+            yy = yc_ if yl is None else yl
+            S.label(ax, x + (0.65 if side == 'r' else -0.65), yy, label,
+                    size=SZ, ha='left' if side == 'r' else 'right')
+
+    def pg(x, y, lead=0.35):              # primary ground on a short lead
+        if lead:
+            S.wire(ax, [(x, y), (x, y - lead)])
+        _pgnd(ax, x, y - lead)
+
+    def sg(x, y, lead=0.3):               # secondary ground
+        if lead:
+            S.wire(ax, [(x, y), (x, y - lead)])
+        y -= lead
+        s_ = 0.30
+        for k, w in enumerate((1.0, 0.62, 0.28)):
+            ax.plot([x - s_ * w, x + s_ * w], [y - k * 0.17] * 2,
+                    color=NAVY, lw=1.6, zorder=3)
+
+    def flag(x, y, name, side='r'):
+        _flag(ax, x, y, name, side=side, size=SN, ms=MS)
+
+    return SimpleNamespace(vres=vres, vcap=vcap, ecap=ecap, pg=pg, sg=sg,
+                           flag=flag)
+
+
+def _sr_stage(ax, K, R, SN, MOS, xs, s7, s12, YCT, XC, YDA, YDB):
+    """The SR stage of the whole-circuit page, also an_sr_ctrl's.
+
+    Mirrored: the MOSFETs next to the windings, the IC to their right,
+    gates on the right of each MOSFET (mirror=True).  Leg A upright
+    with its drain bus at the height of NP1's pin-1 run, leg B upside
+    down with its drain bus at the height of the primary return rail
+    YG - the two sides of T1 wired at the same heights.  The IC's DS
+    pins sit at the bus heights and its SS pins at the source-bus
+    heights, so each Kelvin wire is one straight run to the nearer
+    MOSFET (Q_A2, Q_B2).
+
+    xs, s7, s12, YCT: the secondary windings' pin column, its two
+    outer ends and the centre-tap height (from _xf); XC the core line;
+    YDA / YDB the two drain-bus heights.  K is _kit().
+    -> dict(c=the IC's pins, XV, XQ1, XQ2, XG, TX0, TX1, YVS)
+    """
     import cores
     _pm = cores.PINMAP
-    S.label(ax, xs + 0.15, 9.05, '%d, %d' % (_pm['NS2'][1][0], _pm['NS3'][0][0]),
-            size=8.6, color=GREY, ha='left')
+    flag, sg, vcap = K.flag, K.sg, K.vcap
+    XV = XC + 4.2                          # V_out: centre tap straight down
+    S.wire(ax, [(xs, YCT), (XV, YCT)])
+    S.label(ax, XV - 0.15, YCT + 0.4, '%d, %d' % (_pm['NS2'][1][0],
+                                                   _pm['NS3'][0][0]),
+            size=SN, color=GREY, ha='right')
+    YCA_, YSA, HOPA = YDA - 2.1, YDA - 4.6, YDA - 3.8
+    YCB, YSB, HOPB = YDB + 2.1, YDB + 4.6, YDB + 3.8
+    XQ1, XQ2 = XC + 7.8, XC + 13.8
+    MGS = 2.1                              # gate lead: the resistor clear
+    #                                        of the gate
+    MOSS = dict(MOS, gate=MGS)
+    xr1, xr2 = XQ1 + MGS + 0.9, XQ2 + MGS + 0.9
+    XG = xr2 + 1.1                         # where the gate run splits
+    TX0, TX1 = XG + 1.6, XG + 6.7
+    TY0, TY1 = YDB - 1.0, YDA + 1.0        # room for the supply pins' names
+    c = _ic(ax, TX0, TY0, TX1, TY1, 'TEA2095TE',
+            [('L', YDA, 6, 'DSA'), ('L', YCA_, 8, 'GDA'),
+             ('L', YSA, 5, 'SSA'), ('L', YSB, 4, 'SSB'),
+             ('L', YCB, 1, 'GDB'), ('L', YDB, 3, 'DSB'),
+             ('T', TX0 + 3.6, 7, 'VCC'), ('B', TX0 + 3.6, 2, 'GND')],
+            size=SN, psize=SN, tpad=0.45, title=False, pdy=0.16)
+    #  name in the box's free right half, between the SSA and SSB rows
+    S.label(ax, TX0 + 3.1, (YSA + YSB) / 2.0 + 0.3, 'U7', size=SN,
+            weight='bold')
+    S.label(ax, TX0 + 3.1, (YSA + YSB) / 2.0 - 0.3, 'TEA2095TE', size=SN)
+    gx_, gy_ = c['GND']
+    S.wire(ax, [(gx_, gy_), (gx_, gy_ - 0.4)])
+    sg(gx_, gy_ - 0.4, 0.0)
+    #  VCC: up from the top pin into the band above the box - C_SR and its
+    #  bulk to ground, R_SR in the run out to the net flag: the RC filter
+    #  at the pin (14c.3), with air round every part
+    vx, vy = c['VCC']
+    YVS = YDA + 4.1
+    XSRb, XSR, XRS_, XFL = TX0 + 1.2, TX0 - 0.4, TX0 - 2.8, TX0 - 4.8
+    S.wire(ax, [(vx, vy), (vx, YVS), (XSR, YVS)])
+    for xc_ in (XSRb, XSR):                # each on a lead of its own
+        S.dot(ax, xc_, YVS)
+        vcap(xc_, YVS, YVS - 1.6)
+        sg(xc_, YVS - 1.6, 0.3)
+    S.label(ax, XSR - 0.6, YVS - 0.8, 'C$_{SR}$ ' + _c(_sv('C.SR'))
+            + ' $\\parallel$ ' + _c(_sv('C.SRb') * 1e3), size=SN, ha='right')
+    ra_, rb_ = S.res(ax, XRS_, YVS)
+    S.wire(ax, [(XSR, YVS), rb_])
+    S.wire(ax, [ra_, (XFL, YVS)])
+    S.label(ax, XRS_, YVS + 0.7, 'R$_{SR}$ ' + _r(_sv('R.SR')), size=SN)
+    flag(XFL, YVS, 'V$_{CC,SR}$', side='l')
 
-    def pair(yc, ydrain, ysrc, gate_pin, leg, hop_y):
-        """two MOSFETs, drains on ydrain, sources on ysrc; one gate
-        resistor each, from a split at x = 14.2"""
-        xa, xb = 18.0, 21.6
-        for x in (xa, xb):
-            d, s_ = X.mosfet(ax, x, yc, None, 'plain', h=1.8, gate=1.4,
-                             body=True, coss=False)
+    def pair(yc, ydrain, ysrc, flip, leg, hop_y, ds, gd, ss, xgnd):
+        """two MOSFETs, each with its gate resistor on its own gate lead.
+        The gate run from the IC splits once at XG: straight on through
+        R_G2 into Q2, and a branch at hop_y that passes Q2's source lead
+        with a hop and comes up into R_G1.  DS lands on the drain bus at
+        Q2's lead, SS on the source bus at Q2's lead: the Kelvin pair.
+        The source bus runs back past Q1 to xgnd, where the two legs'
+        buses join and go to ground."""
+        for x in (XQ1, XQ2):
+            d, s_ = X.mosfet(ax, x, yc, None, 'plain', flip=flip,
+                             mirror=True, **MOSS)
             S.wire(ax, [d, (x, ydrain)])
             S.wire(ax, [s_, (x, ysrc)])
-        S.dot(ax, xa, ydrain)
-        S.label(ax, xa - 1.3, yc + 0.75, 'Q$_{%s1}$' % leg, size=10,
-                weight='bold')
-        S.label(ax, xb - 1.3, yc + 0.75, 'Q$_{%s2}$' % leg, size=10,
-                weight='bold')
-        gpx, gpy = gate_pin
-        XS_ = 14.2
-        #  one vertical through every branch point; a dot only where a
-        #  branch leaves its middle, not at its two corners
-        ys_ = sorted((gpy, yc, hop_y))
-        S.wire(ax, [(gpx, gpy), (XS_, gpy)])
-        S.wire(ax, [(XS_, ys_[0]), (XS_, ys_[2])])
-        S.dot(ax, XS_, ys_[1])
-        r1a, r1b = S.res(ax, 15.4, yc)
-        S.wire(ax, [(XS_, yc), r1a])
-        S.wire(ax, [r1b, (xa - 1.4, yc)])
-        # to the second, under the first one's source lead
-        r2a, r2b = S.res(ax, 15.4, hop_y)
-        S.wire(ax, [(XS_, hop_y), r2a])
-        S.wire(ax, [r2b, (xa - R, hop_y)])
-        X.hop(ax, xa, hop_y, r=R)
-        xu = xb - 1.8
-        S.wire(ax, [(xa + R, hop_y), (xu, hop_y), (xu, yc), (xb - 1.4, yc)])
-        return xa, xb
+        up = -1 if flip else 1             # towards the drain bus
+        for x, k in ((XQ1, 1), (XQ2, 2)):   # name beyond the drain bus
+            S.label(ax, x + 0.35, ydrain + up * 0.45,
+                    'Q$_{%s%d}$' % (leg, k),
+                    size=SN, ha='left', weight='bold')
+        S.wire(ax, [gd, (XG, yc), (XG, hop_y)])
+        S.dot(ax, XG, yc)
+        r2a, r2b = S.res(ax, xr2, yc)
+        S.wire(ax, [(XG, yc), r2b])
+        S.wire(ax, [r2a, (XQ2 + MGS, yc)])
+        xu = xr1 + 1.1
+        S.wire(ax, [(XG, hop_y), (XQ2 + R, hop_y)])
+        X.hop(ax, XQ2, hop_y, r=R)
+        r1a, r1b = S.res(ax, xr1, yc)
+        S.wire(ax, [(XQ2 - R, hop_y), (xu, hop_y), (xu, yc), r1b])
+        S.wire(ax, [r1a, (XQ1 + MGS, yc)])
+        for xr_ in (xr1, xr2):             # the side away from the hop run
+            S.label(ax, xr_ - 0.15, yc + up * 0.7,
+                    'R$_{G,SR}$ ' + _r(_sv('R.G_SR')), size=SN)
+        S.wire(ax, [ds, (XQ2, ydrain)])
+        S.dot(ax, XQ2, ydrain)
+        S.dot(ax, XQ1, ydrain)
+        S.wire(ax, [ss, (XQ2, ysrc)])
+        S.wire(ax, [(XQ2, ysrc), (xgnd, ysrc)])
+        S.dot(ax, XQ2, ysrc)
+        S.dot(ax, XQ1, ysrc)
 
-    # ------------------------------------------------- leg A (NS2, pin 7)
-    YDA, YSA = YDA_, 12.6
-    xa, xb = pair(14.6, YDA, YSA, c['GDA'], 'A', 13.2)
-    #  the drain bus hops the VCC run from the follower
-    S.wire(ax, [t['s_top'], (xs, YDA), (vx - R, YDA)])
-    X.hop(ax, vx, YDA, r=R)
-    S.wire(ax, [(vx + R, YDA), (xb, YDA)])
-    S.label(ax, xs + 0.15, t['s_top'][1] + 0.05, str(_pm['NS2'][0][0]),
-            size=8.6, color=GREY,
+    XGS = XQ1 - 1.6                        # the secondary ground
+    pair(YCA_, YDA, YSA, False, 'A', HOPA, c['DSA'], c['GDA'], c['SSA'], XGS)
+    S.wire(ax, [s7, (xs, YDA), (XQ2, YDA)])
+    pair(YCB, YDB, YSB, True, 'B', HOPB, c['DSB'], c['GDB'], c['SSB'], XGS)
+    S.wire(ax, [(XGS, YSA), (XGS, YSB), (XGS, YSB - 0.45)])
+    S.dot(ax, XGS, YSB)
+    sg(XGS, YSB - 0.45, 0.0)
+    S.wire(ax, [s12, (xs, YDB), (XV - R, YDB)])
+    X.hop(ax, XV, YDB, r=R)
+    S.wire(ax, [(XV + R, YDB), (XQ2, YDB)])
+    S.label(ax, TX0 + 1.6, YDB - 2.0, 'Q$_{A1}$–Q$_{B2}$  STL160N10F8, two in parallel '
+            'per leg', size=SN, color=GREY, ha='right')
+
+    return dict(c=c, XV=XV, XQ1=XQ1, XQ2=XQ2, XG=XG, TX0=TX0, TX1=TX1,
+                YVS=YVS)
+
+
+def _sr_follower(ax, K, SN, BJ, XRB, XQB, YO2):
+    """The Zener follower that makes V_CC,SR (14c.4), hung from the
+    output run at YO2: R_BSR and D_ZSR in the column XRB, Q_SR beside
+    them at XQB, the rail flagged under the emitter."""
+    vres, sg, flag = K.vres, K.sg, K.flag
+    YBS = YO2 - 3.0
+    S.dot(ax, XRB, YO2)
+    vres(XRB, YO2, YBS, 'R$_{BSR}$\n' + _r(_sv('R.BSR_sel')), side='l',
+         yl=YO2 - 1.5)
+    S.dot(ax, XRB, YBS)
+    bq, cq, eq_ = _npn(ax, XQB, YBS, **BJ)
+    S.wire(ax, [(XRB, YBS), bq])
+    S.wire(ax, [cq, (cq[0], YO2)])
+    S.dot(ax, cq[0], YO2)
+    za, zc = _zener(ax, XRB, YO2 - 4.2)
+    S.wire(ax, [(XRB, YBS), zc])
+    S.wire(ax, [za, (XRB, YO2 - 5.0)])
+    sg(XRB, YO2 - 5.0, 0.4)
+    S.label(ax, XRB - 0.75, YO2 - 4.2, 'D$_{ZSR}$\nBZT52H-C15', size=SN,
+            ha='right')
+    S.wire(ax, [eq_, (eq_[0], YO2 - 5.2)])
+    flag(eq_[0], YO2 - 5.2, 'V$_{CC,SR}$ %.1f V' % _sv('V.SR'))
+    S.label(ax, eq_[0] + 0.45, YO2 - 1.7, 'Q$_{SR}$\nFZT651', size=SN,
             ha='left')
-    S.wire(ax, [(xa, YSA), (24.2, YSA)])
-    S.dot(ax, xb, YSA)
-    S.wire(ax, [(24.2, YSA), (24.2, 11.9)])
-    S.gnd(ax, 24.2, 11.9)
-    # sense lines: DSA to the drains, SSA to the sources
-    dx_, dy_ = c['DSA']
-    S.wire(ax, [(dx_, dy_), (dx_, YDA)])
-    S.dot(ax, dx_, YDA)
-    sx_, sy_ = c['SSA']
-    S.wire(ax, [(sx_, sy_), (23.2, sy_), (23.2, YSA)])
-    S.dot(ax, 23.2, YSA)
-    S.label(ax, xb, YDA + 0.42, 'leg A: two STL160N10F8 in parallel', size=9.4,
-            color=GREY)
-    S.label(ax, 14.7, 16.1, 'one gate resistor per MOSFET', size=8.6,
-            color=GREY)
-
-    # ------------------------------------------------- leg B (NS3, pin 12)
-    YDB, YSB = 5.4, 1.6
-    xa, xb = pair(3.6, YDB, YSB, c['GDB'], 'B', 2.4)
-    #  the drain bus hops the GDB run, which has to reach the gates
-    S.wire(ax, [t['s_bot'], (xs, YDB), (14.2 - R, YDB)])
-    X.hop(ax, 14.2, YDB, r=R)
-    S.wire(ax, [(14.2 + R, YDB), (xb, YDB)])
-    S.label(ax, xs + 0.15, t['s_bot'][1] - 0.05, str(_pm['NS3'][1][0]),
-            size=8.6,
-            color=GREY, ha='left')
-    S.wire(ax, [(xa, YSB), (24.2, YSB)])
-    S.dot(ax, xb, YSB)
-    S.wire(ax, [(24.2, YSB), (24.2, 0.9)])
-    S.gnd(ax, 24.2, 0.9)
-    dx_, dy_ = c['DSB']
-    S.wire(ax, [(dx_, dy_), (dx_, YDB)])
-    S.dot(ax, dx_, YDB)
-    sx_, sy_ = c['SSB']
-    S.wire(ax, [(sx_, sy_), (23.2, sy_), (23.2, YSB)])
-    S.dot(ax, 23.2, YSB)
-    S.label(ax, 19.8, 0.95, 'leg B: two STL160N10F8 in parallel', size=9.4, color=GREY)
 
 
 def an_sr_ctrl(save, foot):
-    """The synchronous rectifier as built: one TEA2095TE, two SR MOSFETs
-    in parallel per centre-tap leg, the transformer pins as an_xfmr_pins
-    numbers them (NS2 7-9, NS3 10-12, 9 and 10 joined as the centre tap).
-
-    Laid out the way ST's EVL6790_670W SR board lays out its TEA2096: one
-    gate resistor per MOSFET, DSx and SSx run as separate sense lines to
-    the drains and the sources of their pair, VCC decoupled at the pin.
-    The second MOSFET of a pair is reached under the first one's source
-    lead, so that run crosses it with a hop.
+    """The synchronous rectifier as built, drawn as the whole-circuit page
+    draws it (_sr_stage, _sr_follower, 2026-10-04 user): the MOSFETs next
+    to the windings, the TEA2095TE to their right with each DS / SS Kelvin
+    line one straight run to the nearer MOSFET of its pair, the RC filter
+    at its VCC pin in the band above, and the Zener follower that makes
+    V_CC,SR on the output run below.  Transformer pins as an_xfmr_pins
+    (NS2 7-9, NS3 10-12, 9 and 10 the centre tap).  The symbols are the
+    whole-circuit page's size against the layout; the figure is a column
+    wide, so they print 1.7 x larger there.
     """
-    fig = plt.figure(figsize=(8.2, 7.45))
-    ax = _ax(fig, [0.01, 0.02, 0.98, 0.96], -0.4, 27.2, 0.4, 22.4)
-    _sr_block(ax)
+    import cores
+    _pm = cores.PINMAP
+    X0, X1, Y0, Y1 = -1.0, 30.0, -0.6, 27.0
+    fig = plt.figure(figsize=(8.2, 8.2 * (Y1 - Y0) / (X1 - X0)))
+    ax = _ax(fig, [0.005, 0.005, 0.99, 0.99], X0, X1, Y0, Y1)
+    span = X1 - X0
+    ax._sym_mult = 0.47 * 56.7 / span      # the whole-circuit page's symbol
+    ax._xf_mult = 0.37 * 56.7 / span       # size against its layout
+    ax._xf_clear = 0.45
+    ax._diode_k = 0.8
+    R = 0.16
+    SZ, SN = 10.2, 10.0                    # prints at 8.2 / 8.0 pt
+    MS = 6.5
+    MOS = dict(h=2.0, gate=1.7, body=True, coss=False, lws=0.72, arrow=1.5,
+               ox=1.35, wx=1.7)
+    BJ = dict(h=1.2, arrow=1.3)
+    K = _kit(ax, SN, SZ, MS)
+    # ------------------------------------------------- T1: NP1 and the two
+    #  secondaries, the leg-A drain bus at the height of pin 1's run
+    XC, YDA, YDB = 4.0, 20.8, 10.0
+    YS7 = YDA - 3.3
+    (p1, p3), (s7, s9), (s10, s12) = _xf(
+        ax, XC, [('L', YDA, YDA - 4.2, 4),
+                 ('R', YS7, YS7 - 2.0, 2), ('R', YS7 - 2.2, YS7 - 4.2, 2)])
+    xw, xs = p1[0], s7[0]
+    S.wire(ax, [s9, s10])
+    YCT = (s9[1] + s10[1]) / 2.0
+    X.nodot(ax, xs, YCT)
+    for (px, py), n_ in ((p1, _pm['NP1'][0][0]), (p3, _pm['NP1'][1][0])):
+        S.wire(ax, [(px, py), (0.0, py)])
+        _term(ax, 0.0, py, MS)
+        S.label(ax, px - 0.3, py + 0.32, str(n_), size=SN, color=GREY,
+                ha='right')
+    S.label(ax, 0.3, YDA - 4.2 - 0.9, 'to the tank', size=SN, color=GREY,
+            ha='left')
+    S.label(ax, (xw + 0.4) / 2.0, YDA - 2.1, 'NP1\n%.0f T' % _sv('N.p'),
+            size=SN)
+    S.label(ax, xs + 0.3, s7[1] + 0.32, str(_pm['NS2'][0][0]), size=SN,
+            color=GREY, ha='left')
+    S.label(ax, xs + 0.3, s12[1] - 0.3, str(_pm['NS3'][1][0]), size=SN,
+            color=GREY, ha='left')
+    S.label(ax, xs + 0.8, YS7 - 0.7, 'NS2\n%.0f T' % _sv('N.s'), size=SN,
+            ha='left')
+    S.label(ax, xs + 0.8, YS7 - 3.5, 'NS3\n%.0f T' % _sv('N.s'), size=SN,
+            ha='left')
+    S.label(ax, XC, YDA + 1.95, 'T1', size=SN, weight='bold')
+    # ------------------------------------------------- the SR stage
+    SRS = _sr_stage(ax, K, R, SN, MOS, xs, s7, s12, YCT, XC, YDA, YDB)
+    XV = SRS['XV']
+    # ------------------------------------------------- the output run and
+    #  the follower on it
+    YO2 = YDB - 4.0
+    S.wire(ax, [(XV, YCT), (XV, YO2)])
+    XVT = XC + 25.1
+    S.wire(ax, [(XV, YO2), (XVT, YO2)])
+    _term(ax, XVT, YO2, MS)
+    S.label(ax, XVT - 0.2, YO2 + 0.6, 'V$_{out}$ (C$_{out}$)', size=SN,
+            ha='right')
+    _sr_follower(ax, K, SN, BJ, XC + 11.0, XC + 12.2, YO2)
     foot(fig, 'The synchronous rectifier as built: one TEA2095TE fed by a '
-              'Zener follower, two MOSFETs in parallel per leg.')
+              'Zener follower through an RC filter, two MOSFETs in parallel '
+              'per leg.')
     save(fig, 'an_sr_ctrl')
 
 
@@ -3913,359 +4011,6 @@ def _xf(ax, xc, wind, over=None):
     return out
 
 
-def an_full_pri(save, foot):
-    """The whole converter, sheet 1 of 2: the primary side.  Every value
-    printed is read from the sheet (_sv); a block without values is a part
-    this note does not size.  Pin numbers: L6790A as ST's EVL6790_670W
-    control board numbers them, L6498LD in SO-14, T1 as an_xfmr_pins.
-
-    Nets that continue on this sheet away from their source carry a flag
-    (HVG1 ... LVG2, A, B, AUX): the drivers sit with the controller, not
-    with the switches, and the ZCD divider sits at its pin.
-    """
-    import an_pdf
-    V = an_pdf.V
-    fig = plt.figure(figsize=(8.2, 9.7))
-    ax = _ax(fig, [0.01, 0.02, 0.98, 0.96], -0.4, 27.6, 0.0, 32.4)
-    R = 0.20
-    SZ = 9.0                                        # value lettering
-    # ------------------------------------------------- mains, EMI, HVSU
-    YL, YN = 30.4, 26.4
-    for yy, nm in ((YL, 'L'), (YN, 'N')):
-        _term(ax, 0.2, yy)
-        S.label(ax, 0.2, yy + 0.5, nm, size=10)
-        S.wire(ax, [(0.2, yy), (1.0, yy)])
-    S.label(ax, 0.0, 31.9, '%.0f–%.0f Vac' % (V['Vacmin'], V['Vacmax']),
-            size=SZ, ha='left', color=GREY)
-    S.box(ax, 2.3, 28.4, 2.6, 5.4, 'EMI filter\n\nnot sized\nhere', size=9)
-    XH1, XH2 = 4.8, 6.0
-    S.wire(ax, [(3.6, YL), (6.6, YL)])
-    S.dot(ax, XH1, YL)
-    S.wire(ax, [(3.6, YN), (XH1 - R, YN)])
-    X.hop(ax, XH1, YN, r=R)
-    S.wire(ax, [(XH1 + R, YN), (6.6, YN)])
-    S.dot(ax, XH2, YN)
-    a1, k1 = S.diode(ax, XH1, 24.4, horiz=False, flip=True)
-    a2, k2 = S.diode(ax, XH2, 24.4, horiz=False, flip=True)
-    S.wire(ax, [(XH1, YL), a1])
-    S.wire(ax, [(XH2, YN), a2])
-    S.wire(ax, [k2, (XH2, 23.3), (XH1, 23.3)])
-    S.label(ax, XH1 - 0.6, 24.4, 'D$_{HV}$', size=SZ, ha='right')
-    # ------------------------------------------------- bridge, C_in, R_CS
-    S.box(ax, 7.7, 28.4, 2.2, 5.4, 'BR1', size=10, weight='bold')
-    S.label(ax, 6.85, YL + 0.35, '~', size=9, color=GREY)
-    S.label(ax, 6.85, YN + 0.35, '~', size=9, color=GREY)
-    S.label(ax, 8.55, YL + 0.35, '+', size=9, color=GREY)
-    S.label(ax, 8.55, YN + 0.35, '−', size=9, color=GREY)
-    X1, X2 = 15.6, 20.4                              # bridge legs
-    XCI, XM = 9.8, 11.6                              # C_in, rectifier (-)
-    YG = 22.6                                        # bridge return
-    S.wire(ax, [(8.8, YL), (X2, YL)])
-    S.dot(ax, XCI, YL)
-    S.dot(ax, X1, YL)
-    ca, cb = S.cap(ax, XCI, 28.4, horiz=False)
-    S.wire(ax, [(XCI, YL), cb])
-    S.wire(ax, [ca, (XCI, YN)])
-    S.label(ax, XCI + 0.45, 28.4, 'C$_{in}$\n' + _c(_sv('C.in_sel')),
-            size=SZ, ha='left')
-    S.wire(ax, [(8.8, YN), (XM, YN), (XM, YG)])
-    S.dot(ax, XCI, YN)
-    S.dot(ax, XM, YG)
-    ra, rb = S.res(ax, 12.8, YG)
-    S.wire(ax, [(XM, YG), ra])
-    S.wire(ax, [rb, (X2, YG)])
-    S.label(ax, 12.8, YG + 1.05, 'R$_{CS}$ %.0f m$\\Omega$' % _sv('R.CS'),
-            size=SZ)
-    S.label(ax, 12.8, YG - 0.75, '%.0f × %.0f m$\\Omega$'
-            % (_sv('N.RCS'), _sv('R.CS_single')), size=8.4, color=GREY)
-    XGND = 14.4
-    S.dot(ax, XGND, YG)
-    S.wire(ax, [(XGND, YG), (XGND, 21.9)])
-    _pgnd(ax, XGND, 21.9)
-    # ------------------------------------------------- full bridge
-    YH, YLO, YA, YB = 29.1, 25.0, 27.0, 26.4
-    for x, nm_h, nm_l in ((X1, 'S1', 'S2'), (X2, 'S3', 'S4')):
-        d1, s1 = X.mosfet(ax, x, YH, None, 'plain', h=1.8, gate=1.4,
-                          body=True, coss=False)
-        d2, s2 = X.mosfet(ax, x, YLO, None, 'plain', h=1.8, gate=1.4,
-                          body=True, coss=False)
-        S.wire(ax, [d1, (x, YL)])
-        S.wire(ax, [s1, d2])
-        S.wire(ax, [s2, (x, YG)])
-        S.label(ax, x + 1.15, YH + 0.55, nm_h, size=10, weight='bold',
-                ha='left')
-        S.label(ax, x + 1.15, YLO - 0.55, nm_l, size=10, weight='bold',
-                ha='left')
-    S.dot(ax, X1, YG)
-    S.label(ax, 17.9, 31.55, 'S1–S4  STO60N045DM9', size=SZ,
-            color=GREY)
-    for x, y, nm in ((X1, YH, 'HVG1'), (X1, YLO, 'LVG1'),
-                     (X2, YH, 'HVG2'), (X2, YLO, 'LVG2')):
-        _flag(ax, x - 1.4, y, nm, side='l', size=SZ)
-    # A over leg 2 to C_r, B straight on
-    S.dot(ax, X1, YA)
-    S.label(ax, X1 - 0.4, YA + 0.4, 'A', size=10, weight='bold')
-    S.wire(ax, [(X1, YA), (X2 - R, YA)])
-    X.hop(ax, X2, YA, r=R)
-    XCR = 21.95
-    ra, rb = S.cap(ax, XCR, YA)
-    S.wire(ax, [(X2 + R, YA), ra])
-    S.label(ax, XCR, YA + 0.75, 'C$_r$ ' + _c(_sv('C.r')), size=SZ)
-    S.dot(ax, X2, YB)
-    S.label(ax, 21.75, YB - 0.42, 'B', size=10, weight='bold')
-    # ------------------------------------------------- T1, primary side
-    XC = 25.6
-    (p1, p3), (p4, p6) = _xf(ax, XC, [('L', 29.2, 25.4, 5),
-                                      ('L', 24.4, 21.6, 3)])
-    xw = p1[0]
-    S.wire(ax, [rb, (23.1, YA), (23.1, p1[1]), p1])
-    S.wire(ax, [(X2, YB), (22.6, YB), (22.6, p3[1]), p3])
-    import cores
-    _pm = cores.PINMAP
-    for (px, py), n_ in ((p1, _pm['NP1'][0][0]), (p3, _pm['NP1'][1][0]),
-                         (p4, _pm['NAUX'][0][0]), (p6, _pm['NAUX'][1][0])):
-        S.label(ax, px - 0.55, py + 0.3, str(n_), size=8.4, color=GREY)
-    S.label(ax, XC + 0.35, 27.3, 'NP1\n%.0f T' % _sv('N.p'), size=SZ,
-            ha='left')
-    S.label(ax, XC + 0.35, 23.0, 'NAUX\n%.0f T' % _sv('N.aux'), size=SZ,
-            ha='left')
-    S.label(ax, 24.4, 31.85, 'T1  PQ 50/50, N97', size=SZ, weight='bold')
-    S.label(ax, 24.4, 31.15, 'L$_{open}$ %.0f $\\mu$H,  L$_r$ %.0f $\\mu$H'
-            % (_sv('L.open'), _sv('L.short')), size=8.6, color=GREY)
-    S.label(ax, 24.4, 30.5, 'NS2, NS3: sheet 2', size=8.6, color=GREY)
-    S.wire(ax, [p4, (23.1, p4[1]), (23.1, p4[1] - 0.6)])
-    _pgnd(ax, 23.1, p4[1] - 0.6)
-    # ------------------------------------------------- the controller
-    U1 = _ic(ax, 3.8, 3.6, 8.8, 19.2, 'L6790A',
-             [('T', XH1, 1, 'HVSU'), ('T', 6.3, 6, 'ISEN'),
-              ('T', 7.8, 4, 'VCC'),
-              ('R', 17.6, 16, 'HOUT1'), ('R', 16.4, 15, 'LOUT1'),
-              ('R', 11.0, 14, 'HOUT2'), ('R', 9.8, 13, 'LOUT2'),
-              ('R', 6.4, 12, 'ZCD'), ('R', 5.2, 11, 'CFG'),
-              ('R', 4.2, 10, 'BM'),
-              ('L', 17.6, 3, 'DRV_EN'), ('L', 15.6, 7, 'RT'),
-              ('L', 13.6, 8, 'CT'), ('L', 11.6, 5, 'GND'),
-              ('L', 9.0, 9, 'FB')], ref=6.2)
-    S.label(ax, 6.3, 5.5, 'U1', size=9, color=GREY)
-    S.wire(ax, [k1, U1['HVSU']])
-    S.dot(ax, XH1, 23.3)
-    YIS = 21.7
-    S.wire(ax, [(XM, YG), (XM, YIS), (U1['ISEN'][0], YIS), U1['ISEN']])
-    x_, y_ = U1['DRV_EN']
-    S.wire(ax, [(x_, y_), (2.0, y_)])
-    _term(ax, 2.0, y_)
-    S.label(ax, 1.65, y_, 'open', size=8.4, color=GREY, ha='right')
-    for pin, kind, val, nm in (('RT', 'res', _r(_sv('R.T') * 1e3), 'R$_T$'),
-                               ('CT', 'cap', _c(_sv('C.T') / 1e3), 'C$_T$')):
-        x_, y_ = U1[pin]
-        if kind == 'res':
-            a_, b_ = S.res(ax, 1.8, y_)
-        else:
-            a_, b_ = S.cap(ax, 1.8, y_)
-        S.wire(ax, [(x_, y_), b_])
-        S.wire(ax, [a_, (0.4, y_), (0.4, y_ - 0.8)])
-        _pgnd(ax, 0.4, y_ - 0.8)
-        S.label(ax, 1.8, y_ + 0.75, nm + ' ' + val, size=SZ)
-    x_, y_ = U1['GND']
-    S.wire(ax, [(x_, y_), (2.0, y_), (2.0, y_ - 0.7)])
-    _pgnd(ax, 2.0, y_ - 0.7)
-    # FB: the optocoupler transistor and C_fx
-    x_, y_ = U1['FB']
-    XFX = 2.4
-    XOC = 0.3 + 0.77                                 # opto collector
-    S.wire(ax, [(x_, y_), (XOC, y_)])
-    S.dot(ax, XFX, y_)
-    fa, fb_ = S.cap(ax, XFX, y_ - 1.3, horiz=False)
-    S.wire(ax, [(XFX, y_), fb_])
-    S.wire(ax, [fa, (XFX, y_ - 2.2)])
-    _pgnd(ax, XFX, y_ - 2.2)
-    S.label(ax, XFX + 0.1, y_ - 3.35, 'C$_{fx}$\n' + _c(_sv('C.fx')),
-            size=8.6)
-    _, oc, oe = _npn(ax, 0.3, y_ - 1.6, h=1.4)
-    S.wire(ax, [oc, (XOC, y_)])
-    S.wire(ax, [oe, (XOC, y_ - 2.8)])
-    _pgnd(ax, XOC, y_ - 2.8)
-    for dy in (0.25, -0.25):
-        ax.add_patch(FancyArrowPatch((-0.3, y_ - 1.6 + dy + 0.3),
-                                     (0.18, y_ - 1.6 + dy), arrowstyle='-|>',
-                                     mutation_scale=9, color=NAVY, lw=1.2,
-                                     zorder=5, shrinkA=0, shrinkB=0))
-    S.label(ax, -0.3, y_ + 1.05, 'Q4B, LED on sheet 2', size=8.4,
-            color=GREY, ha='left')
-    # BM and CFG to ground, ZCD from the auxiliary winding
-    for pin, xr_, key, nm in (('BM', 10.2, 'R.BM_sel', 'R$_{BM}$'),
-                              ('CFG', 12.0, 'R.CFG_sel', 'R$_{CFG}$')):
-        x_, y_ = U1[pin]
-        S.wire(ax, [(x_, y_), (xr_, y_)])
-        ra, rb = S.res(ax, xr_, y_ - 1.4, horiz=False)
-        S.wire(ax, [(xr_, y_), rb])
-        S.wire(ax, [ra, (xr_, y_ - 2.6)])
-        _pgnd(ax, xr_, y_ - 2.6)
-        if pin == 'BM':
-            S.label(ax, xr_ - 0.45, y_ - 1.4, nm + '\n'
-                    + _r(_sv(key) * 1e3), size=8.6, ha='right')
-        else:
-            S.label(ax, xr_ + 0.45, y_ - 1.4, nm + '\n'
-                    + _r(_sv(key) * 1e3), size=8.6, ha='left')
-    x_, y_ = U1['ZCD']
-    XZ = 14.4
-    S.wire(ax, [(x_, y_), (XZ, y_)])
-    S.dot(ax, XZ, y_)
-    ra, rb = S.res(ax, XZ, y_ + 1.25, horiz=False)
-    S.wire(ax, [(XZ, y_), ra])
-    S.wire(ax, [rb, (XZ, y_ + 2.2)])
-    _flag(ax, XZ, y_ + 2.2, 'AUX', side='r', size=SZ)
-    S.label(ax, XZ + 0.45, y_ + 1.15, 'R$_{ZCD,H}$ '
-            + _r(_sv('R.ZCD_H_sel') * 1e3), size=SZ, ha='left')
-    ra, rb = S.res(ax, XZ, y_ - 1.4, horiz=False)
-    S.wire(ax, [(XZ, y_), rb])
-    S.wire(ax, [ra, (XZ, y_ - 2.6)])
-    _pgnd(ax, XZ, y_ - 2.6)
-    S.label(ax, XZ + 0.45, y_ - 1.4, 'R$_{ZCD,L}$ '
-            + _r(_sv('R.ZCD_L_sel') * 1e3), size=SZ, ha='left')
-    # ------------------------------------------------- the two drivers
-    YV = 20.3                                        # the VCC rail
-    W_ = 3.3
-    def driver(x0, y0, nm, leg, hin, lin, xvcc):
-        """an L6498LD, its bootstrap capacitor and gate resistors"""
-        u = _ic(ax, x0, y0, x0 + W_, y0 + 6.0, 'L6498LD',
-                [('L', hin, 1, 'HIN'), ('L', lin, 2, 'LIN'),
-                 ('T', xvcc, 7, 'VCC'),
-                 ('B', x0 + 0.8, 3, 'SGND'), ('B', x0 + 2.5, 5, 'PGND'),
-                 ('R', y0 + 5.0, 13, 'BOOT'), ('R', y0 + 3.9, 12, 'HVG'),
-                 ('R', y0 + 2.2, 11, 'OUT'), ('R', y0 + 1.1, 6, 'LVG')],
-                ref=y0 + 1.75, size=8.6, psize=8.4)
-        S.label(ax, x0 + 1.25, y0 + 1.15, nm, size=8.6, color=GREY)
-        for pin in ('SGND', 'PGND'):
-            gx, gy = u[pin]
-            S.wire(ax, [(gx, gy), (gx, gy - 0.3)])
-            _pgnd(ax, gx, gy - 0.3)
-        xb = x0 + W_ + 1.1                           # bootstrap column
-        bx, by = u['BOOT']
-        ox, oy = u['OUT']
-        hx, hy = u['HVG']
-        lx, ly = u['LVG']
-        S.wire(ax, [(bx, by), (xb, by)])
-        S.dot(ax, xb, by)
-        cyc = (by + oy) / 2.0 - 0.45
-        ca_, cb_ = S.cap(ax, xb, cyc, horiz=False)
-        S.wire(ax, [(xb, by), cb_])
-        S.wire(ax, [ca_, (xb, oy)])
-        S.dot(ax, xb, oy)
-        S.label(ax, xb + 0.4, cyc - 0.05, _c(_sv('C.BOOT')), size=8.4,
-                ha='left')
-        xr = xb + 1.3
-        S.wire(ax, [(hx, hy), (xb - R, hy)])
-        X.hop(ax, xb, hy, r=R)
-        ra_, rb_ = S.res(ax, xr, hy)
-        S.wire(ax, [(xb + R, hy), ra_])
-        S.wire(ax, [rb_, (xr + 1.0, hy)])
-        _flag(ax, xr + 1.0, hy, 'HVG' + leg, side='r', size=8.6)
-        S.wire(ax, [(ox, oy), (xr + 1.0, oy)])
-        _flag(ax, xr + 1.0, oy, 'A' if leg == '1' else 'B', side='r',
-              size=8.6)
-        ra_, rb_ = S.res(ax, xr, ly)
-        S.wire(ax, [(lx, ly), ra_])
-        S.wire(ax, [rb_, (xr + 1.0, ly)])
-        _flag(ax, xr + 1.0, ly, 'LVG' + leg, side='r', size=8.6)
-        S.label(ax, xr, hy + 0.55, _r(_sv('R.G')), size=8.4)
-        S.label(ax, xr, ly - 0.55, _r(_sv('R.G')), size=8.4)
-        return u, xb, by
-    u2, xb2, by2 = driver(10.5, 13.3, 'U2', '1', U1['HOUT1'][1],
-                          U1['LOUT1'][1], 11.4)
-    u3, xb3, by3 = driver(19.3, 6.2, 'U3', '2', U1['HOUT2'][1],
-                          U1['LOUT2'][1], 20.2)
-    for a_, b_ in ((U1['HOUT1'], u2['HIN']), (U1['LOUT1'], u2['LIN']),
-                   (U1['HOUT2'], u3['HIN']), (U1['LOUT2'], u3['LIN'])):
-        S.wire(ax, [a_, b_])
-    # ------------------------------------------------- V_CC rail
-    #  from the controller across to leg 2's driver, which takes it in at
-    #  the regulator's output run YO
-    XO, YO = 20.2, 14.0
-    S.wire(ax, [U1['VCC'], (7.8, YV), (XO, YV), (XO, YO), u3['VCC']])
-    S.wire(ax, [u2['VCC'], (11.4, YV)])
-    S.dot(ax, 11.4, YV)
-    S.label(ax, 17.6, YV + 0.4, 'V$_{CC}$', size=9.0)
-    da, dk = S.diode(ax, xb2, (YV + by2) / 2.0 + 0.05, horiz=False,
-                     flip=True)
-    S.wire(ax, [(xb2, YV), da])
-    S.wire(ax, [dk, (xb2, by2)])
-    S.dot(ax, xb2, YV)
-    S.label(ax, xb2 + 0.45, (YV + by2) / 2.0, 'D$_{BS}$', size=8.6,
-            ha='left')
-    da, dk = S.diode(ax, xb3, (YO + by3) / 2.0, horiz=False, flip=True)
-    S.wire(ax, [(xb3, YO), da])
-    S.wire(ax, [dk, (xb3, by3)])
-    S.label(ax, xb3 - 0.45, (YO + by3) / 2.0, 'D$_{BS}$', size=8.6,
-            ha='right')
-    # ------------------------------------------------- V_CC regulator
-    N6 = (xw, 20.9)
-    S.wire(ax, [p6, N6])
-    S.dot(ax, *N6)
-    S.wire(ax, [N6, (xw + 0.9, N6[1])])
-    _flag(ax, xw + 0.9, N6[1], 'AUX', side='r', size=SZ)
-    da, dk = S.diode(ax, xw, 19.95, horiz=False, flip=True)
-    S.wire(ax, [N6, da])
-    CA = (xw, 19.0)
-    S.wire(ax, [dk, CA])
-    S.dot(ax, *CA)
-    S.label(ax, xw + 0.45, 19.95, 'D$_{aux}$', size=8.6, ha='left')
-    XCA = 26.0
-    S.wire(ax, [CA, (XCA, CA[1])])
-    ca_, cb_ = S.cap(ax, XCA, 18.0, horiz=False)
-    S.wire(ax, [(XCA, CA[1]), cb_])
-    S.wire(ax, [ca_, (XCA, 17.0)])
-    _pgnd(ax, XCA, 17.0)
-    S.label(ax, XCA + 0.45, 18.0, 'C$_{aux}$', size=8.6, ha='left')
-    XRZ = 23.8
-    bq, cq, eq_ = _npn(ax, 22.95, 16.9, h=1.4, left=True)
-    S.wire(ax, [CA, (cq[0], CA[1]), cq])
-    S.dot(ax, XRZ, CA[1])
-    ra_, rb_ = S.res(ax, XRZ, 17.95, horiz=False)
-    S.wire(ax, [(XRZ, CA[1]), rb_])
-    BN = (XRZ, 16.9)
-    S.wire(ax, [ra_, BN])
-    S.dot(ax, *BN)
-    S.wire(ax, [BN, bq])
-    za, zc = _zener(ax, XRZ, 15.9)
-    S.wire(ax, [BN, zc])
-    S.wire(ax, [za, (XRZ, 15.1)])
-    _pgnd(ax, XRZ, 15.1)
-    S.label(ax, XRZ + 0.42, 17.95, 'R$_{BZ}$\n' + _r(_sv('R.BZ_sel')),
-            size=8.6, ha='left')
-    S.label(ax, XRZ + 0.75, 15.9, 'D$_Z$ %.0f V' % _sv('V.DZ_sel'),
-            size=8.6, ha='left')
-    S.label(ax, cq[0] - 0.3, 17.6, 'Q$_{VCC}$', size=8.6, ha='right')
-    ya, yk = S.diode(ax, eq_[0], 15.2, horiz=False, flip=True)
-    S.wire(ax, [eq_, ya])
-    S.wire(ax, [yk, (eq_[0], YO)])
-    S.wire(ax, [(XO, YO), (xb3, YO)])
-    S.dot(ax, XO, YO)
-    S.dot(ax, eq_[0], YO)
-    S.label(ax, eq_[0] - 0.4, 15.2, 'D$_{byp}$', size=8.4, ha='right')
-    # C_VCC and the pin ceramic, on the output run
-    for xc_ in (25.6, 27.0):
-        ca_, cb_ = S.cap(ax, xc_, YO - 1.0, horiz=False)
-        S.wire(ax, [(xc_, YO), cb_])
-        S.wire(ax, [ca_, (xc_, YO - 1.9)])
-        _pgnd(ax, xc_, YO - 1.9)
-    S.wire(ax, [(xb3, YO), (27.0, YO)])
-    S.dot(ax, xb3, YO)
-    S.dot(ax, 25.6, YO)
-    S.label(ax, 25.6, YO + 0.45, 'C$_{VCC}$ %s $\\parallel$ %s'
-            % (_c(_sv('C.VCC_sel') * 1e3), _c(_sv('C.VCC_hf'))), size=8.4)
-    # ------------------------------------------------- legend
-    S.label(ax, 27.3, 3.2, 'Sheet 1 of 2:  the primary side', size=10,
-            weight='bold', ha='right')
-    _pgnd(ax, 18.6, 2.15)
-    S.label(ax, 19.1, 2.0, 'primary ground: the bridge return', size=8.6,
-            ha='left', color=GREY)
-    _term(ax, 18.6, 1.1)
-    S.label(ax, 19.1, 1.1, 'net continues at the flag of the same name',
-            size=8.6, ha='left', color=GREY)
-    save(fig, 'an_full_pri')
-
-
 def _tl431(ax, x, y):
     """A TL431 as its datasheet draws it: a shunt-regulator triangle, cathode
     up, with REF taken off its left side.  -> (anode, cathode, REF end)"""
@@ -4274,124 +4019,6 @@ def _tl431(ax, x, y):
     ax.plot([x - 0.72 * s * 0.5, x - 0.95], [y, y], color=NAVY, lw=1.6,
             zorder=3)
     return a, c, (x - 0.95, y)
-
-
-def an_full_sec(save, foot):
-    """The whole converter, sheet 2 of 2: the secondary side.  The SR stage
-    is an_sr_ctrl's own drawing (the secondary windings alone); below it the
-    output bank and the voltage loop, joined to it by the V_out flags.
-    The LED rail V_Z is a requirement of the loop design and is not sized
-    in this note, so it is a block."""
-    import an_pdf
-    V = an_pdf.V
-    fig = plt.figure(figsize=(8.2, 9.7))
-    top = _ax(fig, [0.01, 0.335, 0.98, 0.66], -0.4, 27.2, 0.4, 22.4)
-    _sr_block(top, full=True)
-    ax = _ax(fig, [0.01, 0.005, 0.98, 0.325], -0.4, 27.2, 0.0, 10.4)
-    R = 0.20
-    YO, YG = 9.6, 0.8                                # V_out, secondary 0 V
-    _flag(ax, 0.2, YO, 'V$_{out}$', side='u', size=9.4)
-    S.wire(ax, [(0.2, YO), (26.6, YO)])
-    _term(ax, 26.6, YO)
-    S.label(ax, 26.6, YO + 0.5, '+%.0f V, %.1f A' % (V['Vout'], V['Iout']),
-            size=9.4, ha='right')
-    S.wire(ax, [(1.2, YG), (26.6, YG)])
-    _term(ax, 26.6, YG)
-    S.label(ax, 26.6, YG + 0.5, 'output return', size=9.4, ha='right')
-    S.gnd(ax, 1.2, YG)
-    # the output bank
-    for x, txt_ in ((1.8, 'C$_{out}$\n%.0f × %.0f $\\mu$F\n= %.1f mF'
-                     % (_sv('n.C'), _sv('C.single'), _sv('C.out'))),
-                    (6.4, 'C$_{HF}$\n%.0f $\\mu$F' % _sv('C.ceramic'))):
-        ca, cb = S.cap(ax, x, 5.2, horiz=False)
-        S.wire(ax, [(x, YO), cb])
-        S.wire(ax, [ca, (x, YG)])
-        S.dot(ax, x, YO)
-        S.dot(ax, x, YG)
-        S.label(ax, x + 0.45, 5.2, txt_, size=8.8, ha='left')
-    S.label(ax, 1.8 - 0.45, 5.7, '+', size=9, ha='right')
-    # the divider and the TL431
-    XRI, YREF = 10.6, 3.0
-    ra, rb = S.res(ax, XRI, 6.3, horiz=False)
-    S.wire(ax, [(XRI, YO), rb])
-    S.wire(ax, [ra, (XRI, YREF)])
-    S.dot(ax, XRI, YO)
-    S.dot(ax, XRI, YREF)
-    S.label(ax, XRI - 0.45, 6.3, 'R$_I$\n' + _r(_sv('R.I') * 1e3),
-            size=8.8, ha='right')
-    ra, rb = S.res(ax, XRI, 1.9, horiz=False)
-    S.wire(ax, [(XRI, YREF), rb])
-    S.wire(ax, [ra, (XRI, YG)])
-    S.dot(ax, XRI, YG)
-    S.label(ax, XRI - 0.45, 1.9, 'R$_O$\n' + _r(_sv('R.o') * 1e3),
-            size=8.8, ha='right')
-    XK = 15.6
-    ta, tc, tr = _tl431(ax, XK, YREF)
-    S.wire(ax, [(XRI, YREF), tr])
-    S.wire(ax, [ta, (XK, YG)])
-    S.dot(ax, XK, YG)
-    S.label(ax, XK + 0.6, YREF - 0.55, 'Q5  TL431B', size=8.8, ha='left')
-    # compensation between REF and K
-    XL_, YF1, YF2 = 11.8, 5.6, 4.4
-    S.wire(ax, [(XL_, YREF), (XL_, YF1)])
-    S.dot(ax, XL_, YREF)
-    S.dot(ax, XL_, YF2)
-    ca, cb = S.cap(ax, 13.7, YF1)
-    S.wire(ax, [(XL_, YF1), ca])
-    S.wire(ax, [cb, (XK, YF1)])
-    S.label(ax, 13.7, YF1 + 0.5, 'C$_{Fo}$ ' + _c(_sv('C.Fo')), size=8.6)
-    ra, rb = S.res(ax, 13.1, YF2)
-    ca, cb = S.cap(ax, 14.7, YF2)
-    S.wire(ax, [(XL_, YF2), ra])
-    S.wire(ax, [rb, ca])
-    S.wire(ax, [cb, (XK, YF2)])
-    S.label(ax, 13.1, YF2 - 0.55, 'R$_F$ ' + _r(_sv('R.F') * 1e3), size=8.6)
-    S.label(ax, 15.25, YF2 + 0.5, 'C$_F$ ' + _c(_sv('C.F')), size=8.6,
-            ha='right')
-    # K up to the LED; R_P across it on the left, R_B from the V_Z rail
-    YLC, YLA = 6.8, 8.7
-    S.wire(ax, [tc, (XK, YLC)])
-    S.dot(ax, XK, YF1)
-    S.dot(ax, XK, YF2)
-    la, lk = S.diode(ax, XK, (YLC + YLA) / 2.0, horiz=False, flip=True)
-    S.wire(ax, [(XK, YLA), la])
-    S.wire(ax, [lk, (XK, YLC)])
-    S.dot(ax, XK, YLC)
-    S.dot(ax, XK, YLA)
-    ym = (YLC + YLA) / 2.0
-    for dy in (0.25, -0.2):
-        ax.add_patch(FancyArrowPatch((XK + 0.6, ym + dy),
-                                     (XK + 1.05, ym + dy + 0.3),
-                                     arrowstyle='-|>', mutation_scale=9,
-                                     color=NAVY, lw=1.2, zorder=5,
-                                     shrinkA=0, shrinkB=0))
-    S.label(ax, XK + 1.25, ym - 0.1, 'Q4A LED', size=8.6, ha='left',
-            color=GREY)
-    XP = XK - 1.7
-    S.wire(ax, [(XK, YLA), (XP, YLA)])
-    S.wire(ax, [(XK, YLC), (XP, YLC)])
-    ra, rb = S.res(ax, XP, ym, horiz=False)
-    S.wire(ax, [(XP, YLA), rb])
-    S.wire(ax, [ra, (XP, YLC)])
-    S.label(ax, XP - 0.45, ym, 'R$_P$\n' + _r(_sv('R.P') * 1e3), size=8.6,
-            ha='right')
-    XRB_ = 19.6
-    ra, rb = S.res(ax, XRB_, YLA)
-    S.wire(ax, [(XK, YLA), ra])
-    S.label(ax, XRB_, YLA - 0.55, 'R$_B$ ' + _r(_sv('R.B') * 1e3), size=8.6)
-    S.box(ax, 23.2, 6.4, 3.0, 2.0,
-          'V$_Z$ %.0f V rail\nnot sized here' % _sv('V.Z'), size=8.6)
-    S.wire(ax, [rb, (21.0, YLA), (21.0, 6.4), (21.7, 6.4)])
-    S.wire(ax, [(23.2, YO), (23.2, 7.4)])
-    S.dot(ax, 23.2, YO)
-    S.wire(ax, [(23.2, 5.4), (23.2, YG)])
-    S.dot(ax, 23.2, YG)
-    S.label(top, 27.0, 21.6, 'Sheet 2 of 2:  the secondary side', size=10,
-            weight='bold', ha='right')
-    S.gnd(top, 21.4, 20.75)
-    S.label(top, 21.9, 20.7, 'secondary ground', size=8.6, ha='left',
-            color=GREY)
-    save(fig, 'an_full_sec')
 
 
 def an_full(save, foot):
@@ -4429,9 +4056,9 @@ def an_full(save, foot):
     ax._xf_clear = 0.45
     ax._diode_k = 0.8
     R = 0.16
-    SZ, SN = 9.3, 9.1                    # value and name lettering: the
+    SZ, SN = 9.5, 9.3                    # value and name lettering: the
     #                                      page prints this drawing at
-    #                                      0.72, so 9.1 pt lands at 6.5,
+    #                                      0.70, so 9.3 pt lands at 6.5,
     #                                      figcheck's floor (2026-10-04)
     MS = 5.2                             # flag circles, 0.8 x the default
     MH, MG = 2.0, 1.7                    # MOSFET height and gate lead
@@ -4439,63 +4066,9 @@ def an_full(save, foot):
                ox=1.35, wx=1.7)
     BJ = dict(h=1.2, arrow=1.3)
 
-    def vres(x, ytop, ybot, label=None, side='r', yl=None):
-        a_, b_ = S.res(ax, x, (ytop + ybot) / 2.0, horiz=False)
-        S.wire(ax, [(x, ytop), b_])
-        S.wire(ax, [a_, (x, ybot)])
-        if label:
-            yy = (ytop + ybot) / 2.0 if yl is None else yl
-            S.label(ax, x + (0.45 if side == 'r' else -0.45), yy, label,
-                    size=SZ, ha='left' if side == 'r' else 'right')
-
-    def vcap(x, ytop, ybot, label=None, side='r', yl=None):
-        a_, b_ = S.cap(ax, x, (ytop + ybot) / 2.0, horiz=False)
-        S.wire(ax, [(x, ytop), b_])
-        S.wire(ax, [a_, (x, ybot)])
-        if label:
-            yy = (ytop + ybot) / 2.0 if yl is None else yl
-            S.label(ax, x + (0.5 if side == 'r' else -0.5), yy, label,
-                    size=SZ, ha='left' if side == 'r' else 'right')
-
-    def ecap(x, ytop, ybot, label=None, side='r', yl=None):
-        """an electrolytic: straight plate on the + side (top), curved
-        plate below, a + sign beside the top plate"""
-        import numpy as np
-        yc_ = (ytop + ybot) / 2.0
-        s_, g_ = X._cap_size(ax, None, None)
-        ax.plot([x - s_, x + s_], [yc_ + g_] * 2, color=NAVY, lw=2.2,
-                zorder=4)
-        th = np.linspace(np.radians(35), np.radians(145), 30)
-        rr = s_ / np.cos(np.radians(35))
-        yc0 = yc_ - g_ - rr                # apex on the plate line
-        ax.plot(x + rr * np.cos(th), yc0 + rr * np.sin(th), color=NAVY,
-                lw=2.2, zorder=4)
-        X.note_symbol(ax, 'cap', x, yc_, 2 * s_, 2 * g_ + 0.25)
-        ax.text(x - s_ - 0.14, yc_ + g_ + 0.06, '+', size=9.5, color=NAVY,
-                ha='right', va='bottom', zorder=5)
-        S.wire(ax, [(x, ytop), (x, yc_ + g_)])
-        S.wire(ax, [(x, yc_ - g_), (x, ybot)])
-        if label:
-            yy = yc_ if yl is None else yl
-            S.label(ax, x + (0.65 if side == 'r' else -0.65), yy, label,
-                    size=SZ, ha='left' if side == 'r' else 'right')
-
-    def pg(x, y, lead=0.35):              # primary ground on a short lead
-        if lead:
-            S.wire(ax, [(x, y), (x, y - lead)])
-        _pgnd(ax, x, y - lead)
-
-    def sg(x, y, lead=0.3):               # secondary ground
-        if lead:
-            S.wire(ax, [(x, y), (x, y - lead)])
-        y -= lead
-        s_ = 0.30
-        for k, w in enumerate((1.0, 0.62, 0.28)):
-            ax.plot([x - s_ * w, x + s_ * w], [y - k * 0.17] * 2,
-                    color=NAVY, lw=1.6, zorder=3)
-
-    def flag(x, y, name, side='r'):
-        _flag(ax, x, y, name, side=side, size=SN, ms=MS)
+    K = _kit(ax, SN, SZ, MS)
+    vres, vcap, ecap, pg, sg, flag = (K.vres, K.vcap, K.ecap, K.pg, K.sg,
+                                      K.flag)
 
     def switch(xa, ya, xb, yb, lean=-1):
         """a normally-open switch between two points, in grey: not on the
@@ -4659,7 +4232,7 @@ def an_full(save, foot):
               ('B', 11.0, 10, 'BM'),
               ('L', 25.2, 3, 'DRV_EN'), ('L', 21.8, 7, 'RT'),
               ('L', 18.4, 8, 'CT'), ('L', 15.4, 5, 'GND'),
-              ('L', 11.6, 9, 'FB')], ref=18.8, size=SN, psize=SN, pdy=0.1,
+              ('L', 11.6, 9, 'FB')], ref=18.8, size=SN, psize=SN, pdy=0.16,
              tsize=9.4, tpad=0.45)
     S.label(ax, 8.3, 18.0, 'U1', size=SN, color=GREY)
     S.wire(ax, [k1, U1['HVSU']])
@@ -4736,7 +4309,8 @@ def an_full(save, foot):
 
     # ================================================= drivers U2, U3
     YV, XO, YO = 28.0, 29.8, 15.4
-    W_, H_ = 4.0, 9.8                      # 0.9 x the first drawing's width;
+    W_, H_ = 4.8, 9.8                      # wide enough for SGND and PGND
+    #                                        at 9.3 pt (2026-10-04);
     #                                        tall enough for the gate networks
     #                                        (R_G and the turn-off path) to
     #                                        sit apart from each other
@@ -4745,18 +4319,19 @@ def an_full(save, foot):
     def driver(x0, y0, nm, leg):
         u = _ic(ax, x0, y0, x0 + W_, y0 + H_, 'L6498LD',
                 [('L', y0 + 7.6, 1, 'HIN'), ('L', y0 + 6.5, 2, 'LIN'),
-                 ('T', x0 + 2.0, 7, 'VCC'),
-                 ('B', x0 + 1.1, 3, 'SGND'), ('B', x0 + 2.9, 5, 'PGND'),
+                 ('T', x0 + 2.4, 7, 'VCC'),
+                 ('B', x0 + 1.1, 3, 'SGND'), ('B', x0 + 3.7, 5, 'PGND'),
                  ('R', y0 + 8.6, 13, 'BOOT'), ('R', y0 + 7.2, 11, 'OUT'),
                  ('R', y0 + 5.8, 12, 'HVG'), ('R', y0 + 1.6, 6, 'LVG')],
-                size=SN, psize=SN, tpad=0.45, title=False, pdy=0.1)
+                size=SN, psize=SN, tpad=0.45, title=False, pdy=0.16)
         S.label(ax, x0 - 0.35, y0 + 4.3, nm, size=SN, weight='bold',
                 ha='right')
         S.label(ax, x0 - 0.35, y0 + 3.7, 'L6498LD', size=SN, ha='right')
         for pin in ('SGND', 'PGND'):
             gx, gy = u[pin]
             pg(gx, gy, 0.15)
-        xb = x0 + W_ + 1.26
+        xb = x0 + W_ + 1.5                 # the bootstrap column, clear of
+        #                                    the BOOT pin number
         bx, by = u['BOOT']
         ox, oy = u['OUT']
         hx, hy = u['HVG']
@@ -4787,7 +4362,7 @@ def an_full(save, foot):
             flag(xf, yy, nmg + leg)
             S.dot(ax, xn1, yy)
             S.dot(ax, xn2, yy)
-            S.label(ax, xr, yy + 0.65, 'R$_G$ ' + _r(_sv('R.G')), size=SN)
+            S.label(ax, xr, yy + 0.72, 'R$_G$ ' + _r(_sv('R.G')), size=SN)
             yb = yy - 2.0
             S.wire(ax, [(xn1, yy), (xn1, yb)])
             S.wire(ax, [(xn2, yy), (xn2, yb)])
@@ -4797,7 +4372,7 @@ def an_full(save, foot):
             r2a, r2b = S.res(ax, xr2, yb)
             S.wire(ax, [da_, r2a])
             S.wire(ax, [r2b, (xn2, yb)])
-            S.label(ax, xr2, yb - 0.65, 'R$_{G,off}$ ' + _r(_sv('R.G_off')),
+            S.label(ax, xr2, yb - 0.72, 'R$_{G,off}$ ' + _r(_sv('R.G_off')),
                     size=SN)
         return u, xb, by
     u2, xb2, by2 = driver(XD, 17.2, 'U2', '1')    # HIN level with HOUT1
@@ -4864,113 +4439,10 @@ def an_full(save, foot):
             + ' $\\parallel$ ' + _c(_sv('C.VCC_hf')), size=SN, ha='left')
 
     # ================================================= SR stage
-    #  Mirrored: the MOSFETs next to the windings, the IC to their right,
-    #  gates on the right of each MOSFET (mirror=True).  Leg A upright
-    #  with its drain bus at the height of NP1's pin-1 run, leg B upside
-    #  down with its drain bus at the height of the primary return rail
-    #  YG - the two sides of T1 wired at the same heights.  The IC's DS
-    #  pins sit at the bus heights and its SS pins at the source-bus
-    #  heights, so each Kelvin wire is one straight run to the nearer
-    #  MOSFET (Q_A2, Q_B2).
-    XV = 40.0                              # V_out: centre tap straight down
-    S.wire(ax, [(xs, YCT), (XV, YCT)])
-    S.label(ax, XV - 0.15, YCT + 0.4, '%d, %d' % (_pm['NS2'][1][0],
-                                                   _pm['NS3'][0][0]),
-            size=SN, color=GREY, ha='right')
-    YDA, YCA_, YSA, HOPA = YT1, 35.7, 33.2, 34.0
-    YDB, YCB, YSB, HOPB = 27.0, 29.1, 31.6, 30.8
-    XQ1, XQ2 = 43.6, 49.6
-    MGS = 2.1                              # gate lead: the resistor clear
-    #                                        of the gate
-    MOSS = dict(MOS, gate=MGS)
-    xr1, xr2 = XQ1 + MGS + 0.9, XQ2 + MGS + 0.9
-    XG = xr2 + 1.1                         # where the gate run splits
-    TX0, TX1 = XG + 1.6, XG + 6.7
-    TY0, TY1 = YDB - 1.0, YDA + 1.0        # room for the supply pins' names
-    c = _ic(ax, TX0, TY0, TX1, TY1, 'TEA2095TE',
-            [('L', YDA, 6, 'DSA'), ('L', YCA_, 8, 'GDA'),
-             ('L', YSA, 5, 'SSA'), ('L', YSB, 4, 'SSB'),
-             ('L', YCB, 1, 'GDB'), ('L', YDB, 3, 'DSB'),
-             ('T', TX0 + 3.6, 7, 'VCC'), ('B', TX0 + 3.6, 2, 'GND')],
-            size=SN, psize=SN, tpad=0.45, title=False, pdy=0.1)
-    #  name in the box's free right half, between the SSA and SSB rows
-    S.label(ax, TX0 + 3.1, (YSA + YSB) / 2.0 + 0.3, 'U7', size=SN,
-            weight='bold')
-    S.label(ax, TX0 + 3.1, (YSA + YSB) / 2.0 - 0.3, 'TEA2095TE', size=SN)
-    gx_, gy_ = c['GND']
-    S.wire(ax, [(gx_, gy_), (gx_, gy_ - 0.4)])
-    sg(gx_, gy_ - 0.4, 0.0)
-    #  VCC: up from the top pin into the band above the box - C_SR and its
-    #  bulk to ground, R_SR in the run out to the net flag: the RC filter
-    #  at the pin (14c.3), with air round every part
-    vx, vy = c['VCC']
-    YVS = 41.9
-    XSRb, XSR, XRS_, XFL = TX0 + 1.2, TX0 - 0.4, TX0 - 2.8, TX0 - 4.8
-    S.wire(ax, [(vx, vy), (vx, YVS), (XSR, YVS)])
-    for xc_ in (XSRb, XSR):                # each on a lead of its own
-        S.dot(ax, xc_, YVS)
-        vcap(xc_, YVS, YVS - 1.6)
-        sg(xc_, YVS - 1.6, 0.3)
-    S.label(ax, XSR - 0.6, YVS - 0.8, 'C$_{SR}$ ' + _c(_sv('C.SR'))
-            + ' $\\parallel$ ' + _c(_sv('C.SRb') * 1e3), size=SN, ha='right')
-    ra_, rb_ = S.res(ax, XRS_, YVS)
-    S.wire(ax, [(XSR, YVS), rb_])
-    S.wire(ax, [ra_, (XFL, YVS)])
-    S.label(ax, XRS_, YVS + 0.7, 'R$_{SR}$ ' + _r(_sv('R.SR')), size=SN)
-    flag(XFL, YVS, 'V$_{CC,SR}$', side='l')
-
-    def pair(yc, ydrain, ysrc, flip, leg, hop_y, ds, gd, ss, xgnd):
-        """two MOSFETs, each with its gate resistor on its own gate lead.
-        The gate run from the IC splits once at XG: straight on through
-        R_G2 into Q2, and a branch at hop_y that passes Q2's source lead
-        with a hop and comes up into R_G1.  DS lands on the drain bus at
-        Q2's lead, SS on the source bus at Q2's lead: the Kelvin pair.
-        The source bus runs back past Q1 to xgnd, where the two legs'
-        buses join and go to ground."""
-        for x in (XQ1, XQ2):
-            d, s_ = X.mosfet(ax, x, yc, None, 'plain', flip=flip,
-                             mirror=True, **MOSS)
-            S.wire(ax, [d, (x, ydrain)])
-            S.wire(ax, [s_, (x, ysrc)])
-        up = -1 if flip else 1             # towards the drain bus
-        for x, k in ((XQ1, 1), (XQ2, 2)):   # name beyond the drain bus
-            S.label(ax, x + 0.35, ydrain + up * 0.45,
-                    'Q$_{%s%d}$' % (leg, k),
-                    size=SN, ha='left', weight='bold')
-        S.wire(ax, [gd, (XG, yc), (XG, hop_y)])
-        S.dot(ax, XG, yc)
-        r2a, r2b = S.res(ax, xr2, yc)
-        S.wire(ax, [(XG, yc), r2b])
-        S.wire(ax, [r2a, (XQ2 + MGS, yc)])
-        xu = xr1 + 1.1
-        S.wire(ax, [(XG, hop_y), (XQ2 + R, hop_y)])
-        X.hop(ax, XQ2, hop_y, r=R)
-        r1a, r1b = S.res(ax, xr1, yc)
-        S.wire(ax, [(XQ2 - R, hop_y), (xu, hop_y), (xu, yc), r1b])
-        S.wire(ax, [r1a, (XQ1 + MGS, yc)])
-        for xr_ in (xr1, xr2):             # the side away from the hop run
-            S.label(ax, xr_ - 0.15, yc + up * 0.7,
-                    'R$_{G,SR}$ ' + _r(_sv('R.G_SR')), size=SN)
-        S.wire(ax, [ds, (XQ2, ydrain)])
-        S.dot(ax, XQ2, ydrain)
-        S.dot(ax, XQ1, ydrain)
-        S.wire(ax, [ss, (XQ2, ysrc)])
-        S.wire(ax, [(XQ2, ysrc), (xgnd, ysrc)])
-        S.dot(ax, XQ2, ysrc)
-        S.dot(ax, XQ1, ysrc)
-
-    XGS = XQ1 - 1.6                        # the secondary ground
-    pair(YCA_, YDA, YSA, False, 'A', HOPA, c['DSA'], c['GDA'], c['SSA'], XGS)
-    S.wire(ax, [s7, (xs, YDA), (XQ2, YDA)])
-    pair(YCB, YDB, YSB, True, 'B', HOPB, c['DSB'], c['GDB'], c['SSB'], XGS)
-    S.wire(ax, [(XGS, YSA), (XGS, YSB), (XGS, YSB - 0.45)])
-    S.dot(ax, XGS, YSB)
-    sg(XGS, YSB - 0.45, 0.0)
-    S.wire(ax, [s12, (xs, YDB), (XV - R, YDB)])
-    X.hop(ax, XV, YDB, r=R)
-    S.wire(ax, [(XV + R, YDB), (XQ2, YDB)])
-    S.label(ax, TX0 + 1.6, 25.0, 'Q$_{A1}$–Q$_{B2}$  STL160N10F8, two in parallel '
-            'per leg', size=SN, color=GREY, ha='right')
+    #  the MOSFETs next to the windings, the IC to their right, the
+    #  leg-A drain bus at the height of NP1's pin-1 run (_sr_stage)
+    SRS = _sr_stage(ax, K, R, SN, MOS, xs, s7, s12, YCT, XC, YT1, 27.0)
+    XV = SRS['XV']
 
     # ================================================= output bank
     YO2, YT = 23.0, 15.2
@@ -4995,25 +4467,7 @@ def an_full(save, foot):
         S.label(ax, x + (0.65 if fn_ is ecap else 0.5), 21.6, txt_, size=SZ,
                 ha='left')
     # the SR supply follower (14c.4)
-    XRB, XQB, YBS = 52.8, 54.0, 20.0
-    S.dot(ax, XRB, YO2)
-    vres(XRB, YO2, YBS, 'R$_{BSR}$\n' + _r(_sv('R.BSR_sel')), side='l',
-         yl=21.5)
-    S.dot(ax, XRB, YBS)
-    bq, cq, eq_ = _npn(ax, XQB, YBS, **BJ)
-    S.wire(ax, [(XRB, YBS), bq])
-    S.wire(ax, [cq, (cq[0], YO2)])
-    S.dot(ax, cq[0], YO2)
-    za, zc = _zener(ax, XRB, 18.8)
-    S.wire(ax, [(XRB, YBS), zc])
-    S.wire(ax, [za, (XRB, 18.0)])
-    sg(XRB, 18.0, 0.4)
-    S.label(ax, XRB - 0.75, 18.8, 'D$_{ZSR}$\nBZT52H-C15', size=SN,
-            ha='right')
-    S.wire(ax, [eq_, (eq_[0], 17.8)])
-    flag(eq_[0], 17.8, 'V$_{CC,SR}$ %.1f V' % _sv('V.SR'))
-    S.label(ax, eq_[0] + 0.45, 21.3, 'Q$_{SR}$\nFZT651', size=SN,
-            ha='left')
+    _sr_follower(ax, K, SN, BJ, XC + 17.0, XC + 18.2, YO2)
 
     # ================================================= voltage loop
     #  R_I hangs straight off the V_out column; the LED rail's feed R_Z
@@ -5110,5 +4564,4 @@ FIGS = {'an_rac': an_rac, 'an_integrated': an_integrated,
         'an_flux_steps': an_flux_steps, 'an_dc_overlap': an_dc_overlap,
         'an_xfmr_read': an_xfmr_read, 'an_xfmr_pins': an_xfmr_pins,
         'an_gate_drive': an_gate_drive, 'an_sr_ctrl': an_sr_ctrl,
-        'an_full_pri': an_full_pri, 'an_full_sec': an_full_sec,
         'an_full': an_full}
