@@ -9,6 +9,7 @@
 | `Smath/variants/L6790A_7p5to1.sm` | 3코어 설계점의 SMath 시트(47쪽, 노란 입력 130개). `check_sm` OK(2026-10-07 재확인). 시트 §14c(보조권선 VCC)까지 있고 시트 §14c.1–14c.5(게이트 드라이버 · 기동 · SR · 열)는 없다 |
 | `Calculation Excel Sheet/variants/L6790_workbook_7p5to1.xlsx` | ST 툴 수정본, 옛 탱크 |
 | `Calculation Excel Sheet/variants/Transformer_Spec_7p5to1.xlsx` | 벤더 사양서 — **유닛 하나 기준**, 단자는 26OP-LM83W 승인원 방식(1–2 / 3–5 / 4–6 / a–b). 코어 · 보빈은 지정하지 않는다 |
+| `Calculation Excel Sheet/variants/Transformer_Spec_7p5to1_asbuilt.xlsx` | **실제 제작된 트랜스포머의 간단 사양서**(2026-10-07) — 벤더 핀(1차 1–4 · NS2 5–9 · NS3 7–11 · NAUX 2–3, 4핀 + 8핀 보빈), 와이어(Litz 0.1 × 130 / 0.1 × 110 bifilar / ø0.4), 코어 도면(EE 42 × 36 × 19, A_e 114 · l_e 58.82 · V_e 6706, 재질 미기재), 측정 3항(10.33 · 3.67 µH ±10 %, DC overlap 16 A) + 반쪽 누설 기록 + 극성 시험. 값은 `Transformer_Spec_7p5to1.xlsx` 에서 읽어 넣었다(손으로 적지 않음). 벤더 사본의 DC overlap 15 A 는 9월 21일판 값 |
 
 ## 설계점(2026-10-01 시점의 `docs/DESIGN.md` §3 그대로)
 
