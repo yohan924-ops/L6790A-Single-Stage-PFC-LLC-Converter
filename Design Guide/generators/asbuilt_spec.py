@@ -14,6 +14,12 @@ for row in src.iter_rows(values_only=True):
     v = [str(x).strip() for x in row if x is not None]
     if len(v) >= 4 and v[1] in ('INDUCTANCE', 'LEAKAGE INDUCTANCE'): el[v[1]] = v[3]
     if len(v) > 2 and v[1].startswith('Switching frequency'): fsw = v[2]
+# bench measurement, user, 2026-10-09 (LCR 100 kHz / 1 V, series L_s), three units in the order given
+M_OPEN = (10.3, 10.3, 10.3)                # uH, 1-4 with all other windings open
+M_LEAK = (1.9, 2.0, 1.8)                   # uH, 1-4 with 5-9 and 7-11 both shorted
+M_HALF = 2.0                               # uH, one unit (1.8 uH both-shorted) with one half shorted
+L_R = round(sum(M_LEAK), 2); L_M = round(sum(M_OPEN) - L_R, 2)
+N_EFF = 7.5 / math.sqrt(1 + L_R / L_M)
 J = 4.5                                   # A/mm2, the density the design guide uses
 a = math.pi / 4 * 0.1 ** 2                # one 0.1 mm strand
 cap = {'NP1': 130 * a * J, 'NS': 110 * a * J, 'NAUX': math.pi / 4 * 0.4 ** 2 * J}
@@ -26,7 +32,7 @@ bold = Font(bold=True); it = Font(italic=True, color='555555')
 fill = PatternFill('solid', fgColor=NAVY); fill2 = PatternFill('solid', fgColor=LT)
 thin = Side(style='thin', color='BBBBBB'); box = Border(top=thin, bottom=thin, left=thin, right=thin)
 wrap = Alignment(wrap_text=True, vertical='center')
-for col, wd in zip('ABCDEF', (5, 26, 16, 10, 30, 28)): ws.column_dimensions[col].width = wd
+for col, wd in zip('ABCDEF', (5, 26, 16, 22, 30, 28)): ws.column_dimensions[col].width = wd
 def put(row, vals, font=None, fl=None):
     for i, v in enumerate(vals):
         c = ws.cell(row=row, column=i + 1, value=v); c.alignment = wrap; c.border = box
@@ -36,7 +42,7 @@ def section(row, title):
     ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=6)
     c = ws.cell(row=row, column=1, value=title); c.font = hdr; c.fill = fill
 r = 1
-ws.cell(row=r, column=1, value='TRANSFORMER SPECIFICATION — as built').font = h1; r += 1
+ws.cell(row=r, column=1, value='TRANSFORMER SPECIFICATION — as built, with bench measurement').font = h1; r += 1
 ws.cell(row=r, column=1, value='L6790A single-stage PF LLC, 25 V / 26.3 A.  3 units per set (primaries in series, secondaries in parallel).  Values per unit.').font = it; r += 2
 
 section(r, '1.  WINDING'); r += 1
@@ -49,11 +55,17 @@ ws.merge_cells(start_row=r, start_column=1, end_row=r, end_column=6)
 ws.cell(row=r, column=1, value='Centre tap on the PCB: the NS2 end and the NS3 start that add up (section 4). Not joined inside the transformer.').font = it; r += 2
 
 section(r, '2.  ELECTRICAL REQUIREMENTS   (LCR 100 kHz / 1 V, series L_s, per unit)'); r += 1
-put(r, ['No', 'Item', 'Terminal', '', 'Requirement', 'Condition'], bold, fill2); r += 1
-put(r, [1, 'INDUCTANCE', '1 – 4', '', el['INDUCTANCE'], 'all other windings OPEN']); r += 1
-put(r, [2, 'LEAKAGE INDUCTANCE', '1 – 4', '', el['LEAKAGE INDUCTANCE'], '5–9 and 7–11 both SHORT, 2–3 OPEN']); r += 1
-put(r, ['2a', 'Leakage, one half', '1 – 4', '', 'record', '5–9 only SHORT, then 7–11 only SHORT']); r += 1
-put(r, [3, 'D.C OVERLAP', '1 – 4', '', '≥ 90 % of initial inductance', '16 A dc, room temperature, other windings OPEN']); r += 2
+fmt = lambda t: ' / '.join('%.1f' % x for x in t) + ' µH'
+put(r, ['No', 'Item', 'Terminal', 'Measured (3 units)', 'Requirement', 'Condition'], bold, fill2); r += 1
+put(r, [1, 'INDUCTANCE', '1 – 4', fmt(M_OPEN), el['INDUCTANCE'], 'all other windings OPEN']); r += 1
+put(r, [2, 'LEAKAGE INDUCTANCE', '1 – 4', fmt(M_LEAK), el['LEAKAGE INDUCTANCE'], '5–9 and 7–11 both SHORT, 2–3 OPEN']); r += 1
+put(r, ['2a', 'Leakage, one half', '1 – 4', '%.1f µH (one unit; %.1f both SHORT)' % (M_HALF, min(M_LEAK)), 'record', '5–9 only SHORT, then 7–11 only SHORT']); r += 1
+put(r, [3, 'D.C OVERLAP', '1 – 4', 'not measured', '≥ 90 % of initial inductance', '16 A dc, room temperature, other windings OPEN']); r += 1
+ws.merge_cells(start_row=r, start_column=1, end_row=r, end_column=6)
+ws.cell(row=r, column=1, value=('Measured 2026-10-09.  Set of 3 in series: L_r %.1f µH (sum of leakage), L_m %.1f µH (open %.1f − L_r), '
+    'n_eff = 7.5 / √(1 + L_r/L_m) = %.3f.  Leakage is about half the requirement.' % (L_R, L_M, sum(M_OPEN), N_EFF))).font = it
+ws.cell(row=r, column=1).alignment = Alignment(wrap_text=True, vertical='top'); ws.row_dimensions[r].height = 30
+r += 2
 
 section(r, '3.  CORE   (A_e 114 mm², l_e 58.82 mm, V_e 6706 mm³, C1 0.52 mm⁻¹, ≈ 33.8 g/pair, material: TBD)'); r += 1
 put(r, ['', 'A', '42.00 ± 0.60', '', 'E', '6.00 ± 0.20'], None, None); r += 1
@@ -66,7 +78,7 @@ ws.merge_cells(start_row=r, start_column=1, end_row=r, end_column=6)
 c = ws.cell(row=r, column=1, value=('Drive 1–4 with ~5 V, 50–100 kHz sine. 5–9 and 7–11 read 2/5 of it, 2–3 reads 1/5. '
     'Join one end of NS2 to one end of NS3 and find the pair whose remaining ends read double: those two pins are the centre tap. Near zero = wrong pair.'))
 c.alignment = Alignment(wrap_text=True, vertical='top'); ws.row_dimensions[r].height = 46; r += 2
-put(r, ['', 'Switching frequency', fsw, '', 'at full load', '']); r += 1
+put(r, ['', 'Switching frequency', fsw, '', 'at full load, design tank (L_r 11 µH)', '']); r += 1
 
 # pictures to the right
 for name, anchor, w in (('bobbin.png', 'H2', 260), ('core.png', 'H20', 330)):
