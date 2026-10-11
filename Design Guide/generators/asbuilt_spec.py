@@ -17,9 +17,6 @@ for row in src.iter_rows(values_only=True):
 # bench measurement, user, 2026-10-09 (LCR 100 kHz / 1 V, series L_s), three units in the order given
 M_OPEN = (10.3, 10.3, 10.3)                # uH, 1-4 with all other windings open
 M_LEAK = (1.9, 2.0, 1.8)                   # uH, 1-4 with 5-9 and 7-11 both shorted
-M_HALF = 2.0                               # uH, one unit (1.8 uH both-shorted) with one half shorted
-L_R = round(sum(M_LEAK), 2); L_M = round(sum(M_OPEN) - L_R, 2)
-N_EFF = 7.5 / math.sqrt(1 + L_R / L_M)
 J = 4.5                                   # A/mm2, the density the design guide uses
 a = math.pi / 4 * 0.1 ** 2                # one 0.1 mm strand
 cap = {'NP1': 130 * a * J, 'NS': 110 * a * J, 'NAUX': math.pi / 4 * 0.4 ** 2 * J}
@@ -55,17 +52,11 @@ ws.merge_cells(start_row=r, start_column=1, end_row=r, end_column=6)
 ws.cell(row=r, column=1, value='Centre tap on the PCB: the NS2 end and the NS3 start that add up (section 4). Not joined inside the transformer.').font = it; r += 2
 
 section(r, '2.  ELECTRICAL REQUIREMENTS   (LCR 100 kHz / 1 V, series L_s, per unit)'); r += 1
-fmt = lambda t: ' / '.join('%.1f' % x for x in t) + ' µH'
-put(r, ['No', 'Item', 'Terminal', 'Measured (3 units)', 'Requirement', 'Condition'], bold, fill2); r += 1
-put(r, [1, 'INDUCTANCE', '1 – 4', fmt(M_OPEN), el['INDUCTANCE'], 'all other windings OPEN']); r += 1
-put(r, [2, 'LEAKAGE INDUCTANCE', '1 – 4', fmt(M_LEAK), el['LEAKAGE INDUCTANCE'], '5–9 and 7–11 both SHORT, 2–3 OPEN']); r += 1
-put(r, ['2a', 'Leakage, one half', '1 – 4', '%.1f µH (one unit; %.1f both SHORT)' % (M_HALF, min(M_LEAK)), 'record', '5–9 only SHORT, then 7–11 only SHORT']); r += 1
-put(r, [3, 'D.C OVERLAP', '1 – 4', 'not measured', '≥ 90 % of initial inductance', '16 A dc, room temperature, other windings OPEN']); r += 1
-ws.merge_cells(start_row=r, start_column=1, end_row=r, end_column=6)
-ws.cell(row=r, column=1, value=('Measured 2026-10-09.  Set of 3 in series: L_r %.1f µH (sum of leakage), L_m %.1f µH (open %.1f − L_r), '
-    'n_eff = 7.5 / √(1 + L_r/L_m) = %.3f.  Leakage is about half the requirement.' % (L_R, L_M, sum(M_OPEN), N_EFF))).font = it
-ws.cell(row=r, column=1).alignment = Alignment(wrap_text=True, vertical='top'); ws.row_dimensions[r].height = 30
-r += 2
+per_unit = lambda t: '%.1f µH' % (sum(t) / len(t)) + ('' if max(t) == min(t) else '  (%.1f – %.1f)' % (min(t), max(t)))
+put(r, ['No', 'Item', 'Terminal', 'Measured (per unit)', 'Requirement', 'Condition'], bold, fill2); r += 1
+put(r, [1, 'INDUCTANCE', '1 – 4', per_unit(M_OPEN), el['INDUCTANCE'], 'all other windings OPEN']); r += 1
+put(r, [2, 'LEAKAGE INDUCTANCE', '1 – 4', per_unit(M_LEAK), el['LEAKAGE INDUCTANCE'], '5–9 and 7–11 both SHORT, 2–3 OPEN']); r += 1
+put(r, [3, 'D.C OVERLAP', '1 – 4', 'not measured', '≥ 90 % of initial inductance', '16 A dc, room temperature, other windings OPEN']); r += 2
 
 section(r, '3.  CORE   (A_e 114 mm², l_e 58.82 mm, V_e 6706 mm³, C1 0.52 mm⁻¹, ≈ 33.8 g/pair, material: TBD)'); r += 1
 put(r, ['', 'A', '42.00 ± 0.60', '', 'E', '6.00 ± 0.20'], None, None); r += 1
