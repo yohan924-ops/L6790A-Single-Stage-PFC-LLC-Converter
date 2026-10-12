@@ -49,7 +49,9 @@ PICKS = (('Design Spec', 'D27', '657.5', '200', 'Pout, W - 200 W bench test'),
          ('Device Setting', 'F108', '30', '13', 'R.CFG, kOhm - as fitted on the bench board (2026-10-11); '
           'below the 15 kOhm of DS Table 6'),
          ('Power Components', 'F7', '2200', '660', 'C.in, nF - as fitted on the bench board (2 x 330 nF, 2026-10-12); '
-          'C.in.min = 3 nF/W x P.in = 617 nF at 200 W'))
+          'C.in.min = 3 nF/W x P.in = 617 nF at 200 W'),
+         ('Power Components', 'D23', '160', '5', 'n.Cout - as fitted on the bench board (5 x 6800 uF, 2026-10-12)'),
+         ('Power Components', 'D24', '470', '6800', 'Cout.single, uF - as fitted on the bench board (2026-10-12)'))
 MARK = 'measured 200 W copy'
 WHY = ('%s, 2026-10-09 (user): the vendor-wound 5:2 transformers measure 10.3 uH '
        'open and 1.9/2.0/1.8 uH leakage (secondaries shorted) per unit, about half '
