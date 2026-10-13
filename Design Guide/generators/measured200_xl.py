@@ -43,7 +43,7 @@ PICKS = (('Design Spec', 'D27', '657.5', '200', 'Pout, W - 200 W bench test'),
          ('Res. Tank Design', 'F43', '100', '100', 'C.r, nF - kept (best of 68-150 nF at 200 W)'),
          ('Res. Tank Design', 'F44', '11', str(L_R), 'L.r, uH - measured 1.9+2.0+1.8'),
          ('Res. Tank Design', 'F45', '20', str(L_M), 'L.m, uH - 3 x 10.3 measured open minus L.r'),
-         ('Device Setting', 'F24', '11', '11', 'R.T, kOhm - kept (f.Min 92.3 kHz > f.o 90.5 kHz)'),
+         ('Device Setting', 'F24', '11', '6.8', 'R.T, kOhm - as fitted on the bench board (2026-10-13): f.Min 145 kHz; 11 kOhm (f.Min 92 kHz) lost regulation after ~20 s at 110 Vac 200 W'),
          ('Device Setting', 'F61', '30', '16', 'R.BM, kOhm - as fitted on the bench board (2026-10-11)'),
          ('Device Setting', 'F91', '220', '360', 'R.ZCD.H, kOhm - as fitted on the bench board (2026-10-11)'),
          ('Device Setting', 'F108', '30', '13', 'R.CFG, kOhm - as fitted on the bench board (2026-10-11); '
