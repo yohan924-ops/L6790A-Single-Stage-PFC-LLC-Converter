@@ -43,9 +43,13 @@ PICKS = (('Design Spec', 'D27', '657.5', '200', 'Pout, W - 200 W bench test'),
          ('Res. Tank Design', 'F43', '100', '100', 'C.r, nF - kept (best of 68-150 nF at 200 W)'),
          ('Res. Tank Design', 'F44', '11', str(L_R), 'L.r, uH - measured 1.9+2.0+1.8'),
          ('Res. Tank Design', 'F45', '20', str(L_M), 'L.m, uH - 3 x 10.3 measured open minus L.r'),
-         ('Device Setting', 'F24', '11', '6.8', 'R.T, kOhm - as fitted on the bench board (2026-10-13): f.Min 145 kHz; 11 kOhm (f.Min 92 kHz) lost regulation after ~20 s at 110 Vac 200 W'),
+         ('Device Setting', 'F24', '11', '9.1', 'R.T, kOhm - as fitted on the bench board (2026-10-14): f.Min 110 kHz, PF 0.98 at 110 Vac/50 Hz; '
+          '6.8 kOhm (f.Min 145 kHz) was the value that held 110 Vac 200 W on board 1, where 8.2 and 10 kOhm lost regulation after ~20 s; '
+          '11 kOhm (f.Min 92 kHz) failed too. Long-run 200 W check at 9.1 kOhm still open'),
          ('Device Setting', 'F61', '30', '16', 'R.BM, kOhm - as fitted on the bench board (2026-10-11)'),
-         ('Device Setting', 'F91', '220', '360', 'R.ZCD.H, kOhm - as fitted on the bench board (2026-10-11)'),
+         ('Device Setting', 'F91', '220', '360', 'R.ZCD.H, kOhm - as fitted on the bench board (2026-10-11; board 2 ran 540 kOhm until 2026-10-14, '
+          'where the ZCD peak 1.3 V never reached the 1.36 V start-up end threshold); 20 pF on the ZCD pin. '
+          'ZCD measured 2.0 V peak at 360 kOhm, so aux/sec is about 1.5, not the 1 this book assumes'),
          ('Device Setting', 'F108', '30', '13', 'R.CFG, kOhm - as fitted on the bench board (2026-10-11); '
           'below the 15 kOhm of DS Table 6'),
          ('Power Components', 'F7', '2200', '660', 'C.in, nF - as fitted on the bench board (2 x 330 nF, 2026-10-12); '

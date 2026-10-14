@@ -8,6 +8,15 @@ R.BM 15 kOhm, and the 34 mF compensation (C.Fo 220 nF, C.F 2.2 uF, R.F 22 k).
 Built from the bench copy that measured200_xl.py writes, so every bench value
 not listed here (L.r, L.m, n, R.CS, C.in, C.out) is inherited.
 
+SUPERSEDED (bench, 2026-10-14): with C.r 47 nF / 330 pF / 9.1 kOhm the output
+fell to 18 V at 173 W input with FB saturated above 3.5 V - the tank current
+sat only within about 30 deg of the line peak, above resonance; the IC limited
+the power (ACP-soft suspected). f.r/f.o = sqrt((L.r+L.m)/L.r) = 2.33 is fixed by
+the transformer, so C.r cannot buy PF without losing ZVS below resonance. The
+ZCD 270 kOhm also failed on its own: the aux winding is about 1.5 x the
+secondary (ZCD 2.0 V at 360 kOhm), so 270 kOhm put the flat top over OVP2.
+Kept only as the record of what was tried; the bench copy carries the board.
+
     python measured200_opt_xl.py
 """
 import os
@@ -22,7 +31,7 @@ PICKS = (('Res. Tank Design', 'F43', '100', '47', 'C.r, nF - f.o 132 kHz under t
          ('Device Setting', 'D21', '470', '330', 'C.T, pF - f.Max 444 kHz for 264 Vac HB (FHA 400-409 kHz); '
           'the oscillator formulas read D21, F21 only echoes it'),
          ('Device Setting', 'F21', '470', '330', 'C.T, pF - echo of D21'),
-         ('Device Setting', 'F24', '6.8', '9.1', 'R.T, kOhm - f.Min 154 kHz = 1.16 x f.o'),
+         ('Device Setting', 'F24', '9.1', '9.1', 'R.T, kOhm - f.Min 154 kHz = 1.16 x f.o (the bench copy now carries 9.1 kOhm itself)'),
          ('Device Setting', 'F91', '360', '270', 'R.ZCD.H, kOhm - OVP1 35 V, OVP2 38 V, start-up end 20.7 V; 22 pF on ZCD'),
          ('Device Setting', 'F108', '13', '27', 'R.CFG, kOhm - brownout 76 Vac, brown-in 83 Vac (production)'),
          ('Device Setting', 'F61', '16', '15', 'R.BM, kOhm - burst entry 37 W input at R.CS 24 mOhm'),
@@ -44,13 +53,15 @@ def main():
         xml = parts[part].decode('utf-8')
         cur = re.search(r'<c r="%s"[^>]*><v>([^<]*)</v>' % ref, xml).group(1)
         assert abs(float(cur) - float(was)) < 1e-9, '%s!%s is %s, expected %s' % (sheet, ref, cur, was)
-        xml = X.set_cell(xml, ref, X.cell_n(ref, X.style_of(xml, ref), now))
-        parts[part] = xml.encode('utf-8')
+        if was != now:
+            xml = X.set_cell(xml, ref, X.cell_n(ref, X.style_of(xml, ref), now))
+            parts[part] = xml.encode('utf-8')
     log_part = where['CHANGELOG_rev0_6']
     log = parts[log_part].decode('utf-8')
     if MARK not in log:
         r = max(int(x) for x in re.findall(r'<row r="(\d+)"', log)) + 2
-        for sheet, ref, was, now, why in [(None, None, None, None, WHY)] + list(PICKS):
+        rows = [(None, None, None, None, WHY)] + [p for p in PICKS if p[2] != p[3]]
+        for sheet, ref, was, now, why in rows:
             log = X.ensure_row(log, r)
             for col, text in (('B', sheet), ('C', ref), ('D', was), ('E', now), ('F', why)):
                 if text is not None:
