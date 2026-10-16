@@ -38,6 +38,18 @@ VARIANTS = {
     '7p5to1_x1': dict(nT=7.5, Cr=180, Lr=25.0, Lm=45.0, Nx=1, Np=15, Ns=2,
                       kaux=1, RzH=220, CT=470, label='7.5 : 1',
                       Ae=_CORES.CORES['PQ 50/50']['Ae']),
+    # Three-core test board, second winding (2026-10-16): the EE 42x36x19
+    # cores of the first board (A_e 114 mm2) rewound 10 : 4+4 per unit so
+    # that f.r drops to about 97 kHz at 142 mT - the first winding (5 : 2+2,
+    # f.r 152 kHz design / 194.5 kHz as delivered) ran the cores at 141-182 mT
+    # near 200 kHz and the bench efficiency was 84-87 %.  Tank values are the
+    # E12 pair closest to the PQ 50/50 point scaled to the new f.r; L.r is what
+    # the same concentric winding should give at 10 turns (1.9 uH x (10/5)^2 =
+    # 7.6 uH per unit), and C.r is re-picked once the leakage is measured.
+    # docs/THREE_CORE_BOARD.md "두 번째 권선".
+    '7p5to1_x3lf': dict(nT=7.5, Cr=150, Lr=18.0, Lm=33.0, Nx=3, Np=10, Ns=4,
+                        kaux=1, RzH=220, CT=470, RT=16.5,
+                        label='7.5 : 1, three cores, low f.r', Ae=114.0),
 }
 VAR = os.environ.get('L6790_VARIANT', '7p5to1_x1')   # the only design point (2026-10-01)
 V = VARIANTS[VAR]
@@ -877,7 +889,7 @@ S.row('- C.T under its DESIGN limit (>1):', 'k.CTd', MIN('C.T_max/C.T', 'C.T/C.T
       note='the 270..1000 pF checks below are the DATASHEET range, a different limit.')
 S.row('- R.T that would put f.Min exactly on f.o:', 'R.T_ceil', "1/C.T*(1/(2*f.o)-T.idle)", 'ohm', 0)
 S.area_end()
-S.const('- SELECTED timing resistor:', 'R.T', "21.5*'kohm", 'kohm', 1,
+S.const('- SELECTED timing resistor:', 'R.T', "%g*'kohm" % V.get('RT', 21.5), 'kohm', 1,
         note='DS operating range 5 k to 30 k. A smaller R.T raises the VCO clamp.')
 S.row('- R.T under that ceiling (>1):', 'k.RTd', 'R.T_ceil/R.T', None, 3)
 S.row('- VCO minimum frequency:', 'f.Min', "1/(2*(C.T*R.T+T.idle))", 'kHz', 2)

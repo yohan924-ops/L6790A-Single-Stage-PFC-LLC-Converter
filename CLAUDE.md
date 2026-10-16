@@ -54,6 +54,7 @@ f_r 75.0 kHz · f_o 44.8 kHz · B_pk 125.5 mT(A_e 332) · A_L 311 nH · n 6.013(
 | `Smath/L6790A_SingleStage_PF_LLC_Design_Guide.sm` | **정본 시트** — 19절 · 노란 입력 셀 181개 · ZedGraph 판 7장 · A3 가로 56쪽 | rev 1 · F9 확인됨 — **시트 §14c · 시트 §14c.1–14c.4(2026-09-25 · 10-01 · 10-02 신설)은 아직 F9 미확인** |
 | `Smath/variants/L6790A_7p5to1_x1.sm` | 정본과 같은 바이트. `L6790_VARIANT=7p5to1_x1` 로 `build_l6790_smath.py` 가 만든다 — AN · 벤더 사양서가 읽는다 | 검사 통과 |
 | `Smath/variants/L6790A_7p5to1.sm` | **3코어 시험 보드(유닛 5:2 × 3, 옛 탱크)의 시트** — `0821491` 에서 되살린 사본, `check_sm` OK, 시트 §14c.1–14c.5 없음. `docs/THREE_CORE_BOARD.md` | 얼어 있음(2026-10-07) |
+| `Smath/variants/L6790A_7p5to1_x3lf.sm` | **3코어 두 번째 권선(저주파) 설계안** — 10 : 4+4/유닛 · 150 nF / 18 / 33 µH · f_r 96.9 kHz · R.T 16.5 k, `L6790_VARIANT=7p5to1_x3lf` 로 빌더가 만든다. 판정 71/75. 보빈 창 · 누설 실측 전. `docs/THREE_CORE_BOARD.md` "두 번째 권선" | 설계안(2026-10-16) |
 | `Smath/tools/L6790A_probe.sm` · `L6790A_ruler.sm` | 진단 프로브 P1–P29 · 쪽 경계 자 | 큰 시트가 안 열리면 프로브부터 |
 | `Smath/tools/L6790A_gainzed.sm` · `L6790A_gainladder.sm` · `L6790A_gainplot.sm` | 게인 곡선을 SMath 로 그릴 수 있는가 — 확인용 3종 | **아직 아무도 안 열었다** |
 | `Calculation Excel Sheet/L6790_spreadsheet_r1_0_corrected_rev0_6.xlsx` | ST 툴 수정본, 7.5:1(`variants/L6790_workbook_7p5to1_x1.xlsx` 와 같은 파일). `CHANGELOG_rev0_6` 에 변경 이력. **`Res. Tank Design` F43 · F44 · F45 · F9 와 `Device Setting` F24 를 180 · 25 · 45 · 6.0134 · 21.5 로(`pq50_xl.py`) — 의존 수식의 캐시는 Excel 에서 한 번 열었다 저장해야 맞는다** | rev 0.6 + PQ 50/50 탱크 |
