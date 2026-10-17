@@ -15,12 +15,14 @@ schematic of the same date (LG L6790A Single Stage PFC LLC, sheet 3 of 3):
     BM grounded                R211 0 ohm to ground -> P.in.BM 0, R.BM 0
     n.aux/n.sec 1.5            aux 3 T (pins 8-7) over 2 T; ZCD 360 k / (18 k + 1 k = 19 k) + 20 pF
     dead time 270 ns           their value (the IC's dead time is adaptive)
-    c.HB 5229 pF               NOT their 500 pF: C115/C117 2.2 nF 2 kV sit at both half-bridge
-                               midpoints (user, 2026-10-14), so c.HB = 2 x Coss(tr) 897 pF x
-                               400 V / 245 V (l6790 [116], 2929 pF) + 100 pF stray + 2200 pF.
+    c.HB 5529 pF               NOT their 500 pF: C115/C117 2.2 nF 2 kV sit at both half-bridge
+                               midpoints and every MOSFET carries 150 pF drain-source (user,
+                               2026-10-14 and 10-17; the schematic shows C64/C67/C74/C79 as
+                               N.C.), so c.HB = 2 x Coss(tr) 897 pF x 400 V / 245 V (l6790
+                               [116], 2929 pF) + 100 pF stray + 2200 pF + 2 x 150 pF.
                                The book reads c.HB in two places only: Res. Tank Design D60
                                I.R0.crit = sqrt(2 c.HB / (L.r + L.m)) x sqrt2 Vin.min (1.39 ->
-                               4.51 A against the 8.62 A magnetizing peak) and D37 T.T.
+                               4.64 A against the 8.62 A magnetizing peak) and D37 T.T.
     ceramic 50 uF              C61/C66/C84/C85/C92 10 uF x 5 beside the 5 x 6800 uF
     compensation               C95 220 nF, R187 22 k + C98 2.2 uF (C99 0.1 uF parallel),
                                C.fx 1.5 nF + 100 pF at the FB pin = 1.6 nF, line 50 Hz
@@ -52,8 +54,9 @@ from measured200_xl import DST as SRC, sheet_parts
 DST = SRC.replace('_200W.xlsx', '_LGE_200W.xlsx')
 
 PICKS = (('Design Spec', 'D29', '25', '30', 'h, mm - max output capacitor height (LGE workbook)'),
-         ('Design Spec', 'D46', '800', '5229', 'c.HB, pF - 2 x Coss(tr) 897 pF x 400 V / 245 V = 2929 pF (l6790 [116]) + 100 pF stray '
-          '+ C115/C117 2.2 nF/2 kV at the midpoint = 5229 pF; LGE typed 500 pF, which leaves out the 2.2 nF'),
+         ('Design Spec', 'D46', '800', '5529', 'c.HB, pF - 2 x Coss(tr) 897 pF x 400 V / 245 V = 2929 pF (l6790 [116]) + 100 pF stray '
+          '+ C115/C117 2.2 nF/2 kV at the midpoint + 2 x 150 pF drain-source (fitted, N.C. on the schematic) = 5529 pF; '
+          'LGE typed 500 pF, which leaves out the snubbers'),
          ('Design Spec', 'D47', '220', '270', 't.D, ns - dead time as typed by LGE'),
          ('Res. Tank Design', 'F43', '100', '117', 'C.r, nF - board 47 nF 630 V X7R 2S x 5P = 117.5 nF (C106..C116)'),
          ('Power Components', 'D38', '10', '50', 'Cceramic, uF - 5 x 10 uF/50 V beside the 5 x 6800 uF'),
