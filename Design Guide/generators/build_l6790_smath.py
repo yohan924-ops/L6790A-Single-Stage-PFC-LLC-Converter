@@ -50,6 +50,17 @@ VARIANTS = {
     '7p5to1_x3lf': dict(nT=7.5, Cr=150, Lr=18.0, Lm=33.0, Nx=3, Np=10, Ns=4,
                         kaux=1, RzH=220, CT=470, RT=16.5,
                         label='7.5 : 1, three cores, low f.r', Ae=114.0),
+    # 2026-10-17: three flat cores, 2 T secondary kept, f.r 193 kHz for 657.5 W.  The
+    # canonical normalised tank (lambda 0.556, Q 0.86) re-scaled to 193 kHz (68 nF / 10 /
+    # 18 uH) left k.ZVS 0.96: T.ZC = phi / (2 pi f) is 2.6 x shorter at this frequency, and
+    # k.ZVS collapses within +-1 ohm of Z.0 (sweep in docs/THREE_CORE_BOARD.md).  Chosen:
+    # C.r 75 nF (2 x 150 nF film in series), L.r 9.1, L.m 15 uH - lambda 0.607, Z.0 11.0,
+    # Q 0.83 - k.ZVS 1.73, k.TT 2.14 (1.17 with the 2.2 nF midpoint snubbers of the LGE
+    # board).  A_e 225 mm^2 per unit (TDK ELP 43/10/28, N97) keeps B.pk at 72 mT; aux 1 T
+    # per unit, two units in series (ratio 1, ZCD 220 k) as in the canonical design.
+    '7p5to1_x3m3': dict(nT=7.5, Cr=75, Lr=9.1, Lm=15.0, Nx=3, Np=5, Ns=2,
+                        kaux=1, RzH=220, CT=470, RT=7.87,
+                        label='7.5 : 1, three flat cores, 2 T secondary', Ae=225.0),
 }
 VAR = os.environ.get('L6790_VARIANT', '7p5to1_x1')   # the only design point (2026-10-01)
 V = VARIANTS[VAR]
