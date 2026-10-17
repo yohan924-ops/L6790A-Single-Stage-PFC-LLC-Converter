@@ -36,10 +36,18 @@ schematic of the same date (LG L6790A Single Stage PFC LLC, sheet 3 of 3):
                                raster, typical 192 % at 5 mA) scaled to the rank minimum 130 %:
                                I.tr 150 uA -> I.F 0.28 mA, CTR 0.54 (typ 0.71, rank max 0.86);
                                I.tr 300 uA -> I.F 0.46 mA, CTR 0.65 (typ 0.86, rank max 1.07).
-    V.Z 14.5 V                 the 12V_FB rail is a BSS169 follower regulated by TL431 Q46 with
-                               R197 130 k / R204 27 k -> 2.495 x (1 + 130/27) = 14.5 V; the net
-                               name says 12 V, so measure it - R.B.max/min scale with it
-    C.F 2.3 uF                 C98 2.2 uF with C99 0.1 uF in parallel
+    V.Z 11.74 V                the 12V_FB rail is a BSS169 follower regulated by TL431 Q46 with
+                               R197 / R204 27 k.  The schematic has R197 130 k (14.5 V); the user
+                               decided on 2026-10-17 to fit 100 k -> 2.495 x (1 + 100/27) = 11.74 V.
+                               R.B.max/min scale with it (see the CHANGELOG row).
+    compensation 470 nF / 4.7 uF / 10 k   NOT the fitted 220 nF / 2.2||0.1 uF / 22 k: with the
+                               UPC1008 CTR (0.54-0.86 at the operating point against the 0.37 the
+                               SFH617A design assumed) the fitted set gives f.cross 23.6-33 Hz,
+                               phase margin 47.8-40.1 deg and 3rd harmonic 4.7-7.5 % over the CTR
+                               rank; scaling the three impedances together by 2.14 restores
+                               12.5-18.4 Hz, 55.6-52.2 deg, 2.2-3.5 % (LibreOffice recalculation,
+                               2026-10-17).  User decision 2026-10-17; the board still carries the
+                               old set until it is reworked.
     bridge label GBU1006 x 2   two bridges with the AC pins paired (label only; the Design Spec
                                D52/D53 diode model is left as the ST default, no GBU1006 curve here)
 
@@ -87,13 +95,15 @@ PICKS = (('Design Spec', 'D29', '25', '30', 'h, mm - max output capacitor height
          ('CompensationNet&Check', 'D29', '0.37', '0.54', 'CTR.steady at I.tr 150 uA - UPC1008 Ic-If curve (typ 192 % at 5 mA) scaled to the rank '
           'minimum 130 %: I.F 0.28 mA, CTR 0.54 (typ 0.71, rank max 0.86)'),
          ('CompensationNet&Check', 'D31', '0.53', '0.65', 'CTR.max at I.tr 300 uA - same curve, rank minimum: I.F 0.46 mA, CTR 0.65 (typ 0.86, rank max 1.07)'),
-         ('CompensationNet&Check', 'D14', '12', '14.5', 'V.Z, V - 12V_FB rail: BSS169 follower, TL431 Q46 with R197 130 k / R204 27 k -> 14.5 V by the '
-          'schematic values; the net is named 12V_FB, measure it'),
-         ('CompensationNet&Check', 'F93', '82', '220', 'C.Fo, nF - C95 220 nF (34 mF output bank)'),
-         ('CompensationNet&Check', 'F94', '560', '2300', 'C.F, nF - C98 2.2 uF with C99 0.1 uF in parallel'),
+         ('CompensationNet&Check', 'D14', '12', '11.74', 'V.Z, V - 12V_FB rail: BSS169 follower, TL431 Q46, R197 100 k (user decision 2026-10-17; '
+          'schematic had 130 k = 14.5 V) / R204 27 k -> 2.495 x (1 + 100/27) = 11.74 V'),
+         ('CompensationNet&Check', 'F93', '82', '470', 'C.Fo, nF - 470 nF: compensation re-scaled for the UPC1008 CTR (user decision 2026-10-17; '
+          'board carries 220 nF until reworked)'),
+         ('CompensationNet&Check', 'F94', '560', '4700', 'C.F, nF - 4.7 uF (board: C98 2.2 uF || C99 0.1 uF until reworked)'),
          ('Power Components', 'C50', 'GBJ1506U', 'GBU1006 x2 (AC pins paired)', 'bridge label - BD2/BD3 GBU1006, each with its AC pins tied, '
           'outputs paralleled; Design Spec D52/D53 diode model left as the ST default'),
-         ('CompensationNet&Check', 'F95', '47', '22', 'R.F, kOhm - R187 22 k'),
+         ('CompensationNet&Check', 'F95', '47', '10', 'R.F, kOhm - 10 k (board: R187 22 k until reworked); with 470 nF / 4.7 uF / 10 k the loop reads '
+          'f.cross 12.5 / 15.7 / 18.4 Hz, phase margin 55.6 / 54.1 / 52.2 deg, 3rd harmonic 2.2 / 2.9 / 3.5 % at CTR rank min / typ / max'),
          ('CompensationNet&Check', 'F96', '1.55', '1.6', 'C.fx, nF - 1.5 nF + 100 pF at the FB pin'),
          ('CompensationNet&Check', 'D110', '47', '50', 'fl, Hz - line frequency of the test (50 Hz)'))
 MARK = 'LGE 200 W workbook copy'
