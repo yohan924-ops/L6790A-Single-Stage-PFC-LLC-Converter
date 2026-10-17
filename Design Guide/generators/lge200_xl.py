@@ -26,7 +26,22 @@ schematic of the same date (LG L6790A Single Stage PFC LLC, sheet 3 of 3):
     ceramic 50 uF              C61/C66/C84/C85/C92 10 uF x 5 beside the 5 x 6800 uF
     compensation               C95 220 nF, R187 22 k + C98 2.2 uF (C99 0.1 uF parallel),
                                C.fx 1.5 nF + 100 pF at the FB pin = 1.6 nF, line 50 Hz
-    TL431 (TL431G-AE2-R, I.min 0.5 mA) and opto UPC1008G-LS04-R (V.Fo 1.45 V as typed)
+    TL431G-AE2-R, I.min 0.5 mA     UTC TL431 datasheet: I.min 0.3 typ / 0.5 mA max (their value = max)
+    opto UPC1008G-LS04-R        UTC UPC10XX datasheet (unisonic.com.tw, 2026-10-17): rank UPC1008
+                               CTR 130-260 % at I.F 5 mA; V.F 1.45 typ / 1.6 max at 50 mA (no
+                               V.F curve, so 1.45 V stays although the LED runs at 0.2-0.5 mA);
+                               f.c 80 kHz / t.r 3 us / t.f 4.7 us at R.L 100 ohm, the same spec
+                               class as the SFH617A, so C.opto 3 nF stays.  CTR at the two FB
+                               operating points from the UPC1008 Ic-If curve (page 6, read as a
+                               raster, typical 192 % at 5 mA) scaled to the rank minimum 130 %:
+                               I.tr 150 uA -> I.F 0.28 mA, CTR 0.54 (typ 0.71, rank max 0.86);
+                               I.tr 300 uA -> I.F 0.46 mA, CTR 0.65 (typ 0.86, rank max 1.07).
+    V.Z 14.5 V                 the 12V_FB rail is a BSS169 follower regulated by TL431 Q46 with
+                               R197 130 k / R204 27 k -> 2.495 x (1 + 130/27) = 14.5 V; the net
+                               name says 12 V, so measure it - R.B.max/min scale with it
+    C.F 2.3 uF                 C98 2.2 uF with C99 0.1 uF in parallel
+    bridge label GBU1006 x 2   two bridges with the AC pins paired (label only; the Design Spec
+                               D52/D53 diode model is left as the ST default, no GBU1006 curve here)
 
 NOT ported, on purpose:
     Design Spec F20 Vin.min 180 Vac   our F20 is a formula (245 V / sqrt 2 = 173.2 Vac,
@@ -67,10 +82,17 @@ PICKS = (('Design Spec', 'D29', '25', '30', 'h, mm - max output capacitor height
          ('CompensationNet&Check', 'C19', 'TL431AIT', 'TL431G-AE2-R', 'TL431 part as on the board (Q44/Q46)'),
          ('CompensationNet&Check', 'D23', '0.8', '0.5', 'I.min, mA - TL431G-AE2-R as typed by LGE'),
          ('CompensationNet&Check', 'C25', 'SFH617A', 'UPC1008G-LS04-R', 'optocoupler as on the board (U13)'),
-         ('CompensationNet&Check', 'D28', '1.15', '1.45', 'V.Fo, V - UPC1008G-LS04-R as typed by LGE (CTR 0.37/0.53 and '
-          'C.opto 3 nF left at the SFH617A values - the UPC1008 datasheet gives rank 130-260 % at 5 mA, no 150/300 uA data)'),
+         ('CompensationNet&Check', 'D28', '1.15', '1.45', 'V.Fo, V - UPC10XX datasheet typ at I.F 50 mA (max 1.6); no V.F curve in the datasheet, '
+          'the LED runs at 0.2-0.5 mA where V.F is lower, so the R.B window computed from this is on the low side'),
+         ('CompensationNet&Check', 'D29', '0.37', '0.54', 'CTR.steady at I.tr 150 uA - UPC1008 Ic-If curve (typ 192 % at 5 mA) scaled to the rank '
+          'minimum 130 %: I.F 0.28 mA, CTR 0.54 (typ 0.71, rank max 0.86)'),
+         ('CompensationNet&Check', 'D31', '0.53', '0.65', 'CTR.max at I.tr 300 uA - same curve, rank minimum: I.F 0.46 mA, CTR 0.65 (typ 0.86, rank max 1.07)'),
+         ('CompensationNet&Check', 'D14', '12', '14.5', 'V.Z, V - 12V_FB rail: BSS169 follower, TL431 Q46 with R197 130 k / R204 27 k -> 14.5 V by the '
+          'schematic values; the net is named 12V_FB, measure it'),
          ('CompensationNet&Check', 'F93', '82', '220', 'C.Fo, nF - C95 220 nF (34 mF output bank)'),
-         ('CompensationNet&Check', 'F94', '560', '2200', 'C.F, nF - C98 2.2 uF (C99 0.1 uF in parallel)'),
+         ('CompensationNet&Check', 'F94', '560', '2300', 'C.F, nF - C98 2.2 uF with C99 0.1 uF in parallel'),
+         ('Power Components', 'C50', 'GBJ1506U', 'GBU1006 x2 (AC pins paired)', 'bridge label - BD2/BD3 GBU1006, each with its AC pins tied, '
+          'outputs paralleled; Design Spec D52/D53 diode model left as the ST default'),
          ('CompensationNet&Check', 'F95', '47', '22', 'R.F, kOhm - R187 22 k'),
          ('CompensationNet&Check', 'F96', '1.55', '1.6', 'C.fx, nF - 1.5 nF + 100 pF at the FB pin'),
          ('CompensationNet&Check', 'D110', '47', '50', 'fl, Hz - line frequency of the test (50 Hz)'))
