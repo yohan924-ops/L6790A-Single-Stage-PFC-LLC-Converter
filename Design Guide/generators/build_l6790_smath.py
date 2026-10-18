@@ -68,19 +68,22 @@ VARIANTS = {
     # LED rail V.Z 11.74 V (R197 100 k / R204 27 k on TL431), optocoupler
     # UPC1008G-LS04-R (CTR 0.54 / 0.65 at the two FB points, rank minimum, V.F
     # 1.45 V; lge200_xl.py has the derivation), R.B re-centred in the window
-    # that moves with them (5.23 k), and the compensation scaled by 1.21 with
-    # zero and pole kept (100 nF / 680 nF / 39 k) so the 3rd harmonic stays in
-    # budget.  Output bank Rubycon PX 6800 uF / 35 V (18 x 35.5, 1.92 A rms at
-    # 120 Hz / 105 C): 16 in parallel, set by the ripple current, not the
-    # capacitance (11 would do that).  ESR 50.7 mohm = tan d 0.26 / (2 pi 120 Hz
-    # 6800 uF), the only ESR the PX sheet gives - an upper bound at f.sw.
+    # that moves with them (5.23 k), and the compensation re-scaled with zero
+    # and pole kept (150 nF / 1 uF / 27 k) so the 3rd harmonic stays in budget
+    # with the 11-capacitor plant (100 / 680 / 39 k was the 16-capacitor set).  Output bank Rubycon PX 6800 uF / 35 V (18 x 35.5, 1.92 A rms at
+    # 120 Hz / 105 C): 11 in parallel (user 2026-10-18: 16 do not fit) - the
+    # capacitance and hold-up are met, the ripple current per capacitor is
+    # above the 120 Hz rating (see the sheet row I.Cout_each; the ripple is
+    # mostly at f.sw, where the PX multiplier is 1.15 - still over).  ESR 50.7
+    # mohm = tan d 0.26 / (2 pi 120 Hz 6800 uF), the only ESR the PX sheet
+    # gives - an upper bound at f.sw.
     # Ceramic 16 x 10 uF / 50 V X7R, entered at the nominal 160 uF.
     '7p5to1_x3m3': dict(nT=7.5, Cr=70.5, Lr=10.0, Lm=15.0, Nx=3, Np=5, Ns=2,
                         kaux=1, RzH=220, CT=470, RT=7.68,
                         label='7.5 : 1, three flat cores, 2 T secondary', Ae=225.0,
-                        Cs=6800, nC=16, ESRs=50.7, Ccer=160,
+                        Cs=6800, nC=11, ESRs=50.7, Ccer=160,
                         RZ1=100, RZ2=27, VFo=1.45, CTRs=0.54, CTRm=0.65, RB=5.23,
-                        CFo=100, CF=680, RF=39, Cfx=1.6, Imin=0.5,
+                        CFo=150, CF=1000, RF=27, Cfx=1.6, Imin=0.5,
                         opto='1 x UPC1008G-LS04-R (UTC; CTR rank 130-260 %) - 16.5',
                         # the LG board's primary stage (2026-10-18, user: keep the two
                         # books alike): 150 pF drain-source on every FET (C127-C130)

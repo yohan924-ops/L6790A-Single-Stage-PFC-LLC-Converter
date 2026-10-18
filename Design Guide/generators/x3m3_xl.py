@@ -90,8 +90,9 @@ def picks():
              'h, mm - Rubycon PX 6800 uF / 35 V is 18 x 35.5 mm, L + alpha max 37 mm (PX sheet, Vdc <= 100: alpha 1.5); '
              'read only by the capacitor-suggestion table'),
             ('Power Components', PWR, 'D23', '%g' % t('n.C'),
-             'n.Cout - Rubycon PX 6800 uF / 35 V, 18 x 35.5 mm; 16 set by the ripple current '
-             '(%.2f A rms each against 1.92 A at 120 Hz / 105 C), the capacitance alone needs 11' % v('I.Cout_each')),
+             'n.Cout - Rubycon PX 6800 uF / 35 V, 18 x 35.5 mm; 11 (user 2026-10-18: 16 do not fit). Ripple current '
+             '%.2f A rms each against the PX rating 1.92 A at 120 Hz / 105 C (x 1.15 above 10 kHz = 2.21 A) - '
+             'over the rating; check the can temperature on the board' % v('I.Cout_each')),
             ('Power Components', PWR, 'D24', '%g' % t('C.single'), 'Cout.single, uF - Rubycon PX 6800 uF / 35 V'),
             ('Power Components', PWR, 'D25', '%g' % t('ESR.single'),
              'ESR.single, mOhm - tan d 0.26 (35 V: 0.14 + 0.02 per 1000 uF over 1000) / (2 pi 120 Hz 6800 uF); '
@@ -110,7 +111,7 @@ def picks():
             ('CompensationNet&Check', CMP, 'F43', '%g' % t('R.B'),
              'R.B, kOhm (E96) - inside the window %.3f-%.3f k over the V.Z band' % (v('R.B_minZ'), v('R.B_maxZ'))),
             ('CompensationNet&Check', CMP, 'F93', '%g' % t('C.Fo'),
-             'C.Fo, nF - compensation x 1.21 (zero and pole kept) for the UPC1008 CTR: '
+             'C.Fo, nF - compensation re-scaled (zero and pole kept) for the UPC1008 CTR and the 11-capacitor plant: '
              'f.cross %.1f Hz, phase margin %.1f deg, 3rd harmonic %.2f %%' % (v('f.cross'), v('Φ.act'), v('D.3rd_act'))),
             ('CompensationNet&Check', CMP, 'F94', '%g' % t('C.F'), 'C.F, nF - same scaling'),
             ('CompensationNet&Check', CMP, 'F95', '%g' % t('R.F'), 'R.F, kOhm - same scaling'),
@@ -146,7 +147,7 @@ def why():
             'primaries in series and secondaries in parallel, 5 : 2+2 per unit (7.5 : 1 set), '
             'A_e 225 mm2 per unit (placeholder, core not specified). f.r %.1f kHz, B.pk %.1f mT. '
             'C.r = TDK C4532C0G2J473J320KA 2S x 3P. Feedback parts and output bank as the LG board '
-            '(V.Z 11.74 V, UPC1008G-LS04-R, Rubycon PX 6800 uF / 35 V x 16); MOSFETs as the guide. '
+            '(V.Z 11.74 V, UPC1008G-LS04-R, Rubycon PX 6800 uF / 35 V x 11); primary MOSFET as the guide, SR as the board. '
             'Built from %s by x3m3_xl.py from the variant sheet; every other input is the guide book unchanged.'
             % (MARK, v('f.r'), v('B.pk'), os.path.basename(SRC)))
 
