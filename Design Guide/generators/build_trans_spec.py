@@ -118,7 +118,8 @@ if NOCORE:
     V['Acu_sec'] = _up(_d['Isec_rms'] / V['J'])
     # skin depth at f.r, copper at 100 C (rho 1.72e-8 * (1 + 0.00393 * 80))
     _rho = 1.72e-8 * (1.0 + 0.00393 * 80.0)
-    V['delta_mm'] = math.sqrt(_rho / (math.pi * _fr * 1e3 * 4e-7 * math.pi)) * 1e3
+    _delta = lambda f_khz: math.sqrt(_rho / (math.pi * f_khz * 1e3 * 4e-7 * math.pi)) * 1e3
+    V['delta_mm'], V['delta_hi_mm'] = _delta(_fr), _delta(_d['fmax'])
     V['strand_mm'] = 0.10                       # <= 0.6 delta, nearest standard gauge
     V['foil_mm'] = CORES.T_FOIL
     V['fr'], V['Cr'], V['fsu'] = _fr, _Cr, _fsu
@@ -320,9 +321,11 @@ if NOCORE:
     note(r, 'Conductors: NP1 Litz, copper ≥ %.1f mm², strands ≤ %.2f mm.   '
             'NS2 and NS3 each: Litz (strands ≤ %.2f mm) or copper foil ≤ %.2f mm '
             'thick, copper ≥ %.1f mm².   From %.2f A/mm² at the rms currents '
-            'above; skin depth %.2f mm at f.r %.0f kHz, copper at 100 °C.'
+            'above; skin depth %.2f mm at f.r %.0f kHz and %.2f mm at %.0f kHz, '
+            'copper at 100 °C.'
             % (V['Acu_pri'], V['strand_mm'], V['strand_mm'], V['foil_mm'],
-               V['Acu_sec'], V['J'], V['delta_mm'], V['fr']))
+               V['Acu_sec'], V['J'], V['delta_mm'], V['fr'], V['delta_hi_mm'],
+               _d['fmax']))
     r += 1
     _all = V['Nx'] * V['Naux']
     if V['Naux_set'] < _all:
@@ -413,8 +416,9 @@ if NOCORE:
         ('Switching frequency', V['fsw'],
          'full load; start-up %.0f kHz' % V['fsu']),
         ('Resonant frequency', 'f.r  %.0f kHz' % V['fr'],
-         'the winding current is a half-sine at f.r below resonance — '
-         'conductors are sized to it (C.r %g nF)' % V['Cr']),
+         'winding current: half-sine at f.r below resonance, sine at f.sw '
+         'above it (around the line peaks) — conductors sized for the top of '
+         'the range (C.r %g nF)' % V['Cr']),
         ('Core effective area', 'Ae  ≥  %d mm²' % V['Ae_flat'],
          'B.pk ≤ %.0f mT at f.r with %d T.   Ae of the flux path: yoke-limited '
          'in a flat core; two cores in one former add.'
