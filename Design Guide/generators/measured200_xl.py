@@ -30,6 +30,8 @@ import xlsx_patch as X
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 VAR = os.path.normpath(os.path.join(HERE, '..', '..', 'Calculation Excel Sheet', 'variants'))
+#  2026-10-18: SRC and DST were removed from the tree (superseded by the LGE
+#  200 W copy); both are in commit 810e0f4 if this has to run again.
 SRC = os.path.join(VAR, 'L6790_workbook_7p5to1.xlsx')
 DST = os.path.join(VAR, 'L6790_workbook_7p5to1_measured_200W.xlsx')
 

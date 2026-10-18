@@ -26,9 +26,9 @@ from an_pdf import _builder_const
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 XL = os.path.normpath(os.path.join(HERE, '..', '..', 'Calculation Excel Sheet',
-                                   'L6790_spreadsheet_r1_0_corrected_rev0_6.xlsx'))
+                                   'L6790_spreadsheet_r1_0_corrected_rev0_6_unencrypted.xlsx'))
 VAR = os.path.normpath(os.path.join(HERE, '..', '..', 'Calculation Excel Sheet',
-                                    'variants', 'L6790_workbook_7p5to1_x1.xlsx'))
+                                    'variants', 'L6790_workbook_7p5to1_x1_unencrypted.xlsx'))
 LOG = 'xl/worksheets/sheet1.xml'           # CHANGELOG_rev0_6
 PC = 'xl/worksheets/sheet5.xml'            # Power Components
 

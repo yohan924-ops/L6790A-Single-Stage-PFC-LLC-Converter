@@ -8,6 +8,8 @@ import os
 S = os.path.dirname(os.path.abspath(__file__)) + '/'          # pictures from asbuilt_spec_pics.py
 os.chdir(S + '../../')
 # design requirements read from the frozen spec (not typed)
+#  2026-10-18: the source spec was removed from the tree (commit 810e0f4 has it);
+#  the output below is committed and stays as the record of the bench transformer.
 src = openpyxl.load_workbook('Calculation Excel Sheet/variants/Transformer_Spec_7p5to1.xlsx', data_only=True).worksheets[0]
 el = {}; fsw = None
 for row in src.iter_rows(values_only=True):

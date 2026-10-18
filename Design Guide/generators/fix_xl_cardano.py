@@ -43,7 +43,7 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='repla
 
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 XL = os.path.join(ROOT, 'Calculation Excel Sheet',
-                  'L6790_spreadsheet_r1_0_corrected_rev0_6.xlsx')
+                  'L6790_spreadsheet_r1_0_corrected_rev0_6_unencrypted.xlsx')
 
 R0 = 220                     # first row of the new block
 LAM = '$C$23'                # lambda, already on the sheet

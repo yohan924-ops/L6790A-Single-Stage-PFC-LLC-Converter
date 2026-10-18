@@ -39,7 +39,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 SM = os.path.join(ROOT, 'Smath', 'L6790A_SingleStage_PF_LLC_Design_Guide.sm')
 XL = os.path.join(ROOT, 'Calculation Excel Sheet',
-                  'L6790_spreadsheet_r1_0_corrected_rev0_6.xlsx')
+                  'L6790_spreadsheet_r1_0_corrected_rev0_6_unencrypted.xlsx')
 BUILDERS = [os.path.join(HERE, n) for n in ('build_l6790_smath.py', 'smsheet.py', 'l6790.py')]
 DOC = os.path.join(ROOT, 'docs', 'DESIGN.md')
 STAMP = os.path.join(HERE, '.guard_stamp.json')

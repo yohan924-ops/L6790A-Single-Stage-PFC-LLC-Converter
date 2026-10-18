@@ -44,7 +44,7 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8',
 
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 XL = os.path.join(ROOT, 'Calculation Excel Sheet',
-                  'L6790_spreadsheet_r1_0_corrected_rev0_6.xlsx')
+                  'L6790_spreadsheet_r1_0_corrected_rev0_6_unencrypted.xlsx')
 
 LABEL = ('fn.max  (no-load crossing; falls back to the CG26 ceiling when the '
          'required gain is below the 1/(1+lambda) asymptote)')

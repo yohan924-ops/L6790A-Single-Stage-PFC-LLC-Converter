@@ -79,6 +79,25 @@ ABSENT_OK = {
     '.guard_stamp.json', 'Design Guide/generators/.guard_stamp.json',
     # deleted on purpose 2026-10-01 with the other unused figures/ files (79차)
     'gain_vs_m.png',
+    # 2026-10-18 (user: keep only the AN workbook, the 200 W update and the
+    # three-core spec; mark the unencrypted ST-tool copies in the name): the
+    # frozen three-core workbook, the two bench copies and the old requirement
+    # spec were removed (commit 810e0f4 has them); four workbooks were renamed
+    'L6790_workbook_7p5to1_measured_200W.xlsx', 'L6790_workbook_7p5to1_measured_200W_opt.xlsx',
+    'variants/L6790_workbook_7p5to1_measured_200W.xlsx', 'variants/L6790_workbook_7p5to1_measured_200W_opt.xlsx',
+    'Transformer_Spec_7p5to1.xlsx', 'variants/Transformer_Spec_7p5to1.xlsx',
+    'L6790_spreadsheet_r1_0_corrected_rev0_6.xlsx', 'L6790_workbook_7p5to1_x1.xlsx',
+    'variants/L6790_workbook_7p5to1_x1.xlsx', 'L6790_workbook_7p5to1_measured_LGE_200W.xlsx',
+    'variants/L6790_workbook_7p5to1_measured_LGE_200W.xlsx',
+    'Uncryped_04092026_LGE_670W_L6790A_spread sheet.xlsx',
+    'Calculation Excel Sheet/variants/L6790_workbook_7p5to1.xlsx', 'L6790_workbook_7p5to1.xlsx',
+    'Calculation Excel Sheet/variants/L6790_workbook_7p5to1_measured_200W.xlsx',
+    'Calculation Excel Sheet/variants/L6790_workbook_7p5to1_measured_200W_opt.xlsx',
+    'Calculation Excel Sheet/variants/Transformer_Spec_7p5to1.xlsx',
+    'Calculation Excel Sheet/L6790_spreadsheet_r1_0_corrected_rev0_6.xlsx',
+    'Calculation Excel Sheet/variants/L6790_workbook_7p5to1_x1.xlsx',
+    'Calculation Excel Sheet/variants/L6790_workbook_7p5to1_measured_LGE_200W.xlsx',
+    'Calculation Excel Sheet/Uncryped_04092026_LGE_670W_L6790A_spread sheet.xlsx',
 }
 
 problems = []

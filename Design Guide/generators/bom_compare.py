@@ -31,7 +31,7 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='repla
 # paths are relative to this script, so the toolchain moves with the folder
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 XL = os.path.join(ROOT, 'Calculation Excel Sheet',
-                  'L6790_spreadsheet_r1_0_corrected_rev0_6.xlsx')
+                  'L6790_spreadsheet_r1_0_corrected_rev0_6_unencrypted.xlsx')
 SM = os.path.join(ROOT, 'Smath', 'L6790A_SingleStage_PF_LLC_Design_Guide.sm')
 
 require_readable(XL)
