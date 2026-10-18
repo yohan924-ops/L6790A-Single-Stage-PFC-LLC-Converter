@@ -41,8 +41,8 @@ VARIANTS = {
     # the material class, the copper that must fit) and the supplier chooses.
     # Terminals follow the production part 26OP-LM83W, as the frozen 7p5to1 spec.
     # LR_BAND: 3 uH at 5 T is hard to hit.  Trial builds (THREE_CORE_BOARD.md,
-    # 2026-10-18): L.r 8 .. 11 uH passes 71/75 like the design point once C.r
-    # is re-centred; -15 % leakage at the design C.r fails k.CTd / k.ceil, -10 %
+    # 2026-10-18, re-checked at 70.5 nF / 10 uH): L.r 8 .. 11 uH passes 71/75
+    # like the design point once C.r is re-centred; -15 % leakage at the design C.r fails k.CTd / k.ceil, -10 %
     # passes - so the tolerance stays the uniform +-10 %.  J_CU: the copper of
     # the design's winding example (3.0 / 2.5 mm2, 1.0 W a transformer at MLT
     # 0.1 m) - flat cores have long turns, so not the general 4.5 A/mm2.

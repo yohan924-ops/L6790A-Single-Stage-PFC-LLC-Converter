@@ -56,10 +56,16 @@ VARIANTS = {
     # k.ZVS collapses within +-1 ohm of Z.0 (sweep in docs/THREE_CORE_BOARD.md).  Chosen:
     # C.r 75 nF (2 x 150 nF film in series), L.r 9.1, L.m 15 uH - lambda 0.607, Z.0 11.0,
     # Q 0.83 - k.ZVS 1.73, k.TT 2.14 (1.17 with the 2.2 nF midpoint snubbers of the LGE
+    # 2026-10-18 (user): C.r 70.5 nF = TDK C4532C0G2J473J320KA (47 nF C0G 630 V)
+    # 2 in series x 3 in parallel; L.r 10 uH and L.m 15 uH so that the set reads
+    # 10 / 25 uH and a unit 3.33 / 8.33 uH; R.T 7.68 k puts f.Min back 8 % above
+    # f.o (1.025 at the -10 % open-inductance corner).  f.r 189.6 kHz.  71/75 at
+    # the nominal, at every +-10 % inductance corner and at L.r 8 / 11 uH with C.r
+    # re-centred (docs/THREE_CORE_BOARD.md).  The 2026-10-17 point was 75 / 9.1 / 15.
     # board).  A_e 225 mm^2 per unit (TDK ELP 43/10/28, N97) keeps B.pk at 72 mT; aux 1 T
     # per unit, two units in series (ratio 1, ZCD 220 k) as in the canonical design.
-    '7p5to1_x3m3': dict(nT=7.5, Cr=75, Lr=9.1, Lm=15.0, Nx=3, Np=5, Ns=2,
-                        kaux=1, RzH=220, CT=470, RT=7.87,
+    '7p5to1_x3m3': dict(nT=7.5, Cr=70.5, Lr=10.0, Lm=15.0, Nx=3, Np=5, Ns=2,
+                        kaux=1, RzH=220, CT=470, RT=7.68,
                         label='7.5 : 1, three flat cores, 2 T secondary', Ae=225.0),
 }
 VAR = os.environ.get('L6790_VARIANT', '7p5to1_x1')   # the only design point (2026-10-01)
