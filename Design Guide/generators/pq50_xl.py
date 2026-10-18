@@ -20,15 +20,13 @@ copied over afterwards.
 """
 import os
 import re
-import shutil
 
 import xlsx_patch as X
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 XL = os.path.normpath(os.path.join(HERE, '..', '..', 'Calculation Excel Sheet',
                                    'GUIDE_PQ50_657W_workbook_rev0_6_unencrypted.xlsx'))
-VAR = os.path.normpath(os.path.join(HERE, '..', '..', 'Calculation Excel Sheet',
-                                    'variants', 'GUIDE_PQ50_657W_workbook_rev0_6_copy_unencrypted.xlsx'))
+#  The byte copy under variants/ was deleted 2026-10-18 (user) - this script writes the guide workbook only.
 LOG = 'xl/worksheets/sheet1.xml'           # CHANGELOG_rev0_6
 PICKS = (('Res. Tank Design', 'xl/worksheets/sheet4.xml', 'F43', '200', '180',
           'C.r resonant capacitor, nF'),
@@ -75,8 +73,7 @@ def main():
             r += 1
         parts[LOG] = log.encode('utf-8')
     X.write_book(XL, parts)
-    shutil.copyfile(XL, VAR)
-    print('written:', XL, '\ncopied :', VAR)
+    print('written:', XL)
 
 
 if __name__ == '__main__':

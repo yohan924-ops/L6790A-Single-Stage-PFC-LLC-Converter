@@ -103,6 +103,7 @@ ABSENT_OK = {
     'L6790_workbook_7p5to1_x1_unencrypted.xlsx', 'L6790_workbook_7p5to1_measured_LGE_200W_unencrypted.xlsx',
     'Transformer_Spec_7p5to1_x1.xlsx', 'Transformer_Spec_7p5to1_x3m3.xlsx', 'Transformer_Spec_7p5to1_x3m3_KR.xlsx',
     'Transformer_Spec_7p5to1_asbuilt.xlsx',
+    'GUIDE_PQ50_657W_workbook_rev0_6_copy_unencrypted.xlsx',   # byte copy, deleted 2026-10-18
 }
 
 problems = []
