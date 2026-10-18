@@ -66,7 +66,7 @@ f_r 75.0 kHz · f_o 44.8 kHz · B_pk 125.5 mT(A_e 332) · A_L 311 nH · n 6.013(
 | `Design Guide/figures/` | **`an/`** = AN 이 읽는 그림(`figs.py --plain` 이 쓴다). 루트에는 쓰이는 것만: 한국어 본체 문서(`…rev2_1.md`) 그림 19장 · SMath 시트 그림 3장(`comp_network_st` · `bom_*`) · `figedit.py` 원본 4장(`*_raw`). `figs.py` 를 `--plain` 없이 돌리면 제목 붙은 사본이 루트에 다시 생긴다 — 커밋하지 않는다 | 2026-10-01 정리 |
 | `Design Guide/generators/` | 도구 체인 전부 — README 참조 | |
 | `Design Guide/generators/data/` | TDK B65982E 보빈 데이터시트 한 쪽(databook 04/13 p. 287)과 거기서 벡터로 읽은 윤곽 `B65982E_outline.json`(`bobbin_outline.py`). **핀 번호가 적힌 뷰는 밑면도(핀 쪽)** — 핀 끝이 보이는 뷰가 정면도 위에 있다(제1각법). `cores.PIN_XY` 도 밑면도 좌표 | 입력 자료 사본 |
-| `Datasheet/` · `EVB Schematic/` · `LGE Material/` · `Reference/` | 입력 자료. DS 는 **DRAFT**(TBD · 내부 모순 있음). `Reference/Visio-LLC drawing.pdf` 가 본 설계 회로도(벡터) | 원본 |
+| `Datasheet/` · `EVB Schematic/` · `LGE Material/` · `Reference/` | 입력 자료. L6790A DS 는 **DRAFT**(TBD · 내부 모순 있음); L6498LD Rev 3 · STO60N045DM9 Rev 4 · Würth · TDK 자료는 2026-10-18 추가. `Reference/Visio-LLC drawing.pdf` 가 본 설계 회로도(벡터) | 원본 |
 
 ## 지금 상태와 다음 할 일
 
