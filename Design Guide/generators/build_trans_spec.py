@@ -20,10 +20,13 @@ L.L2(2차 누설)는 지그 부유 인덕턴스 수준이라 주지 않는다 - 
 4+5 를 이으면 끝이 3·6 인 같은 센터탭 권선이 된다 - 보빈에 자연스럽지 않다.
 센터탭(4+5)은 PCB 에서 만든다.
 
-결선도는 넣지 않는다 - 사용자가 직접 그린 것을 쓴다.
+결선도: 요구사양서(nocore)에는 넣는다 - trans_diagram.py 가 26OP-LM83W 승인원
+방식으로 그린다(보조 a-b 는 1차 핀 1 · 2 사이, 2026-10-18 사용자 그림).  1개
+트랜스포머 사양서에는 넣지 않는다 - 사용자가 직접 그린 것을 쓴다.
 이 파일을 실행하면 사양서가 통째로 덮어써진다. 사용자가 손으로 색·배치를
 고쳤을 수 있으므로 **요청받았을 때만 실행할 것.**
 """
+import io
 import math
 import os
 import sys
@@ -174,7 +177,7 @@ TXT = {
         loc_ns3='Secondary section, with NS2 (bifilar)',
         loc_aux='Secondary section, beside NS2 · NS3',
         direction='Winding direction: all windings in the same direction.   S = start, '
-                  'F = finish; the starts (%s) are the dots (●) of the schematic diagram.',
+                  'F = finish; the starts (%s) are the dots (●) in the diagram above.',
         sections='Primary section and secondary section side by side, as 26OP-LM83W; '
                  'the spacing between them sets item 3-2.   NAUX is in the secondary '
                  'section so that its voltage follows the secondaries.',
@@ -232,7 +235,7 @@ TXT = {
         loc_np1='1차 구역', loc_ns2='2차 구역, NS3 와 함께(바이파일러)',
         loc_ns3='2차 구역, NS2 와 함께(바이파일러)', loc_aux='2차 구역, NS2 · NS3 옆',
         direction='감는 방향: 모든 권선을 같은 방향으로 감는다.   S = 감기 시작, F = 끝; '
-                  '감기 시작(%s)이 결선도의 점(●)이다.',
+                  '감기 시작(%s)이 위 결선도의 점(●)이다.',
         sections='1차 구역과 2차 구역을 26OP-LM83W 처럼 나란히 둔다; 두 구역 사이 간격이 '
                  '3절 항목 2(누설)를 정한다.   NAUX 는 전압이 2차를 따라가도록 2차 구역에 둔다.',
         tap='센터탭은 PCB 에서 핀 %s 를 이어 만든다 — 트랜스포머 안에서 잇지 말 것.   '
@@ -428,6 +431,16 @@ r += 1
 section(r, T['s2'] if NOCORE else '2.    WINDING')
 r += 1
 if NOCORE:
+    #  The approval sheet's SCHEMATIC DIAGRAM, the auxiliary a-b between the
+    #  primary pins 1 and 2 (2026-10-18, the user's drawing on that sheet)
+    import trans_diagram
+    from openpyxl.drawing.image import Image as XLImage
+    _img = XLImage(io.BytesIO(trans_diagram.draw(
+        LANG, {w: (_MAP[w][0][0], _MAP[w][1][0]) for w in _MAP})))
+    _img.width, _img.height = 560, 228          # px at 96 dpi; the PNG is 6.4 x 2.6 in
+    ws.add_image(_img, 'C%d' % r)
+    ws.row_dimensions[r].height = _img.height * 0.75 + 6
+    r += 1
     #  The approval sheet's WINDING SPEC: terminal S -> F, turns, wire, location.
     #  The currents behind the wire are in section 4.
     head(r, [('B', T['h_no']), ('C', T['h_wdg']), ('D', T['h_sf']),
