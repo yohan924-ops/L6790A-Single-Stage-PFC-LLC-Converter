@@ -162,10 +162,8 @@ TXT = {
         title='TRANSFORMER  SPECIFICATION',
         subtitle='Turns   NP1 : NS2 : NS3 : NAUX   =   %d : %d : %d : %d',
         s1='1.    CONSTRUCTION',
-        construction='Flat (low-profile) construction as the production part '
-                     '26OP-LM83W.   Core and coil former are the supplier’s choice; '
-                     'the windings are as section 2.   The overall height is agreed '
-                     'before the first samples.',
+        construction='Flat (low-profile) construction.   Overall height agreed before '
+                     'the first samples.',
         s2='2.    WINDING  SPEC',
         h_no='No', h_wdg='Winding', h_term='Terminal', h_turns='Turns',
         h_sf='S  →  F', h_wire='Wire   (copper)', h_loc='Location',
@@ -176,100 +174,56 @@ TXT = {
         loc_np1='Primary section', loc_ns2='Secondary section, with NS3 (bifilar)',
         loc_ns3='Secondary section, with NS2 (bifilar)',
         loc_aux='Secondary section, beside NS2 · NS3',
-        direction='Winding direction: all windings in the same direction.   S = start, '
-                  'F = finish; the starts (%s) are the dots (●) in the diagram above.',
-        sections='Primary section and secondary section side by side, as 26OP-LM83W; '
-                 'the spacing between them sets item 3-2.   NAUX is in the secondary '
-                 'section so that its voltage follows the secondaries.',
-        tap='Centre tap is made on the PCB by joining pins %s — do NOT join them '
-            'inside the transformer.   One conductor per pin; a secondary pin '
-            'carries its whole winding current (%.1f A rms): confirm the pin '
-            'current rating, or bring the secondary ends straight out.',
-        equiv='Another wire is acceptable with at least the same copper and strands '
-              '≤ ø%.2f (skin depth %.2f mm at %.0f kHz); NS2 and NS3 may also be '
-              'copper foil ≤ %.2f mm thick.',
-        terminals='Terminal numbers follow the production part 26OP-LM83W (approval '
-                  'sheet, KH Feelux); the pin layout is the supplier’s choice.',
+        equiv='Equivalent wire acceptable: copper ≥ table, strand ≤ ø%.2f mm; NS2 · NS3 '
+              'may be copper foil ≤ %.2f mm thick.',
         s3='3.    ELECTRICAL  REQUIREMENTS',
         s3_tail='Measured with an LCR meter at 100 kHz / 1 V.',
         h_item='Item', h_req='Requirement', h_cond='Condition',
         r_ind='INDUCTANCE',
-        c_ind='All other windings OPEN.   L.mag + L.leak, not L.mag alone.',
+        c_ind='Other windings OPEN',
         r_lk='LEAKAGE INDUCTANCE',
-        c_lk='EACH HALF: NS2 short alone, then NS3 short alone; the other half and '
-             'NAUX open.   Both must pass.   A target, not a maximum.',
+        c_lk='NS2 SHORT (NS3, NAUX open); then NS3 SHORT (NS2, NAUX open) — both',
         r_sat='D.C OVERLAP', req_sat='≥ 90 % of initial inductance',
-        c_sat='Test current %d A, normal temperature',
+        c_sat='%d A dc, room temperature',
         req_L='%.2f µH    %s',
-        band='Item 2 is a target, not a maximum: if the construction cannot reach '
-             'it, state the value it reaches BEFORE samples — %.2f to %.2f µH is '
-             'acceptable, the %s then applying around the stated value.',
-        allshort='With NS2 and NS3 both shorted the reading is lower: record it, do '
-                 'not hold it to item 2.   The auxiliary is NOT shorted.',
+        band='Item 2: %.2f to %.2f µH is acceptable if stated before samples; the %s '
+             'then applies to the stated value.',
         s4='4.    OPERATING  CONDITIONS',
         f_item='Winding frequency', f_val='%d  to  %d kHz',
-        f_tail='of the winding current and voltage at full load; up to %.0f kHz '
-               'briefly at start-up',
         i_item='Winding current   %s', i_val='%.1f A rms   /   %.1f A peak',
-        i_tail_pri='at full load — the wire of section 2 carries it at ≤ %.2f A/mm²',
-        i_tail_sec='each, at full load', i_tail_aux='dc load',
         ae_item='Core effective area', ae_val='Ae  ≥  %d mm²',
-        ae_tail='keeps B.pk ≤ %.0f mT with %d T at %.0f kHz.   Ae of the whole flux '
-                'path: yoke-limited in a flat core; two core sets (pairs) placed side '
-                'by side in one former add.',
     ),
     'kr': dict(
         title='트랜스포머  요구사양서',
         subtitle='권선비   NP1 : NS2 : NS3 : NAUX   =   %d : %d : %d : %d',
         s1='1.    구조',
-        construction='양산품 26OP-LM83W 와 같은 납작한(저배) 구조.   코어 · 보빈은 '
-                     '제작사가 정하고 권선은 2절대로 한다.   전체 높이는 첫 샘플 전에 '
-                     '협의한다.',
+        construction='납작한(저배) 구조.   전체 높이는 첫 샘플 전에 협의.',
         s2='2.    권선 사양',
         h_no='번호', h_wdg='권선', h_term='단자', h_turns='턴수',
         h_sf='S  →  F', h_wire='선재   (구리 단면)', h_loc='위치',
         w_np1='NP1   1차', w_ns2='NS2   2차 A', w_ns3='NS3   2차 B',
         w_aux='NAUX  보조',
         turns='%d T', aux_cur='%.0f mA dc',
-        litz='리츠선  ø%.2f × %d   (%.2f mm²)', solid='단선  ø%.2f   (%.2f mm²)',
-        loc_np1='1차 구역', loc_ns2='2차 구역, NS3 와 함께(바이파일러)',
-        loc_ns3='2차 구역, NS2 와 함께(바이파일러)', loc_aux='2차 구역, NS2 · NS3 옆',
-        direction='감는 방향: 모든 권선을 같은 방향으로 감는다.   S = 감기 시작, F = 끝; '
-                  '감기 시작(%s)이 위 결선도의 점(●)이다.',
-        sections='1차 구역과 2차 구역을 26OP-LM83W 처럼 나란히 둔다; 두 구역 사이 간격이 '
-                 '3절 항목 2(누설)를 정한다.   NAUX 는 전압이 2차를 따라가도록 2차 구역에 둔다.',
-        tap='센터탭은 PCB 에서 핀 %s 를 이어 만든다 — 트랜스포머 안에서 잇지 말 것.   '
-            '핀마다 도체 하나; 2차 핀 하나가 권선 전류 전체(%.1f A rms)를 흘리므로 핀 '
-            '전류 정격을 확인하거나 2차 끝을 바로 뽑아낼 것.',
-        equiv='구리 단면이 같거나 크고 소선이 ø%.2f 이하이면 다른 선재도 된다(표피 깊이 '
-              '%.2f mm, %.0f kHz).   NS2 · NS3 는 두께 %.2f mm 이하 동박도 된다.',
-        terminals='단자 번호는 양산품 26OP-LM83W(KH필룩스 승인원) 방식.   핀 배치는 '
-                  '제작사가 정한다.',
+        litz='Litz  ø%.2f × %d   (%.2f mm²)', solid='단선  ø%.2f   (%.2f mm²)',
+        loc_np1='1차 구역', loc_ns2='2차 구역, NS3 와 함께 (bifilar)',
+        loc_ns3='2차 구역, NS2 와 함께 (bifilar)', loc_aux='2차 구역, NS2 · NS3 옆',
+        equiv='동등 선재 가능: 구리 단면 표 이상 · 소선 ≤ ø%.2f mm; NS2 · NS3 는 두께 '
+              '≤ %.2f mm 동박도 가능.',
         s3='3.    전기 요구사양',
         s3_tail='측정: LCR 미터, 100 kHz / 1 V.',
         h_item='항목', h_req='요구값', h_cond='조건',
         r_ind='인덕턴스',
-        c_ind='다른 권선 전부 개방.   자화 + 누설 인덕턴스(자화만이 아님).',
+        c_ind='다른 권선 개방',
         r_lk='누설 인덕턴스',
-        c_lk='반쪽씩: NS2 만 단락, 이어서 NS3 만 단락; 나머지 반쪽과 NAUX 는 개방.   '
-             '둘 다 만족할 것.   목표값이며 최대값이 아님.',
+        c_lk='NS2 단락(NS3 · NAUX 개방); 이어서 NS3 단락(NS2 · NAUX 개방) — 둘 다',
         r_sat='DC 중첩(포화)', req_sat='초기 인덕턴스의 90 % 이상',
-        c_sat='시험 전류 %d A, 상온',
+        c_sat='%d A dc, 상온',
         req_L='%.2f µH    %s',
-        band='항목 2 는 목표값이며 최대값이 아니다: 구조상 못 맞추면 샘플 전에 도달값을 '
-             '알릴 것 — %.2f–%.2f µH 까지 받아들이며, 그때는 알린 값에 %s 를 적용한다.',
-        allshort='NS2 · NS3 를 함께 단락하면 더 낮게 읽힌다: 기록만 하고 항목 2 의 판정에는 '
-                 '쓰지 말 것.   보조 권선은 단락하지 않는다.',
+        band='항목 2: 샘플 전에 알리면 %.2f–%.2f µH 까지 가능, 그때 %s 는 알린 값 기준.',
         s4='4.    동작 조건',
         f_item='권선 주파수', f_val='%d – %d kHz',
-        f_tail='정격 부하에서 권선 전류 · 전압의 주파수; 기동 시 잠깐 %.0f kHz 까지',
-        i_item='권선 전류   %s', i_val='%.1f A rms   /   %.1f A 피크',
-        i_tail_pri='정격 부하 — 2절의 선재로 %.2f A/mm² 이하',
-        i_tail_sec='각각, 정격 부하', i_tail_aux='직류 부하',
+        i_item='권선 전류   %s', i_val='%.1f A rms   /   %.1f A peak',
         ae_item='코어 유효 단면적', ae_val='Ae  ≥  %d mm²',
-        ae_tail='B.pk ≤ %.0f mT(%d T · %.0f kHz)가 되는 값.   자속 경로 전체의 유효 단면: '
-                '납작한 코어는 요크가 정하고, 한 보빈에 코어 세트(반쪽 두 개 한 쌍) 둘을 '
-                '나란히 넣으면 합산.',
     ),
 }
 T = TXT[LANG]
@@ -482,14 +436,9 @@ r += 1
 
 _shared = set(_MAP['NS2'][1]) == set(_MAP['NS3'][0])
 if NOCORE:
-    note(r, T['direction'] % ', '.join(
-        str(_MAP[w][0][0]) for w in ('NP1', 'NS2', 'NS3', 'NAUX')))
-    r += 1
-    note(r, T['sections'])
-    r += 1
-    _tap = tap_text() if LANG == 'en' else ' · '.join(
-        str(n) for n in sorted(set(_MAP['NS2'][1] + _MAP['NS3'][0])))
-    note(r, T['tap'] % (_tap, _d['Isec_rms']))
+    #  values only (2026-10-18 night, user): no winding-direction, section,
+    #  centre-tap or terminal-numbering notes - the diagram and the table say it
+    note(r, T['equiv'] % (V['strand_mm'], V['foil_mm']))
 elif _shared:
     note(r, 'Centre tap: NS2 finish and NS3 start share pins %s, one Litz '
             'bundle of each on a pin.   At most two bundles on a pin: confirm '
@@ -505,10 +454,7 @@ else:
                % (' (%.1f A rms)' % _d['Isec_rms'] if NOCORE else '')))
 r += 1
 if NOCORE:
-    note(r, T['equiv'] % (V['strand_mm'], V['delta_hi_mm'], _d['fmax'], V['foil_mm']))
     r += 1
-    note(r, T['terminals'])
-    r += 2
 else:
     note(r, ('Custom coil former for %s, %d pins, made to this '
              'specification.   ' % (BOB_NAME, BOB['pins'])
@@ -567,8 +513,6 @@ for n, item, term, req, cnd, h in REQ:
 
 if NOCORE:
     note(r, T['band'] % (V['Lshort_lo'], V['Lshort_hi'], V['tol_short']))
-    r += 1
-    note(r, T['allshort'])
     r += 2
 else:
     note(r, 'Both measured at %s of ONE transformer.   ' % pins('NP1') +
@@ -587,16 +531,12 @@ else:
 section(r, T['s4'] if NOCORE else '4.    OPERATING  CONDITIONS')
 r += 1
 if NOCORE:
-    COND = [
-        (T['f_item'], T['f_val'] % (round(_d['fmin']), round(_d['fmax'])),
-         T['f_tail'] % V['fsu']),
-        (T['i_item'] % 'NP1', T['i_val'] % (_d['Ipri_rms'], _d['Ipri_pk']),
-         T['i_tail_pri'] % (_d['Ipri_rms'] / V['Cu_pri'])),
-        (T['i_item'] % 'NS2, NS3', T['i_val'] % (_d['Isec_rms'], _d['Isec_pk']),
-         T['i_tail_sec']),
-        (T['i_item'] % 'NAUX', T['aux_cur'] % V['Ivcc'], T['i_tail_aux']),
-        (T['ae_item'], T['ae_val'] % V['Ae_flat'],
-         T['ae_tail'] % (V['B_FLAT'] * 1e3, V['Ns'], V['fr'])),
+    COND = [            # values only; no start-up frequency, no explanations
+        (T['f_item'], T['f_val'] % (round(_d['fmin']), round(_d['fmax'])), None),
+        (T['i_item'] % 'NP1', T['i_val'] % (_d['Ipri_rms'], _d['Ipri_pk']), None),
+        (T['i_item'] % 'NS2, NS3', T['i_val'] % (_d['Isec_rms'], _d['Isec_pk']), None),
+        (T['i_item'] % 'NAUX', T['aux_cur'] % V['Ivcc'], None),
+        (T['ae_item'], T['ae_val'] % V['Ae_flat'], None),
     ]
 else:
     COND = [
