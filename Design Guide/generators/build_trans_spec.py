@@ -320,9 +320,9 @@ if NOCORE:
     note(r, 'Conductors: NP1 Litz, copper ≥ %.1f mm², strands ≤ %.2f mm.   '
             'NS2 and NS3 each: Litz (strands ≤ %.2f mm) or copper foil ≤ %.2f mm '
             'thick, copper ≥ %.1f mm².   From %.2f A/mm² at the rms currents '
-            'above; skin depth %.2f mm at f.r, copper at 100 °C.'
+            'above; skin depth %.2f mm at f.r %.0f kHz, copper at 100 °C.'
             % (V['Acu_pri'], V['strand_mm'], V['strand_mm'], V['foil_mm'],
-               V['Acu_sec'], V['J'], V['delta_mm']))
+               V['Acu_sec'], V['J'], V['delta_mm'], V['fr']))
     r += 1
     _all = V['Nx'] * V['Naux']
     if V['Naux_set'] < _all:
@@ -411,19 +411,15 @@ r += 1
 if NOCORE:
     COND = [
         ('Switching frequency', V['fsw'],
-         'at full load; start-up begins at %.0f kHz' % V['fsu']),
+         'full load; start-up %.0f kHz' % V['fsu']),
         ('Resonant frequency', 'f.r  %.0f kHz' % V['fr'],
-         'C.r %g nF with the %s item-2 inductances in series (%.1f µH)'
-         % (V['Cr'], NWORD[V['Nx']], V['Lshort_set'])),
+         'the winding current is a half-sine at f.r below resonance — '
+         'conductors are sized to it (C.r %g nF)' % V['Cr']),
         ('Core effective area', 'Ae  ≥  %d mm²' % V['Ae_flat'],
-         'holds the peak flux density at or below %.0f mT at f.r with %d T: '
-         'B.pk = V.o / (4 · f.r · N.s · Ae).   Ae of the whole flux path — in a '
-         'flat core the yoke, not the centre leg, usually sets it; two cores in '
-         'one coil former count together.'
+         'B.pk ≤ %.0f mT at f.r with %d T.   Ae of the flux path: yoke-limited '
+         'in a flat core; two cores in one former add.'
          % (V['B_FLAT'] * 1e3, V['Ns'])),
-        ('Core material', 'MnZn power ferrite, N97 / PC95 / 3C95 class',
-         'loss minimum near 100 °C.   The loss budget allows about 1.3 W in the '
-         'core and 1.0 W in the windings of each transformer at full load.'),
+        ('Core material', 'MnZn power ferrite, N97 / PC95 / 3C95 class', None),
     ]
 else:
     COND = [
@@ -434,23 +430,23 @@ else:
 for item, val, tail in COND:
     cond(r, item, val, tail)
     r += 1
-r += 1
 if NOCORE:
-    note(r, 'Any core, coil former and winding arrangement meeting sections 2 to 5 '
-            'is acceptable once the first samples are approved; report the open '
-            'and leakage inductances, both halves, with the samples.')
+    r += 1
 else:
+    r += 1
     note(r, 'The core, coil former and winding arrangement of the reference design '
             'set item 3-2. Another construction is acceptable only when sections 3 '
             'and 5 are met and the first samples are approved.')
-r += 2
+    r += 2
 
 # --------------------------------------------------- 5. 안전 절연 (insulation.py)
 import insulation as INS                                        # noqa: E402
 _R = INS.req()
 section(r, '5.    SAFETY  INSULATION',
-        'Household AV (TV) for the US, EU, Japan, Korea and China: IEC 62368-1 '
-        'as adopted there, GB 4943.1-2022 in China (5000 m).')
+        ('IEC 62368-1 (household AV), GB 4943.1-2022 for China; 5000 m.'
+         if NOCORE else
+         'Household AV (TV) for the US, EU, Japan, Korea and China: IEC 62368-1 '
+         'as adopted there, GB 4943.1-2022 in China (5000 m).'))
 r += 2
 head(r, [('B', 'No'), ('C', 'Item'), ('D', 'Between'), ('E', 'Requirement'),
          ('F', 'Condition')])
@@ -470,6 +466,24 @@ else:
              'wound OVER the secondary; leads stay insulated up to the primary-row '
              'pins. Its approved frequency must cover the start-up frequency.')
 SAFE = [
+    ('1', 'Insulation grade', '%s  |  %s' % (PRI, SEC), 'REINFORCED',
+     'Primary = NP1, NAUX; secondary = NS2, NS3 and the CORE.   PD 2, OVC II, '
+     'material group IIIb.', 18),
+    ('2', 'Creepage', '%s  |  %s' % (PRI, SEC), '≥ %.1f mm' % _R['creep'],
+     'where the triple insulation ends (pins, stripped ends) to the secondary '
+     'and the core', 18),
+    ('3', 'Clearance', '%s  |  %s' % (PRI, SEC), '≥ %.1f mm' % _R['clearance'],
+     'at 5000 m (%.1f mm × %.2f)' % (_R['cl_2000'], INS.K_ALT), 18),
+    ('4', 'NP1, NAUX wire', '%s  |  %s' % (PRI, SEC), 'TIW, reinforced',
+     'triple-insulated (NP1: TIW-Litz), approved to IEC 62368-1 up to '
+     '%.0f kHz; one wire pin to pin' % V['fsu'], 18),
+    ('5', 'Solid insulation', '%s  |  %s' % (PRI, SEC),
+     'DTI ≥ %.1f mm  or  ≥ %d tape layers' % (_R['dti'], _R['layers']),
+     'where tape or sleeving carries it', 18),
+    ('6', 'Electric strength', '%s  |  %s' % (PRI, SEC),
+     '%d V ac 60 s  (%d V dc)' % (_R['hipot_ac'], _R['hipot_dc']),
+     'NP1 + NAUX against NS2 + NS3 + core; type test, no breakdown', 18),
+] if NOCORE else [
     ('1', 'Insulation grade', '%s  |  %s' % (PRI, SEC), 'REINFORCED',
      'Primary = NP1, NAUX; secondary = NS2, NS3 and the CORE. Pollution '
      'degree 2, overvoltage category II, material group IIIb, 5000 m.', 30),
@@ -499,10 +513,14 @@ for n, item, betw, req, cnd, h in SAFE:
     ws['E%d' % r].font = Font(name='Calibri', size=10, bold=True)
     ws['D%d' % r].alignment = Alignment(horizontal='center',
                                         vertical='center', wrap_text=True)
+    ws.row_dimensions[r].height = max(ws.row_dimensions[r].height,
+                                      13 * nlines(betw, CHARS['D']) + 5)
     r += 1
 r += 1
-note(r, 'The working voltage behind item 2 is an estimate from the design '
-        '(%.0f V rms, %.0f V peak at %g Vac); the certifying body measures it.'
+note(r, ('Working voltage: design estimate %.0f V rms / %.0f V peak at %g Vac; '
+         'the certifying body measures it.' if NOCORE else
+         'The working voltage behind item 2 is an estimate from the design '
+         '(%.0f V rms, %.0f V peak at %g Vac); the certifying body measures it.')
         % (_R['u_rms'], _R['u_pk'], INS.V_MAINS_DESIGN))
 LAST_ROW = r
 
