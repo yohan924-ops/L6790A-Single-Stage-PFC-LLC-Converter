@@ -55,6 +55,10 @@ if len(sys.argv) < 2 or sys.argv[1] not in VARIANTS:
                      % ' / '.join(VARIANTS))
 VAR = sys.argv[1]
 V = VARIANTS[VAR]
+#  --kr: Korean edition of the requirements-only spec (2026-10-18, user).  The
+#  one-transformer spec stays English.
+LANG = 'kr' if '--kr' in sys.argv[2:] else 'en'
+FONT = 'Malgun Gothic' if LANG == 'kr' else 'Calibri'
 
 # ---------------------------------------------------- 시트에서 읽어 온다
 import check_trans_spec as CTS
@@ -138,6 +142,106 @@ def tap_text():
 
 
 NWORD = {1: 'one', 2: 'two', 3: 'three', 4: 'four'}
+
+TXT = {
+    'en': dict(
+        title='TRANSFORMER  SPECIFICATION',
+        subtitle='Turns   NP1 : NS2 : NS3 : NAUX   =   %d : %d : %d : %d',
+        s1='1.    CONSTRUCTION',
+        construction='Flat (low-profile) construction as the production part '
+                     '26OP-LM83W.   Core, coil former, wire and winding arrangement '
+                     'are the supplier’s choice within sections 2 to 4; the overall '
+                     'height is agreed before the first samples.',
+        s2='2.    WINDING',
+        h_no='No', h_wdg='Winding', h_term='Terminal', h_turns='Turns',
+        h_cur='Winding current           rms   /   peak',
+        w_np1='NP1     Primary', w_ns2='NS2     Secondary A',
+        w_ns3='NS3     Secondary B', w_aux='NAUX   Auxiliary',
+        turns='%d T', cur='%.1f A   /   %.1f A', aux_cur='%.0f mA dc',
+        tap='Centre tap is made on the PCB by joining pins %s — do NOT join them '
+            'inside the transformer.   One conductor per pin; a secondary pin '
+            'carries its whole winding current (%.1f A rms): confirm the pin '
+            'current rating, or bring the secondary ends straight out.',
+        terminals='Terminal numbers follow the production part 26OP-LM83W (approval '
+                  'sheet, KH Feelux): primary %s, secondaries %s and %s, auxiliary '
+                  '%s.   Pin layout is the supplier’s choice.',
+        conductors='Conductors: NP1 Litz, copper ≥ %.1f mm², strands ≤ %.2f mm.   '
+                   'NS2 and NS3 each: Litz (strands ≤ %.2f mm) or copper foil ≤ '
+                   '%.2f mm thick, copper ≥ %.1f mm².   From %.2f A/mm² at the rms '
+                   'currents above; skin depth %.2f mm at %.0f kHz and %.2f mm at '
+                   '%.0f kHz, copper at 100 °C.',
+        aux_note='NAUX: %d T on every transformer.',
+        s3='3.    ELECTRICAL  REQUIREMENTS',
+        s3_tail='Measured with an LCR meter at 100 kHz / 1 V.',
+        h_item='Item', h_req='Requirement', h_cond='Condition',
+        r_ind='INDUCTANCE',
+        c_ind='All other windings OPEN.   L.mag + L.leak, not L.mag alone.',
+        r_lk='LEAKAGE INDUCTANCE',
+        c_lk='EACH HALF: NS2 short alone, then NS3 short alone; the other half and '
+             'NAUX open.   Both must pass.   A target, not a maximum.',
+        r_sat='D.C OVERLAP', req_sat='≥ 90 % of initial inductance',
+        c_sat='Test current %d A, normal temperature',
+        req_L='%.2f µH    %s',
+        band='Item 2 is a target, not a maximum: if the construction cannot reach '
+             'it, state the value it reaches BEFORE samples — %.2f to %.2f µH is '
+             'acceptable, the %s then applying around the stated value.',
+        allshort='With NS2 and NS3 both shorted the reading is lower: record it, do '
+                 'not hold it to item 2.   The auxiliary is NOT shorted.',
+        s4='4.    OPERATING  CONDITIONS',
+        f_item='Winding frequency', f_val='%d  to  %d kHz',
+        f_tail='of the winding current and voltage at full load; up to %.0f kHz '
+               'briefly at start-up',
+        ae_item='Core effective area', ae_val='Ae  ≥  %d mm²',
+        ae_tail='keeps B.pk ≤ %.0f mT with %d T at %.0f kHz.   Ae of the whole flux '
+                'path: yoke-limited in a flat core; two cores in one former add.',
+    ),
+    'kr': dict(
+        title='트랜스포머  요구사양서',
+        subtitle='권선비   NP1 : NS2 : NS3 : NAUX   =   %d : %d : %d : %d',
+        s1='1.    구조',
+        construction='양산품 26OP-LM83W 와 같은 납작한(저배) 구조.   코어 · 보빈 · 선재 · '
+                     '권선 배치는 2–4절을 만족하는 범위에서 제작사가 정하고, 전체 높이는 '
+                     '첫 샘플 전에 협의한다.',
+        s2='2.    권선',
+        h_no='번호', h_wdg='권선', h_term='단자', h_turns='턴수',
+        h_cur='권선 전류           rms   /   피크',
+        w_np1='NP1     1차', w_ns2='NS2     2차 A', w_ns3='NS3     2차 B',
+        w_aux='NAUX   보조',
+        turns='%d T', cur='%.1f A   /   %.1f A', aux_cur='%.0f mA dc',
+        tap='센터탭은 PCB 에서 핀 %s 를 이어 만든다 — 트랜스포머 안에서 잇지 말 것.   '
+            '핀마다 도체 하나; 2차 핀 하나가 권선 전류 전체(%.1f A rms)를 흘리므로 핀 '
+            '전류 정격을 확인하거나 2차 끝을 바로 뽑아낼 것.',
+        terminals='단자 번호는 양산품 26OP-LM83W(KH필룩스 승인원) 방식: 1차 %s, 2차 %s · '
+                  '%s, 보조 %s.   핀 배치는 제작사가 정한다.',
+        conductors='도체: NP1 리츠선, 구리 단면 ≥ %.1f mm², 소선 ≤ %.2f mm.   NS2 · NS3 '
+                   '각각: 리츠선(소선 ≤ %.2f mm) 또는 두께 ≤ %.2f mm 동박, 구리 단면 ≥ '
+                   '%.1f mm².   위 rms 전류에 %.2f A/mm² 를 적용한 값; 표피 깊이 %.2f mm'
+                   '(%.0f kHz) · %.2f mm(%.0f kHz), 구리 100 °C 기준.',
+        aux_note='NAUX: 모든 트랜스포머에 %d T.',
+        s3='3.    전기 요구사양',
+        s3_tail='측정: LCR 미터, 100 kHz / 1 V.',
+        h_item='항목', h_req='요구값', h_cond='조건',
+        r_ind='인덕턴스',
+        c_ind='다른 권선 전부 개방.   자화 + 누설 인덕턴스(자화만이 아님).',
+        r_lk='누설 인덕턴스',
+        c_lk='반쪽씩: NS2 만 단락, 이어서 NS3 만 단락; 나머지 반쪽과 NAUX 는 개방.   '
+             '둘 다 만족할 것.   목표값이며 최대값이 아님.',
+        r_sat='DC 중첩(포화)', req_sat='초기 인덕턴스의 90 % 이상',
+        c_sat='시험 전류 %d A, 상온',
+        req_L='%.2f µH    %s',
+        band='항목 2 는 목표값이며 최대값이 아니다: 구조상 못 맞추면 샘플 전에 도달값을 '
+             '알릴 것 — %.2f–%.2f µH 까지 받아들이며, 그때는 알린 값에 %s 를 적용한다.',
+        allshort='NS2 · NS3 를 함께 단락하면 더 낮게 읽힌다: 기록만 하고 항목 2 의 판정에는 '
+                 '쓰지 말 것.   보조 권선은 단락하지 않는다.',
+        s4='4.    동작 조건',
+        f_item='권선 주파수', f_val='%d – %d kHz',
+        f_tail='정격 부하에서 권선 전류 · 전압의 주파수; 기동 시 잠깐 %.0f kHz 까지',
+        ae_item='코어 유효 단면적', ae_val='Ae  ≥  %d mm²',
+        ae_tail='B.pk ≤ %.0f mT(%d T · %.0f kHz)가 되는 값.   자속 경로 전체의 유효 단면: '
+                '납작한 코어는 요크가 정하고, 한 보빈에 코어 둘이면 합산.',
+    ),
+}
+T = TXT[LANG]
 NAVY, BAND, LINE, MUTED = '1F3864', 'EDF0F7', 'B4B4B4', '5A6472'
 thin = Side(style='thin', color=LINE)
 box = Border(left=thin, right=thin, top=thin, bottom=thin)
@@ -159,7 +263,7 @@ def put(ref, val, bold=False, size=10, color='000000', fill=None,
     c = ws[ref]
     if val is not None:                 # None 이면 셀에 아무것도 쓰지 않는다
         c.value = val                   # (빈 문자열은 숫자 서식 칸에서 0.00 이 된다)
-    c.font = Font(name='Calibri', size=size, bold=bold, italic=italic, color=color)
+    c.font = Font(name=FONT, size=size, bold=bold, italic=italic, color=color)
     c.alignment = Alignment(horizontal=align, vertical='center', wrap_text=wrap)
     if fill:
         c.fill = PatternFill('solid', fgColor=fill)
@@ -195,6 +299,8 @@ def head(row, cells):
 #  9 pt italic in a note merged B..F).  Estimates on the safe side: a row too
 #  tall shows white space, a row too short clips the text in print.
 CHARS = {'C': 28, 'D': 17, 'E': 26, 'F': 44, 'note': 115, 'cond_tail': 48}
+if LANG == 'kr':
+    CHARS = {k: int(v * 0.6) for k, v in CHARS.items()}
 
 
 def nlines(text, chars):
@@ -220,11 +326,13 @@ def note(row, text, lines=None):
 
 # ------------------------------------------------------------------ 표제
 span(2)
-put('B2', 'TRANSFORMER  SPECIFICATION', bold=True, size=18, color=NAVY)
+put('B2', T['title'] if NOCORE else 'TRANSFORMER  SPECIFICATION',
+    bold=True, size=18, color=NAVY)
 ws.row_dimensions[2].height = 26
 span(3)
-put('B3', 'L6790A single-stage PF LLC converter      25 V / 26.3 A output'
-          '      —      turns ratio %s' % V['label'], size=11, color=MUTED)
+put('B3', (T['subtitle'] % (V['Np'], V['Ns'], V['Ns'], V['Naux'])) if NOCORE else
+          ('L6790A single-stage PF LLC converter      25 V / 26.3 A output'
+           '      —      turns ratio %s' % V['label']), size=11, color=MUTED)
 ws.row_dimensions[3].height = 17
 for c in 'BCDEF':
     ws['%s4' % c].border = Border(bottom=Side(style='medium', color=NAVY))
@@ -249,19 +357,10 @@ def cond(row, item, val, tail, lines=None):
 r = 6
 
 # ------------------------------------------------------------- 1. 구성
-section(r, '1.    CONFIGURATION')
+section(r, T['s1'] if NOCORE else '1.    CONFIGURATION')
 r += 1
 if NOCORE:
-    BULLETS = [
-        ('Three identical transformers per set — primaries in series, '
-         'secondaries in parallel.' if V['Nx'] > 1 else
-         'One transformer per set.', False),
-        ('EVERY VALUE BELOW IS PER TRANSFORMER.', True),
-        ('Flat (low-profile) construction as the production part 26OP-LM83W.   '
-         'Core, coil former, wire and winding arrangement are the supplier’s '
-         'choice within sections 2 to 4; the overall height is agreed with the '
-         'set mechanical design before the first samples.', False),
-    ]
+    BULLETS = [(T['construction'], False)]
 else:
     BULLETS = [
         ('One transformer per set on %s %s (core %s, %s coil former, %d pins).'
@@ -278,27 +377,46 @@ for t, red in BULLETS:
 r += 1
 
 # ---------------------------------------------------------- 2. 권선
-section(r, '2.    WINDING')
+section(r, T['s2'] if NOCORE else '2.    WINDING')
 r += 1
-head(r, [('B', 'No'), ('C', 'Winding'), ('D', 'Terminal'), ('E', 'Turns'),
-         ('F', 'Winding current           rms   /   peak')])
-r += 1
-WIND = [
+if NOCORE:
+    head(r, [('B', T['h_no']), ('C', T['h_wdg']), ('D', T['h_term']),
+             ('E', T['h_turns']), ('F', T['h_cur'])])
+    r += 1
+    WIND = [
+        ('1', T['w_np1'], pins('NP1'), T['turns'] % V['Np'],
+         T['cur'] % (_d['Ipri_rms'], _d['Ipri_pk'])),
+        ('2', T['w_ns2'], pins('NS2'), T['turns'] % V['Ns'],
+         T['cur'] % (_d['Isec_rms'], _d['Isec_pk'])),
+        ('3', T['w_ns3'], pins('NS3'), T['turns'] % V['Ns'],
+         T['cur'] % (_d['Isec_rms'], _d['Isec_pk'])),
+        ('4', T['w_aux'], pins('NAUX'), T['turns'] % V['Naux'],
+         T['aux_cur'] % V['Ivcc']),
+    ]
+else:
+  head(r, [('B', 'No'), ('C', 'Winding'), ('D', 'Terminal'), ('E', 'Turns'),
+           ('F', 'Winding current           rms   /   peak')])
+  r += 1
+  WIND = [
     ('1', 'NP1     Primary', pins('NP1'), '%d T' % V['Np'], V['Ipri']),
     ('2', 'NS2     Secondary A', pins('NS2'), '%d T' % V['Ns'], V['Isec']),
     ('3', 'NS3     Secondary B', pins('NS3'), '%d T' % V['Ns'], V['Isec']),
     ('4', 'NAUX   Auxiliary (VCC, ZCD)', pins('NAUX'), '%d T' % V['Naux'],
      '%.0f mA dc load (VCC)' % V['Ivcc']),
-]
+  ]
 for n, des, term, turns, cur in WIND:
     line(r, [('B', n, 'center'), ('C', des, 'left'), ('D', term, 'center'),
              ('E', turns, 'center'), ('F', cur, 'center')])
-    ws['E%d' % r].font = Font(name='Calibri', size=10, bold=True)
+    ws['E%d' % r].font = Font(name=FONT, size=10, bold=True)
     r += 1
 r += 1
 
 _shared = set(_MAP['NS2'][1]) == set(_MAP['NS3'][0])
-if _shared:
+if NOCORE:
+    _tap = tap_text() if LANG == 'en' else ' · '.join(
+        str(n) for n in sorted(set(_MAP['NS2'][1] + _MAP['NS3'][0])))
+    note(r, T['tap'] % (_tap, _d['Isec_rms']))
+elif _shared:
     note(r, 'Centre tap: NS2 finish and NS3 start share pins %s, one Litz '
             'bundle of each on a pin.   At most two bundles on a pin: confirm '
             'the pin current rating.   NP1: the %d bundles of a turn are '
@@ -313,30 +431,14 @@ else:
                % (' (%.1f A rms)' % _d['Isec_rms'] if NOCORE else '')))
 r += 1
 if NOCORE:
-    note(r, 'Terminal numbers follow the production part 26OP-LM83W (approval '
-            'sheet, KH Feelux): primary %s, secondaries %s and %s, auxiliary %s.'
-            '   Pin layout is the supplier’s choice.'
-            % (pins('NP1'), pins('NS2'), pins('NS3'), pins('NAUX')))
+    note(r, T['terminals'] % (pins('NP1'), pins('NS2'), pins('NS3'), pins('NAUX')))
     r += 1
-    note(r, 'Conductors: NP1 Litz, copper ≥ %.1f mm², strands ≤ %.2f mm.   '
-            'NS2 and NS3 each: Litz (strands ≤ %.2f mm) or copper foil ≤ %.2f mm '
-            'thick, copper ≥ %.1f mm².   From %.2f A/mm² at the rms currents '
-            'above; skin depth %.2f mm at %.0f kHz and %.2f mm at %.0f kHz, '
-            'copper at 100 °C.'
+    note(r, T['conductors']
             % (V['Acu_pri'], V['strand_mm'], V['strand_mm'], V['foil_mm'],
                V['Acu_sec'], V['J'], V['delta_mm'], V['fr'], V['delta_hi_mm'],
                _d['fmax']))
     r += 1
-    _all = V['Nx'] * V['Naux']
-    if V['Naux_set'] < _all:
-        _rest = _all - V['Naux_set']
-        note(r, 'NAUX: %d T on EVERY transformer; the set series-connects %s of '
-                'them (%d T in all), the other %s open.'
-                % (V['Naux'], NWORD[V['Naux_set'] // V['Naux']], V['Naux_set'],
-                   ('%s stay' % NWORD[_rest]) if _rest > 1 else 'one stays'))
-    else:
-        note(r, 'NAUX: %d T on every transformer, all in series (%d T in all).'
-                % (V['Naux'], V['Naux_set']))
+    note(r, T['aux_note'] % V['Naux'])
     r += 2
 else:
     note(r, ('Custom coil former for %s, %d pins, made to this '
@@ -353,13 +455,23 @@ else:
     r += 1
 
 # ------------------------------------------------- 3. 전기 요구사양
-section(r, '3.    ELECTRICAL  REQUIREMENTS',
-        'Measured with an LCR meter at 100 kHz / 1 V.')
+section(r, T['s3'] if NOCORE else '3.    ELECTRICAL  REQUIREMENTS',
+        T['s3_tail'] if NOCORE else 'Measured with an LCR meter at 100 kHz / 1 V.')
 r += 2
-head(r, [('B', 'No'), ('C', 'Item'), ('D', 'Terminal'), ('E', 'Requirement'),
-         ('F', 'Condition')])
+if NOCORE:
+    head(r, [('B', T['h_no']), ('C', T['h_item']), ('D', T['h_term']),
+             ('E', T['h_req']), ('F', T['h_cond'])])
+else:
+    head(r, [('B', 'No'), ('C', 'Item'), ('D', 'Terminal'), ('E', 'Requirement'),
+             ('F', 'Condition')])
 r += 1
 REQ = [
+    ('1', T['r_ind'], pins('NP1'), T['req_L'] % (V['Lopen'], V['tol_open']),
+     T['c_ind'], 18),
+    ('2', T['r_lk'], pins('NP1'), T['req_L'] % (V['Lshort'], V['tol_short']),
+     T['c_lk'], 30),
+    ('3', T['r_sat'], pins('NP1'), T['req_sat'], T['c_sat'] % V['Isat'], 18),
+] if NOCORE else [
     ('1', 'INDUCTANCE', pins('NP1'), '%.2f µH    %s' % (V['Lopen'], V['tol_open']),
      'All other windings OPEN.   L.mag + L.leak, not L.mag alone.', 18),
     ('2', 'LEAKAGE INDUCTANCE', pins('NP1'), '%.2f µH    %s' % (V['Lshort'], V['tol_short']),
@@ -372,27 +484,15 @@ REQ = [
 for n, item, term, req, cnd, h in REQ:
     line(r, [('B', n, 'center'), ('C', item, 'left'), ('D', term, 'center'),
              ('E', req, 'center'), ('F', cnd, 'left')], h=h)
-    ws['E%d' % r].font = Font(name='Calibri', size=10, bold=True)
+    ws['E%d' % r].font = Font(name=FONT, size=10, bold=True)
     ws['C%d' % r].alignment = Alignment(horizontal='left', vertical='center',
                                         wrap_text=True)
     r += 1
 
 if NOCORE:
-    note(r, 'Both measured at %s of ONE transformer.   %s in series give the set '
-            '%.1f µH open and %.1f µH leakage, and the ratio %s.'
-            % (pins('NP1'), NWORD[V['Nx']].capitalize(), V['Lopen_set'],
-               V['Lshort_set'], V['label']))
+    note(r, T['band'] % (V['Lshort_lo'], V['Lshort_hi'], V['tol_short']))
     r += 1
-    note(r, 'Item 2 is the converter’s resonant inductor (%.0f kHz with C.r %g nF).   '
-            'If the construction cannot reach it, quote the value it reaches '
-            'BEFORE samples: %.2f to %.2f µH per transformer is taken by '
-            're-selecting C.r and the oscillator setting, the %s then applying '
-            'around the quoted value; below that the difference goes into an '
-            'external inductor.'
-            % (V['fr'], V['Cr'], V['Lshort_lo'], V['Lshort_hi'], V['tol_short']))
-    r += 1
-    note(r, 'With NS2 and NS3 both shorted the reading is lower: record it, do '
-            'not hold it to item 2.   The auxiliary is NOT shorted.')
+    note(r, T['allshort'])
     r += 2
 else:
     note(r, 'Both measured at %s of ONE transformer.   ' % pins('NP1') +
@@ -408,17 +508,14 @@ else:
     r += 2
 
 # ------------------------------------------------------- 4. 동작 조건
-section(r, '4.    OPERATING  CONDITIONS')
+section(r, T['s4'] if NOCORE else '4.    OPERATING  CONDITIONS')
 r += 1
 if NOCORE:
     COND = [
-        ('Operating frequency', V['fsw'],
-         'of the winding current and voltage at full load; start-up %.0f kHz'
-         % V['fsu']),
-        ('Core effective area', 'Ae  ≥  %d mm²' % V['Ae_flat'],
-         'B.pk ≤ %.0f mT with %d T at %.0f kHz.   Ae of the flux path: '
-         'yoke-limited in a flat core; two cores in one former add.'
-         % (V['B_FLAT'] * 1e3, V['Ns'], V['fr'])),
+        (T['f_item'], T['f_val'] % (round(_d['fmin']), round(_d['fmax'])),
+         T['f_tail'] % V['fsu']),
+        (T['ae_item'], T['ae_val'] % V['Ae_flat'],
+         T['ae_tail'] % (V['B_FLAT'] * 1e3, V['Ns'], V['fr'])),
     ]
 else:
     COND = [
@@ -515,7 +612,7 @@ else:
   for n, item, betw, req, cnd, h in SAFE:
       line(r, [('B', n, 'center'), ('C', item, 'left'), ('D', betw, 'center'),
                ('E', req, 'center'), ('F', cnd, 'left')], h=h)
-      ws['E%d' % r].font = Font(name='Calibri', size=10, bold=True)
+      ws['E%d' % r].font = Font(name=FONT, size=10, bold=True)
       ws['D%d' % r].alignment = Alignment(horizontal='center',
                                           vertical='center', wrap_text=True)
       ws.row_dimensions[r].height = max(ws.row_dimensions[r].height,
@@ -541,7 +638,8 @@ ws.page_margins.top = ws.page_margins.bottom = 0.4
 
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                    '..', '..', 'Calculation Excel Sheet',
-                   'variants', 'Transformer_Spec_%s.xlsx' % VAR)
+                   'variants', 'Transformer_Spec_%s%s.xlsx'
+                   % (VAR, '_KR' if LANG == 'kr' else ''))
 os.makedirs(os.path.dirname(OUT), exist_ok=True)
 try:
     wb.save(OUT)
