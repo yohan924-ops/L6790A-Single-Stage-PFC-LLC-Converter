@@ -341,7 +341,15 @@ def _builder_const(name):
                   % re.escape(name), src)
     if not m:
         raise KeyError('no S.const for %s in the sheet builder' % name)
-    return float(re.match(r'[-+0-9.eE]+', m.group(1)).group(0))
+    lit = re.match(r'[-+0-9.eE]+', m.group(1))
+    if lit:
+        return float(lit.group(0))
+    # a variant-keyed pick (2026-10-18): "%g*'unit" % V.get('key', default) -
+    # the AN describes the canonical design, which is the default
+    d = re.search(r"V\.get\('[^']+',\s*([-+0-9.eE]+)\)", src[m.end():m.end() + 200])
+    if d:
+        return float(d.group(1))
+    raise KeyError('S.const for %s is neither a literal nor a V.get default' % name)
 
 
 #  the device datasheet values the loss section substitutes

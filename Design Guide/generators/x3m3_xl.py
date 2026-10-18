@@ -15,7 +15,10 @@ feedback parts and output bank:
     Power Components  D23 D24 D25 D38   n.Cout, Cout.single, ESR.single, Cceramic
     CompensationNet   D14 D28 D29 D31   V.Z, V.Fo, CTR.steady, CTR.max
                       F43 F93 F94 F95   R.B, C.Fo, C.F, R.F    and C25 the optocoupler name
-Primary and SR MOSFETs (STO60N045DM9, STL160N10F8 x 2 per leg) are the guide's.
+    Design Spec       D46  c.HB 5529 pF (leg snubbers + drain-source caps of the LG board)
+    Power Components  D72 C92 D96 D98   Cpar 2600 pF, SR MOSFET TPH3R70APL1 3.7 mOhm k_T 1.9
+    CompensationNet   C19 D23 F96       TL431G-AE2-R, I.min 0.5 mA, C.fx 1.6 nF
+Primary MOSFET STO60N045DM9 x 1 per position as the guide; SR TPH3R70APL1 x 2 per leg as the board.
 
 Every new value is read from the variant sheet Smath/variants/L6790A_7p5to1_x3m3.sm
 (rebuild it first: L6790_VARIANT=7p5to1_x3m3 python build_l6790_smath.py), never
@@ -110,11 +113,30 @@ def picks():
              'C.Fo, nF - compensation x 1.21 (zero and pole kept) for the UPC1008 CTR: '
              'f.cross %.1f Hz, phase margin %.1f deg, 3rd harmonic %.2f %%' % (v('f.cross'), v('Φ.act'), v('D.3rd_act'))),
             ('CompensationNet&Check', CMP, 'F94', '%g' % t('C.F'), 'C.F, nF - same scaling'),
-            ('CompensationNet&Check', CMP, 'F95', '%g' % t('R.F'), 'R.F, kOhm - same scaling'))
+            ('CompensationNet&Check', CMP, 'F95', '%g' % t('R.F'), 'R.F, kOhm - same scaling'),
+            ('CompensationNet&Check', CMP, 'F96', '%g' % t('C.fx'), 'C.fx, nF - 1.5 nF + 100 pF at the FB pin, as the LG board'),
+            ('CompensationNet&Check', CMP, 'D23', '%g' % t('I.min'),
+             'I.min, mA - TL431G-AE2-R as on the LG board (UTC: 0.3 typ / 0.5 max)'),
+            # the LG board's primary stage - the same numbers as the 200 W book
+            ('Design Spec', 'xl/worksheets/sheet2.xml', 'D46', '%g' % v('c.HB'),
+             'c.HB, pF - 2 x Coss(tr) 897 pF x 400 / 245 V = 2929 + 100 layout + 2200 leg snubber (C115/C117) '
+             '+ 2 x 150 drain-source (C127-C130), as the 200 W book; read by Res. Tank Design D37 (T.T) and D60'),
+            ('Power Components', PWR, 'D72', '%g' % t('C.par'),
+             'Cpar, pF - the same 2600 pF (layout + snubbers), feeds D77 for the dv/dt'),
+            # SR MOSFET of the LG board (user: same parts as the board)
+            ('Power Components', PWR, 'D96', '%g' % (t('R.dson_s25') / 1000),
+             'RD, Ohm - TPH3R70APL1 RDSon max at VGS = 10 V, as the 200 W book (Toshiba datasheet not on file)'),
+            ('Power Components', PWR, 'D98', '%g' % t('K.Tsec'),
+             'kT.sec - ST tool default 1.9 kept for the TPH3R70APL1 (no curve on file); the STL160N10F8 had 1.5'))
 
 
 TEXT = (('CompensationNet&Check', 'xl/worksheets/sheet7.xml', 'C25', 'UPC1008G-LS04-R',
-         'optocoupler part - as on the LG board (U13)'),)
+         'optocoupler part - as on the LG board (U13)'),
+        ('CompensationNet&Check', 'xl/worksheets/sheet7.xml', 'C19', 'TL431G-AE2-R',
+         'TL431 part - as on the LG board (Q44/Q46)'),
+        ('Power Components', PWR, 'C92', 'TPH3R70APL1',
+         'SR MOSFET - as on the LG board, 2 per leg under the TEA2095TE'))
+
 
 
 def why():

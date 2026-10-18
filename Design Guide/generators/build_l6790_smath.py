@@ -80,8 +80,26 @@ VARIANTS = {
                         label='7.5 : 1, three flat cores, 2 T secondary', Ae=225.0,
                         Cs=6800, nC=16, ESRs=50.7, Ccer=160,
                         RZ1=100, RZ2=27, VFo=1.45, CTRs=0.54, CTRm=0.65, RB=5.23,
-                        CFo=100, CF=680, RF=39,
-                        opto='1 x UPC1008G-LS04-R (UTC; CTR rank 130-260 %) - 16.5'),
+                        CFo=100, CF=680, RF=39, Cfx=1.6, Imin=0.5,
+                        opto='1 x UPC1008G-LS04-R (UTC; CTR rank 130-260 %) - 16.5',
+                        # the LG board's primary stage (2026-10-18, user: keep the two
+                        # books alike): 2.2 nF per leg at the midpoint and 150 pF
+                        # drain-source on every FET sit beside the 100 pF layout
+                        # figure, so c.HB = 2929 + 2600 = 5529 pF as in the 200 W book
+                        Cpar=2600,
+                        Cpar_note='100 pF layout + 2200 pF leg snubber (C115/C117) + 2 x '
+                                  '150 pF drain-source (C127-C130) of the LG board - '
+                                  'the 200 W book carries the same 5529 pF.',
+                        # SR MOSFET of the LG board (user 2026-10-18: same parts as the
+                        # board).  Only RDSon and its hot multiplier are the Toshiba
+                        # figures (RDSon 3.7 mohm max from the LG workbook, k_T 1.9 the
+                        # ST tool default); gate charge, C.iss, R.thJA and the 100 V
+                        # rating rows below still carry the STL160N10F8 values until
+                        # the TPH3R70APL1 datasheet is on file.
+                        srfet='TPH3R70APL1', RDs=3.7, KTs=1.9,
+                        RDs_note='Toshiba TPH3R70APL1, max at VGS = 10 V, as typed in the LG '
+                                 'workbook - datasheet not on file. Check against R.dson_req_25_s.',
+                        KTs_note='ST tool default; the TPH3R70APL1 curve is not on file.'),
 }
 VAR = os.environ.get('L6790_VARIANT', '7p5to1_x1')   # the only design point (2026-10-01)
 V = VARIANTS[VAR]
@@ -185,7 +203,8 @@ S.const('[DS] Primary MOSFET C.oss eq., time-related, 0 .. V.oss_tr:', 'C.oss_tr
              'charges in the same time as C.oss from 0 to 400 V. It is a CHARGE '
              'figure - C.oss_tr*V.oss_tr is the charge one device moves.')
 S.const('[DS] - the voltage that figure is quoted to:', 'V.oss_tr', "400*'V", 'V', 0)
-S.const('[PICK] Layout parasitic at the midpoint:', 'C.par', "100*'pF", 'pF', 0)
+S.const('[PICK] Layout parasitic at the midpoint:', 'C.par', "%g*'pF" % V.get('Cpar', 100), 'pF', 0,
+        note=V.get('Cpar_note'))
 S.const('[PICK] Design dead time:', 't.D', "220*'ns", 'ns', 0)
 S.const('[TOOL] EMI filter equivalent resistance:', 'R.EMI', "0.15*'ohm", 'ohm', 3)
 S.note('   INPUT BRIDGE: s.br = 1 selects the synchronous bridge, 0 the diode bridge. The '
@@ -673,6 +692,75 @@ S.row('- Primary rms over one switching cycle:', 'I.pri_rms',
       "sqrt(I.trafo_pk^2/2+I.Lm_pk^2/3+(I.Lm_pk*f.sw.a*(1/f.sw.a-1/f.r))^2)", 'A', 3)
 S.row('- MOSFET rms:', 'I.mos_rms', "I.pri_rms/sqrt(2)", 'A', 3)
 
+# ===================================================================== 9b
+S.h2('9b. Composite Peak over the Load Range - when does the load current add '
+     'to the magnetizing peak?   [79]')
+S.note('Below resonance the magnetizing current is a triangle that peaks at the END '
+       'of the half cycle; the reflected load current is a half sine that peaks in '
+       'the MIDDLE. Their sum peaks at the magnetizing value alone while '
+       '2*I.Lm/(pi*I.trafo) >= 1 - light load - and only beyond that does the load '
+       'current raise the peak (section 9, x.pk). The blocks below repeat section 9 '
+       'at the line peak of V.eq_min for 0, 25, 50 and 75 % load, re-solving the '
+       'frequency at each load with the cubic of section 8 (Q scaled by the load '
+       'fraction; 100 % is section 9 itself). r.add = 1.000 means the load adds '
+       'nothing to the peak. Two limits of the model: at zero load the IC is in burst '
+       'mode, so the 0 % column is the magnetizing current the tank would carry at '
+       'that frequency, not a steady state; and near the line ZERO crossing the '
+       'frequency falls to f.Min at any load, where the magnetizing peak is I.lm.0 of '
+       'section 10 - the floor the current sense always sees. 14.1 puts the OCP1 '
+       'threshold against every column.')
+
+
+def load_point(tag, ld):
+    S.area_begin('%d %% load - the cubic of section 8 at theta = pi/2, Q scaled by '
+                 'the load; eleven intermediates, collapsed' % round(ld * 100))
+    S.pack([
+        (f'ld{tag}', '%g' % ld), (f'q{tag}', f"Q.pk^2*ld{tag}^2"),
+        (f'a2{tag}', f"(q{tag}-2*λ.act*(1+λ.act))/λ.act^2"),
+        (f'a1{tag}', f"((1+λ.act)^2-2*q{tag}-1/M.pk.a^2)/λ.act^2"),
+        (f'a0{tag}', f"q{tag}/λ.act^2"),
+        (f'p{tag}', f"a1{tag}-a2{tag}^2/3"),
+        (f'r{tag}', f"2*a2{tag}^3/27-a2{tag}*a1{tag}/3+a0{tag}"),
+        (f'ang{tag}', ACOS(f"3*r{tag}/(2*p{tag})*sqrt(-3/p{tag})") + "/3"),
+        (f'w{tag}', f"2*sqrt(-p{tag}/3)"),
+        (f'x{tag}', f"w{tag}*cos(ang{tag}-2*π/3)-a2{tag}/3"),
+        (f'f.n{tag}', f"1/sqrt(x{tag})"),
+    ])
+    S.area_end()
+    S.row('- Switching frequency at the line peak:', f'f.sw{tag}', f"f.n{tag}*f.r", 'kHz', 2)
+    S.area_begin('currents at that point - collapsed, the peak and its make-up are below')
+    S.pack([(f'f.ss{tag}', MAX(f'f.sw{tag}', 'f.r', 'Hz'), 'kHz', 2),
+            (f'I.oi{tag}', f"2*I.out*ld{tag}", 'A', 3),
+            (f'I.sp{tag}', f"π*(f.r/f.sw{tag})*I.oi{tag}/(1-cos(π*f.r/f.ss{tag}))", 'A', 3),
+            (f'I.tr{tag}', f"I.sp{tag}/n", 'A', 3),
+            (f'I.lm{tag}', f"0.25*n*V.o_eff/(L.m*f.ss{tag})", 'A', 3),
+            (f'r.mix{tag}', f"2*I.lm{tag}/(π*I.tr{tag}+10^(-6)*'A)", None, 4),
+            # two-step clamp: MIN() is (a+b-|a-b|)/2 and loses the 1e-9 against a
+            # ratio of 1e7 at zero load (1+z would be exactly 0 in ACOS)
+            (f'r.c1{tag}', MIN(f'r.mix{tag}', '10'), None, 6),
+            (f'r.clamp{tag}', MIN(f'r.c1{tag}', '0.999999999'), None, 6),
+            (f'x.pk{tag}', ACOS(f'-r.clamp{tag}') + "/π", None, 4)])
+    S.area_end()
+    S.row('- Reflected load current peak:', f'I.trafo_pk{tag}', f'I.tr{tag}', 'A', 3)
+    S.row('- Magnetizing current peak:', f'I.Lm_pk{tag}', f'I.lm{tag}', 'A', 3)
+    S.row('- Composite tank current peak:', f'I.Lr_pk{tag}',
+          f"I.lm{tag}*(2*x.pk{tag}-1)+I.tr{tag}*sin(π*x.pk{tag})", 'A', 3)
+    S.row('- what the load adds to the magnetizing peak (1 = nothing):', f'r.add{tag}',
+          f'I.Lr_pk{tag}/I.lm{tag}', None, 4,
+          note='r.mix >= 1 here means the peak IS the magnetizing current; the load '
+               'half sine is over before the triangle reaches its top.')
+
+
+for _tag, _ld in (('.L0', 0.0), ('.L25', 0.25), ('.L50', 0.5), ('.L75', 0.75)):
+    S.h2('9b.%d  %d %% load' % (int(_ld * 4) + 1, round(_ld * 100)))
+    load_point(_tag, _ld)
+S.h2('9b.5  100 % load - section 9, repeated for the table')
+S.row('- Reflected load current peak:', 'I.trafo_pk.L100', 'I.trafo_pk', 'A', 3)
+S.row('- Magnetizing current peak:', 'I.Lm_pk.L100', 'I.Lm_pk', 'A', 3)
+S.row('- Composite tank current peak:', 'I.Lr_pk.L100', 'I.Lr_pk', 'A', 3)
+S.row('- what the load adds to the magnetizing peak:', 'r.add.L100', 'I.Lr_pk/I.Lm_pk',
+      None, 4)
+
 # ===================================================================== 10
 S.h2('10. Line-Cycle RMS of the Output Capacitor Current   [70a]')
 for k, (tg, th) in enumerate([('.a1', "π/8"), ('.a2', "π/4"), ('.a3', "3*π/8")]):
@@ -835,8 +923,9 @@ S.row('- rms current in ONE device:', 'I.SR_dev', 'I.sec_leg/n.SR', 'A', 2)
 S.const('[PICK] Conduction loss budget per leg:', 'P.SR_budget', "3*'W", 'W', 2)
 S.row('- Required RDSon per leg:', 'R.dson_req_leg',
       "P.SR_budget/I.sec_leg^2", 'mohm', 2)
-S.const('[DS] STL160N10F8 RDSon rise from 25 C to 125 C:', 'K.Tsec', '1.5',
-        None, 2, note='Fig. 13, read from the vector curve: 1.504 (typical).')
+S.const('[DS] %s RDSon rise from 25 C to 125 C:' % V.get('srfet', 'STL160N10F8'), 'K.Tsec',
+        '%g' % V.get('KTs', 1.5), None, 2,
+        note=V.get('KTs_note', 'Fig. 13, read from the vector curve: 1.504 (typical).'))
 S.row('- Required RDSon per DEVICE at Tj,max:', 'R.dson_req_dev',
       "n.SR*R.dson_req_leg", 'mohm', 2)
 S.row('- The same as a 25 C datasheet number (SOURCE AGAINST THIS):',
@@ -873,9 +962,9 @@ S.row('- Case-to-ambient allowed for Tj = 125 C [C/W]:', 'R.thCA_max',
       "(125-T.amb)/(P.mos_dc/'W)-R.thJC", None, 2)
 S.row('- Total primary conduction loss (either mode):', 'P.pri_tot',
       "N.mos/2*R.dson_p*I.pri_lc^2", 'W', 2)
-S.const('[DS] STL160N10F8 RDSon max per device, 25 C at VGS = 10 V:',
-        'R.dson_s25', "3.2*'mohm", 'mohm', 2,
-        note='DS14249 Rev 5, Table 3. Check against R.dson_req_25_s in 13.2.')
+S.const('[DS] %s RDSon max per device, 25 C at VGS = 10 V:' % V.get('srfet', 'STL160N10F8'),
+        'R.dson_s25', "%g*'mohm" % V.get('RDs', 3.2), 'mohm', 2,
+        note=V.get('RDs_note', 'DS14249 Rev 5, Table 3. Check against R.dson_req_25_s in 13.2.'))
 S.row('- RDSon margin against the requirement (>1):', 'k.RDSsec',
       'R.dson_req_25_s/R.dson_s25', None, 3)
 S.row('- the same at Tj,max, per device:', 'R.dson_s',
@@ -948,6 +1037,18 @@ S.row('- Actual maximum input power:', 'P.in_max_act', "16.8*'ohm*'W/R.CS", 'W',
 S.row('- OCP1 trip current:', 'I.OCP1', "0.55*'V/R.CS", 'A', 2)
 S.row('- OCP2 trip current:', 'I.OCP2', "0.75*'V/R.CS", 'A', 2)
 S.row('- OCP1 margin over the composite peak (>1):', 'k.OCP', 'I.OCP1/I.Lr_pk', None, 3)
+S.note('The OCP1 threshold against the composite peak of every load column of 9b. '
+       'It must clear the 100 % value (k.OCP); the lighter columns show how far the '
+       'light-load peak - the magnetizing current alone - sits below the trip.')
+S.pack([('m.OCP.L0', 'I.OCP1/I.Lr_pk.L0', None, 3),
+        ('m.OCP.L25', 'I.OCP1/I.Lr_pk.L25', None, 3),
+        ('m.OCP.L50', 'I.OCP1/I.Lr_pk.L50', None, 3),
+        ('m.OCP.L75', 'I.OCP1/I.Lr_pk.L75', None, 3)])
+S.row('- Magnetizing peak at the line zero crossing, any load (f.Min, below f.r):',
+      'I.Lm_pk.zc', "0.25*n*V.o_eff/(L.m*" + MAX('f.Min', 'f.r', 'Hz') + ")", 'A', 3,
+      note='the same as I.lm.0 of section 10 whenever f.Min is below f.r; the '
+           'current the sense resistor sees twice per line cycle whatever the load.')
+S.row('- OCP1 margin over that floor:', 'm.OCP.zc', 'I.OCP1/I.Lm_pk.zc', None, 3)
 S.row('- Sense resistor dissipation (line cycle):', 'P.RCS',
       "R.CS*I.pri_lc^2", 'W', 2)
 S.row('- Sense resistor dissipation (worst switching cycle):', 'P.RCS_pk',
@@ -1811,7 +1912,7 @@ S.const('[PICK] LED rail divider, upper (E96):', 'R.Z1', "%g*'kohm" % V.get('RZ1
 S.const('[PICK] LED rail divider, lower:', 'R.Z2', "%g*'kohm" % V.get('RZ2', 10), 'kohm', 1)
 S.row('- Feedback supply V.Z, a second TL431 as a shunt regulator (16.1b):',
       'V.Z', 'V.R*(1+R.Z1/R.Z2)', 'V', 3)
-S.const('[PICK] Shunt regulator minimum current:', 'I.min', "0.8*'mA", 'mA', 2)
+S.const('[PICK] Shunt regulator minimum current:', 'I.min', "%g*'mA" % V.get('Imin', 0.8), 'mA', 2)
 S.const('[PICK] Optodiode forward drop:', 'V.Fo', "%g*'V" % V.get('VFo', 1.15), 'V', 3)
 S.const('[PICK] Optocoupler CTR at steady state:', 'CTR.s', '%g' % V.get('CTRs', 0.37), None, 3)
 S.const('[PICK] Optocoupler CTR at maximum current:', 'CTR.m', '%g' % V.get('CTRm', 0.53), None, 3)
@@ -1893,7 +1994,7 @@ S.row('- Calculated feedback resistor R.F:', 'R.F_calc',
 S.const('[PICK] SELECTED R.F:', 'R.F', "%g*'kohm" % V.get('RF', 47), 'kohm', 1)
 S.row('- Calculated FB pin capacitor C.fx:', 'C.fx_calc',
       "1/(2*π*f.pHF*R.FB)-C.opto", 'nF', 3)
-S.const('[PICK] SELECTED C.fx:', 'C.fx', "1.55*'nF", 'nF', 2)
+S.const('[PICK] SELECTED C.fx:', 'C.fx', "%g*'nF" % V.get('Cfx', 1.55), 'nF', 2)
 
 S.h2('16.3  What the selected parts actually implement   [137] - [140]')
 S.area_begin('the compensator algebra - collapsed, the results are below')
@@ -2308,7 +2409,7 @@ S.table(['function', 'designator', 'device class and count'],
          ['Primary switches', 'S1 S2 S3 S4',
           '4 positions x n.par, STO60N045DM9'],
          ['Centre-tap rectifiers', 'Q.A1 Q.A2 Q.B1 Q.B2',
-          '2 legs x n.SR, SR MOSFET'],
+          '2 legs x n.SR, %s' % V.get('srfet', 'SR MOSFET')],
          ['VCC rectifier and bypass diodes', 'D.aux D.byp',
           '2 x 1N4148W (100 V, 300 mA) - 14c.5'],
          ['VCC pass transistor', 'Q.VCC',
@@ -2375,7 +2476,7 @@ print(f'written {OUT}\n  {nbytes} bytes, {ybottom} px tall, '
 print('\n--- cross-check against the reference implementation (l6790.py) ---')
 R = design(Vout=25., Pout=657.5, Vo_min=19., dv_out=0.05, Thold=12e-3, Nrect=1,
            fr_t=150e3, fsw_max_spec=225e3, fsw_min_spec=50e3,
-           **PRI_FET, tD=220e-9, n_sel=V['n'],
+           **dict(PRI_FET, C_par=V.get('Cpar', 100) * 1e-12), tD=220e-9, n_sel=V['n'],
            Cr_sel=V['Cr'] * 1e-9, Lr_sel=V['Lr'] * 1e-6, Lm_sel=V['Lm'] * 1e-6)
 _, Sa = sweep(R, R['Vin_min'])
 _, Sb = sweep(R, R['Vin_FBmax'])
@@ -2390,6 +2491,9 @@ checks = [
     ('I.trafo_pk', Sa['Itr_pk'], 'A'), ('I.Lm_pk', Sa['ILm_pk'], 'A'),
     ('I.Lr_pk', Sa['comp_pk'], 'A'), ('I.pri_rms', Sa['Ipri_pk'], 'A'),
     ('I.Cout_rms', Sa['ICout'], 'A'),
+    ('I.Lr_pk.L50', sweep(R, R['Vin_min'], load=0.5)[1]['comp_pk'], 'A'),
+    ('I.Lr_pk.L25', sweep(R, R['Vin_min'], load=0.25)[1]['comp_pk'], 'A'),
+    ('I.Lm_pk.L50', sweep(R, R['Vin_min'], load=0.5)[1]['ILm_pk'], 'A'),
     ('I.diode_lc', Sa['Idio_lc'], 'A'), ('I.pri_lc', Sa['Ipri_lc'], 'A'),
 ]
 bad = 0

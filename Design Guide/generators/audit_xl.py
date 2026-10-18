@@ -49,6 +49,14 @@ if os.environ.get('XL_OVERRIDE'):          # a variant instead of the canonical 
 
 # sheets whose job is bulk tabulation, not design - dead cells there are normal
 BULK = {'RTC', 'CC', 'OutCap_Sel_DB', 'CHANGELOG_rev0_6', 'BOM&Schematics'}
+# a table laid out ACROSS columns D-H (one load fraction per column, peak_xl.py,
+# 2026-10-18): its F column is the 50 % load, not a selected value, and its last
+# rows (r.add, the text, the OCP margin, the check) are read by nobody on purpose
+TABLES = {('Device Setting', 116, 141)}
+
+
+def in_table(sheet, row):
+    return any(sheet == sh and a <= row <= b for sh, a, b in TABLES)
 ERRS = ('#REF!', '#DIV/0!', '#VALUE!', '#NAME?', '#NUM!', '#NULL!')
 
 REF = re.compile(r"(?:'([^']+)'|([A-Za-z][A-Za-z0-9_. &]*))?!?\$?([A-Z]{1,2})\$?(\d+)")
@@ -102,7 +110,10 @@ def main():
         sheet = key.split('!')[0]
         if sheet in BULK or read_by[key]:
             continue
-        col = re.match(r'[^!]+!([A-Z]+)', key).group(1)
+        _m = re.match(r'[^!]+!([A-Z]+)(\d+)', key)
+        if _m and in_table(sheet, int(_m.group(2))):
+            continue
+        col = _m.group(1)
         if col not in 'DF':                        # E is the unit column
             continue
         if re.fullmatch(r'="[^"]*"', f) or 'IF(' in f and '""' in f:
@@ -188,6 +199,8 @@ def main():
             for c in row:
                 fv = wv[ws.title].cell(c.row, 6).value
                 dv = wv[ws.title].cell(c.row, 4).value
+                if in_table(ws.title, c.row):
+                    continue
                 if isinstance(fv, (int, float)) and isinstance(dv, (int, float)):
                     SELS[(ws.title, c.row)] = (fv, dv, ws.cell(c.row, 3).value)
     GUARD = r"(?:IF|ISNUMBER)\(\s*(?:'[^']+'!)?\$?F\$?%d(?![0-9])"
