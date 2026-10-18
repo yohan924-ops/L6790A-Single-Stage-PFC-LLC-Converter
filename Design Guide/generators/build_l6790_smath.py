@@ -69,8 +69,9 @@ VARIANTS = {
     # UPC1008G-LS04-R (CTR 0.54 / 0.65 at the two FB points, rank minimum, V.F
     # 1.45 V; lge200_xl.py has the derivation), R.B re-centred in the window
     # that moves with them (5.23 k), and the compensation re-scaled with zero
-    # and pole kept (150 nF / 1 uF / 27 k) so the 3rd harmonic stays in budget
-    # with the 11-capacitor plant (100 / 680 / 39 k was the 16-capacitor set).  Output bank Rubycon PX 6800 uF / 35 V (18 x 35.5, 1.92 A rms at
+    # and pole kept: 220 nF / 1.5 uF / 18 k (user 2026-10-18, "the recommended
+    # set" - 3rd harmonic 2.8 %, phase margin 48.9 deg, crossover 12.6 Hz;
+    # 150 / 1000 / 27 k gave 4.1 % at 17.4 Hz, the 5 % budget was never the aim).  Output bank Rubycon PX 6800 uF / 35 V (18 x 35.5, 1.92 A rms at
     # 120 Hz / 105 C): 11 in parallel (user 2026-10-18: 16 do not fit) - the
     # capacitance and hold-up are met, the ripple current per capacitor is
     # above the 120 Hz rating (see the sheet row I.Cout_each; the ripple is
@@ -83,7 +84,7 @@ VARIANTS = {
                         label='7.5 : 1, three flat cores, 2 T secondary', Ae=225.0,
                         Cs=6800, nC=11, ESRs=50.7, Ccer=160,
                         RZ1=100, RZ2=27, VFo=1.45, CTRs=0.54, CTRm=0.65, RB=5.23,
-                        CFo=150, CF=1000, RF=27, Cfx=1.6, Imin=0.5,
+                        CFo=220, CF=1500, RF=18, Cfx=1.6, Imin=0.5,
                         opto='1 x UPC1008G-LS04-R (UTC; CTR rank 130-260 %) - 16.5',
                         # the LG board's primary stage (2026-10-18, user: keep the two
                         # books alike): 150 pF drain-source on every FET (C127-C130)

@@ -111,7 +111,8 @@ def picks():
             ('CompensationNet&Check', CMP, 'F43', '%g' % t('R.B'),
              'R.B, kOhm (E96) - inside the window %.3f-%.3f k over the V.Z band' % (v('R.B_minZ'), v('R.B_maxZ'))),
             ('CompensationNet&Check', CMP, 'F93', '%g' % t('C.Fo'),
-             'C.Fo, nF - compensation re-scaled (zero and pole kept) for the UPC1008 CTR and the 11-capacitor plant: '
+             'C.Fo, nF - compensation re-scaled (zero and pole kept) for the UPC1008 CTR and the 11-capacitor plant, '
+             'the set picked for a low 3rd harmonic (user 2026-10-18): '
              'f.cross %.1f Hz, phase margin %.1f deg, 3rd harmonic %.2f %%' % (v('f.cross'), v('Φ.act'), v('D.3rd_act'))),
             ('CompensationNet&Check', CMP, 'F94', '%g' % t('C.F'), 'C.F, nF - same scaling'),
             ('CompensationNet&Check', CMP, 'F95', '%g' % t('R.F'), 'R.F, kOhm - same scaling'),
