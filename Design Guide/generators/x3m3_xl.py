@@ -15,8 +15,8 @@ feedback parts and output bank:
     Power Components  D23 D24 D25 D38   n.Cout, Cout.single, ESR.single, Cceramic
     CompensationNet   D14 D28 D29 D31   V.Z, V.Fo, CTR.steady, CTR.max
                       F43 F93 F94 F95   R.B, C.Fo, C.F, R.F    and C25 the optocoupler name
-    Design Spec       D46  c.HB 5529 pF (leg snubbers + drain-source caps of the LG board)
-    Power Components  D72 C92 D96 D98   Cpar 2600 pF, SR MOSFET TPH3R70APL1 3.7 mOhm k_T 1.9
+    Design Spec       D46  c.HB 3329 pF (drain-source caps of the LG board; C115/C117 are across the legs)
+    Power Components  D72 C92 D96 D98   Cpar 400 pF, SR MOSFET TPH3R70APL1 3.7 mOhm k_T 1.9
     CompensationNet   C19 D23 F96       TL431G-AE2-R, I.min 0.5 mA, C.fx 1.6 nF
 Primary MOSFET STO60N045DM9 x 1 per position as the guide; SR TPH3R70APL1 x 2 per leg as the board.
 
@@ -119,10 +119,10 @@ def picks():
              'I.min, mA - TL431G-AE2-R as on the LG board (UTC: 0.3 typ / 0.5 max)'),
             # the LG board's primary stage - the same numbers as the 200 W book
             ('Design Spec', 'xl/worksheets/sheet2.xml', 'D46', '%g' % v('c.HB'),
-             'c.HB, pF - 2 x Coss(tr) 897 pF x 400 / 245 V = 2929 + 100 layout + 2200 leg snubber (C115/C117) '
-             '+ 2 x 150 drain-source (C127-C130), as the 200 W book; read by Res. Tank Design D37 (T.T) and D60'),
+             'c.HB, pF - 2 x Coss(tr) 897 pF x 400 / 245 V = 2929 + 100 layout + 2 x 150 drain-source (C127-C130); '
+             'C115/C117 2.2 nF are across each leg (VBUS-PGND), not at the midpoint; read by Res. Tank Design D37 (T.T) and D60'),
             ('Power Components', PWR, 'D72', '%g' % t('C.par'),
-             'Cpar, pF - the same 2600 pF (layout + snubbers), feeds D77 for the dv/dt'),
+             'Cpar, pF - 100 layout + 2 x 150 drain-source, feeds D77 for the dv/dt'),
             # SR MOSFET of the LG board (user: same parts as the board)
             ('Power Components', PWR, 'D96', '%g' % (t('R.dson_s25') / 1000),
              'RD, Ohm - TPH3R70APL1 RDSon max at VGS = 10 V, as the 200 W book (Toshiba datasheet not on file)'),

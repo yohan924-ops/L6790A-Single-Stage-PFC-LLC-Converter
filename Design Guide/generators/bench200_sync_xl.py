@@ -11,9 +11,9 @@ Changed (was -> now):
     Power Components  D25  ESR.single 30 -> 50.7 mohm  tan d 0.26 at 120 Hz / (2 pi 120 Hz
                                                      6800 uF) - the only ESR the PX sheet gives
     Power Components  D58  kT.pri   1.8 -> 1.9      STO60N045DM9 datasheet (fet_xl.py, 81st round)
-    Power Components  D72  Cpar      10 -> 2600 pF  100 pF layout + 2200 pF leg snubber + 2 x
-                                                     150 pF drain-source, the same parasitic the
-                                                     book's c.HB 5529 pF already contains
+    Power Components  D72  Cpar      10 -> 2600 pF  (first pass; corrected below)
+Second pass the same day: c.HB D46 5529 -> 3329 pF and Cpar D72 2600 -> 400 pF - C115/C117
+2.2 nF are across each leg (VBUS-PGND), not at the midpoint.
 Left as they are, on purpose: C.r, L.r, L.m, n, R.T, R.ZCD.H, n.aux/n.sec (measured
 transformer and fitted parts), BM grounded, R.CFG 13 k, C.in, 5 x 6800 uF, 5 x 10 uF
 ceramic, the compensation set (its plant is the 200 W one), fl 50 Hz (the test).
@@ -39,17 +39,37 @@ PICKS = (('Design Spec', 'D47', '270', '220', 't.D, ns - the design dead time of
          ('Power Components', 'D58', '1.8', '1.9', 'kT.pri - STO60N045DM9 datasheet, as the guide and 670 W books (fet_xl.py)'),
          ('Power Components', 'D72', '10', '2600', 'Cpar, pF - 100 layout + 2200 leg snubber (C115/C117) + 2 x 150 drain-source '
           '(C127-C130): the parasitic that c.HB 5529 pF (D46) already contains; feeds D77 for the dv/dt'))
+#  Second pass, the same day (user: "you said yourself 5529 pF was the misread"): C115/C117
+#  2.2 nF sit ACROSS each leg, VBUS to PGND, not at the midpoint (schematic 10-18,
+#  HISTORY 2026-10-18), so they do not load the midpoint: c.HB = 2929 + 100 + 2 x 150 =
+#  3329 pF and Cpar 400 pF.  The first pass above stays as the record of what it wrote.
+MARK2 = 'c.HB corrected to 3329 pF'
+PICKS2 = (('Design Spec', 'D46', '5529', '3329', 'c.HB, pF - 2 x Coss(tr) 897 pF x 400 / 245 V = 2929 + 100 layout + 2 x 150 drain-source '
+           '(C127-C130). C115/C117 2.2 nF are across each leg (VBUS-PGND), not at the midpoint - the 5529 of 10-16 was that misread'),
+          ('Power Components', 'D72', '2600', '400', 'Cpar, pF - 100 layout + 2 x 150 drain-source; the leg capacitors do not count'))
 
 
 def main():
+    for mark, picks, why in ((MARK, PICKS, WHY1), (MARK2, PICKS2, WHY2)):
+        apply(mark, picks, why)
+
+
+WHY1 = ('%s, 2026-10-18 (user): the inputs that describe the same board hardware in both books '
+        'now read the same; the measured transformer, the fitted control parts and the 200 W '
+        'output bank stay as the bench has them.' % MARK)
+WHY2 = ('%s, 2026-10-18 (user): C115/C117 2.2 nF are across each leg, bus to ground - they do not '
+        'load the half-bridge midpoint. The 670 W book carries the same 3329 pF.' % MARK2)
+
+
+def apply(mark, picks, why):
     parts = X.open_book(XL)
     sp = sheet_parts(parts)
     sst = shared_strings(parts)
     log = parts[sp['CHANGELOG_rev0_6']].decode('utf-8')
-    if MARK in log:
-        print('already applied')
+    if mark in log:
+        print('already applied:', mark)
         return
-    for sheet, ref, was, now, _ in PICKS:
+    for sheet, ref, was, now, _ in picks:
         part = sp[sheet]
         xml = parts[part].decode('utf-8')
         cur = current(xml, ref, sst)
@@ -58,10 +78,7 @@ def main():
         parts[part] = xml.encode('utf-8')
         print('%-17s %-4s %6s -> %s' % (sheet, ref, was, now))
     r = max(int(x) for x in re.findall(r'<row r="(\d+)"', log)) + 2
-    why = ('%s, 2026-10-18 (user): the inputs that describe the same board hardware in both books '
-           'now read the same; the measured transformer, the fitted control parts and the 200 W '
-           'output bank stay as the bench has them.' % MARK)
-    for sheet, ref, was, now, text in [(None, None, None, None, why)] + [p for p in PICKS]:
+    for sheet, ref, was, now, text in [(None, None, None, None, why)] + [p for p in picks]:
         log = X.ensure_row(log, r)
         for col, t in (('B', sheet), ('C', ref), ('D', was), ('E', now), ('F', text)):
             if t is not None:

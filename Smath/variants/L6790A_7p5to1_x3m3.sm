@@ -451,7 +451,7 @@
     <math>
       <input>
         <e type="operand">C.par</e>
-        <e type="operand">2600</e>
+        <e type="operand">400</e>
         <e type="operand" style="unit">pF</e>
         <e type="operator" args="2">*</e>
         <e type="operator" args="2">:</e>
@@ -461,7 +461,7 @@
     <region left="20" top="1387" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
-        <p style="font-weight: normal; font-style: normal; font-size: 9px;">100 pF layout + 2200 pF leg snubber (C115/C117) + 2 x 150 pF drain-source (C127-C130) of the LG board - the 200 W book carries the same 5529 pF.</p>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">100 pF layout + 2 x 150 pF drain-source (C127-C130) of the LG board. C115/C117 2.2 nF are across each leg, bus to ground, so they do not load the midpoint.</p>
       </content>
     </text>
     </region>
@@ -2077,7 +2077,7 @@
             <e type="operand" style="unit">pF</e>
           </contract>
           <result action="numeric">
-            <e type="operand">5529</e>
+            <e type="operand">3329</e>
           </result>
       </math>
       </region>
@@ -2114,7 +2114,7 @@
           <e type="operator" args="2">:</e>
         </input>
           <result action="numeric">
-            <e type="operand">2.7201</e>
+            <e type="operand">4.5177</e>
           </result>
       </math>
       </region>
@@ -7019,7 +7019,7 @@
           <e type="operand" style="unit">ns</e>
         </contract>
         <result action="numeric">
-          <e type="operand">187.4</e>
+          <e type="operand">112.9</e>
         </result>
     </math>
     </region>
@@ -7040,7 +7040,7 @@
         <e type="operator" args="2">:</e>
       </input>
         <result action="numeric">
-          <e type="operand">1.174</e>
+          <e type="operand">1.949</e>
         </result>
     </math>
     </region>
@@ -18724,7 +18724,7 @@
         <e type="operator" args="2">:</e>
       </input>
         <result action="numeric">
-          <e type="operand">1.014</e>
+          <e type="operand">1.684</e>
         </result>
     </math>
     </region>
@@ -18818,7 +18818,7 @@
         <e type="operator" args="2">:</e>
       </input>
         <result action="numeric">
-          <e type="operand">4.6</e>
+          <e type="operand">22.3</e>
         </result>
     </math>
     </region>
@@ -18862,7 +18862,7 @@
         <e type="operator" args="2">:</e>
       </input>
         <result action="numeric">
-          <e type="operand">10.853</e>
+          <e type="operand">2.240</e>
         </result>
     </math>
     </region>
@@ -30335,7 +30335,7 @@
         <e type="operand">k.TT</e>
       </input>
         <result action="numeric">
-          <e type="operand">1.174</e>
+          <e type="operand">1.949</e>
         </result>
     </math>
     </region>
@@ -31036,7 +31036,7 @@
         <e type="operand">k.TTd</e>
       </input>
         <result action="numeric">
-          <e type="operand">1.014</e>
+          <e type="operand">1.684</e>
         </result>
     </math>
     </region>
@@ -31053,7 +31053,7 @@
         <e type="operand">k.dvdt</e>
       </input>
         <result action="numeric">
-          <e type="operand">10.853</e>
+          <e type="operand">2.240</e>
         </result>
     </math>
     </region>
@@ -33110,7 +33110,7 @@
           <e type="operand" style="unit">pF</e>
         </contract>
         <result action="numeric">
-          <e type="operand">5529</e>
+          <e type="operand">3329</e>
         </result>
     </math>
     </region>

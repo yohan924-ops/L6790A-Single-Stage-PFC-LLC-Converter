@@ -83,13 +83,15 @@ VARIANTS = {
                         CFo=100, CF=680, RF=39, Cfx=1.6, Imin=0.5,
                         opto='1 x UPC1008G-LS04-R (UTC; CTR rank 130-260 %) - 16.5',
                         # the LG board's primary stage (2026-10-18, user: keep the two
-                        # books alike): 2.2 nF per leg at the midpoint and 150 pF
-                        # drain-source on every FET sit beside the 100 pF layout
-                        # figure, so c.HB = 2929 + 2600 = 5529 pF as in the 200 W book
-                        Cpar=2600,
-                        Cpar_note='100 pF layout + 2200 pF leg snubber (C115/C117) + 2 x '
-                                  '150 pF drain-source (C127-C130) of the LG board - '
-                                  'the 200 W book carries the same 5529 pF.',
+                        # books alike): 150 pF drain-source on every FET (C127-C130)
+                        # beside the 100 pF layout figure, so c.HB = 2929 + 400 =
+                        # 3329 pF.  C115/C117 2.2 nF sit ACROSS each leg (VBUS-PGND),
+                        # not at the midpoint - the 5529 pF of the 10-16 reading was
+                        # that misread (HISTORY 2026-10-18, schematic 10-18).
+                        Cpar=400,
+                        Cpar_note='100 pF layout + 2 x 150 pF drain-source (C127-C130) of '
+                                  'the LG board. C115/C117 2.2 nF are across each leg, '
+                                  'bus to ground, so they do not load the midpoint.',
                         # SR MOSFET of the LG board (user 2026-10-18: same parts as the
                         # board).  Only RDSon and its hot multiplier are the Toshiba
                         # figures (RDSon 3.7 mohm max from the LG workbook, k_T 1.9 the
