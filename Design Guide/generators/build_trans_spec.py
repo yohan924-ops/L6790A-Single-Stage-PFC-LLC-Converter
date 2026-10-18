@@ -370,9 +370,10 @@ else:
     ]
 for t, red in BULLETS:
     span(r)
+    _nl = nlines(t, CHARS['note'])
     put('B%d' % r, '•   ' + t, size=10, bold=red,
-        color=('C00000' if red else '000000'), wrap=(len(t) > 150))
-    ws.row_dimensions[r].height = 15 if len(t) <= 150 else 28
+        color=('C00000' if red else '000000'), wrap=(_nl > 1))
+    ws.row_dimensions[r].height = 15 if _nl == 1 else 13 * _nl + 4
     r += 1
 r += 1
 
