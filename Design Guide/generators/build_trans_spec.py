@@ -35,6 +35,19 @@ from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 # 로 달고 있었다(참값 110 kHz).  아래에는 시트에서 나오지 않는 것만 둔다.
 VARIANTS = {
     '7p5to1_x1': dict(label='7.5 : 1'),        # ONE transformer, cores.CHOSEN
+    # 2026-10-18 (user: "코어를 특정하지 말고 사양만"): the third three-core option,
+    # written as REQUIREMENTS ONLY.  No core, coil former or pin layout is named -
+    # the sheet gives what the core must do (A.e for the flux ceiling B_FLAT,
+    # the material class, the copper that must fit) and the supplier chooses.
+    # Terminals follow the production part 26OP-LM83W, as the frozen 7p5to1 spec.
+    # LR_BAND: 3 uH at 5 T is hard to hit.  Trial builds (THREE_CORE_BOARD.md,
+    # 2026-10-18): L.r 8 .. 11 uH passes 71/75 like the design point once C.r
+    # is re-centred; -15 % leakage at the design C.r fails k.CTd / k.ceil, -10 %
+    # passes - so the tolerance stays the uniform +-10 %.  J_CU: the copper of
+    # the design's winding example (3.0 / 2.5 mm2, 1.0 W a transformer at MLT
+    # 0.1 m) - flat cores have long turns, so not the general 4.5 A/mm2.
+    '7p5to1_x3m3': dict(label='7.5 : 1', nocore=True, B_FLAT=0.075,
+                        LR_BAND=(8.0, 11.0), J_CU=3.75),
 }
 if len(sys.argv) < 2 or sys.argv[1] not in VARIANTS:
     raise SystemExit('변형을 인자로 주십시오: %s   '
@@ -71,13 +84,46 @@ V.update(
 # 1 - 1/k.floor^2 이고 변형마다 다르지만(9:1 14.9 % · 7.5:1 4.1 % · 6:1 58.9 %),
 # 비대칭 공차는 양산 공정이 맞추지 못한다 - 2026-09-07 사용자 결정.
 # 7.5:1 을 채택한다면 R.T 를 10 kohm 으로 내려 k.floor 를 1.117 로 올려야 한다.
-V['tol_open'] = V['tol_short'] = '±10 %'
+V['tol_open'] = '±10 %'
+V['tol_short'] = V.get('tol_short', '±10 %')
 
 # 보빈과 핀 배정: cores.CHOSEN(PQ 50/50, 카탈로그 보빈 B65982E 12핀 + 칸막이 3.0 mm),
 # cores.BOBBINS 한 곳에서 읽는다.
-BOB_NAME = CORES.CHOSEN
-BOB = CORES.BOBBINS[BOB_NAME]
-_MAP = BOB['map']
+NOCORE = bool(V.get('nocore'))
+if NOCORE:
+    #  26OP-LM83W approval sheet (KH Feelux): NP1 1-2, NS2 3-5, NS3 4-6, NAUX a-b.
+    #  The tap 4+5 is made on the PCB.  Pin layout is the supplier's.
+    BOB_NAME, BOB = None, None
+    _MAP = {'NP1': ((1,), (2,)), 'NS2': ((3,), (5,)), 'NS3': ((4,), (6,)),
+            'NAUX': (('a',), ('b',))}
+else:
+    BOB_NAME = CORES.CHOSEN
+    BOB = CORES.BOBBINS[BOB_NAME]
+    _MAP = BOB['map']
+
+# --------------------------------------- requirements-only spec: what the core must do
+if NOCORE:
+    _s = CTS.sheet(_sm)
+    _g = lambda k: _s[k][0]
+    _Vo, _fr, _Cr = _g('V.o_eff'), _g('f.r'), _g('C.r')          # V, kHz, nF
+    _Lr_set, _Lm_set = _g('L.r'), _g('L.m')                     # uH, the set
+    _fsu = _g('f.SU')                                           # kHz
+    # A.e that keeps B.pk = V.o / (4 f.r N.s A.e) at or below B_FLAT - rounded UP to 10 mm2
+    _Ae_flat = _Vo / (4.0 * _fr * 1e3 * V['Ns'] * V['B_FLAT']) * 1e6
+    V['Ae_flat'] = int(math.ceil(_Ae_flat / 10.0) * 10)
+    # copper: the design's current density (cores.J_CU), rounded UP to 0.1 mm2
+    _up = lambda x: math.ceil(x * 10.0 - 1e-9) / 10.0
+    V['J'] = V.get('J_CU', CORES.J_CU)
+    V['Acu_pri'] = _up(_d['Ipri_rms'] / V['J'])
+    V['Acu_sec'] = _up(_d['Isec_rms'] / V['J'])
+    # skin depth at f.r, copper at 100 C (rho 1.72e-8 * (1 + 0.00393 * 80))
+    _rho = 1.72e-8 * (1.0 + 0.00393 * 80.0)
+    V['delta_mm'] = math.sqrt(_rho / (math.pi * _fr * 1e3 * 4e-7 * math.pi)) * 1e3
+    V['strand_mm'] = 0.10                       # <= 0.6 delta, nearest standard gauge
+    V['foil_mm'] = CORES.T_FOIL
+    V['fr'], V['Cr'], V['fsu'] = _fr, _Cr, _fsu
+    V['Lopen_set'], V['Lshort_set'] = _Lr_set + _Lm_set, _Lr_set
+    V['Lshort_lo'], V['Lshort_hi'] = (x / V['Nx'] for x in V['LR_BAND'])
 
 
 def pins(w, dash='\u2013'):
@@ -90,6 +136,7 @@ def tap_text():
     return ', '.join(t[:-1]) + ' and ' + t[-1]
 
 
+NWORD = {1: 'one', 2: 'two', 3: 'three', 4: 'four'}
 NAVY, BAND, LINE, MUTED = '1F3864', 'EDF0F7', 'B4B4B4', '5A6472'
 thin = Side(style='thin', color=LINE)
 box = Border(left=thin, right=thin, top=thin, bottom=thin)
@@ -143,17 +190,31 @@ def head(row, cells):
     ws.row_dimensions[row].height = 20
 
 
+#  Characters a cell holds on one line (Calibri 10 pt in column widths above;
+#  9 pt italic in a note merged B..F).  Estimates on the safe side: a row too
+#  tall shows white space, a row too short clips the text in print.
+CHARS = {'C': 28, 'D': 17, 'E': 26, 'F': 44, 'note': 115, 'cond_tail': 48}
+
+
+def nlines(text, chars):
+    return max(1, -(-len(text) // chars))
+
+
 def line(row, cells, h=18):
+    lines = 1
     for col, t, al in cells:
         put('%s%d' % (col, row), t, size=10, align=al, border=True,
             wrap=(al == 'left'))
-    ws.row_dimensions[row].height = h
+        if al == 'left' and col in CHARS:
+            lines = max(lines, nlines(t, CHARS[col]))
+    ws.row_dimensions[row].height = max(h, 13 * lines + 5)
 
 
-def note(row, text):
+def note(row, text, lines=None):
     span(row)
-    put('B%d' % row, text, size=9, italic=True, color=MUTED)
-    ws.row_dimensions[row].height = 14
+    lines = lines or nlines(text, CHARS['note'])
+    put('B%d' % row, text, size=9, italic=True, color=MUTED, wrap=(lines > 1))
+    ws.row_dimensions[row].height = 14 if lines == 1 else 12 * lines + 2
 
 
 # ------------------------------------------------------------------ 표제
@@ -168,23 +229,59 @@ for c in 'BCDEF':
     ws['%s4' % c].border = Border(bottom=Side(style='medium', color=NAVY))
 ws.row_dimensions[4].height = 4
 
+
+def cond(row, item, val, tail, lines=None):
+    """One operating-condition line; lines > 1 wraps the value and the tail."""
+    lines = lines or max(nlines(val, CHARS['E']), nlines(tail or '', CHARS['cond_tail']))
+    put('B%d' % row, '•', size=10, align='center', color=MUTED)
+    ws.merge_cells('C%d:D%d' % (row, row))
+    put('C%d' % row, item, size=10)
+    put('E%d' % row, val, size=10, bold=True, wrap=(lines > 1))
+    if tail:
+        put('F%d' % row, tail, size=9, italic=True, color=MUTED, wrap=(lines > 1))
+    ws.row_dimensions[row].height = 16 if lines == 1 else 13 * lines
+
+
+#  Row numbers are not fixed: the requirements-only spec has more lines.  The
+#  cursor reproduces the one-transformer layout exactly (rows 6 .. 45, print area
+#  to 47) - check_trans_spec reads the file by its labels, not by row.
+r = 6
+
 # ------------------------------------------------------------- 1. 구성
-section(6, '1.    CONFIGURATION')
-for i, (t, red) in enumerate([
+section(r, '1.    CONFIGURATION')
+r += 1
+if NOCORE:
+    BULLETS = [
+        ('Three identical transformers per set — primaries in series, '
+         'secondaries in parallel.' if V['Nx'] > 1 else
+         'One transformer per set.', False),
+        ('EVERY VALUE BELOW IS PER TRANSFORMER.', True),
+        ('Flat (low-profile) construction as the production part 26OP-LM83W.   '
+         'Core, coil former, wire and winding arrangement are the supplier’s '
+         'choice within sections 2 to 5; the overall height is agreed with the '
+         'set mechanical design before the first samples.', False),
+    ]
+else:
+    BULLETS = [
         ('One transformer per set on %s %s (core %s, %s coil former, %d pins).'
          % (CORES.CORES[BOB_NAME].get('vendor', 'TDK'), BOB_NAME,
             CORES.CORES[BOB_NAME]['core'], BOB['former'], BOB['pins']), False),
-        ('EVERY VALUE BELOW IS PER TRANSFORMER.', True)]):
-    row = 7 + i
-    span(row)
-    put('B%d' % row, '•   ' + t, size=10, bold=red,
-        color=('C00000' if red else '000000'))
-    ws.row_dimensions[row].height = 15
+        ('EVERY VALUE BELOW IS PER TRANSFORMER.', True),
+    ]
+for t, red in BULLETS:
+    span(r)
+    put('B%d' % r, '•   ' + t, size=10, bold=red,
+        color=('C00000' if red else '000000'), wrap=(len(t) > 150))
+    ws.row_dimensions[r].height = 15 if len(t) <= 150 else 28
+    r += 1
+r += 1
 
 # ---------------------------------------------------------- 2. 권선
-section(10, '2.    WINDING')
-head(11, [('B', 'No'), ('C', 'Winding'), ('D', 'Terminal'), ('E', 'Turns'),
-          ('F', 'Winding current           rms   /   peak')])
+section(r, '2.    WINDING')
+r += 1
+head(r, [('B', 'No'), ('C', 'Winding'), ('D', 'Terminal'), ('E', 'Turns'),
+         ('F', 'Winding current           rms   /   peak')])
+r += 1
 WIND = [
     ('1', 'NP1     Primary', pins('NP1'), '%d T' % V['Np'], V['Ipri']),
     ('2', 'NS2     Secondary A', pins('NS2'), '%d T' % V['Ns'], V['Isec']),
@@ -192,41 +289,73 @@ WIND = [
     ('4', 'NAUX   Auxiliary (VCC, ZCD)', pins('NAUX'), '%d T' % V['Naux'],
      '%.0f mA dc load (VCC)' % V['Ivcc']),
 ]
-for i, (n, des, term, turns, cur) in enumerate(WIND):
-    line(12 + i, [('B', n, 'center'), ('C', des, 'left'), ('D', term, 'center'),
-                  ('E', turns, 'center'), ('F', cur, 'center')])
-    ws['E%d' % (12 + i)].font = Font(name='Calibri', size=10, bold=True)
+for n, des, term, turns, cur in WIND:
+    line(r, [('B', n, 'center'), ('C', des, 'left'), ('D', term, 'center'),
+             ('E', turns, 'center'), ('F', cur, 'center')])
+    ws['E%d' % r].font = Font(name='Calibri', size=10, bold=True)
+    r += 1
+r += 1
 
 _shared = set(_MAP['NS2'][1]) == set(_MAP['NS3'][0])
 if _shared:
-    note(17, 'Centre tap: NS2 finish and NS3 start share pins %s, one Litz '
-             'bundle of each on a pin.   At most two bundles on a pin: confirm '
-             'the pin current rating.   NP1: the %d bundles of a turn are '
-             'turned over as a group at each layer.'
-             % (tap_text(), CORES.PRI_PAR))
+    note(r, 'Centre tap: NS2 finish and NS3 start share pins %s, one Litz '
+            'bundle of each on a pin.   At most two bundles on a pin: confirm '
+            'the pin current rating.   NP1: the %d bundles of a turn are '
+            'turned over as a group at each layer.'
+            % (tap_text(), CORES.PRI_PAR))
 else:
-    note(17, 'Centre tap is made on the PCB by joining pins %s — do NOT join '
-             'them inside the transformer.%s'
-             % (tap_text(), '   One conductor per pin; a secondary pin '
-                'carries its whole winding current: confirm the pin current '
-                'rating, or bring the secondary ends straight out.'))
-note(18, ('Custom coil former for %s, %d pins, made to this '
-          'specification.   ' % (BOB_NAME, BOB['pins'])
-          if CORES.MECH.get(BOB_NAME, {}).get('custom') else
-          'Coil former TDK %s (%s), %d pins%s.   '
-          % (BOB['former'], BOB_NAME, BOB['pins'],
-             ', with a %.1f mm partition added between the two sections'
-             % CORES.PARTITION
-             if CORES.MECH.get(BOB_NAME, {}).get('partition') else '')) +
-         (CORES.PIN_NOTE if BOB_NAME == CORES.CHOSEN else
-          'Pin numbers count along one row from pin 1 and back along the '
-          'other — confirm on the bobbin drawing before winding.'))
+    note(r, 'Centre tap is made on the PCB by joining pins %s — do NOT join '
+            'them inside the transformer.%s'
+            % (tap_text(), '   One conductor per pin; a secondary pin '
+               'carries its whole winding current%s: confirm the pin current '
+               'rating, or bring the secondary ends straight out.'
+               % (' (%.1f A rms)' % _d['Isec_rms'] if NOCORE else '')))
+r += 1
+if NOCORE:
+    note(r, 'Terminal numbers follow the production part 26OP-LM83W (approval '
+            'sheet, KH Feelux): primary %s, secondaries %s and %s, auxiliary %s.'
+            '   Pin layout is the supplier’s choice.'
+            % (pins('NP1'), pins('NS2'), pins('NS3'), pins('NAUX')))
+    r += 1
+    note(r, 'Conductors: NP1 Litz, copper ≥ %.1f mm², strands ≤ %.2f mm.   '
+            'NS2 and NS3 each: Litz (strands ≤ %.2f mm) or copper foil ≤ %.2f mm '
+            'thick, copper ≥ %.1f mm².   From %.2f A/mm² at the rms currents '
+            'above; skin depth %.2f mm at f.r, copper at 100 °C.'
+            % (V['Acu_pri'], V['strand_mm'], V['strand_mm'], V['foil_mm'],
+               V['Acu_sec'], V['J'], V['delta_mm']))
+    r += 1
+    _all = V['Nx'] * V['Naux']
+    if V['Naux_set'] < _all:
+        _rest = _all - V['Naux_set']
+        note(r, 'NAUX: %d T on EVERY transformer; the set series-connects %s of '
+                'them (%d T in all), the other %s open.'
+                % (V['Naux'], NWORD[V['Naux_set'] // V['Naux']], V['Naux_set'],
+                   ('%s stay' % NWORD[_rest]) if _rest > 1 else 'one stays'))
+    else:
+        note(r, 'NAUX: %d T on every transformer, all in series (%d T in all).'
+                % (V['Naux'], V['Naux_set']))
+    r += 2
+else:
+    note(r, ('Custom coil former for %s, %d pins, made to this '
+             'specification.   ' % (BOB_NAME, BOB['pins'])
+             if CORES.MECH.get(BOB_NAME, {}).get('custom') else
+             'Coil former TDK %s (%s), %d pins%s.   '
+             % (BOB['former'], BOB_NAME, BOB['pins'],
+                ', with a %.1f mm partition added between the two sections'
+                % CORES.PARTITION
+                if CORES.MECH.get(BOB_NAME, {}).get('partition') else '')) +
+            (CORES.PIN_NOTE if BOB_NAME == CORES.CHOSEN else
+             'Pin numbers count along one row from pin 1 and back along the '
+             'other — confirm on the bobbin drawing before winding.'))
+    r += 1
 
 # ------------------------------------------------- 3. 전기 요구사양
-section(19, '3.    ELECTRICAL  REQUIREMENTS',
+section(r, '3.    ELECTRICAL  REQUIREMENTS',
         'Measured with an LCR meter at 100 kHz / 1 V.')
-head(21, [('B', 'No'), ('C', 'Item'), ('D', 'Terminal'), ('E', 'Requirement'),
-          ('F', 'Condition')])
+r += 2
+head(r, [('B', 'No'), ('C', 'Item'), ('D', 'Terminal'), ('E', 'Requirement'),
+         ('F', 'Condition')])
+r += 1
 REQ = [
     ('1', 'INDUCTANCE', pins('NP1'), '%.2f µH    %s' % (V['Lopen'], V['tol_open']),
      'All other windings OPEN.   L.mag + L.leak, not L.mag alone.', 18),
@@ -237,54 +366,109 @@ REQ = [
     ('3', 'D.C OVERLAP', pins('NP1'), '≥ 90 % of initial inductance',
      'Test current %d A, normal temperature' % V['Isat'], 18),
 ]
-for i, (n, item, term, req, cond, h) in enumerate(REQ):
-    row = 22 + i
-    line(row, [('B', n, 'center'), ('C', item, 'left'), ('D', term, 'center'),
-               ('E', req, 'center'), ('F', cond, 'left')], h=h)
-    ws['E%d' % row].font = Font(name='Calibri', size=10, bold=True)
-    ws['C%d' % row].alignment = Alignment(horizontal='left', vertical='center',
-                                          wrap_text=True)
+for n, item, term, req, cnd, h in REQ:
+    line(r, [('B', n, 'center'), ('C', item, 'left'), ('D', term, 'center'),
+             ('E', req, 'center'), ('F', cnd, 'left')], h=h)
+    ws['E%d' % r].font = Font(name='Calibri', size=10, bold=True)
+    ws['C%d' % r].alignment = Alignment(horizontal='left', vertical='center',
+                                        wrap_text=True)
+    r += 1
 
-note(25, 'Both measured at %s of ONE transformer.   ' % pins('NP1') +
-         ('Item 2 is set by the winding and the partition between the two '
-          'sections: measure it, and each half alone, on the first samples; '
-          'a thinner partition lowers it.'))
-note(26, ('Item 2, each half: in service only one half conducts at a time, '
-          'and the two halves lie in different layers.   With NS2 and NS3 '
-          'both shorted the reading is lower (about %.1f µH estimated): '
-          'record it, do not hold it to item 2.   The auxiliary is NOT shorted.'
-          % __import__('leakage_fem').estimate(__import__('an_pdf').V)))
+if NOCORE:
+    note(r, 'Both measured at %s of ONE transformer.   %s in series give the set '
+            '%.1f µH open and %.1f µH leakage, and the ratio %s.'
+            % (pins('NP1'), NWORD[V['Nx']].capitalize(), V['Lopen_set'],
+               V['Lshort_set'], V['label']))
+    r += 1
+    note(r, 'Item 2 is the resonant inductor: C.r %g nF with the %s in series '
+            'gives f.r %.0f kHz.   If the construction cannot reach it, quote the '
+            'value it reaches BEFORE samples: %.2f to %.2f µH per transformer is '
+            'taken by re-selecting C.r and the oscillator setting, the %s then '
+            'applying around the quoted value; below that the difference goes '
+            'into an external inductor.'
+            % (V['Cr'], NWORD[V['Nx']], V['fr'], V['Lshort_lo'], V['Lshort_hi'],
+               V['tol_short']))
+    r += 1
+    note(r, 'With NS2 and NS3 both shorted the reading is lower: record it, do '
+            'not hold it to item 2.   The auxiliary is NOT shorted.')
+    r += 2
+else:
+    note(r, 'Both measured at %s of ONE transformer.   ' % pins('NP1') +
+            ('Item 2 is set by the winding and the partition between the two '
+             'sections: measure it, and each half alone, on the first samples; '
+             'a thinner partition lowers it.'))
+    r += 1
+    note(r, ('Item 2, each half: in service only one half conducts at a time, '
+             'and the two halves lie in different layers.   With NS2 and NS3 '
+             'both shorted the reading is lower (about %.1f µH estimated): '
+             'record it, do not hold it to item 2.   The auxiliary is NOT shorted.'
+             % __import__('leakage_fem').estimate(__import__('an_pdf').V)))
+    r += 2
 
 # ------------------------------------------------------- 4. 동작 조건
-section(28, '4.    OPERATING  CONDITIONS')
-COND = [
-    ('Switching frequency', V['fsw'], 'at full load'),
-    ('Core effective area', 'Ae  ≥  %d mm²' % V['Ae'],
-     'holds the peak flux density at or below 0.20 T'),
-]
-for i, (item, val, tail) in enumerate(COND):
-    row = 29 + i
-    put('B%d' % row, '•', size=10, align='center', color=MUTED)
-    ws.merge_cells('C%d:D%d' % (row, row))
-    put('C%d' % row, item, size=10)
-    put('E%d' % row, val, size=10, bold=True)
-    if tail:
-        put('F%d' % row, tail, size=9, italic=True, color=MUTED)
-    ws.row_dimensions[row].height = 16
-
-note(32, 'The core, coil former and winding arrangement of the reference design '
-         'set item 3-2. Another construction is acceptable only when sections 3 '
-         'and 5 are met and the first samples are approved.')
+section(r, '4.    OPERATING  CONDITIONS')
+r += 1
+if NOCORE:
+    COND = [
+        ('Switching frequency', V['fsw'],
+         'at full load; start-up begins at %.0f kHz' % V['fsu']),
+        ('Resonant frequency', 'f.r  %.0f kHz' % V['fr'],
+         'C.r %g nF with the %s item-2 inductances in series (%.1f µH)'
+         % (V['Cr'], NWORD[V['Nx']], V['Lshort_set'])),
+        ('Core effective area', 'Ae  ≥  %d mm²' % V['Ae_flat'],
+         'holds the peak flux density at or below %.0f mT at f.r with %d T: '
+         'B.pk = V.o / (4 · f.r · N.s · Ae).   Ae of the whole flux path — in a '
+         'flat core the yoke, not the centre leg, usually sets it; two cores in '
+         'one coil former count together.'
+         % (V['B_FLAT'] * 1e3, V['Ns'])),
+        ('Core material', 'MnZn power ferrite, N97 / PC95 / 3C95 class',
+         'loss minimum near 100 °C.   The loss budget allows about 1.3 W in the '
+         'core and 1.0 W in the windings of each transformer at full load.'),
+    ]
+else:
+    COND = [
+        ('Switching frequency', V['fsw'], 'at full load'),
+        ('Core effective area', 'Ae  ≥  %d mm²' % V['Ae'],
+         'holds the peak flux density at or below 0.20 T'),
+    ]
+for item, val, tail in COND:
+    cond(r, item, val, tail)
+    r += 1
+r += 1
+if NOCORE:
+    note(r, 'Any core, coil former and winding arrangement meeting sections 2 to 5 '
+            'is acceptable once the first samples are approved; report the open '
+            'and leakage inductances, both halves, with the samples.')
+else:
+    note(r, 'The core, coil former and winding arrangement of the reference design '
+            'set item 3-2. Another construction is acceptable only when sections 3 '
+            'and 5 are met and the first samples are approved.')
+r += 2
 
 # --------------------------------------------------- 5. 안전 절연 (insulation.py)
 import insulation as INS                                        # noqa: E402
 _R = INS.req()
-section(34, '5.    SAFETY  INSULATION',
+section(r, '5.    SAFETY  INSULATION',
         'Household AV (TV) for the US, EU, Japan, Korea and China: IEC 62368-1 '
         'as adopted there, GB 4943.1-2022 in China (5000 m).')
-head(36, [('B', 'No'), ('C', 'Item'), ('D', 'Between'), ('E', 'Requirement'),
-          ('F', 'Condition')])
+r += 2
+head(r, [('B', 'No'), ('C', 'Item'), ('D', 'Between'), ('E', 'Requirement'),
+         ('F', 'Condition')])
+r += 1
 PRI, SEC = 'primary', 'secondary'
+if NOCORE:
+    _np1 = ('Triple-insulated Litz approved as reinforced insulation to IEC '
+            '62368-1, one wire from pin to pin.')
+    _naux = ('Triple-insulated wire approved as reinforced insulation to IEC '
+             '62368-1; leads stay insulated up to the primary pins. Its approved '
+             'frequency must cover the start-up frequency, %.0f kHz.' % V['fsu'])
+else:
+    _np1 = ('Triple-insulated Litz approved as reinforced insulation to IEC '
+            '62368-1, one wire from pin to pin. The partition between the '
+            'sections carries NO insulation; it sets item 3-2.')
+    _naux = ('Triple-insulated wire approved as reinforced insulation to IEC 62368-1, '
+             'wound OVER the secondary; leads stay insulated up to the primary-row '
+             'pins. Its approved frequency must cover the start-up frequency.')
 SAFE = [
     ('1', 'Insulation grade', '%s  |  %s' % (PRI, SEC), 'REINFORCED',
      'Primary = NP1, NAUX; secondary = NS2, NS3 and the CORE. Pollution '
@@ -296,14 +480,8 @@ SAFE = [
     ('3', 'Clearance', '%s  |  %s' % (PRI, SEC), '≥ %.1f mm' % _R['clearance'],
      '%.1f mm at 2000 m × %.2f for 5000 m, rounded up.'
      % (_R['cl_2000'], INS.K_ALT), 22),
-    ('4', 'NP1 wire', 'NP1  |  %s' % SEC, 'TIW-Litz, reinforced',
-     'Triple-insulated Litz approved as reinforced insulation to IEC '
-     '62368-1, one wire from pin to pin. The partition between the '
-     'sections carries NO insulation; it sets item 3-2.', 30),
-    ('5', 'NAUX wire', 'NAUX  |  %s' % SEC, 'TIW, reinforced',
-     'Triple-insulated wire approved as reinforced insulation to IEC 62368-1, '
-     'wound OVER the secondary; leads stay insulated up to the primary-row '
-     'pins. Its approved frequency must cover the start-up frequency.', 30),
+    ('4', 'NP1 wire', 'NP1  |  %s' % SEC, 'TIW-Litz, reinforced', _np1, 30),
+    ('5', 'NAUX wire', 'NAUX  |  %s' % SEC, 'TIW, reinforced', _naux, 30),
     ('6', 'Solid insulation', '%s  |  %s' % (PRI, SEC),
      'DTI ≥ %.1f mm  or  ≥ %d tape layers' % (_R['dti'], _R['layers']),
      'Where tape or sleeving carries it: each tape layer passes the '
@@ -315,16 +493,18 @@ SAFE = [
      'breakdown. Routine test voltage and time as agreed with the certifier.',
      30),
 ]
-for i, (n, item, betw, req, cond, h) in enumerate(SAFE):
-    row = 37 + i
-    line(row, [('B', n, 'center'), ('C', item, 'left'), ('D', betw, 'center'),
-               ('E', req, 'center'), ('F', cond, 'left')], h=h)
-    ws['E%d' % row].font = Font(name='Calibri', size=10, bold=True)
-    ws['D%d' % row].alignment = Alignment(horizontal='center',
-                                          vertical='center', wrap_text=True)
-note(45, 'The working voltage behind item 2 is an estimate from the design '
-         '(%.0f V rms, %.0f V peak at %g Vac); the certifying body measures it.'
-         % (_R['u_rms'], _R['u_pk'], INS.V_MAINS_DESIGN))
+for n, item, betw, req, cnd, h in SAFE:
+    line(r, [('B', n, 'center'), ('C', item, 'left'), ('D', betw, 'center'),
+             ('E', req, 'center'), ('F', cnd, 'left')], h=h)
+    ws['E%d' % r].font = Font(name='Calibri', size=10, bold=True)
+    ws['D%d' % r].alignment = Alignment(horizontal='center',
+                                        vertical='center', wrap_text=True)
+    r += 1
+r += 1
+note(r, 'The working voltage behind item 2 is an estimate from the design '
+        '(%.0f V rms, %.0f V peak at %g Vac); the certifying body measures it.'
+        % (_R['u_rms'], _R['u_pk'], INS.V_MAINS_DESIGN))
+LAST_ROW = r
 
 # ------------------------------------------------------------- 인쇄
 ws.page_setup.orientation = 'portrait'
@@ -332,7 +512,7 @@ ws.page_setup.paperSize = ws.PAPERSIZE_A4
 ws.page_setup.fitToWidth = 1
 ws.page_setup.fitToHeight = 1
 ws.sheet_properties.pageSetUpPr.fitToPage = True
-ws.print_area = 'A1:G47'
+ws.print_area = 'A1:G%d' % (LAST_ROW + 2)
 ws.page_margins.left = ws.page_margins.right = 0.3
 ws.page_margins.top = ws.page_margins.bottom = 0.4
 
