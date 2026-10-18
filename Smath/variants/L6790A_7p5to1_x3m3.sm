@@ -9492,7 +9492,7 @@
     <math>
       <input>
         <e type="operand">C.single</e>
-        <e type="operand">470</e>
+        <e type="operand">6800</e>
         <e type="operand" style="unit">μF</e>
         <e type="operator" args="2">*</e>
         <e type="operator" args="2">:</e>
@@ -9510,7 +9510,7 @@
     <math>
       <input>
         <e type="operand">n.C</e>
-        <e type="operand">160</e>
+        <e type="operand">16</e>
         <e type="operator" args="2">:</e>
       </input>
     </math>
@@ -9535,7 +9535,7 @@
           <e type="operand" style="unit">mF</e>
         </contract>
         <result action="numeric">
-          <e type="operand">75.20</e>
+          <e type="operand">108.80</e>
         </result>
     </math>
     </region>
@@ -9565,7 +9565,7 @@
           <e type="operand" style="unit">V</e>
         </contract>
         <result action="numeric">
-          <e type="operand">1.184</e>
+          <e type="operand">0.819</e>
         </result>
     </math>
     </region>
@@ -9588,7 +9588,7 @@
         <e type="operator" args="2">:</e>
       </input>
         <result action="numeric">
-          <e type="operand">4.74</e>
+          <e type="operand">3.27</e>
         </result>
     </math>
     </region>
@@ -9614,7 +9614,7 @@
           <e type="operand" style="unit">V</e>
         </contract>
         <result action="numeric">
-          <e type="operand">24.408</e>
+          <e type="operand">24.591</e>
         </result>
     </math>
     </region>
@@ -9648,7 +9648,7 @@
           <e type="operand" style="unit">mF</e>
         </contract>
         <result action="numeric">
-          <e type="operand">67.22</e>
+          <e type="operand">64.75</e>
         </result>
     </math>
     </region>
@@ -9683,7 +9683,7 @@
           <e type="operand" style="unit">ms</e>
         </contract>
         <result action="numeric">
-          <e type="operand">13.42</e>
+          <e type="operand">20.16</e>
         </result>
     </math>
     </region>
@@ -9704,7 +9704,7 @@
         <e type="operator" args="2">:</e>
       </input>
         <result action="numeric">
-          <e type="operand">1.119</e>
+          <e type="operand">1.680</e>
         </result>
     </math>
     </region>
@@ -9728,7 +9728,7 @@
           <e type="operand" style="unit">A</e>
         </contract>
         <result action="numeric">
-          <e type="operand">0.18</e>
+          <e type="operand">1.80</e>
         </result>
     </math>
     </region>
@@ -9743,7 +9743,7 @@
     <math>
       <input>
         <e type="operand">ESR.single</e>
-        <e type="operand">30</e>
+        <e type="operand">50.7</e>
         <e type="operand" style="unit">mohm</e>
         <e type="operator" args="2">*</e>
         <e type="operator" args="2">:</e>
@@ -9770,7 +9770,7 @@
           <e type="operand" style="unit">mohm</e>
         </contract>
         <result action="numeric">
-          <e type="operand">0.1875</e>
+          <e type="operand">3.1688</e>
         </result>
     </math>
     </region>
@@ -9801,7 +9801,7 @@
           <e type="operand" style="unit">mV</e>
         </contract>
         <result action="numeric">
-          <e type="operand">17.56</e>
+          <e type="operand">296.77</e>
         </result>
     </math>
     </region>
@@ -9878,7 +9878,7 @@
           <e type="operand" style="unit">μF</e>
         </contract>
         <result action="numeric">
-          <e type="operand">-52.62</e>
+          <e type="operand">66.77</e>
         </result>
     </math>
     </region>
@@ -9919,7 +9919,7 @@
           <e type="operand" style="unit">μF</e>
         </contract>
         <result action="numeric">
-          <e type="operand">0.00</e>
+          <e type="operand">66.77</e>
         </result>
     </math>
     </region>
@@ -9941,7 +9941,7 @@
     <math>
       <input>
         <e type="operand">C.ceramic</e>
-        <e type="operand">10</e>
+        <e type="operand">160</e>
         <e type="operand" style="unit">μF</e>
         <e type="operator" args="2">*</e>
         <e type="operator" args="2">:</e>
@@ -9982,7 +9982,7 @@
           <e type="operand" style="unit">mV</e>
         </contract>
         <result action="numeric">
-          <e type="operand">16.28</e>
+          <e type="operand">13.30</e>
         </result>
     </math>
     </region>
@@ -10003,7 +10003,7 @@
         <e type="operator" args="2">:</e>
       </input>
         <result action="numeric">
-          <e type="operand">1.843</e>
+          <e type="operand">2.255</e>
         </result>
     </math>
     </region>
@@ -10043,7 +10043,7 @@
           <e type="operand" style="unit">W</e>
         </contract>
         <result action="numeric">
-          <e type="operand">0.145</e>
+          <e type="operand">0.118</e>
         </result>
     </math>
     </region>
@@ -16812,7 +16812,7 @@
           <e type="operand" style="unit">ms</e>
         </contract>
         <result action="numeric">
-          <e type="operand">43.7</e>
+          <e type="operand">63.2</e>
         </result>
     </math>
     </region>
@@ -16840,7 +16840,7 @@
         <e type="operator" args="2">:</e>
       </input>
         <result action="numeric">
-          <e type="operand">2.747</e>
+          <e type="operand">1.899</e>
         </result>
     </math>
     </region>
@@ -16896,7 +16896,7 @@
           <e type="operand" style="unit">μF</e>
         </contract>
         <result action="numeric">
-          <e type="operand">1200</e>
+          <e type="operand">1730</e>
         </result>
     </math>
     </region>
@@ -16942,7 +16942,7 @@
         <e type="operator" args="2">:</e>
       </input>
         <result action="numeric">
-          <e type="operand">0.833</e>
+          <e type="operand">0.578</e>
         </result>
     </math>
     </region>
@@ -22298,7 +22298,7 @@
         <e type="operator" args="2">:</e>
       </input>
         <result action="numeric">
-          <e type="operand">130.06</e>
+          <e type="operand">89.89</e>
         </result>
     </math>
     </region>
@@ -22331,7 +22331,7 @@
           <e type="operand" style="unit">Hz</e>
         </contract>
         <result action="numeric">
-          <e type="operand">20.70</e>
+          <e type="operand">14.31</e>
         </result>
     </math>
     </region>
@@ -22363,7 +22363,7 @@
           <e type="operand" style="unit">V</e>
         </contract>
         <result action="numeric">
-          <e type="operand">1.1843</e>
+          <e type="operand">0.8186</e>
         </result>
     </math>
     </region>
@@ -22411,7 +22411,7 @@
         <e type="operator" args="2">:</e>
       </input>
         <result action="numeric">
-          <e type="operand">0.4541</e>
+          <e type="operand">0.6570</e>
         </result>
     </math>
     </region>
@@ -22556,7 +22556,7 @@
         <e type="operator" args="2">:</e>
       </input>
         <result action="numeric">
-          <e type="operand">36.203</e>
+          <e type="operand">52.379</e>
         </result>
     </math>
     </region>
@@ -23046,7 +23046,7 @@
     <math>
       <input>
         <e type="operand">R.Z1</e>
-        <e type="operand">38.3</e>
+        <e type="operand">100</e>
         <e type="operand" style="unit">kohm</e>
         <e type="operator" args="2">*</e>
         <e type="operator" args="2">:</e>
@@ -23064,7 +23064,7 @@
     <math>
       <input>
         <e type="operand">R.Z2</e>
-        <e type="operand">10</e>
+        <e type="operand">27</e>
         <e type="operand" style="unit">kohm</e>
         <e type="operator" args="2">*</e>
         <e type="operator" args="2">:</e>
@@ -23096,7 +23096,7 @@
           <e type="operand" style="unit">V</e>
         </contract>
         <result action="numeric">
-          <e type="operand">12.051</e>
+          <e type="operand">11.736</e>
         </result>
     </math>
     </region>
@@ -23129,7 +23129,7 @@
     <math>
       <input>
         <e type="operand">V.Fo</e>
-        <e type="operand">1.15</e>
+        <e type="operand">1.45</e>
         <e type="operand" style="unit">V</e>
         <e type="operator" args="2">*</e>
         <e type="operator" args="2">:</e>
@@ -23147,7 +23147,7 @@
     <math>
       <input>
         <e type="operand">CTR.s</e>
-        <e type="operand">0.37</e>
+        <e type="operand">0.54</e>
         <e type="operator" args="2">:</e>
       </input>
     </math>
@@ -23163,7 +23163,7 @@
     <math>
       <input>
         <e type="operand">CTR.m</e>
-        <e type="operand">0.53</e>
+        <e type="operand">0.65</e>
         <e type="operator" args="2">:</e>
       </input>
     </math>
@@ -23324,7 +23324,7 @@
           <e type="operand" style="unit">kohm</e>
         </contract>
         <result action="numeric">
-          <e type="operand">1.437</e>
+          <e type="operand">1.812</e>
         </result>
     </math>
     </region>
@@ -23384,7 +23384,7 @@
           <e type="operand" style="unit">kohm</e>
         </contract>
         <result action="numeric">
-          <e type="operand">6.516</e>
+          <e type="operand">5.592</e>
         </result>
     </math>
     </region>
@@ -23419,7 +23419,7 @@
           <e type="operand" style="unit">kohm</e>
         </contract>
         <result action="numeric">
-          <e type="operand">5.795</e>
+          <e type="operand">4.940</e>
         </result>
     </math>
     </region>
@@ -23441,7 +23441,7 @@
     <math>
       <input>
         <e type="operand">R.B</e>
-        <e type="operand">6.2</e>
+        <e type="operand">5.23</e>
         <e type="operand" style="unit">kohm</e>
         <e type="operator" args="2">*</e>
         <e type="operator" args="2">:</e>
@@ -23465,7 +23465,7 @@
         <e type="operator" args="2">:</e>
       </input>
         <result action="numeric">
-          <e type="operand">1.106</e>
+          <e type="operand">1.394</e>
         </result>
     </math>
     </region>
@@ -23493,7 +23493,7 @@
         <e type="operator" args="2">:</e>
       </input>
         <result action="numeric">
-          <e type="operand">1.070</e>
+          <e type="operand">1.059</e>
         </result>
     </math>
     </region>
@@ -23514,7 +23514,7 @@
         <e type="operator" args="2">:</e>
       </input>
         <result action="numeric">
-          <e type="operand">1.051</e>
+          <e type="operand">1.069</e>
         </result>
     </math>
     </region>
@@ -23605,7 +23605,7 @@
           <e type="operand" style="unit">V</e>
         </contract>
         <result action="numeric">
-          <e type="operand">11.802</e>
+          <e type="operand">11.495</e>
         </result>
     </math>
     </region>
@@ -23649,7 +23649,7 @@
           <e type="operand" style="unit">V</e>
         </contract>
         <result action="numeric">
-          <e type="operand">12.305</e>
+          <e type="operand">11.982</e>
         </result>
     </math>
     </region>
@@ -23684,7 +23684,7 @@
           <e type="operand" style="unit">kohm</e>
         </contract>
         <result action="numeric">
-          <e type="operand">6.323</e>
+          <e type="operand">5.419</e>
         </result>
     </math>
     </region>
@@ -23719,7 +23719,7 @@
           <e type="operand" style="unit">kohm</e>
         </contract>
         <result action="numeric">
-          <e type="operand">5.970</e>
+          <e type="operand">5.097</e>
         </result>
     </math>
     </region>
@@ -23740,7 +23740,7 @@
         <e type="operator" args="2">:</e>
       </input>
         <result action="numeric">
-          <e type="operand">1.020</e>
+          <e type="operand">1.036</e>
         </result>
     </math>
     </region>
@@ -23761,7 +23761,7 @@
         <e type="operator" args="2">:</e>
       </input>
         <result action="numeric">
-          <e type="operand">1.039</e>
+          <e type="operand">1.026</e>
         </result>
     </math>
     </region>
@@ -23799,7 +23799,7 @@
         <e type="operator" args="2">:</e>
       </input>
         <result action="numeric">
-          <e type="operand">0.970</e>
+          <e type="operand">1.023</e>
         </result>
     </math>
     </region>
@@ -23825,7 +23825,7 @@
           <e type="operand" style="unit">mA</e>
         </contract>
         <result action="numeric">
-          <e type="operand">1.58</e>
+          <e type="operand">1.81</e>
         </result>
     </math>
     </region>
@@ -23876,7 +23876,7 @@
           <e type="operand" style="unit">mA</e>
         </contract>
         <result action="numeric">
-          <e type="operand">0.249</e>
+          <e type="operand">0.092</e>
         </result>
     </math>
     </region>
@@ -23906,7 +23906,7 @@
           <e type="operand" style="unit">ohm</e>
         </contract>
         <result action="numeric">
-          <e type="operand">2364</e>
+          <e type="operand">2415</e>
         </result>
     </math>
     </region>
@@ -23945,7 +23945,7 @@
         <e type="operator" args="2">:</e>
       </input>
         <result action="numeric">
-          <e type="operand">1.075</e>
+          <e type="operand">1.098</e>
         </result>
     </math>
     </region>
@@ -23974,7 +23974,7 @@
           <e type="operand" style="unit">W</e>
         </contract>
         <result action="numeric">
-          <e type="operand">0.133</e>
+          <e type="operand">0.138</e>
         </result>
     </math>
     </region>
@@ -24005,7 +24005,7 @@
           <e type="operand" style="unit">mW</e>
         </contract>
         <result action="numeric">
-          <e type="operand">93</e>
+          <e type="operand">94</e>
         </result>
     </math>
     </region>
@@ -24110,7 +24110,7 @@
           <e type="operand" style="unit">nF</e>
         </contract>
         <result action="numeric">
-          <e type="operand">77.88</e>
+          <e type="operand">93.13</e>
         </result>
     </math>
     </region>
@@ -24125,7 +24125,7 @@
     <math>
       <input>
         <e type="operand">C.Fo</e>
-        <e type="operand">82</e>
+        <e type="operand">100</e>
         <e type="operand" style="unit">nF</e>
         <e type="operator" args="2">*</e>
         <e type="operator" args="2">:</e>
@@ -24157,7 +24157,7 @@
           <e type="operand" style="unit">nF</e>
         </contract>
         <result action="numeric">
-          <e type="operand">525.5</e>
+          <e type="operand">640.8</e>
         </result>
     </math>
     </region>
@@ -24179,7 +24179,7 @@
     <math>
       <input>
         <e type="operand">C.F</e>
-        <e type="operand">560</e>
+        <e type="operand">680</e>
         <e type="operand" style="unit">nF</e>
         <e type="operator" args="2">*</e>
         <e type="operator" args="2">:</e>
@@ -24212,7 +24212,7 @@
           <e type="operand" style="unit">kohm</e>
         </contract>
         <result action="numeric">
-          <e type="operand">45.72</e>
+          <e type="operand">37.65</e>
         </result>
     </math>
     </region>
@@ -24227,7 +24227,7 @@
     <math>
       <input>
         <e type="operand">R.F</e>
-        <e type="operand">47</e>
+        <e type="operand">39</e>
         <e type="operand" style="unit">kohm</e>
         <e type="operator" args="2">*</e>
         <e type="operator" args="2">:</e>
@@ -24326,7 +24326,7 @@
           <e type="operator" args="2">:</e>
         </input>
           <result action="numeric">
-            <e type="operand">32.534</e>
+            <e type="operand">46.330</e>
           </result>
       </math>
       </region>
@@ -24356,7 +24356,7 @@
             <e type="operand" style="unit">Hz</e>
           </contract>
           <result action="numeric">
-            <e type="operand">6.047</e>
+            <e type="operand">6.001</e>
           </result>
       </math>
       </region>
@@ -24384,7 +24384,7 @@
             <e type="operand" style="unit">nF</e>
           </contract>
           <result action="numeric">
-            <e type="operand">71.53</e>
+            <e type="operand">87.18</e>
           </result>
       </math>
       </region>
@@ -24414,7 +24414,7 @@
             <e type="operand" style="unit">Hz</e>
           </contract>
           <result action="numeric">
-            <e type="operand">47.343</e>
+            <e type="operand">46.810</e>
           </result>
       </math>
       </region>
@@ -24471,7 +24471,7 @@
           <e type="operand" style="unit">Hz</e>
         </contract>
         <result action="numeric">
-          <e type="operand">6.047</e>
+          <e type="operand">6.001</e>
         </result>
     </math>
     </region>
@@ -24491,7 +24491,7 @@
           <e type="operand" style="unit">Hz</e>
         </contract>
         <result action="numeric">
-          <e type="operand">47.343</e>
+          <e type="operand">46.810</e>
         </result>
     </math>
     </region>
@@ -24528,7 +24528,7 @@
         <e type="operand">EA.oi</e>
       </input>
         <result action="numeric">
-          <e type="operand">32.534</e>
+          <e type="operand">46.330</e>
         </result>
     </math>
     </region>
@@ -24551,7 +24551,7 @@
         <e type="operator" args="2">:</e>
       </input>
         <result action="numeric">
-          <e type="operand">37.993921</e>
+          <e type="operand">37.707391</e>
         </result>
     </math>
     </region>
@@ -24567,7 +24567,7 @@
         <e type="operator" args="2">:</e>
       </input>
         <result action="numeric">
-          <e type="operand">297.464601</e>
+          <e type="operand">294.117647</e>
         </result>
     </math>
     </region>
@@ -24597,7 +24597,7 @@
         <e type="operator" args="2">:</e>
       </input>
         <result action="numeric">
-          <e type="operand">4231.394960</e>
+          <e type="operand">4164.807870</e>
         </result>
     </math>
     </region>
@@ -24619,7 +24619,7 @@
           <e type="operator" args="2">:</e>
         </input>
           <result action="numeric">
-            <e type="operand">65.04917</e>
+            <e type="operand">64.53532</e>
           </result>
       </math>
       </region>
@@ -24659,7 +24659,7 @@
           <e type="operator" args="2">:</e>
         </input>
           <result action="numeric">
-            <e type="operand">1.936866</e>
+            <e type="operand">1.936047</e>
           </result>
       </math>
       </region>
@@ -24674,7 +24674,7 @@
           <e type="operator" args="2">:</e>
         </input>
           <result action="numeric">
-            <e type="operand">90.52980</e>
+            <e type="operand">89.79567</e>
           </result>
       </math>
       </region>
@@ -24714,7 +24714,7 @@
           <e type="operator" args="2">:</e>
         </input>
           <result action="numeric">
-            <e type="operand">2.471872</e>
+            <e type="operand">2.470007</e>
           </result>
       </math>
       </region>
@@ -24729,7 +24729,7 @@
           <e type="operator" args="2">:</e>
         </input>
           <result action="numeric">
-            <e type="operand">102.27153</e>
+            <e type="operand">101.42537</e>
           </result>
       </math>
       </region>
@@ -24769,7 +24769,7 @@
           <e type="operator" args="2">:</e>
         </input>
           <result action="numeric">
-            <e type="operand">2.715162</e>
+            <e type="operand">2.712543</e>
           </result>
       </math>
       </region>
@@ -24784,7 +24784,7 @@
           <e type="operator" args="2">:</e>
         </input>
           <result action="numeric">
-            <e type="operand">107.18639</e>
+            <e type="operand">106.28838</e>
           </result>
       </math>
       </region>
@@ -24824,7 +24824,7 @@
           <e type="operator" args="2">:</e>
         </input>
           <result action="numeric">
-            <e type="operand">2.815495</e>
+            <e type="operand">2.812453</e>
           </result>
       </math>
       </region>
@@ -24839,7 +24839,7 @@
           <e type="operator" args="2">:</e>
         </input>
           <result action="numeric">
-            <e type="operand">109.14884</e>
+            <e type="operand">108.22812</e>
           </result>
       </math>
       </region>
@@ -24879,7 +24879,7 @@
           <e type="operator" args="2">:</e>
         </input>
           <result action="numeric">
-            <e type="operand">2.855264</e>
+            <e type="operand">2.852012</e>
           </result>
       </math>
       </region>
@@ -24894,7 +24894,7 @@
           <e type="operator" args="2">:</e>
         </input>
           <result action="numeric">
-            <e type="operand">109.91701</e>
+            <e type="operand">108.98661</e>
           </result>
       </math>
       </region>
@@ -24934,7 +24934,7 @@
           <e type="operator" args="2">:</e>
         </input>
           <result action="numeric">
-            <e type="operand">2.870782</e>
+            <e type="operand">2.867433</e>
           </result>
       </math>
       </region>
@@ -24949,7 +24949,7 @@
           <e type="operator" args="2">:</e>
         </input>
           <result action="numeric">
-            <e type="operand">110.21531</e>
+            <e type="operand">109.28086</e>
           </result>
       </math>
       </region>
@@ -24989,7 +24989,7 @@
           <e type="operator" args="2">:</e>
         </input>
           <result action="numeric">
-            <e type="operand">2.876801</e>
+            <e type="operand">2.873408</e>
           </result>
       </math>
       </region>
@@ -25004,7 +25004,7 @@
           <e type="operator" args="2">:</e>
         </input>
           <result action="numeric">
-            <e type="operand">110.33079</e>
+            <e type="operand">109.39465</e>
           </result>
       </math>
       </region>
@@ -25044,7 +25044,7 @@
           <e type="operator" args="2">:</e>
         </input>
           <result action="numeric">
-            <e type="operand">2.879130</e>
+            <e type="operand">2.875717</e>
           </result>
       </math>
       </region>
@@ -25059,7 +25059,7 @@
           <e type="operator" args="2">:</e>
         </input>
           <result action="numeric">
-            <e type="operand">110.37544</e>
+            <e type="operand">109.43861</e>
           </result>
       </math>
       </region>
@@ -25098,7 +25098,7 @@
             <e type="operand" style="unit">Hz</e>
           </contract>
           <result action="numeric">
-            <e type="operand">17.567</e>
+            <e type="operand">17.418</e>
           </result>
       </math>
       </region>
@@ -25188,7 +25188,7 @@
           <e type="operator" args="2">:</e>
         </input>
           <result action="numeric">
-            <e type="operand">49.64</e>
+            <e type="operand">49.58</e>
           </result>
       </math>
       </region>
@@ -25212,7 +25212,7 @@
           <e type="operand" style="unit">Hz</e>
         </contract>
         <result action="numeric">
-          <e type="operand">17.567</e>
+          <e type="operand">17.418</e>
         </result>
     </math>
     </region>
@@ -25229,7 +25229,7 @@
         <e type="operand">Φ.act</e>
       </input>
         <result action="numeric">
-          <e type="operand">49.64</e>
+          <e type="operand">49.58</e>
         </result>
     </math>
     </region>
@@ -25267,7 +25267,7 @@
         <e type="operator" args="2">:</e>
       </input>
         <result action="numeric">
-          <e type="operand">0.993</e>
+          <e type="operand">0.992</e>
         </result>
     </math>
     </region>
@@ -25322,7 +25322,7 @@
             <e type="operand" style="unit">Hz</e>
           </contract>
           <result action="numeric">
-            <e type="operand">202.45</e>
+            <e type="operand">201.26</e>
           </result>
       </math>
       </region>
@@ -25345,7 +25345,7 @@
           <e type="operator" args="2">:</e>
         </input>
           <result action="numeric">
-            <e type="operand">1272.017</e>
+            <e type="operand">1264.524</e>
           </result>
       </math>
       </region>
@@ -25398,7 +25398,7 @@
           <e type="operator" args="2">:</e>
         </input>
           <result action="numeric">
-            <e type="operand">0.01955</e>
+            <e type="operand">0.01941</e>
           </result>
       </math>
       </region>
@@ -25424,7 +25424,7 @@
           <e type="operator" args="2">:</e>
         </input>
           <result action="numeric">
-            <e type="operand">34.18</e>
+            <e type="operand">34.24</e>
           </result>
       </math>
       </region>
@@ -25448,7 +25448,7 @@
           <e type="operand" style="unit">Hz</e>
         </contract>
         <result action="numeric">
-          <e type="operand">202.45</e>
+          <e type="operand">201.26</e>
         </result>
     </math>
     </region>
@@ -25465,7 +25465,7 @@
         <e type="operand">GM</e>
       </input>
         <result action="numeric">
-          <e type="operand">34.18</e>
+          <e type="operand">34.24</e>
         </result>
     </math>
     </region>
@@ -25502,7 +25502,7 @@
         <e type="operator" args="2">:</e>
       </input>
         <result action="numeric">
-          <e type="operand">3.418</e>
+          <e type="operand">3.424</e>
         </result>
     </math>
     </region>
@@ -25585,7 +25585,7 @@
         <e type="operator" args="2">:</e>
       </input>
         <result action="numeric">
-          <e type="operand">0.3843</e>
+          <e type="operand">0.5464</e>
         </result>
     </math>
     </region>
@@ -25617,7 +25617,7 @@
         <e type="operator" args="2">:</e>
       </input>
         <result action="numeric">
-          <e type="operand">4.231</e>
+          <e type="operand">4.158</e>
         </result>
     </math>
     </region>
@@ -25638,7 +25638,7 @@
         <e type="operator" args="2">:</e>
       </input>
         <result action="numeric">
-          <e type="operand">1.182</e>
+          <e type="operand">1.202</e>
         </result>
     </math>
     </region>
@@ -25679,7 +25679,7 @@
           <e type="operand" style="unit">mV</e>
         </contract>
         <result action="numeric">
-          <e type="operand">51.9</e>
+          <e type="operand">51.0</e>
         </result>
     </math>
     </region>
@@ -25711,7 +25711,7 @@
           <e type="operand" style="unit">kohm</e>
         </contract>
         <result action="numeric">
-          <e type="operand">2.596</e>
+          <e type="operand">2.551</e>
         </result>
     </math>
     </region>
@@ -25742,7 +25742,7 @@
           <e type="operand" style="unit">kohm</e>
         </contract>
         <result action="numeric">
-          <e type="operand">27.404</e>
+          <e type="operand">27.449</e>
         </result>
     </math>
     </region>
@@ -25828,7 +25828,7 @@
           <e type="operator" args="2">:</e>
         </input>
           <result action="numeric">
-            <e type="operand">6.0469</e>
+            <e type="operand">6.0013</e>
           </result>
       </math>
       </region>
@@ -25849,7 +25849,7 @@
           <e type="operator" args="2">:</e>
         </input>
           <result action="numeric">
-            <e type="operand">47.343</e>
+            <e type="operand">46.810</e>
           </result>
       </math>
       </region>
@@ -25895,7 +25895,7 @@
           <e type="operator" args="2">:</e>
         </input>
           <result action="numeric">
-            <e type="operand">20.700</e>
+            <e type="operand">14.307</e>
           </result>
       </math>
       </region>
@@ -25920,7 +25920,7 @@
           <e type="operator" args="2">:</e>
         </input>
           <result action="numeric">
-            <e type="operand">5.178</e>
+            <e type="operand">7.374</e>
           </result>
       </math>
       </region>
@@ -26214,7 +26214,7 @@
           <e type="operator" args="2">:</e>
         </input>
           <result action="numeric">
-            <e type="operand">17.567</e>
+            <e type="operand">17.418</e>
           </result>
       </math>
       </region>
@@ -26500,7 +26500,7 @@
           <e type="operator" args="2">:</e>
         </input>
           <result action="numeric">
-            <e type="operand">1.00013</e>
+            <e type="operand">1.00014</e>
           </result>
       </math>
       </region>
@@ -26526,7 +26526,7 @@
           <e type="operator" args="2">:</e>
         </input>
           <result action="numeric">
-            <e type="operand">80.60</e>
+            <e type="operand">80.47</e>
           </result>
       </math>
       </region>
@@ -26556,7 +26556,7 @@
           <e type="operator" args="2">:</e>
         </input>
           <result action="numeric">
-            <e type="operand">0.82</e>
+            <e type="operand">0.83</e>
           </result>
       </math>
       </region>
@@ -26614,7 +26614,7 @@
           <e type="operator" args="2">:</e>
         </input>
           <result action="numeric">
-            <e type="operand">1.01336</e>
+            <e type="operand">1.01356</e>
           </result>
       </math>
       </region>
@@ -26640,7 +26640,7 @@
           <e type="operator" args="2">:</e>
         </input>
           <result action="numeric">
-            <e type="operand">40.72</e>
+            <e type="operand">40.58</e>
           </result>
       </math>
       </region>
@@ -26670,7 +26670,7 @@
           <e type="operator" args="2">:</e>
         </input>
           <result action="numeric">
-            <e type="operand">8.12</e>
+            <e type="operand">8.18</e>
           </result>
       </math>
       </region>
@@ -26728,7 +26728,7 @@
           <e type="operator" args="2">:</e>
         </input>
           <result action="numeric">
-            <e type="operand">1.89076</e>
+            <e type="operand">1.90036</e>
           </result>
       </math>
       </region>
@@ -26754,7 +26754,7 @@
           <e type="operator" args="2">:</e>
         </input>
           <result action="numeric">
-            <e type="operand">6.14</e>
+            <e type="operand">6.04</e>
           </result>
       </math>
       </region>
@@ -26784,7 +26784,7 @@
           <e type="operator" args="2">:</e>
         </input>
           <result action="numeric">
-            <e type="operand">46.34</e>
+            <e type="operand">46.40</e>
           </result>
       </math>
       </region>
@@ -26842,7 +26842,7 @@
           <e type="operator" args="2">:</e>
         </input>
           <result action="numeric">
-            <e type="operand">7.05400</e>
+            <e type="operand">7.04188</e>
           </result>
       </math>
       </region>
@@ -26868,7 +26868,7 @@
           <e type="operator" args="2">:</e>
         </input>
           <result action="numeric">
-            <e type="operand">-22.43</e>
+            <e type="operand">-22.58</e>
           </result>
       </math>
       </region>
@@ -26898,7 +26898,7 @@
           <e type="operator" args="2">:</e>
         </input>
           <result action="numeric">
-            <e type="operand">16.16</e>
+            <e type="operand">15.94</e>
           </result>
       </math>
       </region>
@@ -26956,7 +26956,7 @@
           <e type="operator" args="2">:</e>
         </input>
           <result action="numeric">
-            <e type="operand">5.52838</e>
+            <e type="operand">5.50785</e>
           </result>
       </math>
       </region>
@@ -26982,7 +26982,7 @@
           <e type="operator" args="2">:</e>
         </input>
           <result action="numeric">
-            <e type="operand">-64.55</e>
+            <e type="operand">-64.72</e>
           </result>
       </math>
       </region>
@@ -27012,7 +27012,7 @@
           <e type="operator" args="2">:</e>
         </input>
           <result action="numeric">
-            <e type="operand">-42.65</e>
+            <e type="operand">-42.68</e>
           </result>
       </math>
       </region>
@@ -27388,7 +27388,7 @@
           <e type="operand" style="unit">mF</e>
         </contract>
         <result action="numeric">
-          <e type="operand">75.20</e>
+          <e type="operand">108.80</e>
         </result>
     </math>
     </region>
@@ -27405,7 +27405,7 @@
         <e type="operand">ΔV.out_pc</e>
       </input>
         <result action="numeric">
-          <e type="operand">4.74</e>
+          <e type="operand">3.27</e>
         </result>
     </math>
     </region>
@@ -27422,7 +27422,7 @@
         <e type="operand">k.hold</e>
       </input>
         <result action="numeric">
-          <e type="operand">1.119</e>
+          <e type="operand">1.680</e>
         </result>
     </math>
     </region>
@@ -27607,7 +27607,7 @@
         <e type="operand">k.hold</e>
       </input>
         <result action="numeric">
-          <e type="operand">1.119</e>
+          <e type="operand">1.680</e>
         </result>
     </math>
     </region>
@@ -27624,7 +27624,7 @@
         <e type="operand">k.RN</e>
       </input>
         <result action="numeric">
-          <e type="operand">1.843</e>
+          <e type="operand">2.255</e>
         </result>
     </math>
     </region>
@@ -28114,7 +28114,7 @@
         <e type="operand">k.CVCC</e>
       </input>
         <result action="numeric">
-          <e type="operand">0.833</e>
+          <e type="operand">0.578</e>
         </result>
     </math>
     </region>
@@ -28131,7 +28131,7 @@
         <e type="operand">k.thand</e>
       </input>
         <result action="numeric">
-          <e type="operand">2.747</e>
+          <e type="operand">1.899</e>
         </result>
     </math>
     </region>
@@ -28383,7 +28383,7 @@
         <e type="operand">k.PM</e>
       </input>
         <result action="numeric">
-          <e type="operand">0.993</e>
+          <e type="operand">0.992</e>
         </result>
     </math>
     </region>
@@ -28400,7 +28400,7 @@
         <e type="operand">k.GM</e>
       </input>
         <result action="numeric">
-          <e type="operand">3.418</e>
+          <e type="operand">3.424</e>
         </result>
     </math>
     </region>
@@ -28417,7 +28417,7 @@
         <e type="operand">k.D3rd</e>
       </input>
         <result action="numeric">
-          <e type="operand">1.182</e>
+          <e type="operand">1.202</e>
         </result>
     </math>
     </region>
@@ -28434,7 +28434,7 @@
         <e type="operand">k.RB_lo</e>
       </input>
         <result action="numeric">
-          <e type="operand">1.070</e>
+          <e type="operand">1.059</e>
         </result>
     </math>
     </region>
@@ -28451,7 +28451,7 @@
         <e type="operand">k.RB_hi</e>
       </input>
         <result action="numeric">
-          <e type="operand">1.051</e>
+          <e type="operand">1.069</e>
         </result>
     </math>
     </region>
@@ -28468,7 +28468,7 @@
         <e type="operand">k.RP</e>
       </input>
         <result action="numeric">
-          <e type="operand">1.106</e>
+          <e type="operand">1.394</e>
         </result>
     </math>
     </region>
@@ -28795,7 +28795,7 @@
           <e type="operand" style="unit">μF</e>
         </contract>
         <result action="numeric">
-          <e type="operand">470</e>
+          <e type="operand">6800</e>
         </result>
     </math>
     </region>
@@ -28812,7 +28812,7 @@
         <e type="operand">n.C</e>
       </input>
         <result action="numeric">
-          <e type="operand">160</e>
+          <e type="operand">16</e>
         </result>
     </math>
     </region>
@@ -28832,7 +28832,7 @@
           <e type="operand" style="unit">mF</e>
         </contract>
         <result action="numeric">
-          <e type="operand">75.20</e>
+          <e type="operand">108.80</e>
         </result>
     </math>
     </region>
@@ -28852,7 +28852,7 @@
           <e type="operand" style="unit">μF</e>
         </contract>
         <result action="numeric">
-          <e type="operand">10.0</e>
+          <e type="operand">160.0</e>
         </result>
     </math>
     </region>
@@ -28872,7 +28872,7 @@
           <e type="operand" style="unit">mohm</e>
         </contract>
         <result action="numeric">
-          <e type="operand">30.0</e>
+          <e type="operand">50.7</e>
         </result>
     </math>
     </region>
@@ -28892,7 +28892,7 @@
           <e type="operand" style="unit">mohm</e>
         </contract>
         <result action="numeric">
-          <e type="operand">0.1875</e>
+          <e type="operand">3.1688</e>
         </result>
     </math>
     </region>
@@ -28932,7 +28932,7 @@
           <e type="operand" style="unit">A</e>
         </contract>
         <result action="numeric">
-          <e type="operand">0.180</e>
+          <e type="operand">1.804</e>
         </result>
     </math>
     </region>
@@ -29043,7 +29043,7 @@
           <e type="operand" style="unit">nF</e>
         </contract>
         <result action="numeric">
-          <e type="operand">82.0</e>
+          <e type="operand">100.0</e>
         </result>
     </math>
     </region>
@@ -29063,7 +29063,7 @@
           <e type="operand" style="unit">nF</e>
         </contract>
         <result action="numeric">
-          <e type="operand">560.0</e>
+          <e type="operand">680.0</e>
         </result>
     </math>
     </region>
@@ -29083,7 +29083,7 @@
           <e type="operand" style="unit">kohm</e>
         </contract>
         <result action="numeric">
-          <e type="operand">47.0</e>
+          <e type="operand">39.0</e>
         </result>
     </math>
     </region>
@@ -29183,7 +29183,7 @@
           <e type="operand" style="unit">kohm</e>
         </contract>
         <result action="numeric">
-          <e type="operand">6.20</e>
+          <e type="operand">5.23</e>
         </result>
     </math>
     </region>
@@ -29203,7 +29203,7 @@
           <e type="operand" style="unit">V</e>
         </contract>
         <result action="numeric">
-          <e type="operand">12.1</e>
+          <e type="operand">11.7</e>
         </result>
     </math>
     </region>
@@ -29727,7 +29727,7 @@
           <e type="operand" style="unit">kohm</e>
         </contract>
         <result action="numeric">
-          <e type="operand">38.3</e>
+          <e type="operand">100.0</e>
         </result>
     </math>
     </region>
@@ -29747,7 +29747,7 @@
           <e type="operand" style="unit">kohm</e>
         </contract>
         <result action="numeric">
-          <e type="operand">10.0</e>
+          <e type="operand">27.0</e>
         </result>
     </math>
     </region>
@@ -30134,8 +30134,8 @@
     <region left="710" top="89292" width="220" height="51" color="#000000" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
-        <p style="font-weight: normal; font-style: normal; font-size: 9px;">1 x SFH617A-2 (the ST tool&#x27;s part;</p>
-        <p style="font-weight: normal; font-style: normal; font-size: 9px;">CTR bin 2 as on the EVB) - 16.5</p>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">1 x UPC1008G-LS04-R (UTC; CTR rank</p>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">130-260 %) - 16.5</p>
       </content>
     </text>
     </region>
@@ -30508,7 +30508,7 @@
         <e type="operand">CTR.s</e>
       </input>
         <result action="numeric">
-          <e type="operand">0.370</e>
+          <e type="operand">0.540</e>
         </result>
     </math>
     </region>

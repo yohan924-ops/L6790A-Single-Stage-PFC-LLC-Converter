@@ -64,9 +64,24 @@ VARIANTS = {
     # re-centred (docs/THREE_CORE_BOARD.md).  The 2026-10-17 point was 75 / 9.1 / 15.
     # board).  A_e 225 mm^2 per unit (TDK ELP 43/10/28, N97) keeps B.pk at 72 mT; aux 1 T
     # per unit, two units in series (ratio 1, ZCD 220 k) as in the canonical design.
+    # 2026-10-18 (user): the LG board's feedback parts and the output bank -
+    # LED rail V.Z 11.74 V (R197 100 k / R204 27 k on TL431), optocoupler
+    # UPC1008G-LS04-R (CTR 0.54 / 0.65 at the two FB points, rank minimum, V.F
+    # 1.45 V; lge200_xl.py has the derivation), R.B re-centred in the window
+    # that moves with them (5.23 k), and the compensation scaled by 1.21 with
+    # zero and pole kept (100 nF / 680 nF / 39 k) so the 3rd harmonic stays in
+    # budget.  Output bank Rubycon PX 6800 uF / 35 V (18 x 35.5, 1.92 A rms at
+    # 120 Hz / 105 C): 16 in parallel, set by the ripple current, not the
+    # capacitance (11 would do that).  ESR 50.7 mohm = tan d 0.26 / (2 pi 120 Hz
+    # 6800 uF), the only ESR the PX sheet gives - an upper bound at f.sw.
+    # Ceramic 16 x 10 uF / 50 V X7R, entered at the nominal 160 uF.
     '7p5to1_x3m3': dict(nT=7.5, Cr=70.5, Lr=10.0, Lm=15.0, Nx=3, Np=5, Ns=2,
                         kaux=1, RzH=220, CT=470, RT=7.68,
-                        label='7.5 : 1, three flat cores, 2 T secondary', Ae=225.0),
+                        label='7.5 : 1, three flat cores, 2 T secondary', Ae=225.0,
+                        Cs=6800, nC=16, ESRs=50.7, Ccer=160,
+                        RZ1=100, RZ2=27, VFo=1.45, CTRs=0.54, CTRm=0.65, RB=5.23,
+                        CFo=100, CF=680, RF=39,
+                        opto='1 x UPC1008G-LS04-R (UTC; CTR rank 130-260 %) - 16.5'),
 }
 VAR = os.environ.get('L6790_VARIANT', '7p5to1_x1')   # the only design point (2026-10-01)
 V = VARIANTS[VAR]
@@ -698,8 +713,8 @@ S.row('- MOSFET rms over the line cycle:', 'I.mos_lc', "I.pri_lc/sqrt(2)", 'A', 
 S.h2('11. Output Capacitor   [101] - [106], at the worst line phase')
 S.row('- Capacitance required by the 2fL ripple:', 'C.ripple',
       "I.out/(2*π*f.line_min*V.out*ΔV.pc/100)", 'mF', 2)
-S.const('- SELECTED single capacitor:', 'C.single', "470*'μF", 'μF', 0)
-S.const('- SELECTED number in parallel:', 'n.C', '160', None, 0)
+S.const('- SELECTED single capacitor:', 'C.single', "%g*'μF" % V.get('Cs', 470), 'μF', 0)
+S.const('- SELECTED number in parallel:', 'n.C', '%d' % V.get('nC', 160), None, 0)
 S.row('- Output capacitance:', 'C.out', 'n.C*C.single', 'mF', 2)
 S.row('- Actual 2fL ripple (pk-pk):', 'ΔV.out', "I.out/(2*π*f.line_min*C.out)", 'V', 3)
 S.row('- Actual ripple [% of Vout]:', 'ΔV.out_pc', '100*ΔV.out/V.out', None, 2)
@@ -710,7 +725,7 @@ S.row('- Achieved hold-up time:', 't.hold_act',
       "C.out*(V.start^2-V.out_min^2)/(2*P.out)", 'ms', 2)
 S.row('- Hold-up margin (must be > 1):', 'k.hold', 't.hold_act/t.holdup', None, 3)
 S.row('- Ripple current per capacitor:', 'I.Cout_each', 'I.Cout_rms/n.C', 'A', 2)
-S.const('[PICK] ESR of ONE output capacitor:', 'ESR.single', "30*'mohm", 'mohm', 1)
+S.const('[PICK] ESR of ONE output capacitor:', 'ESR.single', "%g*'mohm" % V.get('ESRs', 30), 'mohm', 1)
 S.row('- ESR of the whole bank:', 'ESR.out', 'ESR.single/n.C', 'mohm', 4,
       note='[107]  read the ESR at the SWITCHING frequency, not the 120 Hz tan-delta.')
 S.row('- Ripple and noise from the ESR alone:', 'R.N0',
@@ -721,7 +736,7 @@ S.row('- Ceramic needed to reach the budget:', 'C.cer_raw',
       "(1-R.Nmax/R.N0)*DF/100/(ESR.out*2*π*f.sw.a*R.Nmax/R.N0)", 'μF', 2)
 S.row('- clamped at zero:', 'C.cer_min', MAX('C.cer_raw', "0*'μF", 'μF'), 'μF', 2,
       note='[109]  zero means no ceramic is needed.')
-S.const('[PICK] SELECTED ceramic capacitor:', 'C.ceramic', "10*'μF", 'μF', 1)
+S.const('[PICK] SELECTED ceramic capacitor:', 'C.ceramic', "%g*'μF" % V.get('Ccer', 10), 'μF', 1)
 S.row('- Resulting ripple and noise:', 'R.Nact',
       "R.N0/(ESR.out*2*π*f.sw.a*C.ceramic/(DF/100)+1)", 'mV', 2)
 S.row('- R&N budget check (>1):', 'k.RN', 'R.Nmax/R.Nact', None, 3)
@@ -1792,14 +1807,14 @@ S.const('[DS] FB pin internal resistance:', 'R.FB', "35*'kohm", 'kohm', 1)
 S.const('[DS] FB steady-state current:', 'I.FB_steady', "150*'μA", 'μA', 1)
 S.const('[DS] FB maximum current:', 'I.FB_max', "300*'μA", 'μA', 1)
 S.const('[PICK] Shunt regulator reference (TL431B, as Q6):', 'V.R', "2.495*'V", 'V', 3)
-S.const('[PICK] LED rail divider, upper (E96):', 'R.Z1', "38.3*'kohm", 'kohm', 1)
-S.const('[PICK] LED rail divider, lower:', 'R.Z2', "10*'kohm", 'kohm', 1)
+S.const('[PICK] LED rail divider, upper (E96):', 'R.Z1', "%g*'kohm" % V.get('RZ1', 38.3), 'kohm', 1)
+S.const('[PICK] LED rail divider, lower:', 'R.Z2', "%g*'kohm" % V.get('RZ2', 10), 'kohm', 1)
 S.row('- Feedback supply V.Z, a second TL431 as a shunt regulator (16.1b):',
       'V.Z', 'V.R*(1+R.Z1/R.Z2)', 'V', 3)
 S.const('[PICK] Shunt regulator minimum current:', 'I.min', "0.8*'mA", 'mA', 2)
-S.const('[PICK] Optodiode forward drop:', 'V.Fo', "1.15*'V", 'V', 3)
-S.const('[PICK] Optocoupler CTR at steady state:', 'CTR.s', '0.37', None, 3)
-S.const('[PICK] Optocoupler CTR at maximum current:', 'CTR.m', '0.53', None, 3)
+S.const('[PICK] Optodiode forward drop:', 'V.Fo', "%g*'V" % V.get('VFo', 1.15), 'V', 3)
+S.const('[PICK] Optocoupler CTR at steady state:', 'CTR.s', '%g' % V.get('CTRs', 0.37), None, 3)
+S.const('[PICK] Optocoupler CTR at maximum current:', 'CTR.m', '%g' % V.get('CTRm', 0.53), None, 3)
 S.const('[PICK] Optocoupler output capacitance:', 'C.opto', "3*'nF", 'nF', 2)
 S.const('[PICK] Added high-frequency pole:', 'f.pHF', "1000*'Hz", 'Hz', 0)
 
@@ -1816,7 +1831,7 @@ S.row('- Bias resistor upper bound:', 'R.B_max',
 S.row('- Bias resistor lower bound:', 'R.B_min',
       "(V.Z-(V.R+V.Fo))/(V.Fo/R.P+I.FB_max/CTR.m)", 'kohm', 3,
       note='[145][146]  the DS 5.2.12 window.')
-S.const('[PICK] SELECTED bias resistor:', 'R.B', "6.2*'kohm", 'kohm', 2)
+S.const('[PICK] SELECTED bias resistor:', 'R.B', "%g*'kohm" % V.get('RB', 6.2), 'kohm', 2)
 S.row('- photodiode resistor check (>1):', 'k.RP', 'R.P_max/R.P', None, 3,
       note='[144]  a MAXIMUM, so round DOWN.')
 S.row('- inside the window, lower check (>1):', 'k.RB_lo', 'R.B/R.B_min', None, 3)
@@ -1868,14 +1883,14 @@ S.const('[PICK] Capacitor on V.Z:', 'C.Z', "10*'μF", 'μF', 0,
 S.h2('16.2  Compensation components   [133] - [136]')
 S.row('- Calculated feedback capacitor C.Fo:', 'C.Fo_calc',
       "f.zero/f.pole*(CTR.s*R.FB)/(R.I*R.B*EA.o)", 'nF', 2)
-S.const('[PICK] SELECTED C.Fo:', 'C.Fo', "82*'nF", 'nF', 1)
+S.const('[PICK] SELECTED C.Fo:', 'C.Fo', "%g*'nF" % V.get('CFo', 82), 'nF', 1)
 S.row('- Calculated feedback capacitor C.F:', 'C.F_calc',
       "C.Fo*(f.pole/f.zero-1)", 'nF', 1,
       note='[134]  computed from the SELECTED C.Fo, not from C.Fo_calc.')
-S.const('[PICK] SELECTED C.F:', 'C.F', "560*'nF", 'nF', 1)
+S.const('[PICK] SELECTED C.F:', 'C.F', "%g*'nF" % V.get('CF', 560), 'nF', 1)
 S.row('- Calculated feedback resistor R.F:', 'R.F_calc',
       "1/(2*π*f.zero*C.F)", 'kohm', 2)
-S.const('[PICK] SELECTED R.F:', 'R.F', "47*'kohm", 'kohm', 1)
+S.const('[PICK] SELECTED R.F:', 'R.F', "%g*'kohm" % V.get('RF', 47), 'kohm', 1)
 S.row('- Calculated FB pin capacitor C.fx:', 'C.fx_calc',
       "1/(2*π*f.pHF*R.FB)-C.opto", 'nF', 3)
 S.const('[PICK] SELECTED C.fx:', 'C.fx', "1.55*'nF", 'nF', 2)
@@ -2308,7 +2323,7 @@ S.table(['function', 'designator', 'device class and count'],
          ['SR supply Zener', 'D.ZSR', '1 x BZT52H-C15, 1 cm2 cathode pad'],
          ['LED rail regulator', 'Q6', '1 x TL431B, SOT-23 - 16.1b'],
          ['Feedback optocoupler', 'Q4',
-          '1 x SFH617A-2 (the ST tool\'s part; CTR bin 2 as on the EVB) - 16.5'],
+          V.get('opto', '1 x SFH617A-2 (the ST tool\'s part; CTR bin 2 as on the EVB) - 16.5')],
          ['External error amplifier', 'Q5',
           '1 x TL431B, 2.5 V shunt regulator - one grade with Q6']],
         widths=[430, 260, 230])
