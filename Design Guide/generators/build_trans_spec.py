@@ -193,7 +193,8 @@ TXT = {
                'briefly at start-up',
         ae_item='Core effective area', ae_val='Ae  ≥  %d mm²',
         ae_tail='keeps B.pk ≤ %.0f mT with %d T at %.0f kHz.   Ae of the whole flux '
-                'path: yoke-limited in a flat core; two cores in one former add.',
+                'path: yoke-limited in a flat core; two core sets (pairs) placed side '
+                'by side in one former add.',
     ),
     'kr': dict(
         title='트랜스포머  요구사양서',
@@ -238,7 +239,8 @@ TXT = {
         f_tail='정격 부하에서 권선 전류 · 전압의 주파수; 기동 시 잠깐 %.0f kHz 까지',
         ae_item='코어 유효 단면적', ae_val='Ae  ≥  %d mm²',
         ae_tail='B.pk ≤ %.0f mT(%d T · %.0f kHz)가 되는 값.   자속 경로 전체의 유효 단면: '
-                '납작한 코어는 요크가 정하고, 한 보빈에 코어 둘이면 합산.',
+                '납작한 코어는 요크가 정하고, 한 보빈에 코어 세트(반쪽 두 개 한 쌍) 둘을 '
+                '나란히 넣으면 합산.',
     ),
 }
 T = TXT[LANG]
