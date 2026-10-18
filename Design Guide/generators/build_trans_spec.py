@@ -259,7 +259,7 @@ if NOCORE:
         ('EVERY VALUE BELOW IS PER TRANSFORMER.', True),
         ('Flat (low-profile) construction as the production part 26OP-LM83W.   '
          'Core, coil former, wire and winding arrangement are the supplier’s '
-         'choice within sections 2 to 5; the overall height is agreed with the '
+         'choice within sections 2 to 4; the overall height is agreed with the '
          'set mechanical design before the first samples.', False),
     ]
 else:
@@ -321,7 +321,7 @@ if NOCORE:
     note(r, 'Conductors: NP1 Litz, copper ≥ %.1f mm², strands ≤ %.2f mm.   '
             'NS2 and NS3 each: Litz (strands ≤ %.2f mm) or copper foil ≤ %.2f mm '
             'thick, copper ≥ %.1f mm².   From %.2f A/mm² at the rms currents '
-            'above; skin depth %.2f mm at f.r %.0f kHz and %.2f mm at %.0f kHz, '
+            'above; skin depth %.2f mm at %.0f kHz and %.2f mm at %.0f kHz, '
             'copper at 100 °C.'
             % (V['Acu_pri'], V['strand_mm'], V['strand_mm'], V['foil_mm'],
                V['Acu_sec'], V['J'], V['delta_mm'], V['fr'], V['delta_hi_mm'],
@@ -383,14 +383,13 @@ if NOCORE:
             % (pins('NP1'), NWORD[V['Nx']].capitalize(), V['Lopen_set'],
                V['Lshort_set'], V['label']))
     r += 1
-    note(r, 'Item 2 is the resonant inductor: C.r %g nF with the %s in series '
-            'gives f.r %.0f kHz.   If the construction cannot reach it, quote the '
-            'value it reaches BEFORE samples: %.2f to %.2f µH per transformer is '
-            'taken by re-selecting C.r and the oscillator setting, the %s then '
-            'applying around the quoted value; below that the difference goes '
-            'into an external inductor.'
-            % (V['Cr'], NWORD[V['Nx']], V['fr'], V['Lshort_lo'], V['Lshort_hi'],
-               V['tol_short']))
+    note(r, 'Item 2 is the converter’s resonant inductor (%.0f kHz with C.r %g nF).   '
+            'If the construction cannot reach it, quote the value it reaches '
+            'BEFORE samples: %.2f to %.2f µH per transformer is taken by '
+            're-selecting C.r and the oscillator setting, the %s then applying '
+            'around the quoted value; below that the difference goes into an '
+            'external inductor.'
+            % (V['fr'], V['Cr'], V['Lshort_lo'], V['Lshort_hi'], V['tol_short']))
     r += 1
     note(r, 'With NS2 and NS3 both shorted the reading is lower: record it, do '
             'not hold it to item 2.   The auxiliary is NOT shorted.')
@@ -413,17 +412,13 @@ section(r, '4.    OPERATING  CONDITIONS')
 r += 1
 if NOCORE:
     COND = [
-        ('Switching frequency', V['fsw'],
-         'full load; start-up %.0f kHz' % V['fsu']),
-        ('Resonant frequency', 'f.r  %.0f kHz' % V['fr'],
-         'winding current: half-sine at f.r below resonance, sine at f.sw '
-         'above it (around the line peaks) — conductors sized for the top of '
-         'the range (C.r %g nF)' % V['Cr']),
+        ('Operating frequency', V['fsw'],
+         'of the winding current and voltage at full load; start-up %.0f kHz'
+         % V['fsu']),
         ('Core effective area', 'Ae  ≥  %d mm²' % V['Ae_flat'],
-         'B.pk ≤ %.0f mT at f.r with %d T.   Ae of the flux path: yoke-limited '
-         'in a flat core; two cores in one former add.'
-         % (V['B_FLAT'] * 1e3, V['Ns'])),
-        ('Core material', 'MnZn power ferrite, N97 / PC95 / 3C95 class', None),
+         'B.pk ≤ %.0f mT with %d T at %.0f kHz.   Ae of the flux path: '
+         'yoke-limited in a flat core; two cores in one former add.'
+         % (V['B_FLAT'] * 1e3, V['Ns'], V['fr'])),
     ]
 else:
     COND = [
@@ -444,89 +439,95 @@ else:
     r += 2
 
 # --------------------------------------------------- 5. 안전 절연 (insulation.py)
+#  Not in the requirements-only spec (2026-10-18, user): the customer's safety
+#  engineering writes the insulation system; the transformer maker gets the
+#  electrical and winding requirements only.
 import insulation as INS                                        # noqa: E402
 _R = INS.req()
-section(r, '5.    SAFETY  INSULATION',
-        ('IEC 62368-1 (household AV), GB 4943.1-2022 for China; 5000 m.'
-         if NOCORE else
-         'Household AV (TV) for the US, EU, Japan, Korea and China: IEC 62368-1 '
-         'as adopted there, GB 4943.1-2022 in China (5000 m).'))
-r += 2
-head(r, [('B', 'No'), ('C', 'Item'), ('D', 'Between'), ('E', 'Requirement'),
-         ('F', 'Condition')])
-r += 1
-PRI, SEC = 'primary', 'secondary'
 if NOCORE:
-    _np1 = ('Triple-insulated Litz approved as reinforced insulation to IEC '
-            '62368-1, one wire from pin to pin.')
-    _naux = ('Triple-insulated wire approved as reinforced insulation to IEC '
-             '62368-1; leads stay insulated up to the primary pins. Its approved '
-             'frequency must cover the start-up frequency, %.0f kHz.' % V['fsu'])
+    LAST_ROW = r - 2
 else:
-    _np1 = ('Triple-insulated Litz approved as reinforced insulation to IEC '
-            '62368-1, one wire from pin to pin. The partition between the '
-            'sections carries NO insulation; it sets item 3-2.')
-    _naux = ('Triple-insulated wire approved as reinforced insulation to IEC 62368-1, '
-             'wound OVER the secondary; leads stay insulated up to the primary-row '
-             'pins. Its approved frequency must cover the start-up frequency.')
-SAFE = [
-    ('1', 'Insulation grade', '%s  |  %s' % (PRI, SEC), 'REINFORCED',
-     'Primary = NP1, NAUX; secondary = NS2, NS3 and the CORE.   PD 2, OVC II, '
-     'material group IIIb.', 18),
-    ('2', 'Creepage', '%s  |  %s' % (PRI, SEC), '≥ %.1f mm' % _R['creep'],
-     'where the triple insulation ends (pins, stripped ends) to the secondary '
-     'and the core', 18),
-    ('3', 'Clearance', '%s  |  %s' % (PRI, SEC), '≥ %.1f mm' % _R['clearance'],
-     'at 5000 m (%.1f mm × %.2f)' % (_R['cl_2000'], INS.K_ALT), 18),
-    ('4', 'NP1, NAUX wire', '%s  |  %s' % (PRI, SEC), 'TIW, reinforced',
-     'triple-insulated (NP1: TIW-Litz), approved to IEC 62368-1 up to '
-     '%.0f kHz; one wire pin to pin' % V['fsu'], 18),
-    ('5', 'Solid insulation', '%s  |  %s' % (PRI, SEC),
-     'DTI ≥ %.1f mm  or  ≥ %d tape layers' % (_R['dti'], _R['layers']),
-     'where tape or sleeving carries it', 18),
-    ('6', 'Electric strength', '%s  |  %s' % (PRI, SEC),
-     '%d V ac 60 s  (%d V dc)' % (_R['hipot_ac'], _R['hipot_dc']),
-     'NP1 + NAUX against NS2 + NS3 + core; type test, no breakdown', 18),
-] if NOCORE else [
-    ('1', 'Insulation grade', '%s  |  %s' % (PRI, SEC), 'REINFORCED',
-     'Primary = NP1, NAUX; secondary = NS2, NS3 and the CORE. Pollution '
-     'degree 2, overvoltage category II, material group IIIb, 5000 m.', 30),
-    ('2', 'Creepage', '%s  |  %s' % (PRI, SEC), '≥ %.1f mm' % _R['creep'],
-     'Wherever the triple insulation ends: primary pins and stripped wire '
-     'ends to the core and to secondary leads and pins (%d V rms row, '
-     'reinforced = 2 × basic).' % _R['row'], 30),
-    ('3', 'Clearance', '%s  |  %s' % (PRI, SEC), '≥ %.1f mm' % _R['clearance'],
-     '%.1f mm at 2000 m × %.2f for 5000 m, rounded up.'
-     % (_R['cl_2000'], INS.K_ALT), 22),
-    ('4', 'NP1 wire', 'NP1  |  %s' % SEC, 'TIW-Litz, reinforced', _np1, 30),
-    ('5', 'NAUX wire', 'NAUX  |  %s' % SEC, 'TIW, reinforced', _naux, 30),
-    ('6', 'Solid insulation', '%s  |  %s' % (PRI, SEC),
-     'DTI ≥ %.1f mm  or  ≥ %d tape layers' % (_R['dti'], _R['layers']),
-     'Where tape or sleeving carries it: each tape layer passes the '
-     'reinforced test. Sleeve primary leads that leave the triple '
-     'insulation near the core.', 30),
-    ('7', 'Electric strength', '%s  |  %s' % (PRI, SEC),
-     '%d V ac 60 s  (%d V dc)' % (_R['hipot_ac'], _R['hipot_dc']),
-     'NP1 + NAUX joined against NS2 + NS3 + core joined. Type test, no '
-     'breakdown. Routine test voltage and time as agreed with the certifier.',
-     30),
-]
-for n, item, betw, req, cnd, h in SAFE:
-    line(r, [('B', n, 'center'), ('C', item, 'left'), ('D', betw, 'center'),
-             ('E', req, 'center'), ('F', cnd, 'left')], h=h)
-    ws['E%d' % r].font = Font(name='Calibri', size=10, bold=True)
-    ws['D%d' % r].alignment = Alignment(horizontal='center',
-                                        vertical='center', wrap_text=True)
-    ws.row_dimensions[r].height = max(ws.row_dimensions[r].height,
-                                      13 * nlines(betw, CHARS['D']) + 5)
-    r += 1
-r += 1
-note(r, ('Working voltage: design estimate %.0f V rms / %.0f V peak at %g Vac; '
-         'the certifying body measures it.' if NOCORE else
-         'The working voltage behind item 2 is an estimate from the design '
-         '(%.0f V rms, %.0f V peak at %g Vac); the certifying body measures it.')
-        % (_R['u_rms'], _R['u_pk'], INS.V_MAINS_DESIGN))
-LAST_ROW = r
+  section(r, '5.    SAFETY  INSULATION',
+          ('IEC 62368-1 (household AV), GB 4943.1-2022 for China; 5000 m.'
+           if NOCORE else
+           'Household AV (TV) for the US, EU, Japan, Korea and China: IEC 62368-1 '
+           'as adopted there, GB 4943.1-2022 in China (5000 m).'))
+  r += 2
+  head(r, [('B', 'No'), ('C', 'Item'), ('D', 'Between'), ('E', 'Requirement'),
+           ('F', 'Condition')])
+  r += 1
+  PRI, SEC = 'primary', 'secondary'
+  if NOCORE:
+      _np1 = ('Triple-insulated Litz approved as reinforced insulation to IEC '
+              '62368-1, one wire from pin to pin.')
+      _naux = ('Triple-insulated wire approved as reinforced insulation to IEC '
+               '62368-1; leads stay insulated up to the primary pins. Its approved '
+               'frequency must cover the start-up frequency, %.0f kHz.' % V['fsu'])
+  else:
+      _np1 = ('Triple-insulated Litz approved as reinforced insulation to IEC '
+              '62368-1, one wire from pin to pin. The partition between the '
+              'sections carries NO insulation; it sets item 3-2.')
+      _naux = ('Triple-insulated wire approved as reinforced insulation to IEC 62368-1, '
+               'wound OVER the secondary; leads stay insulated up to the primary-row '
+               'pins. Its approved frequency must cover the start-up frequency.')
+  SAFE = [
+      ('1', 'Insulation grade', '%s  |  %s' % (PRI, SEC), 'REINFORCED',
+       'Primary = NP1, NAUX; secondary = NS2, NS3 and the CORE.   PD 2, OVC II, '
+       'material group IIIb.', 18),
+      ('2', 'Creepage', '%s  |  %s' % (PRI, SEC), '≥ %.1f mm' % _R['creep'],
+       'where the triple insulation ends (pins, stripped ends) to the secondary '
+       'and the core', 18),
+      ('3', 'Clearance', '%s  |  %s' % (PRI, SEC), '≥ %.1f mm' % _R['clearance'],
+       'at 5000 m (%.1f mm × %.2f)' % (_R['cl_2000'], INS.K_ALT), 18),
+      ('4', 'NP1, NAUX wire', '%s  |  %s' % (PRI, SEC), 'TIW, reinforced',
+       'triple-insulated (NP1: TIW-Litz), approved to IEC 62368-1 up to '
+       '%.0f kHz; one wire pin to pin' % V['fsu'], 18),
+      ('5', 'Solid insulation', '%s  |  %s' % (PRI, SEC),
+       'DTI ≥ %.1f mm  or  ≥ %d tape layers' % (_R['dti'], _R['layers']),
+       'where tape or sleeving carries it', 18),
+      ('6', 'Electric strength', '%s  |  %s' % (PRI, SEC),
+       '%d V ac 60 s  (%d V dc)' % (_R['hipot_ac'], _R['hipot_dc']),
+       'NP1 + NAUX against NS2 + NS3 + core; type test, no breakdown', 18),
+  ] if NOCORE else [
+      ('1', 'Insulation grade', '%s  |  %s' % (PRI, SEC), 'REINFORCED',
+       'Primary = NP1, NAUX; secondary = NS2, NS3 and the CORE. Pollution '
+       'degree 2, overvoltage category II, material group IIIb, 5000 m.', 30),
+      ('2', 'Creepage', '%s  |  %s' % (PRI, SEC), '≥ %.1f mm' % _R['creep'],
+       'Wherever the triple insulation ends: primary pins and stripped wire '
+       'ends to the core and to secondary leads and pins (%d V rms row, '
+       'reinforced = 2 × basic).' % _R['row'], 30),
+      ('3', 'Clearance', '%s  |  %s' % (PRI, SEC), '≥ %.1f mm' % _R['clearance'],
+       '%.1f mm at 2000 m × %.2f for 5000 m, rounded up.'
+       % (_R['cl_2000'], INS.K_ALT), 22),
+      ('4', 'NP1 wire', 'NP1  |  %s' % SEC, 'TIW-Litz, reinforced', _np1, 30),
+      ('5', 'NAUX wire', 'NAUX  |  %s' % SEC, 'TIW, reinforced', _naux, 30),
+      ('6', 'Solid insulation', '%s  |  %s' % (PRI, SEC),
+       'DTI ≥ %.1f mm  or  ≥ %d tape layers' % (_R['dti'], _R['layers']),
+       'Where tape or sleeving carries it: each tape layer passes the '
+       'reinforced test. Sleeve primary leads that leave the triple '
+       'insulation near the core.', 30),
+      ('7', 'Electric strength', '%s  |  %s' % (PRI, SEC),
+       '%d V ac 60 s  (%d V dc)' % (_R['hipot_ac'], _R['hipot_dc']),
+       'NP1 + NAUX joined against NS2 + NS3 + core joined. Type test, no '
+       'breakdown. Routine test voltage and time as agreed with the certifier.',
+       30),
+  ]
+  for n, item, betw, req, cnd, h in SAFE:
+      line(r, [('B', n, 'center'), ('C', item, 'left'), ('D', betw, 'center'),
+               ('E', req, 'center'), ('F', cnd, 'left')], h=h)
+      ws['E%d' % r].font = Font(name='Calibri', size=10, bold=True)
+      ws['D%d' % r].alignment = Alignment(horizontal='center',
+                                          vertical='center', wrap_text=True)
+      ws.row_dimensions[r].height = max(ws.row_dimensions[r].height,
+                                        13 * nlines(betw, CHARS['D']) + 5)
+      r += 1
+  r += 1
+  note(r, ('Working voltage: design estimate %.0f V rms / %.0f V peak at %g Vac; '
+           'the certifying body measures it.' if NOCORE else
+           'The working voltage behind item 2 is an estimate from the design '
+           '(%.0f V rms, %.0f V peak at %g Vac); the certifying body measures it.')
+          % (_R['u_rms'], _R['u_pk'], INS.V_MAINS_DESIGN))
+  LAST_ROW = r
 
 # ------------------------------------------------------------- 인쇄
 ws.page_setup.orientation = 'portrait'
