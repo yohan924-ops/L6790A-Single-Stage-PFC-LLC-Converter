@@ -39,7 +39,7 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='repla
 
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 XL = os.path.join(ROOT, 'Calculation Excel Sheet',
-                  'L6790_spreadsheet_r1_0_corrected_rev0_6_unencrypted.xlsx')
+                  'GUIDE_PQ50_657W_workbook_rev0_6_unencrypted.xlsx')
 
 # sheet name -> part, resolved from the workbook itself rather than assumed
 SHEET = {'Res. Tank Design': 'xl/worksheets/sheet4.xml',

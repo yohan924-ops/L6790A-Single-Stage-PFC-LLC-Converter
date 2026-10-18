@@ -77,5 +77,5 @@ put(r, ['', 'Switching frequency', fsw, '', 'at full load, design tank (L_r 11 Â
 for name, anchor, w in (('bobbin.png', 'H2', 260), ('core.png', 'H20', 330)):
     im = XImg(S + name); sc = w / im.width; im.width = w; im.height = int(im.height * sc); ws.add_image(im, anchor)
 ws.page_setup.orientation = 'landscape'; ws.sheet_properties.pageSetUpPr.fitToPage = True; ws.page_setup.fitToWidth = 1; ws.page_setup.fitToHeight = 0
-out = 'Calculation Excel Sheet/variants/Transformer_Spec_7p5to1_asbuilt.xlsx'
+out = 'Calculation Excel Sheet/variants/BENCH_200W_transformer_asbuilt.xlsx'
 wb.save(out); print('saved')

@@ -1,6 +1,6 @@
 import re
 # -*- coding: utf-8 -*-
-"""벤더 사양서(Transformer_Spec_*.xlsx)의 숫자를 변형 시트에서 다시 계산해 대조한다.
+"""벤더 사양서(*_transformer_spec.xlsx)의 숫자를 변형 시트에서 다시 계산해 대조한다.
 
 build_trans_spec.py 의 VARIANTS 는 손으로 박은 상수 표다.  시트를 고치면
 사양서는 조용히 낡는다 - 벤더에 나가는 문서라서 그게 가장 비싼 실수다.
@@ -57,6 +57,13 @@ def khz(s, k):
     """<result> 는 이미 표시 단위 값이다 (규칙 E24).  kHz 로 맞춘다."""
     v, u = s[k]
     return v * {'kHz': 1.0, 'Hz': 1e-3, 'MHz': 1e3}[u]
+
+
+#  Spec file names say what they are for (2026-10-18, user): the AN design
+#  (PQ 50/50, 657 W) and the three-core 670 W option.  build_trans_spec writes
+#  to these names, this checker reads them.
+SPEC_FILE = {'7p5to1_x1': 'GUIDE_PQ50_657W_transformer_spec',
+             '7p5to1_x3m3': '3CORE_670W_transformer_spec'}
 
 
 def derive(s):
@@ -143,7 +150,7 @@ def main():
     for var in ('7p5to1_x1',):
         smp = os.path.join(SMDIR, 'L6790A_%s.sm' % var)
         xlp = os.path.join(HERE, '..', '..', 'Calculation Excel Sheet',
-                           'variants', 'Transformer_Spec_%s.xlsx' % var)
+                           'variants', SPEC_FILE[var] + '.xlsx')
         # 없는 파일 판정은 이 변형에만 걸어야 한다.  누적 bad 를 보고 continue
         # 하면 앞 변형이 하나라도 어긋난 순간 뒤 변형을 통째로 건너뛴다 -
         # 실제로 (지금은 지운) 9to1 하나 때문에 나머지 셋이 검사되지 않고 있었다.

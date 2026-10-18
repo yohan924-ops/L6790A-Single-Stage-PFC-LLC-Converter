@@ -218,7 +218,7 @@ if __name__ == '__main__':
     else:
         root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
         target = os.path.join(root, 'Calculation Excel Sheet',
-                              'L6790_spreadsheet_r1_0_corrected_rev0_6_unencrypted.xlsx')
+                              'GUIDE_PQ50_657W_workbook_rev0_6_unencrypted.xlsx')
     parts = open_book(target)
     problems = validate({k: v for k, v in parts.items() if k != '__order__'})
     sheets = sum(1 for n in parts if re.match(r'xl/worksheets/sheet\d+\.xml$', n))

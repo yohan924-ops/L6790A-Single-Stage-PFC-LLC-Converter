@@ -69,6 +69,7 @@ opened in Excel once (or converted with LibreOffice and OOXMLRecalcMode 0).
 
     python lge200_xl.py
 """
+import os
 import re
 
 import xlsx_patch as X
@@ -76,7 +77,7 @@ from measured200_xl import DST as SRC, sheet_parts
 
 #  2026-10-18: SRC (the bench copy) was removed from the tree with the other
 #  superseded workbooks - restore it from commit 810e0f4 before running this.
-DST = SRC.replace('_200W.xlsx', '_LGE_200W_unencrypted.xlsx')
+DST = os.path.join(os.path.dirname(SRC), 'BENCH_200W_LGE_workbook_unencrypted.xlsx')
 
 PICKS = (('Design Spec', 'D29', '25', '30', 'h, mm - max output capacitor height (LGE workbook)'),
          ('Design Spec', 'D46', '800', '5529', 'c.HB, pF - 2 x Coss(tr) 897 pF x 400 V / 245 V = 2929 pF (l6790 [116]) + 100 pF stray '

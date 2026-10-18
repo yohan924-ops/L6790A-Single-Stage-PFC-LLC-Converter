@@ -659,8 +659,8 @@ ws.page_margins.top = ws.page_margins.bottom = 0.4
 
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                    '..', '..', 'Calculation Excel Sheet',
-                   'variants', 'Transformer_Spec_%s%s.xlsx'
-                   % (VAR, '_KR' if LANG == 'kr' else ''))
+                   'variants', '%s%s.xlsx'
+                   % (CTS.SPEC_FILE[VAR], '_KR' if LANG == 'kr' else ''))
 os.makedirs(os.path.dirname(OUT), exist_ok=True)
 try:
     wb.save(OUT)

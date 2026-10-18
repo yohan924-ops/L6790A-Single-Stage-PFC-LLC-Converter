@@ -31,7 +31,7 @@ from log_xl_findings import part_of, XL                              # noqa: E40
 warnings.filterwarnings('ignore')
 
 ORIG = os.path.join(os.path.dirname(XL),
-                    'ST_original_04092026_LGE_670W_L6790A_spreadsheet_unencrypted.xlsx')
+                    'ST_ORIGINAL_LGE_670W_workbook_04092026_unencrypted.xlsx')
 LOG = 'CHANGELOG_rev0_6'
 
 HEAD = ('rev 0.7 - changes that were made earlier but never written into this '

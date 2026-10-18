@@ -43,7 +43,7 @@ def require_readable(path):
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 XL = os.path.join(ROOT, 'Calculation Excel Sheet',
-                  'L6790_spreadsheet_r1_0_corrected_rev0_6_unencrypted.xlsx')
+                  'GUIDE_PQ50_657W_workbook_rev0_6_unencrypted.xlsx')
 if os.environ.get('XL_OVERRIDE'):          # a variant instead of the canonical workbook
     XL = os.environ['XL_OVERRIDE']
 

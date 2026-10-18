@@ -34,7 +34,7 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8',
 
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 XL = os.path.join(ROOT, 'Calculation Excel Sheet',
-                  'L6790_spreadsheet_r1_0_corrected_rev0_6_unencrypted.xlsx')
+                  'GUIDE_PQ50_657W_workbook_rev0_6_unencrypted.xlsx')
 SHEET = 'Power Components'
 
 # ref -> (live Simpson cell, what it is, the hand-typed value it replaces)

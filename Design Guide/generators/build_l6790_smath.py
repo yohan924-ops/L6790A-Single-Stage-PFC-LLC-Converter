@@ -80,7 +80,7 @@ else:                                        # 인자가 없으면 정본 자리
     OUT = os.path.normpath(os.path.join(
         HERE, '..', '..', 'Smath', 'L6790A_SingleStage_PF_LLC_Design_Guide.sm'))
 # The compensation network drawing on the CompensationNet&Check sheet of
-# Calculation Excel Sheet/L6790_spreadsheet_r1_0_corrected_rev0_6_unencrypted.xlsx, lifted
+# Calculation Excel Sheet/GUIDE_PQ50_657W_workbook_rev0_6_unencrypted.xlsx, lifted
 # out so the equations of section 16 sit next to the topology they describe.
 FIG_COMP = os.path.normpath(os.path.join(
     HERE, '..', 'figures', 'comp_network_st.png'))

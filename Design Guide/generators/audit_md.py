@@ -98,6 +98,11 @@ ABSENT_OK = {
     'Calculation Excel Sheet/variants/L6790_workbook_7p5to1_x1.xlsx',
     'Calculation Excel Sheet/variants/L6790_workbook_7p5to1_measured_LGE_200W.xlsx',
     'Calculation Excel Sheet/Uncryped_04092026_LGE_670W_L6790A_spread sheet.xlsx',
+    # renamed 2026-10-18 by purpose (GUIDE_ / 3CORE_670W / BENCH_200W / ST_ORIGINAL)
+    'L6790_spreadsheet_r1_0_corrected_rev0_6_unencrypted.xlsx', 'ST_original_04092026_LGE_670W_L6790A_spreadsheet_unencrypted.xlsx',
+    'L6790_workbook_7p5to1_x1_unencrypted.xlsx', 'L6790_workbook_7p5to1_measured_LGE_200W_unencrypted.xlsx',
+    'Transformer_Spec_7p5to1_x1.xlsx', 'Transformer_Spec_7p5to1_x3m3.xlsx', 'Transformer_Spec_7p5to1_x3m3_KR.xlsx',
+    'Transformer_Spec_7p5to1_asbuilt.xlsx',
 }
 
 problems = []
