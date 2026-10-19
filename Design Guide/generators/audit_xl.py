@@ -52,7 +52,7 @@ BULK = {'RTC', 'CC', 'OutCap_Sel_DB', 'CHANGELOG_rev0_6', 'BOM&Schematics'}
 # a table laid out ACROSS columns D-H (one load fraction per column, peak_xl.py,
 # 2026-10-18): its F column is the 50 % load, not a selected value, and its last
 # rows (r.add, the text, the OCP margin, the check) are read by nobody on purpose
-TABLES = {('Device Setting', 116, 141)}
+TABLES = set()     # (sheet, first row, last row); peak_xl.py now writes one value per row
 
 
 def in_table(sheet, row):
