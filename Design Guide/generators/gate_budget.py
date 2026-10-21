@@ -23,25 +23,65 @@ What it answers, per network and frequency
   boot     first high-side pulse: what one LOUT pulse puts on C.BOOT through
            R.boot; the steady deficit at f.SU
 
-    python gate_budget.py            prints the tables
+    python gate_budget.py            the x3m3 tank (sheet)
+    python gate_budget.py bench200   the 200 W bench board (its workbook + l6790), 2026-10-21
 """
 import math
 import os
+import sys
 
 import check_trans_spec as CTS
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+TANK = sys.argv[1] if len(sys.argv) > 1 else 'x3m3'
 _s = CTS.sheet(os.path.join(HERE, '..', '..', 'Smath', 'variants',
                             'L6790A_7p5to1_x3m3.sm'))
 g = lambda k: _s[k][0]
 
-# ------------------------------------------------------------- tank (sheet)
-fSU, fMAX, fB, fMIN, fR = (g('f.SU') * 1e3, g('f.Max') * 1e3, g('f.sw.b') * 1e3,
-                           g('f.Min') * 1e3, g('f.r') * 1e3)
-Lr, Cr = g('L.r') * 1e-6, g('C.r') * 1e-9
+if TANK == 'x3m3':
+    # ------------------------------------------------------------- tank (sheet)
+    fSU, fMAX, fB, fMIN, fR = (g('f.SU') * 1e3, g('f.Max') * 1e3, g('f.sw.b') * 1e3,
+                               g('f.Min') * 1e3, g('f.r') * 1e3)
+    Lr, Cr = g('L.r') * 1e-6, g('C.r') * 1e-9
+    #  c.HB of the sheet already holds the board's 2 x 150 pF drain-source (C.par 400 pF
+    #  since 2026-10-18); until then this line added them a second time
+    cHB = g('c.HB') * 1e-12
+    TT_RUN = g('T.T') * 1e-9                # midpoint swing at I.Lm_pk, run
+    LABEL = 'x3m3 tank'
+elif TANK == 'bench200':
+    # ------------------------------------------------------------- the 200 W bench board
+    #  inputs read from its workbook (values typed there, nothing typed here); the oscillator
+    #  with the workbook's own formulas (Device Setting D27-D29); the run frequency from
+    #  l6790.sweep at the worst line the board is driven from (264 Vac HB = 264 V equivalent)
+    import openpyxl
+    from l6790 import design, sweep, PRI_FET
+    _wb = openpyxl.load_workbook(os.path.join(HERE, '..', '..', 'Calculation Excel Sheet', 'variants',
+                                              'BENCH_200W_LGE_workbook_unencrypted.xlsx'))
+    _rt, _ds, _sp = _wb['Res. Tank Design'], _wb['Device Setting'], _wb['Design Spec']
+    n_, Cr, Lr, Lm_ = (_rt['F9'].value, _rt['F43'].value * 1e-9, _rt['F44'].value * 1e-6,
+                       _rt['F45'].value * 1e-6)
+    VREF, TIDLE, IEA, IOSC = (_ds['D12'].value, _ds['D13'].value * 1e-9, _ds['D15'].value * 1e-3,
+                              _ds['D16'].value * 1e-3)
+    CT, RT = _ds['D21'].value * 1e-12, _ds['F24'].value * 1e3
+    cHB = _sp['D46'].value * 1e-12
+    fMIN = 1 / (2 * (CT * RT + TIDLE))
+    fMAX = 1 / (2 * (CT / (IEA / VREF + 1 / RT) + TIDLE))
+    fSU = 1 / (2 * (CT / ((IEA + IOSC) / VREF + 1 / RT) + TIDLE))
+    fR = 1 / (2 * math.pi * math.sqrt(Lr * Cr))
+    _R = design(Vout=25., Pout=_sp['D27'].value, Vo_min=19., dv_out=0.05, Thold=12e-3, Nrect=1,
+                fr_t=150e3, fsw_max_spec=225e3, fsw_min_spec=50e3,
+                **dict(PRI_FET, C_par=_wb['Power Components']['D72'].value * 1e-12), tD=220e-9,
+                n_sel=n_, Cr_sel=Cr, Lr_sel=Lr, Lm_sel=Lm_)
+    fB = max(sweep(_R, 264.0, load=ld)[1]['fsw_max'] for ld in (1.0, 0.25, 0.1))
+    _ILm = sweep(_R, _R['Vin_min'])[1]['ILm_pk']
+    #  run swing: the magnetizing peak carries the node; the slowest bus is 264 Vac HB (373 V)
+    TT_RUN = cHB * 373.0 / _ILm
+    LABEL = ('200 W bench tank (C.r %.0f nF, L.r %.1f uH, L.m %.1f uH, C.T %.0f pF, R.T %.2f k, '
+             'c.HB %.0f pF; run swing at I.Lm %.2f A on 373 V)'
+             % (Cr * 1e9, Lr * 1e6, Lm_ * 1e6, CT * 1e12, RT / 1e3, cHB * 1e12, _ILm))
+else:
+    raise SystemExit('python gate_budget.py [x3m3 | bench200]')
 Z0 = math.sqrt(Lr / Cr)
-cHB = g('c.HB') * 1e-12 + 2 * 150e-12       # sheet c.HB + the board's 150 pF D-S x 2
-TT_RUN = g('T.T') * 1e-9                    # midpoint swing at I.Lm_pk, run
 CG = g('C.g_hi') * 1e-9                     # 7.5 nF
 RSO, RSI = g('R.so'), g('R.si')             # 10.71 / 9.68 ohm upper bounds
 RTH = g('R.th_drv')                         # 120 K/W, SO-14
@@ -119,9 +159,9 @@ def power(n, f, Vend):
 
 def main():
     T = 1 / fSU
-    print('x3m3 tank: f.SU %.0f kHz (half period %.0f ns, current reverses T/4 = %.0f ns '
-          'after the edge)   f.sw,b %.0f   f.Max %.0f   f.Min %.0f kHz'
-          % (fSU / 1e3, 0.5e9 / fSU, 0.25e9 / fSU, fB / 1e3, fMAX / 1e3, fMIN / 1e3))
+    print('%s\n  f.SU %.0f kHz (half period %.0f ns, current reverses T/4 = %.0f ns '
+          'after the edge)   f.r %.0f   f.sw,b %.0f   f.Max %.0f   f.Min %.0f kHz'
+          % (LABEL, fSU / 1e3, 0.5e9 / fSU, 0.25e9 / fSU, fR / 1e3, fB / 1e3, fMAX / 1e3, fMIN / 1e3))
     print('start-up currents at V.out ~ 0 (L.r-C.r, Z0 %.1f ohm): ' % Z0 +
           '   '.join('%s %.1f A' % (lab, i_sw(A, fSU)) for lab, A in
                      (('FB 155 V', 155.0), ('FB 235 V', 235.0), ('HB 325 V', 325 / 2.0),
