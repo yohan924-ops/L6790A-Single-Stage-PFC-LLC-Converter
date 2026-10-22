@@ -77,23 +77,23 @@ PRIMARY = [
 ]
 SECONDARY = [
     ('VDS',   'V_DS breakdown rating',
-     'reflected 2*Vout plus leakage ringing',              'D185', 'V.DS_sec'),
+     'reflected 2*Vout plus leakage ringing',              'D183', 'V.DS_sec'),
     ('ID',    'I_D rating per LEG',
-     'a CT leg carries the WHOLE secondary current',       'D186', 'I.sec_rating'),
+     'a CT leg carries the WHOLE secondary current',       'D184', 'I.sec_rating'),
     ('NSR',   'devices in parallel per leg',
-     'the only place the leg current divides',            'D199', 'n.SR'),
+     'the only place the leg current divides',            'D197', 'n.SR'),
     ('IPKD',  'peak current in ONE device',
-     'what the datasheet I_D has to cover',                'D187', 'I.SR_pk_dev'),
+     'what the datasheet I_D has to cover',                'D185', 'I.SR_pk_dev'),
     ('IRMSD', 'rms current in ONE device',
-     'what the conduction loss is built on',               'D183', 'I.SR_dev'),
+     'what the conduction loss is built on',               'D181', 'I.SR_dev'),
     ('RDS',   'R_DS(on)',
-     'conduction loss - dominant at 26 A',                 'D192', 'R.dson_s25'),
+     'conduction loss - dominant at 26 A',                 'D190', 'R.dson_s25'),
     ('RDST',  'R_DS(on) temperature factor',
-     'x1.4..1.6 at Tj = 125 C for a low-voltage SR FET',   'D194', 'K.Tsec'),
+     'x1.4..1.6 at Tj = 125 C for a low-voltage SR FET',   'D192', 'K.Tsec'),
     ('TYPE',  'diode or SR MOSFET',
-     'the loss model is a different equation',   'D189', '#SR by construction'),
+     'the loss model is a different equation',   'D187', '#SR by construction'),
     ('VF',    'body diode V_f',
-     'conducts during the SR dead time',                   'D191', ''),
+     'conducts during the SR dead time',                   'D189', ''),
     ('COSS',  'C_oss',
      'rings with the leakage - this is what sets the 1.6x', '',   'K.ring'),
     ('QRR',   'body diode Q_rr',
@@ -103,7 +103,7 @@ SECONDARY = [
     ('BUDG',  'loss budget actually checked',
      'a budget nothing compares against is decoration',    '',    'k.PSR'),
     ('RTH',   'R_th required',
-     'thermal budget',                                     'D197', ''),
+     'thermal budget',                                     'D195', ''),
 ]
 
 
@@ -233,7 +233,7 @@ def main():
 
     n1 = report('1차 스위치 (primary MOSFET)   -- Power Components 57..88 / SMath 13.1',
                 PRIMARY, pc, defs)
-    n2 = report('2차 정류 (SR MOSFET)          -- Power Components 179..198 / SMath 13.2',
+    n2 = report('2차 정류 (SR MOSFET)          -- Power Components 177..196 / SMath 13.2',
                 SECONDARY, pc, defs)
 
     # the one internal contradiction worth naming, checked not asserted
@@ -243,7 +243,7 @@ def main():
     print('=' * 78)
     bad = 0
     for label, rds, kt, loss, rth in (('1차', 'D70', 'D58', 'D86', 'D87'),
-                                      ('2차', 'D192', 'D194', 'D196', 'D197')):
+                                      ('2차', 'D190', 'D192', 'D194', 'D195')):
         f = pc.get(rth) or ''
         tj = re.search(r'\((\d+)\s*-', f)
         rl = pc.get(loss) or ''

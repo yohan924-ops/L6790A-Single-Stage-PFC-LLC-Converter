@@ -27,17 +27,17 @@ GRN = '#1B7F3B'
 
 
 def draw():
-    fig = plt.figure(figsize=(9.0, 5.3))
-    ax = F._ax(fig, [0.01, 0.02, 0.98, 0.96], -0.6, 26.4, 3.6, 22.6)
+    fig = plt.figure(figsize=(9.0, 5.6))
+    ax = F._ax(fig, [0.01, 0.02, 0.98, 0.96], -0.6, 26.4, 2.9, 22.6)
     YV, YB = 20.0, 21.6                      # V.drv rail, bus
     # ------------------------------------------------------------ the driver
     XD0, XD1 = 3.2, 8.4
-    d = F._ic(ax, XD0, 8.8, XD1, 16.6, 'Gate driver',
+    d = F._ic(ax, XD0, 8.8, XD1, 16.6, 'U.drv1',
               [('L', 13.2, '', 'IN.H'), ('L', 11.6, '', 'IN.L'),
                ('T', 4.8, '', 'VCC'), ('B', 6.8, '', 'GND'),
                ('R', 15.6, '', 'BOOT'), ('R', 14.2, '', 'HO'),
                ('R', 12.6, '', 'HS'), ('R', 10.6, '', 'LO')], ref=12.4)
-    S.label(ax, (XD0 + XD1) / 2, 11.5, 'half bridge', size=8.6, color=GREY)
+    S.label(ax, (XD0 + XD1) / 2 + 0.3, 11.1, 'gate driver, leg 1', size=8.2, color=GREY)
     S.label(ax, (XD0 + XD1) / 2, 10.0, '(t.DT: internal\ndead time, if any)', size=7.8, color=GREY)
     for y, t in ((13.2, 'HOUT'), (11.6, 'LOUT')):
         pin = d['IN.H'] if y == 13.2 else d['IN.L']
@@ -130,7 +130,8 @@ def draw():
     S.label(ax, 23.4, YB + 0.5, 'bus', size=9.4, color=GREY)
     for y, t in ((6.1, 'One output pin per side: R.off + D.off in parallel with R.on.'),
                  (5.3, 'Separate GON / GOFF pins: R.on on GON, R.off on GOFF, V.F = 0.'),
-                 (4.5, 'Green names = the rows of Power Components "LLC Half Bridge Gate Driver Selection".')):
+                 (4.5, 'Green names = the rows of Power Components "LLC Half Bridge Gate Driver Selection" and of the BOM.'),
+                 (3.7, 'U.drv2 drives leg 2 (S3, S4) with the same network; D.boot, C.boot, R.boot once per leg, R.on, R.off, D.off, C.gs once per switch.')):
         S.label(ax, 0.0, y, t, size=8.8, ha='left', color=GREY)
     return fig
 

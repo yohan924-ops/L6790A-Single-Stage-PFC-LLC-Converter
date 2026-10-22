@@ -55,7 +55,7 @@ NOT ported, on purpose:
     Design Spec F20 Vin.min 180 Vac   our F20 is a formula (245 V / sqrt 2 = 173.2 Vac,
                                the morphing threshold); 180 is inside the tool's own
                                "165-180" hint but less conservative.
-    Design Spec D58 Vrect 0.395 V + Power Components C92 STPS30M60S (C188 since the 2026-10-22 row inserts)
+    Design Spec D58 Vrect 0.395 V + Power Components C92 STPS30M60S (C186 since the 2026-10-22 row inserts)
                                the old tool has no SR option, so they modelled the
                                rectifier as a Schottky drop with RD 3.7 mohm; the board
                                runs TPH3R70APL1 x 2 per leg under a TEA2095TE and the

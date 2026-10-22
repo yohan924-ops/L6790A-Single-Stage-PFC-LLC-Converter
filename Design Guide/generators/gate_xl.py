@@ -12,9 +12,9 @@ everything below moves down, references follow), in the sheets' own pattern (Dev
 CT.max / CT.min / "Select CT between", RT.ceil with its Selected Value on the same row):
   76-83    the switch's gate data, in its own yellow parameter block next to Rdson / Coss:
            C.g (Qg slope above the plateau)  C.gs.dev  R.g  V.pl  V.th  V.th.min  Q.gd  V.gs.max
-  89-176   two blank rows, then "LLC Half Bridge Gate Driver Selection" at 91, two blank rows after:
+  89-174   two blank rows, then "LLC Half Bridge Gate Driver Selection" at 91, two blank rows after:
            - the driver part number and its datasheet values (yellow): I.so I.si V.test
-             R.o.src R.o.sink (0 = derive from V.test / I.so, I.si) V.cc.min V.cc.max t.pd MT
+             R.o.src R.o.sink (Value = V.test / I.so, I.si; Selected = the datasheet's own) V.cc.min V.cc.max t.pd MT
              t.DT (own dead time, 0 = none) f.max I.Q Rth.drv Tj.max V.bo.min dV/dt.max
              V.hs.max V.IH.max Ta.drv
            - the bootstrap diode part number and V.F V.RRM I.F I.FSM; the turn-off diode part
@@ -28,15 +28,16 @@ CT.max / CT.min / "Select CT between", RT.ceil with its Selected Value on the sa
              current, D.off surge) / R.off (E12); C.gs.max (10 V within the pulse with the
              selected R.on) / C.gs.min (Miller) / C.gs; C.boot.max / .min / C.boot (E6);
              R.boot.max / R.boot.min (D.boot surge) / R.boot (E12)
-           - the final quantities, twelve with a Check: R.so R.si I.G.on.pk I.G.off.pk k.IG(*)
+           - the final quantities, twelve with a Check: I.G.on.pk I.G.off.pk k.IG(*)
              R.off.eff(*) t.D.need t.D.max k.tD(*) t.D.su.min t.D.su.max k.tD.su(*) V.g.su(*)
              V.bs.1(*) V.bs.min k.Miller(*) dv/dt.su k.drv(*) P.drv.max P.drv(*) Tj.drv f.SU(*)
              P.Ron P.Roff I.boot.pk I.boot.avg V.RRM.need k.D.boot(*) I.off.pk I.off.avg
              k.D.off(*)
            - the schematic (xl_gate_fig.py, no part named) at column G
 BOM&Schematics 91-105  "Gate driver and gate network": PN table (U.drv1/2, D.boot, D.off) and a
-  value table (V.drv R.on R.off C.gs C.boot R.boot), live links; the frame's bottom row moves down.
-  old rows 76-80 -> 84-88, old 81-119 (the secondary section) -> 177-215.
+  value table (V.drv R.on R.off C.gs C.boot R.boot), live links, the schematic at I91; the frame's bottom
+  row moves down.
+  old rows 76-80 -> 84-88, old 81-119 (the secondary section) -> 175-213.
 Res. Tank Design 81-87  start-up with the output near 0 V: I.su, k.su.OCP2 and k.su.OCP1 (both
   checked, Device Setting G49 / D49), f.su.OCP1.
 CC 77-   the working (the model of gate_budget.py) and the two L6790A assumptions (start-up dead
@@ -107,12 +108,14 @@ DRV_ROWS = [
     ('gapB', 'gap', None, None, None, None, None, None),
     ('t', 'title', 'LLC Half Bridge Gate Driver Selection', None, None, None, None, None),
     ('part', 'part', 'Please Select a dedicated Gate Driver part number ', 'L6498LD', None, None, None, None),
-    ('h1', 'head', 'Parameter', 'Name', 'Value', 'Unit', None, None),
+    ('h1', 'head', 'Parameter', 'Name', 'Value', 'Unit', 'Selected Value', None),
     ('Iso', 'data', 'Source current, min (full temperature)', 'I.so', 1.4, 'A', None, None),
     ('Isi', 'data', 'Sink current, min (full temperature)', 'I.si', 1.55, 'A', None, None),
     ('Vt', 'data', 'Supply voltage those currents are given at', 'V.test', 15, 'V', None, None),
-    ('Rosrc', 'data', 'Output resistance, source (0 = derive as V.test / I.so)', 'R.o.src', 0, 'Ω', None, None),
-    ('Rosnk', 'data', 'Output resistance, sink (0 = derive as V.test / I.si)', 'R.o.sink', 0, 'Ω', None, None),
+    ('Rosrc', 'net', 'Output resistance, source: Value = V.test / I.so; type the datasheet value if it gives one', 'R.o.src',
+     '{cc:Rso0}', 'Ω', 'in', None),
+    ('Rosnk', 'net', 'Output resistance, sink: Value = V.test / I.si; type the datasheet value if it gives one', 'R.o.sink',
+     '{cc:Rsi0}', 'Ω', 'in', None),
     ('Vccmin', 'data', 'Supply voltage, recommended min', 'V.cc.min', 10, 'V', None, None),
     ('Vccmax', 'data', 'Supply voltage, recommended max', 'V.cc.max', 20, 'V', None, None),
     ('tpd', 'data', 'Propagation delay, typ', 't.pd', 85, 'ns', None, None),
@@ -169,8 +172,6 @@ DRV_ROWS = [
      None, None),
     ('Rb', 'net', 'Select R.boot between R.boot.min and R.boot.max (Value: E12)', 'R.boot', '{cc:Rbrec}', 'Ω', 'in', None),
     ('h3', 'head', 'Parameters', 'Name', 'Value', 'Unit', 'Check', None),
-    ('Rso', 'res', 'Driver output resistance in use, source (in series with R.on)', 'R.so', '{cc:Rso}', 'Ω', None, None),
-    ('Rsi', 'res', 'Driver output resistance in use, sink (in series with R.off)', 'R.si', '{cc:Rsi}', 'Ω', None, None),
     ('Ion', 'res', 'Peak gate current, turn-on', 'I.G.on.pk', '{cc:Ion}', 'A', None, None),
     ('Ioff', 'res', 'Peak gate current, turn-off', 'I.G.off.pk', '{cc:Ioff}', 'A', None, None),
     ('kIG', 'res', 'Driver current margin: I.so / I.G.on.pk and I.si / I.G.off.pk (>1)', 'k.IG', '{cc:kIG}', '-',
@@ -224,8 +225,10 @@ CC_ROWS = [
     ('tDsu', 'L6790A dead time at start-up, before ADT (DS gives none) [assumed]', 420, 'ns', True),
     ('fIC', 'L6790A maximum operating frequency (DS: upper limited to about 675 kHz)', 675, 'kHz', True),
     ('VbFB', 'L6790A highest FB bus = HB/FB morphing threshold (DS V.HVPK_BOH)', 235, 'V', True),
-    ('Rso', 'Driver source resistance: R.o.src, or V.test / I.so', 'IF({d:Rosrc}>0,{d:Rosrc},{d:Vt}/{d:Iso})', 'Ω', False),
-    ('Rsi', 'Driver sink resistance: R.o.sink, or V.test / I.si', 'IF({d:Rosnk}>0,{d:Rosnk},{d:Vt}/{d:Isi})', 'Ω', False),
+    ('Rso0', 'Driver source resistance from the short-circuit current: V.test / I.so', '{d:Vt}/{d:Iso}', 'Ω', False),
+    ('Rsi0', 'Driver sink resistance from the short-circuit current: V.test / I.si', '{d:Vt}/{d:Isi}', 'Ω', False),
+    ('Rso', 'Driver source resistance in use: the typed datasheet value, else V.test / I.so', 'IF(ISNUMBER({pc:Rosrc}),{pc:Rosrc},{Rso0})', 'Ω', False),
+    ('Rsi', 'Driver sink resistance in use: the typed datasheet value, else V.test / I.si', 'IF(ISNUMBER({pc:Rosnk}),{pc:Rosnk},{Rsi0})', 'Ω', False),
     ('V', 'V.drv (selected)', '{pc:V}', 'V', False),
     ('Vmin', 'V.drv min: driver range, and 10 V at the high-side gate after D.boot', 'MAX({d:Vccmin},10+{d:VFb})', 'V', False),
     ('Vmax', 'V.drv max: driver range and the MOSFET V.gs rating', 'MIN({d:Vccmax},{d:Vgsmax})', 'V', False),
@@ -368,9 +371,9 @@ def add_merge(xml, ref):
     return xml.replace(m.group(0), '<mergeCells count="%d"><mergeCell ref="%s"/>' % (int(m.group(1)) + 1, ref), 1)
 
 
-def add_picture(parts, sp, png, row0, col0=6):
-    """anchor the PNG at (col0, row0) of Power Components, about 760 px wide"""
-    rels = parts['xl/worksheets/_rels/' + sp['Power Components'].split('/')[-1] + '.rels'].decode()
+def add_picture(parts, sp, png, row0, col0=6, sheet='Power Components', width=760):
+    """anchor the PNG at (col0, row0) of the sheet, about `width` px wide"""
+    rels = parts['xl/worksheets/_rels/' + sp[sheet].split('/')[-1] + '.rels'].decode()
     dpath = 'xl/' + re.search(r'Target="\.\./(drawings/drawing\d+\.xml)"', rels).group(1)
     drels = dpath.replace('drawings/', 'drawings/_rels/') + '.rels'
     n = max(int(m.group(1)) for k in parts for m in [re.match(r'xl/media/image(\d+)\.\w+$', k)] if m) + 1
@@ -386,7 +389,7 @@ def add_picture(parts, sp, png, row0, col0=6):
     cid = max(int(x) for x in re.findall(r'<xdr:cNvPr id="(\d+)"', d)) + 1
     from PIL import Image
     w, h = Image.open(png).size
-    cx = 760 * 9525
+    cx = width * 9525
     cy = int(cx * h / w)
     anchor = ('<xdr:oneCellAnchor><xdr:from><xdr:col>%d</xdr:col><xdr:colOff>76200</xdr:colOff>'
               '<xdr:row>%d</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:from><xdr:ext cx="%d" cy="%d"/>'
@@ -463,6 +466,7 @@ def bom_block(parts, sp, drow):
     b = b.replace('<row r="%d"></row>' % r, re.sub(r'r="([A-Z]*)%d"' % last, lambda m: 'r="%s%d"' % (m.group(1), r), bottom))
     b = re.sub(r'<dimension ref="([A-Z]+\d+:[A-Z]+)\d+"/>', lambda m: '<dimension ref="%s%d"/>' % (m.group(1), r), b, count=1)
     parts[sp['BOM&Schematics']] = b.encode('utf-8')
+    add_picture(parts, sp, PNG, r0, col0=8, sheet='BOM&Schematics', width=700)
 
 
 def main():
@@ -547,7 +551,7 @@ def apply(path, sel):
             cell('D%d' % r, '<c r="D%d" s="%s"/>' % (r, s_val))
         cell('E%d' % r, X.cell_t('E%d' % r, s_unit, unit))
         if fcol == 'in':
-            cell('F%d' % r, X.cell_n('F%d' % r, s_in, sel[key]))
+            cell('F%d' % r, X.cell_n('F%d' % r, s_in, sel[key]) if key in sel else '<c r="F%d" s="%s"/>' % (r, s_in))
         elif fcol:
             cell('F%d' % r, X.cell_f('F%d' % r, s_lab, sub(fcol, 'pc')))
         if gcol:

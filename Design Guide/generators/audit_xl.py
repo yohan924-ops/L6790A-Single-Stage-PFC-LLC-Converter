@@ -55,7 +55,7 @@ BULK = {'RTC', 'CC', 'OutCap_Sel_DB', 'CHANGELOG_rev0_6', 'BOM&Schematics'}
 TABLES = set()     # (sheet, first row, last row); peak_xl.py now writes one value per row
 # gate_xl.py (2026-10-22): the gate-drive rows and the start-up rows are read by people and
 # their own Check column - their end results are read by no other cell on purpose
-TABLES.update({('Power Components', 89, 176), ('Res. Tank Design', 81, 87)})
+TABLES.update({('Power Components', 89, 174), ('Res. Tank Design', 81, 87)})
 
 
 def in_table(sheet, row):
