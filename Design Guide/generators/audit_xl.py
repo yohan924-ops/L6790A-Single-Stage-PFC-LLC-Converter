@@ -53,6 +53,10 @@ BULK = {'RTC', 'CC', 'OutCap_Sel_DB', 'CHANGELOG_rev0_6', 'BOM&Schematics'}
 # 2026-10-18): its F column is the 50 % load, not a selected value, and its last
 # rows (r.add, the text, the OCP margin, the check) are read by nobody on purpose
 TABLES = set()     # (sheet, first row, last row); peak_xl.py now writes one value per row
+# gate_xl.py (2026-10-22): the start-up and gate-drive block is read by people and its own
+# Check column - its end results (peak gate currents, the diode current, V.RRM ...) are
+# read by no other cell on purpose
+TABLES.add(('Power Components', 121, 208))
 
 
 def in_table(sheet, row):
