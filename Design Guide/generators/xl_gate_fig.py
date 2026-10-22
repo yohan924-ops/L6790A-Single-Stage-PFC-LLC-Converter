@@ -3,7 +3,7 @@
 (2026-10-22, user: "add a simple gate driver schematic with its parts, so I know what is
 what while looking at the workbook").
 
-One bridge leg: L6498LD, its bootstrap (R.boot, D.boot, C.boot) and the two switches, each
+One bridge leg: a half-bridge gate driver (any part - no pin numbers), its bootstrap (R.boot, D.boot, C.boot) and the two switches, each
 with R.on, the turn-off branch R.off + D.off and the optional C.gs.  The part names are the
 row names of the workbook block (gate_xl.py) - no values are drawn, so one picture serves
 all three books.  Drawn with the kit of figs_ref.an_gate_drive.
@@ -27,26 +27,26 @@ GRN = '#1B7F3B'
 
 
 def draw():
-    fig = plt.figure(figsize=(9.0, 5.0))
-    ax = F._ax(fig, [0.01, 0.02, 0.98, 0.96], -0.6, 26.4, 4.6, 22.6)
+    fig = plt.figure(figsize=(9.0, 5.3))
+    ax = F._ax(fig, [0.01, 0.02, 0.98, 0.96], -0.6, 26.4, 3.6, 22.6)
     YV, YB = 20.0, 21.6                      # V.drv rail, bus
     # ------------------------------------------------------------ the driver
     XD0, XD1 = 3.2, 8.4
-    d = F._ic(ax, XD0, 8.8, XD1, 16.6, 'L6498LD',
-              [('L', 13.2, 1, 'HIN'), ('L', 11.6, 2, 'LIN'),
-               ('T', 4.8, 7, 'VCC'),
-               ('B', 4.6, 3, 'SGND'), ('B', 6.8, 5, 'PGND'),
-               ('R', 15.6, 13, 'BOOT'), ('R', 14.2, 12, 'HVG'),
-               ('R', 12.6, 11, 'OUT'), ('R', 10.6, 6, 'LVG')], ref=12.9)
+    d = F._ic(ax, XD0, 8.8, XD1, 16.6, 'Gate driver',
+              [('L', 13.2, '', 'IN.H'), ('L', 11.6, '', 'IN.L'),
+               ('T', 4.8, '', 'VCC'), ('B', 6.8, '', 'GND'),
+               ('R', 15.6, '', 'BOOT'), ('R', 14.2, '', 'HO'),
+               ('R', 12.6, '', 'HS'), ('R', 10.6, '', 'LO')], ref=12.4)
+    S.label(ax, (XD0 + XD1) / 2, 11.5, 'half bridge', size=8.6, color=GREY)
+    S.label(ax, (XD0 + XD1) / 2, 10.0, '(t.DT: internal\ndead time, if any)', size=7.8, color=GREY)
     for y, t in ((13.2, 'HOUT'), (11.6, 'LOUT')):
-        pin = d['HIN'] if y == 13.2 else d['LIN']
+        pin = d['IN.H'] if y == 13.2 else d['IN.L']
         S.wire(ax, [(0.0, y), pin])
         F._term(ax, 0.0, y)
         S.label(ax, 0.0, y + 0.5, t, size=8.6, ha='left', color=GREY)
     S.label(ax, 0.0, 14.3, 'from L6790A', size=8.6, ha='left', color=GREY)
     S.wire(ax, [d['VCC'], (4.8, YV)])
     S.dot(ax, 4.8, YV)
-    F._pgnd(ax, *d['SGND'])
     S.wire(ax, [(-0.2, YV), (10.2, YV)])
     F._term(ax, -0.2, YV)
     S.label(ax, -0.2, YV + 0.5, 'V.drv', size=10.5, ha='left', weight='bold', color=GRN)
@@ -103,11 +103,11 @@ def draw():
         S.label(ax, xc - 0.42, (yg + ys) / 2, 'C.gs\n(option)', size=8.8, ha='right', color=GREY)
 
     # high side: HVG crosses the C.boot lead with a hop
-    S.wire(ax, [d['HVG'], (XB - R, 14.2)])
+    S.wire(ax, [d['HO'], (XB - R, 14.2)])
     X.hop(ax, XB, 14.2, r=R)
     net(14.2, 12.6, XB + R)
     # low side
-    S.wire(ax, [d['LVG'], (11.4, 10.6), (11.4, 8.6)])
+    S.wire(ax, [d['LO'], (11.4, 10.6), (11.4, 8.6)])
     net(8.6, 7.0, 11.4)
     # drains, midpoint, sources
     S.wire(ax, [s1d, (XS, YB)])
@@ -115,7 +115,7 @@ def draw():
     S.wire(ax, [s1s, (XS, YA)])
     S.wire(ax, [(XS, YA), s2d])
     S.dot(ax, XS, YA)
-    S.wire(ax, [d['OUT'], (XS, 12.6)])
+    S.wire(ax, [d['HS'], (XS, 12.6)])
     S.dot(ax, XS, 12.6)
     S.wire(ax, [(XS, YA), (24.6, YA)])
     F._term(ax, 24.6, YA)
@@ -123,15 +123,15 @@ def draw():
     YK = 7.0
     S.wire(ax, [s2s, (XS, 5.6)])
     S.dot(ax, XS, YK)
-    S.wire(ax, [d['PGND'], (6.8, YK), (XS, YK)])
+    S.wire(ax, [d['GND'], (6.8, YK), (XS, YK)])
     F._pgnd(ax, XS, 5.6)
     S.wire(ax, [(XS, YB), (24.6, YB)])
     F._term(ax, 24.6, YB)
     S.label(ax, 23.4, YB + 0.5, 'bus', size=9.4, color=GREY)
-    S.label(ax, 0.0, 6.0, 'Separate GON / GOFF pins: R.on on GON, R.off on GOFF, V.F = 0 (no D.off).',
-            size=8.8, ha='left', color=GREY)
-    S.label(ax, 0.0, 5.2, 'Green names = the rows of Power Components "LLC Half Bridge Gate Driver Selection".',
-            size=8.8, ha='left', color=GREY)
+    for y, t in ((6.1, 'One output pin per side: R.off + D.off in parallel with R.on.'),
+                 (5.3, 'Separate GON / GOFF pins: R.on on GON, R.off on GOFF, V.F = 0.'),
+                 (4.5, 'Green names = the rows of Power Components "LLC Half Bridge Gate Driver Selection".')):
+        S.label(ax, 0.0, y, t, size=8.8, ha='left', color=GREY)
     return fig
 
 

@@ -1,26 +1,38 @@
 # -*- coding: utf-8 -*-
-"""Gate driver selection and start-up in the three workbooks (2026-10-22, user: "too many
-parameters; start-up into Res. Tank Design, simpler names, no duplicate OCP1/2; the gate
-driver in the switch section; recommended value first, mine next, as the other sheets do;
-only the checks that matter; a simple gate-driver schematic" - then "there is no guarantee
-the driver is an L6498LD: make it like the MOSFET selection").
+"""Gate driver selection and start-up in the three workbooks (2026-10-22, user, three rounds:
+"too many parameters; start-up into Res. Tank Design, simpler names, no duplicate OCP1/2; the
+gate driver in the switch section; recommended value first, mine next; only the checks that
+matter; a simple schematic" - "no guarantee the driver is an L6498LD: make it like the MOSFET
+selection" - "R.on / R.off have no recommendation, I cannot tell whether the selected values
+are right, no verdict on the driver dissipation, the picture is fixed to L6498LD; add the
+OCP1 start-up margin, the driver's maximum frequency, drivers with their own dead time").
 
 Power Components, inside the LLC half-bridge switch section (xl_rows.py inserts the rows -
 everything below moves down, references follow):
   76-82    the switch's gate data, in its own yellow parameter block next to Rdson / Coss:
            C.g (Qg slope above the plateau)  C.gs.dev  R.g  V.pl  V.th  V.th.min  Q.gd
-  88-120   "LLC Half Bridge Gate Driver Selection", laid out like the switch selection:
-           the part number (yellow), the driver datasheet values (yellow): I.so I.si
-           V.test t.pd MT I.Q Rth.drv Tj.max V.bo.min;
-           the gate network - Value is the recommendation, Selected Value is the design:
-           V.drv R.on R.off V.F (0 = separate GOFF pin) C.gs C.boot R.boot V.F.boot;
-           results, five with a Check: t.on t.off t.D.need V.g.su V.bs.1 V.bs.min k.Miller
-           Tj.drv (at Ta, D73) P.Ron P.Roff; the schematic (xl_gate_fig.py) at G100.
-  old rows 76-80 -> 83-87, old 81-119 (the secondary section) -> 121-159.
-Res. Tank Design 81-86  start-up with the output near 0 V: I.su, k.su (OCP2, Device Setting
-  G49), f.su.OCP1.
-CC 77-   the working (the model of gate_budget.py) and the two L6790A assumptions
-  (start-up dead time 420 ns, FB bus 235 V).
+  88-132   "LLC Half Bridge Gate Driver Selection" (45 rows, the last ones spare), laid out like
+           the switch selection:
+           - the part number and the driver datasheet values (yellow): I.so I.si V.test
+             V.cc.min V.cc.max t.pd MT t.DT (its own dead time, 0 = none) f.max I.Q Rth.drv
+             Tj.max V.bo.min
+           - the gate network: Value = the recommendation, Selected Value = the design, G = OK /
+             CHECK with the allowed range:  V.drv (range of the driver and 10 V at the high-side
+             gate)  R.on (min: driver temperature; max: gate at 10 V within the start-up pulse;
+             recommendation the log middle, E12)  R.off (max: off before the other side is on,
+             and the Miller limit unless C.gs holds; recommendation half of min(R.on, max), E12)
+             V.F (0 = separate GOFF pin)  C.gs (needed)  C.boot (10 x C.gate .. the first LOUT
+             pulse still reaches V.bo.min; E6)  R.boot (max for that pulse; half, E12)  V.F.boot
+           - results, G = OK / CHECK with the limit: t.on  t.off  t.D.need (<= max(420, t.DT))
+             t.D.max (run: the incoming gate on before the magnetizing current reverses)
+             V.g.su  V.bs.1  V.bs.min  k.Miller  P.drv (<= (Tj.max - Ta) / Rth)  Tj.drv
+             f.SU (<= the driver f.max)  P.Ron  P.Roff
+           - the schematic (xl_gate_fig.py, no part named) at column H
+  old rows 76-80 -> 83-87, old 81-119 (the secondary section) -> 133-171.
+Res. Tank Design 81-87  start-up with the output near 0 V: I.su, k.su.OCP2 and k.su.OCP1 (both
+  checked, Device Setting G49 / D49), f.su.OCP1.
+CC 77-   the working (the model of gate_budget.py) and the two L6790A assumptions (start-up dead
+  time 420 ns, FB bus 235 V).
 
     python gate_xl.py          all three books, idempotent (CHANGELOG mark)
 """
@@ -36,7 +48,7 @@ XL = os.path.normpath(os.path.join(HERE, '..', '..', 'Calculation Excel Sheet'))
 PNG = os.path.normpath(os.path.join(HERE, '..', 'figures', 'xl_gate_drive.png'))
 MARK = 'gate driver selection in the switch section, start-up in Res. Tank Design'
 AT1, N1 = 76, 7                     # switch gate data
-AT2 = 88                            # gate driver section (after the first insert)
+AT2, N2 = 88, 45                    # gate driver section (after the first insert), spare rows at the end
 
 SHEET = dict(V=14.35, Ron=4.7, Roff=2.2, VF=0.7, Cgs=0, Cb=470, Rb=0, VFb=1.3,
              note='design sheet section 14c.1: V.CC_reg_max 14.35 V, R.G 4.7, R.G_off 2.2 ohm + '
@@ -51,6 +63,21 @@ BOOKS = {
 }
 DV, DS, RT, PCq = "'Device Setting'!", "'Design Spec'!", "'Res. Tank Design'!", "'Power Components'!"
 
+
+def e12f(x):
+    """the E12 value at or below x"""
+    y = '(%s)*1.000001' % x
+    return ('IF((%s)<=0,0,10^INT(LOG10(%s))*LOOKUP(%s/10^INT(LOG10(%s)),'
+            '{1,1.2,1.5,1.8,2.2,2.7,3.3,3.9,4.7,5.6,6.8,8.2}))' % (x, y, y, y))
+
+
+def e6c(x):
+    """the E6 value at or above x"""
+    y = '(%s)*0.999999' % x
+    return ('IF((%s)<=0,0,-10^INT(LOG10(%s))*LOOKUP(-%s/10^INT(LOG10(%s)),'
+            '{-10,-6.8,-4.7,-3.3,-2.2,-1.5,-1}))' % (x, y, y, y))
+
+
 #  STO60N045DM9 DS14711 Rev 4 (Figures 4-6 read as vectors, gate_wave.py) - one set for all books
 MOS_ROWS = [   # key, label, name, value, unit
     ('Cg', 'Gate capacitance above the plateau, Qg slope (per device)', 'C.g', 7.5, 'nF'),
@@ -62,58 +89,82 @@ MOS_ROWS = [   # key, label, name, value, unit
     ('Qgd', 'Miller charge over the bus swing (per device)', 'Q.gd', 13, 'nC'),
 ]
 
-#  gate driver section rows from AT2: (key, kind, label, name, D, unit, F)
-#  kind: title / part / head / data (yellow D) / net (D recommended, F yellow) / res (D, F check)
+#  gate driver rows from AT2: (key, kind, label, name, D, unit, F, G)
+#  kind: title / part / head / data (yellow D) / net (D recommended, F yellow, G range) / res (D, F check)
 DRV_ROWS = [
-    ('t', 'title', 'LLC Half Bridge Gate Driver Selection', None, None, None, None),
-    ('part', 'part', 'Please Select a dedicated Gate Driver part number ', 'L6498LD', None, None, None),
-    ('h1', 'head', 'Parameter', 'Name', 'Value', 'Unit', None),
-    ('Iso', 'data', 'Source current, min (full temperature)', 'I.so', 1.4, 'A', None),
-    ('Isi', 'data', 'Sink current, min (full temperature)', 'I.si', 1.55, 'A', None),
-    ('Vt', 'data', 'Supply voltage those currents are given at', 'V.test', 15, 'V', None),
-    ('tpd', 'data', 'Propagation delay, typ', 't.pd', 85, 'ns', None),
-    ('MT', 'data', 'Delay matching, max', 'MT', 30, 'ns', None),
-    ('IQ', 'data', 'Quiescent current, VCC + floating, max', 'I.Q', 0.6, 'mA', None),
-    ('Rth', 'data', 'Thermal resistance junction-ambient', 'Rth.drv', 120, '˚C/W', None),
-    ('Tjmax', 'data', 'Junction temperature, recommended max', 'Tj.max', 125, '˚C', None),
-    ('Vbo', 'data', 'Floating (bootstrap) supply, recommended min', 'V.bo.min', 9.3, 'V', None),
-    ('h2', 'head', 'Parameter', 'Name', 'Value', 'Unit', 'Selected Value'),
-    ('V', 'net', 'Gate drive voltage (Value: the driver test voltage)', 'V.drv', '{Vt}', 'V', 'in'),
-    ('Ron', 'net', 'Turn-on resistor (Value: min, driver temperature)', 'R.on', '{cc:Ronmin}', 'Ω', 'in'),
-    ('Roff', 'net', 'Turn-off resistor with D.off (Value: max, no overlap)', 'R.off', '{cc:Roffmax}', 'Ω', 'in'),
-    ('VF', 'net', 'D.off forward voltage (0 = separate GOFF pin)', 'V.F', None, 'V', 'in'),
-    ('Cgs', 'net', 'Gate-source capacitor, option (Value: needed)', 'C.gs', '{cc:Cgsmin}', 'nF', 'in'),
-    ('Cb', 'net', 'Bootstrap capacitor (Value: min, 10 x C.gate)', 'C.boot', '{cc:Cbmin}', 'nF', 'in'),
-    ('Rb', 'net', 'Bootstrap resistor (Value: max, 1st pulse to V.bo.min)', 'R.boot', '{cc:Rbmax}', 'Ω', 'in'),
-    ('VFb', 'net', 'D.boot forward voltage', 'V.F.boot', None, 'V', 'in'),
-    ('h3', 'head', 'Results', 'Name', 'Value', 'Unit', 'Check'),
-    ('ton', 'res', 'Gate on delay: IC edge -> channel on', 't.on', '{cc:ton}', 'ns', None),
-    ('toff', 'res', 'Gate off delay: IC edge -> channel off', 't.off', '{cc:toff}', 'ns', None),
-    ('tD', 'res', 'Dead time needed in run (ADT 40-420 ns)', 't.D.need', '{cc:tDneed}', 'ns',
-     'IF(AND({tD}>=40,{tD}<=420),"OK","CHECK")'),
-    ('Vg', 'res', 'Gate voltage, end of start-up pulse (>= 10 V)', 'V.g.su', '{cc:Vgsu}', 'V',
-     'IF({Vg}>=10,"OK","CHECK")'),
-    ('Vbs1', 'res', 'V.BS after the first LOUT pulse (>= V.bo.min)', 'V.bs.1', '{cc:Vbs1}', 'V',
-     'IF({Vbs1}>={Vbo},"OK","CHECK")'),
-    ('Vbs', 'res', 'V.BS lowest, steady at f.SU', 'V.bs.min', '{cc:Vbsmin}', 'V', None),
-    ('kM', 'res', 'Gate-off margin vs Miller kick (> 1)', 'k.Miller', '{cc:kM}', '-', 'IF({kM}>=1,"OK","CHECK")'),
-    ('Tj', 'res', 'Driver junction at f.Max and Ta (<= Tj.max)', 'Tj.drv', '{cc:Tj}', '˚C',
-     'IF({Tj}<={Tjmax},"OK","CHECK")'),
-    ('PRon', 'res', 'R.on dissipation at f.Max (rating >= 2x)', 'P.Ron', '{cc:PRon}', 'W', None),
-    ('PRoff', 'res', 'R.off dissipation at f.Max (rating >= 2x)', 'P.Roff', '{cc:PRoff}', 'W', None),
-    ('gap', 'gap', None, None, None, None, None),
+    ('t', 'title', 'LLC Half Bridge Gate Driver Selection', None, None, None, None, None),
+    ('part', 'part', 'Please Select a dedicated Gate Driver part number ', 'L6498LD', None, None, None, None),
+    ('h1', 'head', 'Parameter', 'Name', 'Value', 'Unit', None, None),
+    ('Iso', 'data', 'Source current, min (full temperature)', 'I.so', 1.4, 'A', None, None),
+    ('Isi', 'data', 'Sink current, min (full temperature)', 'I.si', 1.55, 'A', None, None),
+    ('Vt', 'data', 'Supply voltage those currents are given at', 'V.test', 15, 'V', None, None),
+    ('Vccmin', 'data', 'Supply voltage, recommended min', 'V.cc.min', 10, 'V', None, None),
+    ('Vccmax', 'data', 'Supply voltage, recommended max', 'V.cc.max', 20, 'V', None, None),
+    ('tpd', 'data', 'Propagation delay, typ', 't.pd', 85, 'ns', None, None),
+    ('MT', 'data', 'Delay matching, max', 'MT', 30, 'ns', None, None),
+    ('tDT', 'data', 'Internal dead time (0 = none, interlocking only)', 't.DT', 0, 'ns', None, None),
+    ('fmax', 'data', 'Maximum switching frequency', 'f.max', 800, 'kHz', None, None),
+    ('IQ', 'data', 'Quiescent current, VCC + floating, max', 'I.Q', 0.6, 'mA', None, None),
+    ('Rth', 'data', 'Thermal resistance junction-ambient', 'Rth.drv', 120, '˚C/W', None, None),
+    ('Tjmax', 'data', 'Junction temperature, recommended max', 'Tj.max', 125, '˚C', None, None),
+    ('Vbo', 'data', 'Floating (bootstrap) supply, recommended min', 'V.bo.min', 9.3, 'V', None, None),
+    ('h2', 'head', 'Parameter', 'Name', 'Value', 'Unit', 'Selected Value', 'Check   allowed range'),
+    ('V', 'net', 'Gate drive voltage', 'V.drv', '{cc:Vrec}', 'V', 'in',
+     'IF(AND({pc:V}>={cc:Vmin},{pc:V}<={cc:Vmax}),"OK","CHECK")&"   "&TEXT({cc:Vmin},"0.0")&" - "&TEXT({cc:Vmax},"0.0")&" V"'),
+    ('Ron', 'net', 'Turn-on resistor', 'R.on', '{cc:Ronrec}', 'Ω', 'in',
+     'IF(ISNUMBER({cc:Ronmin}),IF(AND({pc:Ron}>={cc:Ronmin},{pc:Ron}<={cc:Ronmax}),"OK","CHECK")&"   "'
+     '&TEXT({cc:Ronmin},"0.0")&" - "&TEXT({cc:Ronmax},"0.0")&" Ω","CHECK   "&{cc:Ronmin})'),
+    ('Roff', 'net', 'Turn-off resistor (with D.off, or on GOFF)', 'R.off', '{cc:Roffrec}', 'Ω', 'in',
+     'IF({cc:Roffmax}="any","OK   no limit",IF(ISNUMBER({cc:Roffmax}),IF({pc:Roff}<={cc:Roffmax},"OK","CHECK")'
+     '&"   max "&TEXT({cc:Roffmax},"0.0")&" Ω","CHECK   "&{cc:Roffmax}))'),
+    ('VF', 'net', 'D.off forward voltage (0 = separate GOFF pin)', 'V.F', None, 'V', 'in', None),
+    ('Cgs', 'net', 'Gate-source capacitor, option', 'C.gs', '{cc:Cgsrec}', 'nF', 'in',
+     'IF({pc:Cgs}>={cc:Cgsmin},"OK","CHECK")&"   min "&TEXT({cc:Cgsmin},"0.0")&" nF"'),
+    ('Cb', 'net', 'Bootstrap capacitor', 'C.boot', '{cc:Cbrec}', 'nF', 'in',
+     'IF(AND({pc:Cb}>={cc:Cbmin},{pc:Cb}<={cc:Cbmax}),"OK","CHECK")&"   "&TEXT({cc:Cbmin},"0")&" - "'
+     '&TEXT({cc:Cbmax},"0")&" nF"'),
+    ('Rb', 'net', 'Bootstrap resistor (0 = diode alone)', 'R.boot', '{cc:Rbrec}', 'Ω', 'in',
+     'IF(ISNUMBER({cc:Rbmax}),IF({pc:Rb}<={cc:Rbmax},"OK","CHECK")&"   max "&TEXT({cc:Rbmax},"0.0")&" Ω",'
+     '"CHECK   "&{cc:Rbmax})'),
+    ('VFb', 'net', 'D.boot forward voltage', 'V.F.boot', None, 'V', 'in', None),
+    ('h3', 'head', 'Results', 'Name', 'Value', 'Unit', None, 'Check   limit'),
+    ('ton', 'res', 'Gate on delay: IC edge -> channel on', 't.on', '{cc:ton}', 'ns', None, None),
+    ('toff', 'res', 'Gate off delay: IC edge -> channel off', 't.off', '{cc:toff}', 'ns', None, None),
+    ('tD', 'res', 'Dead time needed in run (IC ADT 40-420 ns or t.DT)', 't.D.need', '{cc:tDneed}', 'ns',
+     'IF({tD}<=MAX(420,{tDT}),"OK","CHECK")&"   max "&TEXT(MAX(420,{tDT}),"0")&" ns"', None),
+    ('tDmax', 'res', 'Dead time max in run (gate on before the current reverses)', 't.D.max', '{cc:tDmax}', 'ns',
+     'IF(MAX({tD},{tDT})<={tDmax},"OK","CHECK")&"   dead time "&TEXT(MAX({tD},{tDT}),"0")&" ns"', None),
+    ('Vg', 'res', 'Gate voltage, end of start-up pulse', 'V.g.su', '{cc:Vgsu}', 'V',
+     'IF({Vg}>=10,"OK","CHECK")&"   min 10 V"', None),
+    ('Vbs1', 'res', 'V.BS after the first LOUT pulse', 'V.bs.1', '{cc:Vbs1}', 'V',
+     'IF({Vbs1}>={Vbo},"OK","CHECK")&"   min "&TEXT({Vbo},"0.0")&" V"', None),
+    ('Vbs', 'res', 'V.BS lowest, steady at f.SU', 'V.bs.min', '{cc:Vbsmin}', 'V', None, None),
+    ('kM', 'res', 'Gate-off margin vs Miller kick', 'k.Miller', '{cc:kM}', '-',
+     'IF({kM}>=1,"OK","CHECK")&"   min 1"', None),
+    ('Pdrv', 'res', 'Driver dissipation at f.Max, both sides', 'P.drv', '{cc:Pdrv}', 'W',
+     'IF({Pdrv}<={cc:Pallow},"OK","CHECK")&"   max "&TEXT({cc:Pallow},"0.00")&" W at Ta "&TEXT($D$73,"0")&" ˚C"',
+     None),
+    ('Tj', 'res', 'Driver junction at f.Max and Ta (D73)', 'Tj.drv', '{cc:Tj}', '˚C', None, None),
+    ('fsw', 'res', 'Highest switching frequency (f.SU)', 'f.SU', DV + '$D$29', 'kHz',
+     'IF({fsw}<={fmax},"OK","CHECK")&"   driver max "&TEXT({fmax},"0")&" kHz"', None),
+    ('PRon', 'res', 'R.on dissipation at f.Max (rating >= 2x)', 'P.Ron', '{cc:PRon}', 'W', None, None),
+    ('PRoff', 'res', 'R.off dissipation at f.Max (rating >= 2x)', 'P.Roff', '{cc:PRoff}', 'W', None, None),
 ]
+DRV_ROWS += [('gap%d' % i, 'gap', None, None, None, None, None, None) for i in range(N2 - len(DRV_ROWS))]
 
 #  CC working: (key, label, value / formula, unit, is_data). {pc:key} = the Selected Value of a
 #  network row, {d:key} = the D cell of a driver or switch data row
 CC0 = 77
 CC_ROWS = [
-    ('title', 'Gate drive working - feeds Power Components 76-82 and 88-119', None, None, False),
+    ('title', 'Gate drive working - feeds Power Components 76-82 and 88-132', None, None, False),
     ('tDsu', 'L6790A dead time at start-up, before ADT (DS gives none) [assumed]', 420, 'ns', True),
     ('VbFB', 'L6790A highest FB bus = HB/FB morphing threshold (DS V.HVPK_BOH)', 235, 'V', True),
     ('Rso', 'Driver source resistance: V.test / I.so', '{d:Vt}/{d:Iso}', 'Ω', False),
     ('Rsi', 'Driver sink resistance: V.test / I.si', '{d:Vt}/{d:Isi}', 'Ω', False),
     ('V', 'V.drv (selected)', '{pc:V}', 'V', False),
+    ('Vmin', 'V.drv min: driver range, and 10 V at the high-side gate after D.boot', 'MAX({d:Vccmin},10+{pc:VFb})', 'V', False),
+    ('Vmax', 'V.drv max: driver range', '{d:Vccmax}', 'V', False),
+    ('Vrec', 'V.drv recommended: the driver test voltage inside the range', 'MIN({Vmax},MAX({Vmin},{d:Vt}))', 'V', False),
     ('CG', 'Gate capacitance per position: n.par x C.g + C.gs', PCq + '$D$68*{d:Cg}+{pc:Cgs}', 'nF', False),
     ('Rgi', 'Internal gate resistance per position', '{d:Rgi0}/' + PCq + '$D$68', 'Ω', False),
     ('Reff', 'Turn-off path resistance',
@@ -122,8 +173,9 @@ CC_ROWS = [
      'V', False),
     ('ton_', 'τ.on = (R.so + R.on + R.gi) C.G', '({Rso}+{pc:Ron}+{Rgi})*{CG}', 'ns', False),
     ('toff_', 'τ.off = (R.si + R.off.eff + R.gi) C.G', '({Rsi}+{Reff}+{Rgi})*{CG}', 'ns', False),
-    ('tL1', 'Start-up pulse T/2 - t.D.su (also the first LOUT pulse)', '10^6/(2*%s$D$29)-{tDsu}' % DV, 'ns', False),
-    ('trun', 'Pulse at f.Max: T/2 - t.D', '10^6/(2*%s$D$27)-%s$D$47' % (DV, DS), 'ns', False),
+    ('tL1', 'Start-up pulse T/2 - max(t.D.su, t.DT) (also the first LOUT pulse)',
+     '10^6/(2*%s$D$29)-MAX({tDsu},{d:tDT})' % DV, 'ns', False),
+    ('trun', 'Pulse at f.Max: T/2 - t.D', '10^6/(2*%s$D$27)-MAX(%s$D$47,{d:tDT})' % (DV, DS), 'ns', False),
     ('Vgsu', 'Gate voltage at the end of the start-up pulse', '{V}*(1-EXP(-{tL1}/{ton_}))', 'V', False),
     ('Vgrun', 'Gate voltage at the end of the f.Max pulse', '{V}*(1-EXP(-{trun}/{ton_}))', 'V', False),
     ('Eon', 'Energy per turn-on at f.Max', '{CG}*{Vgrun}*({V}-{Vgrun}/2)', 'nJ', False),
@@ -132,12 +184,16 @@ CC_ROWS = [
     ('xoff', 'Driver share of the turn-off energy', '{Rsi}/({Rsi}+{Reff}+{Rgi})', '-', False),
     ('Pdrv', 'Driver power at f.Max, both positions + quiescent',
      '2*({Eon}*{xon}+{Eoff}*{xoff})*%s$D$27*10^-6+{d:IQ}*{V}/1000' % DV, 'W', False),
-    ('Pbud', 'Driver power budget: (Tj.max - Ta) / Rth - quiescent',
-     '({d:Tjmax}-%s$D$73)/{d:Rth}-{d:IQ}*{V}/1000' % PCq, 'W', False),
+    ('Pallow', 'Driver power allowed: (Tj.max - Ta) / Rth', '({d:Tjmax}-%s$D$73)/{d:Rth}' % PCq, 'W', False),
+    ('Pbud', 'Driver gate-power budget: allowed - quiescent', '{Pallow}-{d:IQ}*{V}/1000', 'W', False),
     ('xneed', 'Turn-on share the budget allows',
      '({Pbud}-2*{Eoff}*{xoff}*%s$D$27*10^-6)/(2*{Eon}*%s$D$27*10^-6)' % (DV, DV), '-', False),
-    ('Ronmin', 'R.on minimum for the driver temperature',
+    ('Ronmin', 'R.on min: the driver temperature',
      'IF({xneed}<=0,"lower V.drv",MAX(0,{Rso}/{xneed}-{Rso}-{Rgi}))', 'Ω', False),
+    ('Ronmax', 'R.on max: the gate reaches 10 V within the start-up pulse',
+     'IF({V}>10,{tL1}/({CG}*LN({V}/({V}-10)))-{Rso}-{Rgi},0)', 'Ω', False),
+    ('Ronrec', 'R.on recommended: the log middle of min .. max, E12 below',
+     'IF(ISNUMBER({Ronmin}),' + e12f('SQRT(MAX({Ronmin},1)*MAX({Ronmax},1))') + ',{Ronmin})', 'Ω', False),
     ('TTrun', 'Midpoint swing in run: c.HB V.bus,max / I.Lm.pk',
      '%s$D$46*SQRT(2)*%s$D$14/%s$D$73/1000' % (DS, DS, RT), 'ns', False),
     ('TTsu', 'Midpoint swing at start-up: c.HB V.bus,FB / I.su', '%s$D$46*{VbFB}/%s$D$84/1000' % (DS, RT), 'ns', False),
@@ -149,24 +205,35 @@ CC_ROWS = [
     ('kM', 'k.Miller = V.th min / the smaller kick', '{d:Vthm}/MIN({dVr},{dVc})', '-', False),
     ('Cgsmin', 'C.gs needed (0 if the gate holds without it)',
      'IF(MIN({dVr},{dVc})<={d:Vthm},0,MAX(0,%s$D$68*({d:Qgd}/{d:Vthm}-{d:Cgsd})))' % PCq, 'nF', False),
+    ('Cgsrec', 'C.gs recommended: E6 above the need', 'IF({Cgsmin}=0,0,' + e6c('{Cgsmin}') + ')', 'nF', False),
     ('ton', 't.on: IC edge -> V.th', '{d:tpd}+{ton_}*LN({V}/({V}-{d:Vth}))', 'ns', False),
+    ('tonpl', 'IC edge -> plateau on the way up', '{d:tpd}+{ton_}*LN({V}/({V}-{d:Vpl}))', 'ns', False),
     ('toff', 't.off: IC edge -> below V.th min',
      'IF({d:Vthm}>{Veff},{d:tpd}+{toff_}*LN(({V}-{Veff})/({d:Vthm}-{Veff})),"never")', 'ns', False),
     ('toffpl', 'IC edge -> plateau on the way down', '{d:tpd}+{toff_}*LN(({V}-{Veff})/({d:Vpl}-{Veff}))', 'ns', False),
     ('tDneed', 't.D.need = (t.off.pl - t.pd) + swing - (t.on - t.pd) + MT', '{toffpl}-{ton}+{TTrun}+{d:MT}', 'ns', False),
+    ('tDmax', 't.D.max = T/4 at f.Max + (t.off.pl - t.on.pl) - MT: on at the plateau before the reversal',
+     '10^6/(4*%s$D$27)+{toffpl}-{tonpl}-{d:MT}' % DV, 'ns', False),
     ('Reffm', 'Turn-off path that holds the gate below V.th min against the Miller current',
      '{d:Vthm}/{iM}-{Rsi}-{Rgi}', 'Ω', False),
     ('Reffo', 'Turn-off path that has the gate off before the other side turns on (t.D + t.on)',
-     '(%s$D$47+{ton}-{d:tpd})/(LN(({V}-{Veff})/({d:Vthm}-{Veff}))*{CG})-{Rsi}-{Rgi}' % DS, 'Ω', False),
-    ('Reffmax', 'Turn-off path maximum: the overlap limit, and the Miller limit unless C.gs alone holds',
+     '(MAX(%s$D$47,{d:tDT})+{ton}-{d:tpd})/(LN(({V}-{Veff})/({d:Vthm}-{Veff}))*{CG})-{Rsi}-{Rgi}' % DS, 'Ω', False),
+    ('Reffmax', 'Turn-off path max: the overlap limit, and the Miller limit unless C.gs alone holds',
      'IF({dVc}<={d:Vthm},{Reffo},MIN({Reffo},{Reffm}))', 'Ω', False),
-    ('Roffmax', 'R.off maximum (in parallel with R.on unless V.F = 0)',
+    ('Roffmax', 'R.off max (in parallel with R.on unless V.F = 0)',
      'IF({Reffmax}<=0,"lower R.on",IF({pc:VF}=0,{Reffmax},IF({Reffmax}>={pc:Ron},"any",1/(1/{Reffmax}-1/{pc:Ron}))))',
      'Ω', False),
-    ('Cbmin', 'C.boot minimum: 10 x C.G', '10*{CG}', 'nF', False),
+    ('Roffrec', 'R.off recommended: half of min(R.on, R.off max), E12 below',
+     e12f('MIN({pc:Ron},IF(ISNUMBER({Roffmax}),{Roffmax},1E9))/2'), 'Ω', False),
+    ('Cbmin', 'C.boot min: 10 x C.G', '10*{CG}', 'nF', False),
+    ('Cbmax', 'C.boot max: the first LOUT pulse still charges it to V.bo.min (with R.boot)',
+     'IF({V}-{pc:VFb}>{d:Vbo},{tL1}/(MAX({pc:Rb},0.5)*LN(({V}-{pc:VFb})/({V}-{pc:VFb}-{d:Vbo}))),0)', 'nF', False),
+    ('Cbrec', 'C.boot recommended: E6 above the min', e6c('{Cbmin}'), 'nF', False),
     ('taub', 'τ.boot (a diode alone taken as 0.5 Ω)', 'MAX({pc:Rb},0.5)*{pc:Cb}', 'ns', False),
-    ('Rbmax', 'R.boot maximum: the first LOUT pulse reaches V.bo.min',
+    ('Rbmax', 'R.boot max: the first LOUT pulse reaches V.bo.min (with C.boot)',
      'IF({V}-{pc:VFb}>{d:Vbo},{tL1}/({pc:Cb}*LN(({V}-{pc:VFb})/({V}-{pc:VFb}-{d:Vbo}))),"V.drv too low")', 'Ω', False),
+    ('Rbrec', 'R.boot recommended: half the max, E12 below', 'IF(ISNUMBER({Rbmax}),' + e12f('{Rbmax}/2') + ',{Rbmax})',
+     'Ω', False),
     ('Vbs1', 'V.BS after the first LOUT pulse', '({V}-{pc:VFb})*(1-EXP(-{tL1}/{taub}))', 'V', False),
     ('dVbs', 'V.BS drop per high-side pulse at f.SU (gate charge + floating quiescent 120 uA)',
      '{CG}*{Vgsu}/{pc:Cb}+0.00012*{tL1}/{pc:Cb}', 'V', False),
@@ -187,7 +254,10 @@ def rt_rows(cc):
     return [
         ('I.su', 'Tank peak at f.SU, V.out ~0 (FB, 235 V bus)',
          '%s/D52*TAN(PI()*D55/(2*%s$D$29))' % (a, DV), 'A', None),
-        ('k.su', 'OCP2 margin (> 1, else start-up restarts)', '%s$G$49/D84' % DV, '-', 'IF(D85>=1,"OK","CHECK")'),
+        ('k.su.OCP2', 'OCP2 margin (> 1, else start-up restarts)', '%s$G$49/D84' % DV, '-',
+         'IF(D85>=1,"OK","CHECK")'),
+        ('k.su.OCP1', 'OCP1 margin (> 1, else OCP1 acts at once)', '%s$D$49/D84' % DV, '-',
+         'IF(D86>=1,"OK","CHECK")'),
         ('f.su.OCP1', 'Lowest f before OCP1 while V.out is low',
          'PI()*D55/(2*ATAN(%s$D$49*D52/%s))' % (DV, a), 'kHz', None),
     ]
@@ -203,7 +273,7 @@ def add_merge(xml, ref):
     return xml.replace(m.group(0), '<mergeCells count="%d"><mergeCell ref="%s"/>' % (int(m.group(1)) + 1, ref), 1)
 
 
-def add_picture(parts, sp, png, row0, col0=6):
+def add_picture(parts, sp, png, row0, col0=7):
     """anchor the PNG at (col0, row0) of Power Components, about 760 px wide"""
     rels = parts['xl/worksheets/_rels/' + sp['Power Components'].split('/')[-1] + '.rels'].decode()
     dpath = 'xl/' + re.search(r'Target="\.\./(drawings/drawing\d+\.xml)"', rels).group(1)
@@ -247,7 +317,7 @@ def apply(path, sel):
         print('already present in', os.path.basename(path))
         return
     xl_rows.insert_rows(parts, 'Power Components', AT1, N1)
-    xl_rows.insert_rows(parts, 'Power Components', AT2, len(DRV_ROWS))
+    xl_rows.insert_rows(parts, 'Power Components', AT2, N2)
 
     drow = {r[0]: AT1 + i for i, r in enumerate(MOS_ROWS)}
     drow.update({r[0]: AT2 + i for i, r in enumerate(DRV_ROWS)})
@@ -264,7 +334,7 @@ def apply(path, sel):
             if k.startswith('cc:'):
                 return '%s$C$%d' % ('' if here == 'cc' else 'CC!', ccrow[k[3:]])
             return 'D%d' % drow[k] if here == 'pc' else 'C%d' % ccrow[k]
-        return re.sub(r'\{([\w:]+)\}', one, f)
+        return re.sub(r'\{([A-Za-z]\w*(?::\w+)?)\}', one, f)
 
     # ---- Power Components
     pc = parts[sp['Power Components']].decode('utf-8')
@@ -283,7 +353,7 @@ def apply(path, sel):
         cell('C%d' % r, X.cell_t('C%d' % r, s_lab, name))
         cell('D%d' % r, X.cell_n('D%d' % r, s_in, val))
         cell('E%d' % r, X.cell_t('E%d' % r, s_unit, unit))
-    for key, kind, label, name, dval, unit, fcol in DRV_ROWS:
+    for key, kind, label, name, dval, unit, fcol, gcol in DRV_ROWS:
         r = drow[key]
         pc = X.ensure_row(pc, r)
         if kind == 'gap':
@@ -299,7 +369,7 @@ def apply(path, sel):
             pc = add_merge(pc, 'C%d:E%d' % (r, r))
             continue
         if kind == 'head':
-            for col, t in zip('BCDEF', (label, name, dval, unit, fcol)):
+            for col, t in zip('BCDEFG', (label, name, dval, unit, fcol, gcol)):
                 if t:
                     cell('%s%d' % (col, r), X.cell_t('%s%d' % (col, r), s_head, t))
             continue
@@ -314,8 +384,10 @@ def apply(path, sel):
         cell('E%d' % r, X.cell_t('E%d' % r, s_unit, unit))
         if fcol == 'in':
             cell('F%d' % r, X.cell_n('F%d' % r, s_in, sel[key]))
-        elif fcol:
-            cell('F%d' % r, X.cell_f('F%d' % r, s_lab, sub(fcol, 'pc')))
+        elif fcol:                       # a result's check goes to the wide column G
+            cell('G%d' % r, X.cell_f('G%d' % r, s_lab, sub(fcol, 'pc')))
+        if gcol:
+            cell('G%d' % r, X.cell_f('G%d' % r, s_lab, sub(gcol, 'pc')))
     parts[sp['Power Components']] = pc.encode('utf-8')
     add_picture(parts, sp, PNG, drow['h2'])
 
@@ -335,7 +407,7 @@ def apply(path, sel):
     cc = re.sub(r'<dimension ref="[^"]*"/>', '<dimension ref="B3:AM%d"/>' % last_cc, cc, count=1)
     parts[sp['CC']] = cc.encode('utf-8')
 
-    # ---- Res. Tank Design 81-86 (format of the peak table at 70-79)
+    # ---- Res. Tank Design 81-87 (format of the peak table at 70-79)
     rt = parts[sp['Res. Tank Design']].decode('utf-8')
     s_t, s_h = X.style_of(rt, 'B70'), X.style_of(rt, 'B72')
     s_l, s_v, s_u = X.style_of(rt, 'B73'), X.style_of(rt, 'D73'), X.style_of(rt, 'E73')
@@ -345,7 +417,8 @@ def apply(path, sel):
     rt = X.set_cell(rt, 'B81', X.cell_t('B81', s_t, 'Start-up with the output near 0 V'))
     for col, t in zip('BCDEF', ('Parameters', 'Name', 'Value', 'Unit', 'Check')):
         rt = X.set_cell(rt, '%s83' % col, X.cell_t('%s83' % col, s_h, t))
-    for i, (name, label, f, unit, chk) in enumerate(rt_rows(ccrow)):
+    rows = rt_rows(ccrow)
+    for i, (name, label, f, unit, chk) in enumerate(rows):
         r = 84 + i
         rt = X.ensure_row(rt, r)
         rt = set_ht(rt, r, 15)
@@ -355,24 +428,27 @@ def apply(path, sel):
         rt = X.set_cell(rt, 'E%d' % r, X.cell_t('E%d' % r, s_u, unit))
         if chk:
             rt = X.set_cell(rt, 'F%d' % r, X.cell_f('F%d' % r, s_l, chk))
-    rt = re.sub(r'<dimension ref="[^"]*"/>', '<dimension ref="B4:G86"/>', rt, count=1)
+    rt_last = 83 + len(rows)
+    rt = re.sub(r'<dimension ref="[^"]*"/>', '<dimension ref="B4:G%d"/>' % rt_last, rt, count=1)
     parts[sp['Res. Tank Design']] = rt.encode('utf-8')
 
     # ---- CHANGELOG
-    last = AT2 + len(DRV_ROWS) - 1
+    last = AT2 + N2 - 1
     rr = max(int(x) for x in re.findall(r'<row r="(\d+)"', log)) + 2
     why = ('%s - ADDED (user, 2026-10-22). Power Components rows inserted (xl_rows.py, every reference '
            'followed): 76-82 the switch gate data (STO60N045DM9: C.g 7.5 nF Qg slope, C.gs 4.76 nF, R.g 4.5, '
-           'V.pl 6.3, V.th 4.0 / 3.5, Q.gd 13 nC), 88-%d LLC Half Bridge Gate Driver Selection - part number, '
-           'driver datasheet values (L6498LD), gate network (Value = recommendation, Selected Value = %s), '
-           'results with five checks, schematic at G%d. Old rows 76-80 are now 83-87 and old 81-119 (the '
-           'secondary section) 121-159; CHANGELOG entries above this line name the old rows. Res. Tank '
-           'Design 81-86: start-up I.su, k.su (OCP2), f.su.OCP1. CC 77-%d: the working (gate_budget.py model).'
-           % (MARK, last, sel['note'], drow['h2'], last_cc))
+           'V.pl 6.3, V.th 4.0 / 3.5, Q.gd 13 nC); 88-%d LLC Half Bridge Gate Driver Selection - part number, '
+           'driver datasheet values (L6498LD: 1.4 / 1.55 A at 15 V, 10-20 V, 85 ns, MT 30 ns, no internal dead '
+           'time, 800 kHz, 0.6 mA, 120 K/W, 125 C, V.BO 9.3 V), gate network (Value = recommendation, Selected '
+           'Value = %s, G = OK / CHECK and the allowed range), results with G = OK / CHECK and the limit, '
+           'schematic at column H. Old rows 76-80 are now 83-87 and old 81-119 (the secondary section) %d-%d; '
+           'CHANGELOG entries above this line name the old rows. Res. Tank Design 81-%d: start-up I.su, '
+           'k.su.OCP2, k.su.OCP1, f.su.OCP1. CC 77-%d: the working (gate_budget.py model).'
+           % (MARK, last, sel['note'], 81 + N1 + N2, 119 + N1 + N2, rt_last, last_cc))
     for sheet, ref, text in ((None, None, why),
                              ('Power Components', 'B76:E82', 'switch gate data (yellow)'),
-                             ('Power Components', 'B%d:F%d' % (AT2, last - 1), 'gate driver selection'),
-                             ('Res. Tank Design', 'B81:F86', 'start-up: I.su, k.su, f.su.OCP1'),
+                             ('Power Components', 'B%d:G%d' % (AT2, last), 'gate driver selection'),
+                             ('Res. Tank Design', 'B81:F%d' % rt_last, 'start-up: I.su, k.su.OCP2, k.su.OCP1, f.su.OCP1'),
                              ('CC', 'B77:D%d' % last_cc, 'gate drive working')):
         log = X.ensure_row(log, rr)
         for col, t in (('B', sheet), ('C', ref), ('F', text)):

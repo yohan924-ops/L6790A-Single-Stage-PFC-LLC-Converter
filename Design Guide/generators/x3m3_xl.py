@@ -16,7 +16,7 @@ feedback parts and output bank:
     CompensationNet   D14 D28 D29 D31   V.Z, V.Fo, CTR.steady, CTR.max
                       F43 F93 F94 F95   R.B, C.Fo, C.F, R.F    and C25 the optocoupler name
     Design Spec       D46  c.HB 3329 pF (drain-source caps of the LG board; C115/C117 are across the legs)
-    Power Components  D72 C132 D136 D138 (C92 D96 D98 before 2026-10-22)   Cpar 400 pF, SR MOSFET TPH3R70APL1 3.7 mOhm k_T 1.9
+    Power Components  D72 C144 D148 D150 (C92 D96 D98 before 2026-10-22)   Cpar 400 pF, SR MOSFET TPH3R70APL1 3.7 mOhm k_T 1.9
     CompensationNet   C19 D23 F96       TL431G-AE2-R, I.min 0.5 mA, C.fx 1.6 nF
 Primary MOSFET STO60N045DM9 x 1 per position as the guide; SR TPH3R70APL1 x 2 per leg as the board.
 
@@ -126,9 +126,9 @@ def picks():
             ('Power Components', PWR, 'D72', '%g' % t('C.par'),
              'Cpar, pF - 100 layout + 2 x 150 drain-source, feeds D77 for the dv/dt'),
             # SR MOSFET of the LG board (user: same parts as the board)
-            ('Power Components', PWR, 'D136', '%g' % (t('R.dson_s25') / 1000),
+            ('Power Components', PWR, 'D148', '%g' % (t('R.dson_s25') / 1000),
              'RD, Ohm - TPH3R70APL1 RDSon max at VGS = 10 V, as the 200 W book (Toshiba datasheet not on file)'),
-            ('Power Components', PWR, 'D138', '%g' % t('K.Tsec'),
+            ('Power Components', PWR, 'D150', '%g' % t('K.Tsec'),
              'kT.sec - ST tool default 1.9 kept for the TPH3R70APL1 (no curve on file); the STL160N10F8 had 1.5'))
 
 
@@ -136,7 +136,7 @@ TEXT = (('CompensationNet&Check', 'xl/worksheets/sheet7.xml', 'C25', 'UPC1008G-L
          'optocoupler part - as on the LG board (U13)'),
         ('CompensationNet&Check', 'xl/worksheets/sheet7.xml', 'C19', 'TL431G-AE2-R',
          'TL431 part - as on the LG board (Q44/Q46)'),
-        ('Power Components', PWR, 'C132', 'TPH3R70APL1',
+        ('Power Components', PWR, 'C144', 'TPH3R70APL1',
          'SR MOSFET - as on the LG board, 2 per leg under the TEA2095TE'))
 
 
