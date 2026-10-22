@@ -23,36 +23,45 @@
     </dependencies>
   </settings>
   <regions type="content">
-    <region left="20" top="64" width="1560" height="32" color="#000000" fontSize="15" isBreakable="false">
+    <region left="20" top="64" width="1560" height="66" color="#000000" fontSize="15" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
-        <p style="font-weight: bold; font-style: normal; font-size: 15px;">L6790A gate drive and start-up check  -  twin of Power Components 76-83, 89-174 and Res. Tank Design 81-87</p>
+        <p style="font-weight: bold; font-style: normal; font-size: 15px;">L6790A gate drive and start-up check - 3-core 670 W board (x3m3)  -  twin of Power Components 76-83, 89-174 and Res. Tank Design 81-87 of</p>
+        <p style="font-weight: bold; font-style: normal; font-size: 15px;">3CORE_670W_workbook_unencrypted.xlsx</p>
       </content>
     </text>
     </region>
-    <region left="20" top="110" width="1560" height="51" color="#444444" fontSize="9" isBreakable="false">
+    <region left="20" top="144" width="1560" height="79" color="#444444" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
-        <p style="font-weight: normal; font-style: normal; font-size: 9px;">Every row here is a row of the GUIDE_PQ50_657W workbook (gate_xl.py, 2026-10-22), same formula and same name. Yellow cells are the inputs; the six selected values come FIRST because SMath evaluates top to bottom, and their limits follow as checks. k.* rows</p>
-        <p style="font-weight: normal; font-style: normal; font-size: 9px;">are margins and read OK at 1 or above. Functions used: sqrt, abs, ln, exp, atan, cos, sin - min/max are the abs() forms of the main sheet.</p>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">Every row here is a row of the workbook (gate_xl.py, 2026-10-22), same formula and same name. Yellow cells are the inputs; the six selected values come FIRST because SMath evaluates top to bottom, and their limits follow as checks. k.* rows are margins and</p>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">read OK at 1 or above. THE GATE DRIVER IS NOT FIXED: section 4 is a datasheet block any half-bridge driver fills - the numbers in it are those of the part this build uses (L6498LD); the same for the two diodes in section 5. Functions used: sqrt, abs, ln,</p>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">exp, atan, cos, sin - min/max are abs() forms.</p>
       </content>
     </text>
     </region>
-    <region left="20" top="185" width="1560" height="27" color="#0f2a44" fontSize="12" isBreakable="false">
+    <region left="20" top="247" width="1560" height="27" color="#0f2a44" fontSize="12" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
-        <p style="font-weight: bold; font-style: normal; font-size: 12px;">1  Design inputs (Device Setting D27 D29, Design Spec D14 D46 D47, Res. Tank Design, Power Components D68)</p>
+        <p style="font-weight: bold; font-style: normal; font-size: 12px;">1  Design inputs - 3-core 670 W board (x3m3) (Device Setting D27 D29, Design Spec D14 D46 D47, Res. Tank Design F43 F44 D73, Power Components D68)</p>
       </content>
     </text>
     </region>
-    <region left="20" top="220" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="282" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">Tank: C.r 70.5 nF (C0G 2S x 3P) / L.r 10 uH / L.m 15 uH, R.T 7.68 k. The gate data and the parts are the same in both books.</p>
+      </content>
+    </text>
+    </region>
+    <region left="20" top="313" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[XL] Maximum input voltage:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="220" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="313" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">V.AC_max</e>
@@ -63,50 +72,50 @@
       </input>
     </math>
     </region>
-    <region left="20" top="263" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="356" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[XL] Resonant capacitor C.r:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="263" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="356" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">C.r</e>
-        <e type="operand">180</e>
+        <e type="operand">70.5</e>
         <e type="operand" style="unit">nF</e>
         <e type="operator" args="2">*</e>
         <e type="operator" args="2">:</e>
       </input>
     </math>
     </region>
-    <region left="20" top="306" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="399" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[XL] Resonant inductance L.r:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="306" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="399" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">L.r</e>
-        <e type="operand">25</e>
+        <e type="operand">10</e>
         <e type="operand" style="unit">μH</e>
         <e type="operator" args="2">*</e>
         <e type="operator" args="2">:</e>
       </input>
     </math>
     </region>
-    <region left="20" top="349" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="442" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[XL] Current sense resistor R.CS:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="349" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="442" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">R.CS</e>
@@ -117,89 +126,89 @@
       </input>
     </math>
     </region>
-    <region left="20" top="392" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="485" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[XL] Maximum (VCO) switching frequency f.Max:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="392" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="485" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">f.Max</e>
-        <e type="operand">285.5931</e>
+        <e type="operand">348.6138</e>
         <e type="operand" style="unit">kHz</e>
         <e type="operator" args="2">*</e>
         <e type="operator" args="2">:</e>
       </input>
     </math>
     </region>
-    <region left="20" top="435" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
+    <region left="20" top="528" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
-        <p style="font-weight: normal; font-style: normal; font-size: 9px;">Device Setting D27 - set by R.T 21.5 kohm and C.T 470 pF in the main sheet.</p>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">Device Setting D27 - set by R.T and C.T in the design sheet.</p>
       </content>
     </text>
     </region>
-    <region left="20" top="466" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="559" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[XL] Start-up frequency f.SU:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="466" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="559" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">f.SU</e>
-        <e type="operand">476.4035</e>
+        <e type="operand">526.3811</e>
         <e type="operand" style="unit">kHz</e>
         <e type="operator" args="2">*</e>
         <e type="operator" args="2">:</e>
       </input>
     </math>
     </region>
-    <region left="20" top="509" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
+    <region left="20" top="602" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">Device Setting D29.</p>
       </content>
     </text>
     </region>
-    <region left="20" top="540" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="633" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[XL] Half-bridge midpoint capacitance c.HB:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="540" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="633" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">c.HB</e>
-        <e type="operand">3028.98</e>
+        <e type="operand">3329</e>
         <e type="operand" style="unit">pF</e>
         <e type="operator" args="2">*</e>
         <e type="operator" args="2">:</e>
       </input>
     </math>
     </region>
-    <region left="20" top="583" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
+    <region left="20" top="676" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
-        <p style="font-weight: normal; font-style: normal; font-size: 9px;">Design Spec D46 - two STO60N045DM9 C.oss plus the stray, after fet_xl.py.</p>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">Design Spec D46 - the two switch C.oss plus the stray (fet_xl.py; the 3-core book carries the bench-board figure, bench200_sync_xl.py).</p>
       </content>
     </text>
     </region>
-    <region left="20" top="614" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="707" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[XL] Design dead time t.D:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="614" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="707" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">t.D</e>
@@ -210,39 +219,39 @@
       </input>
     </math>
     </region>
-    <region left="20" top="657" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="750" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[XL] Peak magnetizing current I.Lm.pk at f.Max:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="657" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="750" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">I.Lm_pk</e>
-        <e type="operand">11.1320</e>
+        <e type="operand">12.7703</e>
         <e type="operand" style="unit">A</e>
         <e type="operator" args="2">*</e>
         <e type="operator" args="2">:</e>
       </input>
     </math>
     </region>
-    <region left="20" top="700" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
+    <region left="20" top="793" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">Res. Tank Design D73.</p>
       </content>
     </text>
     </region>
-    <region left="20" top="731" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="824" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[XL] Devices in parallel per switch position n.par:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="731" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="824" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">n.par</e>
@@ -251,14 +260,14 @@
       </input>
     </math>
     </region>
-    <region left="20" top="774" width="470" height="62" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="867" width="470" height="62" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Series resonant frequency:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="774" width="1080" height="62" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="867" width="1080" height="62" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="2">
       <input>
         <e type="operand">f.r</e>
@@ -278,18 +287,18 @@
           <e type="operand" style="unit">kHz</e>
         </contract>
         <result action="numeric">
-          <e type="operand">75.03</e>
+          <e type="operand">189.55</e>
         </result>
     </math>
     </region>
-    <region left="20" top="844" width="470" height="64" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="937" width="470" height="64" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Tank characteristic impedance:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="844" width="1080" height="64" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="937" width="1080" height="64" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="3">
       <input>
         <e type="operand">Z.0</e>
@@ -303,18 +312,18 @@
           <e type="operand" style="unit">ohm</e>
         </contract>
         <result action="numeric">
-          <e type="operand">11.785</e>
+          <e type="operand">11.910</e>
         </result>
     </math>
     </region>
-    <region left="20" top="916" width="470" height="53" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="1009" width="470" height="53" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- OCP1 trip current:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="916" width="1080" height="53" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="1009" width="1080" height="53" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="2">
       <input>
         <e type="operand">I.OCP1</e>
@@ -333,14 +342,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="977" width="470" height="53" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="1184" width="470" height="53" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- OCP2 trip current:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="977" width="1080" height="53" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="1184" width="1080" height="53" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="2">
       <input>
         <e type="operand">I.OCP2</e>
@@ -359,14 +368,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="1184" width="470" height="44" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="1245" width="470" height="44" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Highest bus, sqrt(2) x VAC.max:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="1184" width="1080" height="44" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="1245" width="1080" height="44" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="2">
       <input>
         <e type="operand">V.bus</e>
@@ -384,21 +393,21 @@
         </result>
     </math>
     </region>
-    <region left="20" top="1252" width="1560" height="27" color="#0f2a44" fontSize="12" isBreakable="false">
+    <region left="20" top="1313" width="1560" height="27" color="#0f2a44" fontSize="12" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: bold; font-style: normal; font-size: 12px;">2  L6790A figures the rows assume (CC 78-82)</p>
       </content>
     </text>
     </region>
-    <region left="20" top="1287" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="1348" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] HOUT / LOUT high level, min (V.OH):</p>
       </content>
     </text>
     </region>
-    <region left="510" top="1287" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="1348" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">V.OH</e>
@@ -409,14 +418,14 @@
       </input>
     </math>
     </region>
-    <region left="20" top="1330" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="1391" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[ASSUMED] D.boot dynamic resistance at the surge:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="1330" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="1391" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">R.d_boot</e>
@@ -427,14 +436,14 @@
       </input>
     </math>
     </region>
-    <region left="20" top="1373" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="1434" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[ASSUMED] Dead time at start-up, before ADT acts:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="1373" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="1434" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">t.D_su</e>
@@ -445,21 +454,21 @@
       </input>
     </math>
     </region>
-    <region left="20" top="1416" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
+    <region left="20" top="1477" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">the DRAFT datasheet gives none; 420 ns is the value the bench start-up capture is consistent with. Replace when ST confirms.</p>
       </content>
     </text>
     </region>
-    <region left="20" top="1447" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="1508" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] Maximum operating frequency (about 675 kHz):</p>
       </content>
     </text>
     </region>
-    <region left="510" top="1447" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="1508" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">f.IC</e>
@@ -470,14 +479,14 @@
       </input>
     </math>
     </region>
-    <region left="20" top="1490" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="1551" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] Highest FB bus = HB/FB morphing threshold V.HVPK_BOH:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="1490" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="1551" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">V.bus_FB</e>
@@ -488,14 +497,14 @@
       </input>
     </math>
     </region>
-    <region left="20" top="1533" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="1594" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
-        <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] L6498 floating quiescent current I.QBO:</p>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] Driver floating-section quiescent current I.QBO:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="1533" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="1594" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">I.QBO</e>
@@ -506,21 +515,28 @@
       </input>
     </math>
     </region>
-    <region left="20" top="1592" width="1560" height="27" color="#0f2a44" fontSize="12" isBreakable="false">
+    <region left="20" top="1637" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">a driver datasheet value (the workbook has it inside the I.boot.avg formula); 120 uA is the L6498LD figure.</p>
+      </content>
+    </text>
+    </region>
+    <region left="20" top="1684" width="1560" height="27" color="#0f2a44" fontSize="12" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: bold; font-style: normal; font-size: 12px;">3  Switch gate data - STO60N045DM9 (Power Components 76-83)</p>
       </content>
     </text>
     </region>
-    <region left="20" top="1627" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="1719" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] Gate capacitance above the plateau, Q.g slope:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="1627" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="1719" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">C.g</e>
@@ -531,14 +547,14 @@
       </input>
     </math>
     </region>
-    <region left="20" top="1670" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="1762" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] Gate-source capacitance C.iss - C.rss:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="1670" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="1762" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">C.gs_dev</e>
@@ -549,14 +565,14 @@
       </input>
     </math>
     </region>
-    <region left="20" top="1713" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="1805" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] Internal gate resistance:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="1713" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="1805" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">R.g</e>
@@ -567,14 +583,14 @@
       </input>
     </math>
     </region>
-    <region left="20" top="1756" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="1848" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] Miller plateau voltage:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="1756" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="1848" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">V.pl</e>
@@ -585,14 +601,14 @@
       </input>
     </math>
     </region>
-    <region left="20" top="1799" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="1891" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] Gate threshold, typ.:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="1799" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="1891" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">V.th</e>
@@ -603,14 +619,14 @@
       </input>
     </math>
     </region>
-    <region left="20" top="1842" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="1934" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] Gate threshold, min.:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="1842" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="1934" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">V.th_min</e>
@@ -621,14 +637,14 @@
       </input>
     </math>
     </region>
-    <region left="20" top="1885" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="1977" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] Miller charge over the bus swing [nC]:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="1885" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="1977" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">Q.gd</e>
@@ -637,21 +653,21 @@
       </input>
     </math>
     </region>
-    <region left="20" top="1928" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
+    <region left="20" top="2020" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">a plain number in nC; the rows below put 10^-9 A*s back on.</p>
       </content>
     </text>
     </region>
-    <region left="20" top="1959" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="2051" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] Gate-source voltage rating:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="1959" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="2051" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">V.gs_max</e>
@@ -662,21 +678,29 @@
       </input>
     </math>
     </region>
-    <region left="20" top="2018" width="1560" height="27" color="#0f2a44" fontSize="12" isBreakable="false">
+    <region left="20" top="2304" width="1560" height="27" color="#0f2a44" fontSize="12" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
-        <p style="font-weight: bold; font-style: normal; font-size: 12px;">4  Gate driver data - L6498LD (Power Components 92-112)</p>
+        <p style="font-weight: bold; font-style: normal; font-size: 12px;">4  Gate driver data - any half-bridge driver; this build: L6498LD (Power Components 92-112)</p>
       </content>
     </text>
     </region>
-    <region left="20" top="2053" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="2339" width="1560" height="51" color="#444444" fontSize="9" isBreakable="false">
+    <text lang="eng" fontFamily="Arial" fontSize="10">
+      <content>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">Replace every value below with the chosen driver&#x27;s datasheet when the part changes - nothing else in the sheet knows the part. Drivers with their own dead time: put it in t.DT; drivers that give an output resistance: type it into R.so / R.si instead of the</p>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">short-circuit estimate; separate GON / GOFF pins: V.F.off = 0 (workbook branch).</p>
+      </content>
+    </text>
+    </region>
+    <region left="20" top="2398" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] Source current, min:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="2053" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="2398" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">I.so</e>
@@ -687,14 +711,14 @@
       </input>
     </math>
     </region>
-    <region left="20" top="2096" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="2441" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] Sink current, min:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="2096" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="2441" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">I.si</e>
@@ -705,14 +729,14 @@
       </input>
     </math>
     </region>
-    <region left="20" top="2139" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="2484" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] Test supply voltage for I.so, I.si:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="2139" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="2484" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">V.test</e>
@@ -723,14 +747,14 @@
       </input>
     </math>
     </region>
-    <region left="20" top="2304" width="470" height="53" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="2527" width="470" height="53" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Source resistance from the short-circuit current:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="2304" width="1080" height="53" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="2527" width="1080" height="53" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="2">
       <input>
         <e type="operand">R.so_sc</e>
@@ -747,14 +771,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="2365" width="470" height="53" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="2588" width="470" height="53" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Sink resistance from the short-circuit current:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="2365" width="1080" height="53" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="2588" width="1080" height="53" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="2">
       <input>
         <e type="operand">R.si_sc</e>
@@ -771,14 +795,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="2426" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="2649" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[PICK] Output resistance in use, source:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="2426" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="2649" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">R.so</e>
@@ -787,21 +811,21 @@
       </input>
     </math>
     </region>
-    <region left="20" top="2469" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
+    <region left="20" top="2692" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">the workbook row R.o.src: type the datasheet value here when the driver gives one.</p>
       </content>
     </text>
     </region>
-    <region left="20" top="2500" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="2723" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[PICK] Output resistance in use, sink:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="2500" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="2723" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">R.si</e>
@@ -810,14 +834,14 @@
       </input>
     </math>
     </region>
-    <region left="20" top="2543" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="2766" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] Supply voltage, min:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="2543" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="2766" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">V.cc_min</e>
@@ -828,14 +852,14 @@
       </input>
     </math>
     </region>
-    <region left="20" top="2586" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="2809" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] Supply voltage, max:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="2586" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="2809" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">V.cc_max</e>
@@ -846,14 +870,14 @@
       </input>
     </math>
     </region>
-    <region left="20" top="2629" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="2852" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] Propagation delay:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="2629" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="2852" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">t.pd</e>
@@ -864,14 +888,14 @@
       </input>
     </math>
     </region>
-    <region left="20" top="2672" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="2895" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] Delay matching, max:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="2672" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="2895" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">MT</e>
@@ -882,14 +906,14 @@
       </input>
     </math>
     </region>
-    <region left="20" top="2715" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="2938" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] Internal dead time (0 = none):</p>
       </content>
     </text>
     </region>
-    <region left="510" top="2715" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="2938" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">t.DT</e>
@@ -900,14 +924,14 @@
       </input>
     </math>
     </region>
-    <region left="20" top="2758" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="2981" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] Maximum switching frequency:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="2758" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="2981" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">f.max_drv</e>
@@ -918,14 +942,14 @@
       </input>
     </math>
     </region>
-    <region left="20" top="2801" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="3024" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] Quiescent current, max:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="2801" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="3024" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">I.Q</e>
@@ -936,14 +960,14 @@
       </input>
     </math>
     </region>
-    <region left="20" top="2844" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="3067" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] Thermal resistance junction-ambient [C/W]:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="2844" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="3067" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">R.th_drv</e>
@@ -952,14 +976,14 @@
       </input>
     </math>
     </region>
-    <region left="20" top="2887" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="3110" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] Junction temperature, max [C]:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="2887" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="3110" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">T.j_max</e>
@@ -968,14 +992,14 @@
       </input>
     </math>
     </region>
-    <region left="20" top="2930" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="3153" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] Bootstrap supply, min:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="2930" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="3153" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">V.bo_min</e>
@@ -986,14 +1010,14 @@
       </input>
     </math>
     </region>
-    <region left="20" top="2973" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="3196" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] HS pin dV/dt immunity [V/ns]:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="2973" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="3196" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">dVdt.max</e>
@@ -1002,14 +1026,14 @@
       </input>
     </math>
     </region>
-    <region left="20" top="3016" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="3239" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] HS pin voltage rating:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="3016" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="3239" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">V.hs_max</e>
@@ -1020,14 +1044,14 @@
       </input>
     </math>
     </region>
-    <region left="20" top="3059" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="3424" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] Logic input high, max:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="3059" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="3424" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">V.IH_max</e>
@@ -1038,14 +1062,14 @@
       </input>
     </math>
     </region>
-    <region left="20" top="3102" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="3467" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[PICK] Operating ambient temperature of the driver [C]:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="3102" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="3467" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">T.a_drv</e>
@@ -1054,28 +1078,28 @@
       </input>
     </math>
     </region>
-    <region left="20" top="3145" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
+    <region left="20" top="3510" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">set it to the temperature inside the set - 25 is the workbook default.</p>
       </content>
     </text>
     </region>
-    <region left="20" top="3192" width="1560" height="27" color="#0f2a44" fontSize="12" isBreakable="false">
+    <region left="20" top="3557" width="1560" height="27" color="#0f2a44" fontSize="12" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
-        <p style="font-weight: bold; font-style: normal; font-size: 12px;">5  Bootstrap diode ES1J and turn-off diode 1N4148W (Power Components 113-123)</p>
+        <p style="font-weight: bold; font-style: normal; font-size: 12px;">5  Bootstrap diode and turn-off diode - this build: ES1J, 1N4148W (Power Components 113-123)</p>
       </content>
     </text>
     </region>
-    <region left="20" top="3227" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="3592" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] D.boot forward voltage:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="3227" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="3592" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">V.F_boot</e>
@@ -1086,14 +1110,14 @@
       </input>
     </math>
     </region>
-    <region left="20" top="3424" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="3635" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] D.boot repetitive reverse voltage:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="3424" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="3635" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">V.RRM_boot</e>
@@ -1104,14 +1128,14 @@
       </input>
     </math>
     </region>
-    <region left="20" top="3467" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="3678" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] D.boot average forward current:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="3467" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="3678" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">I.F_boot</e>
@@ -1122,14 +1146,14 @@
       </input>
     </math>
     </region>
-    <region left="20" top="3510" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="3721" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] D.boot surge current, 8.3 ms:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="3510" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="3721" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">I.FSM_boot</e>
@@ -1140,14 +1164,14 @@
       </input>
     </math>
     </region>
-    <region left="20" top="3553" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="3764" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] D.off forward voltage (0 = no diode, GOFF pin):</p>
       </content>
     </text>
     </region>
-    <region left="510" top="3553" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="3764" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">V.F_off</e>
@@ -1158,21 +1182,21 @@
       </input>
     </math>
     </region>
-    <region left="20" top="3596" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
+    <region left="20" top="3807" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">this sheet is written for a diode fitted (V.F.off &gt; 0, R.off &gt; 0) - the GOFF-pin branch of the workbook IF is not here.</p>
       </content>
     </text>
     </region>
-    <region left="20" top="3627" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="3838" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] D.off average forward current:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="3627" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="3838" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">I.F_off</e>
@@ -1183,14 +1207,14 @@
       </input>
     </math>
     </region>
-    <region left="20" top="3670" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="3881" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] D.off surge current, 1 us:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="3670" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="3881" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">I.FSM_off</e>
@@ -1201,29 +1225,29 @@
       </input>
     </math>
     </region>
-    <region left="20" top="3729" width="1560" height="27" color="#0f2a44" fontSize="12" isBreakable="false">
+    <region left="20" top="3940" width="1560" height="27" color="#0f2a44" fontSize="12" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: bold; font-style: normal; font-size: 12px;">6  Selected values (the Selected Value column, Power Components 127-142)</p>
       </content>
     </text>
     </region>
-    <region left="20" top="3764" width="1560" height="51" color="#444444" fontSize="9" isBreakable="false">
+    <region left="20" top="3975" width="1560" height="51" color="#444444" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
-        <p style="font-weight: normal; font-style: normal; font-size: 9px;">Entered here, checked in section 7. The workbook recommends: V.drv 15 V, R.on 6.8 ohm (E12 below the log middle of min..max), R.off 2.2, C.gs 0, C.boot 100 nF (E6 above 10 x C.gate), R.boot 0.33 ohm (E12 below half its max). The design uses the main-sheet</p>
-        <p style="font-weight: normal; font-style: normal; font-size: 9px;">parts of section 14c.1.</p>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">Entered here, checked in section 7. The workbook recommends: V.drv 15 V, R.on 6.8 ohm (E12 below the log middle of min..max), R.off 2.2, C.gs 0, C.boot 100 nF (E6 above 10 x C.gate), R.boot (E12 below half its max - 0.22 ohm here, 0.33 in the guide book).</p>
+        <p style="font-weight: normal; font-style: normal; font-size: 9px;">The selections are the design-sheet parts of section 14c.1 at V.drv 15 V.</p>
       </content>
     </text>
     </region>
-    <region left="20" top="3823" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="4034" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[PICK] Gate drive voltage V.drv:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="3823" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="4034" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">V.drv</e>
@@ -1234,14 +1258,14 @@
       </input>
     </math>
     </region>
-    <region left="20" top="3866" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="4077" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[PICK] Turn-on resistor R.on:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="3866" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="4077" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">R.on</e>
@@ -1252,14 +1276,14 @@
       </input>
     </math>
     </region>
-    <region left="20" top="3909" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="4120" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[PICK] Turn-off resistor R.off:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="3909" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="4120" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">R.off</e>
@@ -1270,14 +1294,14 @@
       </input>
     </math>
     </region>
-    <region left="20" top="3952" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="4163" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[PICK] Gate-source capacitor C.gs (0 = none):</p>
       </content>
     </text>
     </region>
-    <region left="510" top="3952" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="4163" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">C.gs</e>
@@ -1288,14 +1312,14 @@
       </input>
     </math>
     </region>
-    <region left="20" top="3995" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="4206" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[PICK] Bootstrap capacitor C.boot:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="3995" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="4206" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">C.boot</e>
@@ -1306,14 +1330,14 @@
       </input>
     </math>
     </region>
-    <region left="20" top="4038" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="4249" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">[PICK] Bootstrap resistor R.boot (0 = none):</p>
       </content>
     </text>
     </region>
-    <region left="510" top="4038" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
+    <region left="510" top="4249" width="1080" height="35" color="#000000" bgColor="#ffff80" fontSize="8" isBreakable="false">
     <math>
       <input>
         <e type="operand">R.boot</e>
@@ -1324,21 +1348,21 @@
       </input>
     </math>
     </region>
-    <region left="20" top="4097" width="1560" height="27" color="#0f2a44" fontSize="12" isBreakable="false">
+    <region left="20" top="4308" width="1560" height="27" color="#0f2a44" fontSize="12" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: bold; font-style: normal; font-size: 12px;">7  Working rows (CC 88-167)</p>
       </content>
     </text>
     </region>
-    <region left="20" top="4132" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="4343" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Gate capacitance per position, n.par C.g + C.gs:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="4132" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="4343" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="2">
       <input>
         <e type="operand">C.G</e>
@@ -1357,14 +1381,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="4175" width="470" height="53" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="4544" width="470" height="53" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Internal gate resistance per position:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="4175" width="1080" height="53" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="4544" width="1080" height="53" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="2">
       <input>
         <e type="operand">R.gi</e>
@@ -1381,14 +1405,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="4236" width="470" height="53" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="4605" width="470" height="53" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Turn-off path resistance, R.off parallel R.on:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="4236" width="1080" height="53" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="4605" width="1080" height="53" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="3">
       <input>
         <e type="operand">R.eff</e>
@@ -1409,14 +1433,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="4297" width="470" height="53" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="4666" width="470" height="53" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Turn-off path offset from D.off:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="4297" width="1080" height="53" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="4666" width="1080" height="53" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="3">
       <input>
         <e type="operand">V.eff</e>
@@ -1437,14 +1461,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="4358" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="4727" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- tau.on = (R.so + R.on + R.gi) C.G:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="4358" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="4727" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="1">
       <input>
         <e type="operand">τ.on</e>
@@ -1466,14 +1490,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="4544" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="4770" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- tau.off = (R.si + R.eff + R.gi) C.G:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="4544" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="4770" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="1">
       <input>
         <e type="operand">τ.off</e>
@@ -1495,14 +1519,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="4587" width="470" height="76" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="4813" width="470" height="76" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Start-up pulse, T/2 - max(t.D.su, t.DT) (first LOUT pulse):</p>
       </content>
     </text>
     </region>
-    <region left="510" top="4587" width="1080" height="76" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="4813" width="1080" height="76" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="1">
       <input>
         <e type="operand">t.L1</e>
@@ -1534,18 +1558,18 @@
           <e type="operand" style="unit">ns</e>
         </contract>
         <result action="numeric">
-          <e type="operand">629.5</e>
+          <e type="operand">529.9</e>
         </result>
     </math>
     </region>
-    <region left="20" top="4671" width="470" height="76" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="4897" width="470" height="76" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Pulse at f.Max, T/2 - max(t.D, t.DT):</p>
       </content>
     </text>
     </region>
-    <region left="510" top="4671" width="1080" height="76" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="4897" width="1080" height="76" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="1">
       <input>
         <e type="operand">t.run</e>
@@ -1577,18 +1601,18 @@
           <e type="operand" style="unit">ns</e>
         </contract>
         <result action="numeric">
-          <e type="operand">1530.7</e>
+          <e type="operand">1214.3</e>
         </result>
     </math>
     </region>
-    <region left="20" top="4755" width="470" height="94" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="4981" width="470" height="94" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Gate voltage at the end of the start-up pulse:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="4755" width="1080" height="94" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="4981" width="1080" height="94" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="3">
       <input>
         <e type="operand">V.g_su</e>
@@ -1613,18 +1637,18 @@
           <e type="operand" style="unit">V</e>
         </contract>
         <result action="numeric">
-          <e type="operand">14.778</e>
+          <e type="operand">14.568</e>
         </result>
     </math>
     </region>
-    <region left="20" top="4857" width="470" height="94" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="5083" width="470" height="94" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Gate voltage at the end of the f.Max pulse:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="4857" width="1080" height="94" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="5083" width="1080" height="94" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="4">
       <input>
         <e type="operand">V.g_run</e>
@@ -1649,18 +1673,18 @@
           <e type="operand" style="unit">V</e>
         </contract>
         <result action="numeric">
-          <e type="operand">14.9995</e>
+          <e type="operand">14.9956</e>
         </result>
     </math>
     </region>
-    <region left="20" top="4959" width="470" height="84" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="5185" width="470" height="84" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Energy per turn-on at f.Max [nJ]:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="4959" width="1080" height="84" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="5185" width="1080" height="84" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="1">
       <input>
         <e type="operand">E.on</e>
@@ -1688,14 +1712,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="5051" width="470" height="96" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="5277" width="470" height="96" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Energy per turn-off at f.Max [nJ]:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="5051" width="1080" height="96" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="5277" width="1080" height="96" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="1">
       <input>
         <e type="operand">E.off</e>
@@ -1716,18 +1740,18 @@
         <e type="operator" args="2">:</e>
       </input>
         <result action="numeric">
-          <e type="operand">843.7</e>
+          <e type="operand">843.3</e>
         </result>
     </math>
     </region>
-    <region left="20" top="5155" width="470" height="53" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="5381" width="470" height="53" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Driver share of the turn-on energy:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="5155" width="1080" height="53" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="5381" width="1080" height="53" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="4">
       <input>
         <e type="operand">x.on</e>
@@ -1745,14 +1769,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="5216" width="470" height="53" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="5442" width="470" height="53" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Driver share of the turn-off energy:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="5216" width="1080" height="53" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="5442" width="1080" height="53" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="4">
       <input>
         <e type="operand">x.off</e>
@@ -1770,14 +1794,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="5277" width="470" height="53" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="5664" width="470" height="53" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Midpoint swing in run, c.HB V.bus / I.Lm.pk:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="5277" width="1080" height="53" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="5664" width="1080" height="53" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="1">
       <input>
         <e type="operand">T.T_run</e>
@@ -1792,18 +1816,18 @@
           <e type="operand" style="unit">ns</e>
         </contract>
         <result action="numeric">
-          <e type="operand">101.6</e>
+          <e type="operand">97.3</e>
         </result>
     </math>
     </region>
-    <region left="20" top="5338" width="470" height="171" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="5725" width="470" height="171" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Start-up edge current, HB on V.bus / 2:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="5338" width="1080" height="171" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="5725" width="1080" height="171" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="3">
       <input>
         <e type="operand">I.su_HB</e>
@@ -1844,18 +1868,18 @@
           <e type="operand" style="unit">A</e>
         </contract>
         <result action="numeric">
-          <e type="operand">4.000</e>
+          <e type="operand">9.951</e>
         </result>
     </math>
     </region>
-    <region left="20" top="5664" width="470" height="94" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="5904" width="470" height="94" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Start-up tank peak, FB bus or half the HB bus, the larger:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="5664" width="1080" height="94" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="5904" width="1080" height="94" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="1">
       <input>
         <e type="operand">a.su</e>
@@ -1889,14 +1913,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="5766" width="470" height="171" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="6006" width="470" height="171" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Start-up tank peak at f.SU (Res. Tank Design D84):</p>
       </content>
     </text>
     </region>
-    <region left="510" top="5766" width="1080" height="171" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="6006" width="1080" height="171" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="3">
       <input>
         <e type="operand">I.su</e>
@@ -1935,25 +1959,25 @@
           <e type="operand" style="unit">A</e>
         </contract>
         <result action="numeric">
-          <e type="operand">5.036</e>
+          <e type="operand">12.526</e>
         </result>
     </math>
     </region>
-    <region left="20" top="5945" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
+    <region left="20" top="6185" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">I = A / Z.0 x tan(pi f.r / 2 f.SU): the tank is a short through the transformer while the output is at 0 V. Valid for f.SU above f.r.</p>
       </content>
     </text>
     </region>
-    <region left="20" top="5976" width="470" height="53" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="6216" width="470" height="53" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Midpoint swing at start-up, FB: c.HB V.bus.FB / I.su:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="5976" width="1080" height="53" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="6216" width="1080" height="53" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="1">
       <input>
         <e type="operand">T.T_su</e>
@@ -1968,18 +1992,18 @@
           <e type="operand" style="unit">ns</e>
         </contract>
         <result action="numeric">
-          <e type="operand">141.3</e>
+          <e type="operand">62.5</e>
         </result>
     </math>
     </region>
-    <region left="20" top="6037" width="470" height="53" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="6277" width="470" height="53" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Midpoint swing at start-up, HB: c.HB V.bus / I.su.HB:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="6037" width="1080" height="53" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="6277" width="1080" height="53" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="1">
       <input>
         <e type="operand">T.T_suHB</e>
@@ -1994,18 +2018,18 @@
           <e type="operand" style="unit">ns</e>
         </contract>
         <result action="numeric">
-          <e type="operand">282.7</e>
+          <e type="operand">124.9</e>
         </result>
     </math>
     </region>
-    <region left="20" top="6098" width="470" height="106" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="6338" width="470" height="106" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Miller current into an off gate during the faster swing:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="6098" width="1080" height="106" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="6338" width="1080" height="106" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="4">
       <input>
         <e type="operand">i.M</e>
@@ -2044,18 +2068,18 @@
           <e type="operand" style="unit">A</e>
         </contract>
         <result action="numeric">
-          <e type="operand">0.1280</e>
+          <e type="operand">0.2082</e>
         </result>
     </math>
     </region>
-    <region left="20" top="6212" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="6452" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Gate kick, resistive estimate, i.M x sink path:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="6212" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="6452" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="3">
       <input>
         <e type="operand">dV.r</e>
@@ -2073,18 +2097,18 @@
           <e type="operand" style="unit">V</e>
         </contract>
         <result action="numeric">
-          <e type="operand">2.006</e>
+          <e type="operand">3.263</e>
         </result>
     </math>
     </region>
-    <region left="20" top="6255" width="470" height="65" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="6495" width="470" height="65" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Gate kick, capacitive bound, Q.gd / (C.gs.dev + C.gs):</p>
       </content>
     </text>
     </region>
-    <region left="510" top="6255" width="1080" height="65" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="6495" width="1080" height="65" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="3">
       <input>
         <e type="operand">dV.c</e>
@@ -2116,14 +2140,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="6328" width="470" height="94" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="6568" width="470" height="94" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- t.on, IC edge to V.th:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="6328" width="1080" height="94" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="6568" width="1080" height="94" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="1">
       <input>
         <e type="operand">t.on</e>
@@ -2151,14 +2175,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="6430" width="470" height="94" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="6784" width="470" height="94" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- IC edge to the plateau on the way up:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="6430" width="1080" height="94" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="6784" width="1080" height="94" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="1">
       <input>
         <e type="operand">t.on_pl</e>
@@ -2186,14 +2210,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="6532" width="470" height="94" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="6886" width="470" height="94" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- t.off, IC edge to below V.th.min:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="6532" width="1080" height="94" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="6886" width="1080" height="94" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="1">
       <input>
         <e type="operand">t.off</e>
@@ -2223,14 +2247,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="6784" width="470" height="94" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="6988" width="470" height="94" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- IC edge to the plateau on the way down:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="6784" width="1080" height="94" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="6988" width="1080" height="94" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="1">
       <input>
         <e type="operand">t.off_pl</e>
@@ -2260,14 +2284,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="6886" width="470" height="94" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="7090" width="470" height="94" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Turn-off delay to the plateau from V.g.su (no t.pd):</p>
       </content>
     </text>
     </region>
-    <region left="510" top="6886" width="1080" height="94" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="7090" width="1080" height="94" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="1">
       <input>
         <e type="operand">t.off_su</e>
@@ -2291,25 +2315,25 @@
           <e type="operand" style="unit">ns</e>
         </contract>
         <result action="numeric">
-          <e type="operand">105.6</e>
+          <e type="operand">103.9</e>
         </result>
     </math>
     </region>
-    <region left="20" top="7004" width="1560" height="27" color="#0f2a44" fontSize="12" isBreakable="false">
+    <region left="20" top="7208" width="1560" height="27" color="#0f2a44" fontSize="12" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: bold; font-style: normal; font-size: 12px;">8  Limits of the selected values (Power Components 125-141) and the recommendations</p>
       </content>
     </text>
     </region>
-    <region left="20" top="7039" width="470" height="76" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="7243" width="470" height="76" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Maximum gate drive voltage, driver range and V.gs rating:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="7039" width="1080" height="76" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="7243" width="1080" height="76" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="1">
       <input>
         <e type="operand">V.drv_max</e>
@@ -2339,14 +2363,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="7123" width="470" height="76" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="7327" width="470" height="76" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Minimum gate drive voltage, driver range and 10 V after D.boot:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="7123" width="1080" height="76" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="7327" width="1080" height="76" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="1">
       <input>
         <e type="operand">V.drv_min</e>
@@ -2384,14 +2408,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="7207" width="470" height="76" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="7411" width="470" height="76" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- V.drv inside its range (&gt;1):</p>
       </content>
     </text>
     </region>
-    <region left="510" top="7207" width="1080" height="76" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="7411" width="1080" height="76" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="3">
       <input>
         <e type="operand">k.Vdrv</e>
@@ -2420,14 +2444,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="7291" width="470" height="53" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="7495" width="470" height="53" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Driver power allowed at T.a, (T.j.max - T.a) / R.th:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="7291" width="1080" height="53" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="7495" width="1080" height="53" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="3">
       <input>
         <e type="operand">P.drv_max</e>
@@ -2448,14 +2472,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="7352" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="7556" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Gate-power budget, allowed less quiescent:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="7352" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="7556" width="1080" height="35" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="3">
       <input>
         <e type="operand">P.bud</e>
@@ -2474,14 +2498,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="7395" width="470" height="78" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="7599" width="470" height="78" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Turn-on share the budget allows:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="7395" width="1080" height="78" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="7599" width="1080" height="78" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="4">
       <input>
         <e type="operand">x.need</e>
@@ -2517,18 +2541,18 @@
         <e type="operator" args="2">:</e>
       </input>
         <result action="numeric">
-          <e type="operand">1.0932</e>
+          <e type="operand">0.7843</e>
         </result>
     </math>
     </region>
-    <region left="20" top="7481" width="470" height="94" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="7685" width="470" height="94" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- R.on min for the driver temperature:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="7481" width="1080" height="94" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="7685" width="1080" height="94" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="2">
       <input>
         <e type="operand">R.on_min_T</e>
@@ -2574,14 +2598,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="7583" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
+    <region left="20" top="7904" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">0 when the budget allows the driver to take the whole turn-on energy (x.need above 1); the workbook says &quot;lower V.drv&quot; when x.need is negative.</p>
       </content>
     </text>
     </region>
-    <region left="20" top="7614" width="470" height="94" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="7935" width="470" height="94" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- R.on min for the driver source current, V.drv / I.so - R.so -</p>
@@ -2589,7 +2613,7 @@
       </content>
     </text>
     </region>
-    <region left="510" top="7614" width="1080" height="94" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="7935" width="1080" height="94" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="2">
       <input>
         <e type="operand">R.on_min_I</e>
@@ -2635,14 +2659,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="7904" width="470" height="76" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="8037" width="470" height="76" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Minimum turn-on resistor, the larger of the two:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="7904" width="1080" height="76" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="8037" width="1080" height="76" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="2">
       <input>
         <e type="operand">R.on_min</e>
@@ -2672,14 +2696,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="7988" width="470" height="152" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="8121" width="470" height="152" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Maximum turn-on resistor, 10 V within the shorter pulse:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="7988" width="1080" height="152" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="8121" width="1080" height="152" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="2">
       <input>
         <e type="operand">R.on_max</e>
@@ -2724,18 +2748,18 @@
           <e type="operand" style="unit">ohm</e>
         </contract>
         <result action="numeric">
-          <e type="operand">61.19</e>
+          <e type="operand">49.09</e>
         </result>
     </math>
     </region>
-    <region left="20" top="8148" width="470" height="88" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="8281" width="470" height="88" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
-        <p style="font-weight: normal; font-style: normal; font-size: 10px;">- R.on recommended, log middle of min..max (E12 below -&gt; 6.8):</p>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">- R.on recommended, log middle of min..max (workbook: E12 below):</p>
       </content>
     </text>
     </region>
-    <region left="510" top="8148" width="1080" height="88" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="8281" width="1080" height="88" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="2">
       <input>
         <e type="operand">R.on_mid</e>
@@ -2787,18 +2811,18 @@
           <e type="operand" style="unit">ohm</e>
         </contract>
         <result action="numeric">
-          <e type="operand">7.82</e>
+          <e type="operand">7.01</e>
         </result>
     </math>
     </region>
-    <region left="20" top="8244" width="470" height="116" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="8377" width="470" height="116" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- turn-on resistor inside its range (&gt;1):</p>
       </content>
     </text>
     </region>
-    <region left="510" top="8244" width="1080" height="116" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="8377" width="1080" height="116" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="3">
       <input>
         <e type="operand">k.Ron</e>
@@ -2861,25 +2885,25 @@
         <e type="operator" args="2">:</e>
       </input>
         <result action="numeric">
-          <e type="operand">13.019</e>
+          <e type="operand">10.446</e>
         </result>
     </math>
     </region>
-    <region left="20" top="8368" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
+    <region left="20" top="8501" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">the lower ratio is against 1 mohm when R.on.min is 0, so it is large.</p>
       </content>
     </text>
     </region>
-    <region left="20" top="8399" width="470" height="53" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="8532" width="470" height="53" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Turn-off path that holds the gate under V.th.min against i.M:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="8399" width="1080" height="53" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="8532" width="1080" height="53" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="2">
       <input>
         <e type="operand">R.eff_m</e>
@@ -2896,18 +2920,18 @@
           <e type="operand" style="unit">ohm</e>
         </contract>
         <result action="numeric">
-          <e type="operand">13.17</e>
+          <e type="operand">2.64</e>
         </result>
     </math>
     </region>
-    <region left="20" top="8460" width="470" height="171" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="8593" width="470" height="171" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Turn-off path off before the other side reaches V.th.min:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="8460" width="1080" height="171" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="8593" width="1080" height="171" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="2">
       <input>
         <e type="operand">R.eff_o</e>
@@ -2969,14 +2993,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="8639" width="470" height="112" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="8772" width="470" height="112" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Turn-off path that lets the channel go within T.T.run:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="8639" width="1080" height="112" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="8772" width="1080" height="112" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="2">
       <input>
         <e type="operand">R.eff_s</e>
@@ -3006,11 +3030,11 @@
           <e type="operand" style="unit">ohm</e>
         </contract>
         <result action="numeric">
-          <e type="operand">12.78</e>
+          <e type="operand">11.65</e>
         </result>
     </math>
     </region>
-    <region left="20" top="8759" width="470" height="112" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="9024" width="470" height="112" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- 1 when the capacitive kick exceeds V.th.min (Miller criterion</p>
@@ -3018,7 +3042,7 @@
       </content>
     </text>
     </region>
-    <region left="510" top="8759" width="1080" height="112" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="9024" width="1080" height="112" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="0">
       <input>
         <e type="operand">s.M</e>
@@ -3049,14 +3073,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="9024" width="470" height="116" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="9144" width="470" height="116" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Maximum turn-off path resistance:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="9024" width="1080" height="116" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="9144" width="1080" height="116" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="3">
       <input>
         <e type="operand">R.eff_max</e>
@@ -3138,21 +3162,21 @@
         </result>
     </math>
     </region>
-    <region left="20" top="9148" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
+    <region left="20" top="9268" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">min of overlap and soft turn-off; the Miller limit joins unless C.gs alone holds the gate (s.M = 0).</p>
       </content>
     </text>
     </region>
-    <region left="20" top="9179" width="470" height="71" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="9299" width="470" height="71" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- R.off that brings the path to half its max, parallel with R.on:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="9179" width="1080" height="71" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="9299" width="1080" height="71" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="2">
       <input>
         <e type="operand">R.off_need</e>
@@ -3175,21 +3199,21 @@
         </result>
     </math>
     </region>
-    <region left="20" top="9258" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
+    <region left="20" top="9378" width="1560" height="23" color="#444444" fontSize="9" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 9px;">valid while R.eff.max / 2 is below R.on - otherwise no R.off is needed (workbook: 1E9).</p>
       </content>
     </text>
     </region>
-    <region left="20" top="9289" width="470" height="94" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="9409" width="470" height="94" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
-        <p style="font-weight: normal; font-style: normal; font-size: 10px;">- R.off recommended, min(R.on / 2, that need) (E12 below -&gt; 2.2):</p>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">- R.off recommended, min(R.on / 2, that need) (workbook: E12 below):</p>
       </content>
     </text>
     </region>
-    <region left="510" top="9289" width="1080" height="94" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="9409" width="1080" height="94" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="2">
       <input>
         <e type="operand">R.off_rec</e>
@@ -3223,14 +3247,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="9391" width="470" height="134" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="9511" width="470" height="134" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Minimum turn-off resistor, sink current and D.off surge:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="9391" width="1080" height="134" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="9511" width="1080" height="134" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="2">
       <input>
         <e type="operand">R.off_min</e>
@@ -3310,14 +3334,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="9533" width="470" height="116" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="9653" width="470" height="116" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- turn-off path inside its range (&gt;1):</p>
       </content>
     </text>
     </region>
-    <region left="510" top="9533" width="1080" height="116" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="9653" width="1080" height="116" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="3">
       <input>
         <e type="operand">k.Roff</e>
@@ -3384,14 +3408,14 @@
         </result>
     </math>
     </region>
-    <region left="20" top="9657" width="470" height="193" color="#000000" fontSize="10" isBreakable="false">
+    <region left="20" top="9777" width="470" height="193" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
         <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Maximum gate-source capacitor, 10 V within the pulse with R.on:</p>
       </content>
     </text>
     </region>
-    <region left="510" top="9657" width="1080" height="193" color="#000000" fontSize="8" isBreakable="false">
+    <region left="510" top="9777" width="1080" height="193" color="#000000" fontSize="8" isBreakable="false">
     <math decimalPlaces="2">
       <input>
         <e type="operand">C.gs_max</e>
@@ -3499,7 +3523,7 @@
           <e type="operand" style="unit">nF</e>
         </contract>
         <result action="numeric">
-          <e type="operand">21.27</e>
+          <e type="operand">16.72</e>
         </result>
     </math>
     </region>
@@ -3660,7 +3684,7 @@
     <region left="20" top="10490" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
-        <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Minimum bootstrap capacitor, 10 x C.G (E6 above -&gt; 100 nF):</p>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">- Minimum bootstrap capacitor, 10 x C.G (workbook: E6 above):</p>
       </content>
     </text>
     </region>
@@ -3719,7 +3743,7 @@
           <e type="operand" style="unit">nF</e>
         </contract>
         <result action="numeric">
-          <e type="operand">1108.5</e>
+          <e type="operand">933.1</e>
         </result>
     </math>
     </region>
@@ -3755,7 +3779,7 @@
         <e type="operator" args="2">:</e>
       </input>
         <result action="numeric">
-          <e type="operand">2.359</e>
+          <e type="operand">1.985</e>
         </result>
     </math>
     </region>
@@ -3834,7 +3858,7 @@
           <e type="operand" style="unit">ohm</e>
         </contract>
         <result action="numeric">
-          <e type="operand">0.679</e>
+          <e type="operand">0.493</e>
         </result>
     </math>
     </region>
@@ -3894,7 +3918,7 @@
     <region left="20" top="10999" width="470" height="53" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
-        <p style="font-weight: normal; font-style: normal; font-size: 10px;">- R.boot recommended, half the max (E12 below -&gt; 0.33):</p>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">- R.boot recommended, half the max (workbook: E12 below):</p>
       </content>
     </text>
     </region>
@@ -3911,7 +3935,7 @@
           <e type="operand" style="unit">ohm</e>
         </contract>
         <result action="numeric">
-          <e type="operand">0.340</e>
+          <e type="operand">0.246</e>
         </result>
     </math>
     </region>
@@ -3958,7 +3982,7 @@
         <e type="operator" args="2">:</e>
       </input>
         <result action="numeric">
-          <e type="operand">679.289</e>
+          <e type="operand">492.620</e>
         </result>
     </math>
     </region>
@@ -4087,7 +4111,7 @@
           <e type="operand" style="unit">ns</e>
         </contract>
         <result action="numeric">
-          <e type="operand">192.7</e>
+          <e type="operand">188.4</e>
         </result>
     </math>
     </region>
@@ -4120,7 +4144,7 @@
           <e type="operand" style="unit">ns</e>
         </contract>
         <result action="numeric">
-          <e type="operand">871.5</e>
+          <e type="operand">713.2</e>
         </result>
     </math>
     </region>
@@ -4216,7 +4240,7 @@
         <e type="operator" args="2">:</e>
       </input>
         <result action="numeric">
-          <e type="operand">2.179</e>
+          <e type="operand">2.229</e>
         </result>
     </math>
     </region>
@@ -4269,7 +4293,7 @@
           <e type="operand" style="unit">ns</e>
         </contract>
         <result action="numeric">
-          <e type="operand">372.0</e>
+          <e type="operand">212.5</e>
         </result>
     </math>
     </region>
@@ -4304,7 +4328,7 @@
           <e type="operand" style="unit">ns</e>
         </contract>
         <result action="numeric">
-          <e type="operand">519.0</e>
+          <e type="operand">467.5</e>
         </result>
     </math>
     </region>
@@ -4377,7 +4401,7 @@
         <e type="operator" args="2">:</e>
       </input>
         <result action="numeric">
-          <e type="operand">1.129</e>
+          <e type="operand">1.113</e>
         </result>
     </math>
     </region>
@@ -4400,7 +4424,7 @@
         <e type="operator" args="2">:</e>
       </input>
         <result action="numeric">
-          <e type="operand">1.478</e>
+          <e type="operand">1.457</e>
         </result>
     </math>
     </region>
@@ -4466,7 +4490,7 @@
           <e type="operand" style="unit">V</e>
         </contract>
         <result action="numeric">
-          <e type="operand">12.760</e>
+          <e type="operand">12.263</e>
         </result>
     </math>
     </region>
@@ -4487,7 +4511,7 @@
         <e type="operator" args="2">:</e>
       </input>
         <result action="numeric">
-          <e type="operand">1.372</e>
+          <e type="operand">1.319</e>
         </result>
     </math>
     </region>
@@ -4519,7 +4543,7 @@
           <e type="operand" style="unit">V</e>
         </contract>
         <result action="numeric">
-          <e type="operand">0.2360</e>
+          <e type="operand">0.2326</e>
         </result>
     </math>
     </region>
@@ -4571,7 +4595,7 @@
           <e type="operand" style="unit">V</e>
         </contract>
         <result action="numeric">
-          <e type="operand">13.447</e>
+          <e type="operand">13.440</e>
         </result>
     </math>
     </region>
@@ -4607,7 +4631,7 @@
         <e type="operator" args="2">:</e>
       </input>
         <result action="numeric">
-          <e type="operand">1.745</e>
+          <e type="operand">1.282</e>
         </result>
     </math>
     </region>
@@ -4652,7 +4676,7 @@
         <e type="operator" args="2">:</e>
       </input>
         <result action="numeric">
-          <e type="operand">1.6626</e>
+          <e type="operand">3.7628</e>
         </result>
     </math>
     </region>
@@ -4762,7 +4786,7 @@
           <e type="operand" style="unit">W</e>
         </contract>
         <result action="numeric">
-          <e type="operand">0.5658</e>
+          <e type="operand">0.6885</e>
         </result>
     </math>
     </region>
@@ -4783,7 +4807,7 @@
         <e type="operator" args="2">:</e>
       </input>
         <result action="numeric">
-          <e type="operand">1.473</e>
+          <e type="operand">1.210</e>
         </result>
     </math>
     </region>
@@ -4808,7 +4832,7 @@
         <e type="operator" args="2">:</e>
       </input>
         <result action="numeric">
-          <e type="operand">92.9</e>
+          <e type="operand">107.6</e>
         </result>
     </math>
     </region>
@@ -4844,7 +4868,7 @@
         <e type="operator" args="2">:</e>
       </input>
         <result action="numeric">
-          <e type="operand">1.417</e>
+          <e type="operand">1.282</e>
         </result>
     </math>
     </region>
@@ -4898,7 +4922,7 @@
           <e type="operand" style="unit">mW</e>
         </contract>
         <result action="numeric">
-          <e type="operand">64.2</e>
+          <e type="operand">78.4</e>
         </result>
     </math>
     </region>
@@ -4941,7 +4965,7 @@
           <e type="operand" style="unit">mW</e>
         </contract>
         <result action="numeric">
-          <e type="operand">15.7</e>
+          <e type="operand">19.1</e>
         </result>
     </math>
     </region>
@@ -4997,7 +5021,7 @@
           <e type="operand" style="unit">mA</e>
         </contract>
         <result action="numeric">
-          <e type="operand">32.25</e>
+          <e type="operand">39.33</e>
         </result>
     </math>
     </region>
@@ -5149,7 +5173,7 @@
           <e type="operand" style="unit">mA</e>
         </contract>
         <result action="numeric">
-          <e type="operand">21.88</e>
+          <e type="operand">26.71</e>
         </result>
     </math>
     </region>
@@ -5212,7 +5236,7 @@
           <e type="operand" style="unit">A</e>
         </contract>
         <result action="numeric">
-          <e type="operand">5.036</e>
+          <e type="operand">12.526</e>
         </result>
     </math>
     </region>
@@ -5233,7 +5257,7 @@
         <e type="operator" args="2">:</e>
       </input>
         <result action="numeric">
-          <e type="operand">6.205</e>
+          <e type="operand">2.495</e>
         </result>
     </math>
     </region>
@@ -5254,7 +5278,7 @@
         <e type="operator" args="2">:</e>
       </input>
         <result action="numeric">
-          <e type="operand">4.551</e>
+          <e type="operand">1.829</e>
         </result>
     </math>
     </region>
@@ -5293,7 +5317,7 @@
           <e type="operand" style="unit">kHz</e>
         </contract>
         <result action="numeric">
-          <e type="operand">137.88</e>
+          <e type="operand">346.24</e>
         </result>
     </math>
     </region>
