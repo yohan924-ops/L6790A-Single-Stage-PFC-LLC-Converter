@@ -4,9 +4,9 @@ workbook and log it in CHANGELOG_rev0_6.  The user supplied the STL160N10F8
 datasheet (DS14249 Rev 5); the earlier selection was a 3.7 mOhm part with
 an assumed temperature factor of 1.9.
 
-    Power Components  C189 part (C92 before 2026-10-22)      TPH3R70APL1 -> STL160N10F8
-                      D193 RD        0.0037 -> 0.0032 ohm  (Table 3, max.)
-                      D195 kT.sec    1.9    -> 1.5         (Fig. 13 at
+    Power Components  C190 part (C92 before 2026-10-22)      TPH3R70APL1 -> STL160N10F8
+                      D194 RD        0.0037 -> 0.0032 ohm  (Table 3, max.)
+                      D196 kT.sec    1.9    -> 1.5         (Fig. 13 at
                            125 C, read from the vector curve: 1.504)
 
 The two values are read from the sheet builder, not typed here.  Cells are
@@ -33,9 +33,9 @@ PC = 'xl/worksheets/sheet5.xml'            # Power Components
 PART = 'STL160N10F8'
 RDS = _builder_const('R.dson_s25') / 1e3   # mOhm in the builder -> ohm
 KT = _builder_const('K.Tsec')
-NUMS = (('D193', '0.0037', '%g' % RDS,
+NUMS = (('D194', '0.0037', '%g' % RDS,
          'RD SR RDSon max 25 C, VGS 10 V - STL160N10F8 Table 3'),
-        ('D195', '1.9', '%g' % KT,
+        ('D196', '1.9', '%g' % KT,
          'kT.sec RDSon rise to Tj 125 C - Fig. 13 vector read 1.504'))
 MARK = 'STL160N10F8 datasheet'
 WHY = ('STL160N10F8 datasheet (DS14249 Rev 5), 2026-10-02 (user): the SR '
@@ -55,14 +55,14 @@ def main():
         assert abs(float(cur) - float(was)) < 1e-12, '%s is %s' % (ref, cur)
         xml = X.set_cell(xml, ref, X.cell_n(ref, X.style_of(xml, ref), now))
     if PART not in xml:
-        xml = X.set_cell(xml, 'C189', X.cell_t('C189', X.style_of(xml, 'C189'),
+        xml = X.set_cell(xml, 'C190', X.cell_t('C190', X.style_of(xml, 'C190'),
                                               PART))
     parts[PC] = xml.encode('utf-8')
     log = parts[LOG].decode('utf-8')
     if MARK not in log:
         r = max(int(x) for x in re.findall(r'<row r="(\d+)"', log)) + 2
         rows = [(None, None, None, None, WHY),
-                ('Power Components', 'C189', 'TPH3R70APL1', PART,
+                ('Power Components', 'C190', 'TPH3R70APL1', PART,
                  'SR part number')] + [
             ('Power Components', ref, was, now, what)
             for ref, was, now, what in NUMS]

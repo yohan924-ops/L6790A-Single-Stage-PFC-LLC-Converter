@@ -71,29 +71,29 @@ PRIMARY = [
     ('BUDG',  'loss budget actually checked',
      'a budget nothing compares against is decoration',    '',    'k.Ploss'),
     ('RTH',   'R_th(j-a) required',
-     'thermal budget',                                     'D86', ''),
+     'thermal budget',                                     'D87', ''),
     ('TJ',    'T_j(max)',
      'the temperature the loss is evaluated AT',           '',    ''),
 ]
 SECONDARY = [
     ('VDS',   'V_DS breakdown rating',
-     'reflected 2*Vout plus leakage ringing',              'D186', 'V.DS_sec'),
+     'reflected 2*Vout plus leakage ringing',              'D187', 'V.DS_sec'),
     ('ID',    'I_D rating per LEG',
-     'a CT leg carries the WHOLE secondary current',       'D187', 'I.sec_rating'),
+     'a CT leg carries the WHOLE secondary current',       'D188', 'I.sec_rating'),
     ('NSR',   'devices in parallel per leg',
-     'the only place the leg current divides',            'D200', 'n.SR'),
+     'the only place the leg current divides',            'D201', 'n.SR'),
     ('IPKD',  'peak current in ONE device',
-     'what the datasheet I_D has to cover',                'D188', 'I.SR_pk_dev'),
+     'what the datasheet I_D has to cover',                'D189', 'I.SR_pk_dev'),
     ('IRMSD', 'rms current in ONE device',
-     'what the conduction loss is built on',               'D184', 'I.SR_dev'),
+     'what the conduction loss is built on',               'D185', 'I.SR_dev'),
     ('RDS',   'R_DS(on)',
-     'conduction loss - dominant at 26 A',                 'D193', 'R.dson_s25'),
+     'conduction loss - dominant at 26 A',                 'D194', 'R.dson_s25'),
     ('RDST',  'R_DS(on) temperature factor',
-     'x1.4..1.6 at Tj = 125 C for a low-voltage SR FET',   'D195', 'K.Tsec'),
+     'x1.4..1.6 at Tj = 125 C for a low-voltage SR FET',   'D196', 'K.Tsec'),
     ('TYPE',  'diode or SR MOSFET',
-     'the loss model is a different equation',   'D190', '#SR by construction'),
+     'the loss model is a different equation',   'D191', '#SR by construction'),
     ('VF',    'body diode V_f',
-     'conducts during the SR dead time',                   'D192', ''),
+     'conducts during the SR dead time',                   'D193', ''),
     ('COSS',  'C_oss',
      'rings with the leakage - this is what sets the 1.6x', '',   'K.ring'),
     ('QRR',   'body diode Q_rr',
@@ -103,7 +103,7 @@ SECONDARY = [
     ('BUDG',  'loss budget actually checked',
      'a budget nothing compares against is decoration',    '',    'k.PSR'),
     ('RTH',   'R_th required',
-     'thermal budget',                                     'D198', ''),
+     'thermal budget',                                     'D199', ''),
 ]
 
 
@@ -231,9 +231,9 @@ def main():
         raise SystemExit('워크북이 열려 있다 - Excel 을 닫고 다시 실행할 것')
     defs = sm_defs()
 
-    n1 = report('1차 스위치 (primary MOSFET)   -- Power Components 57..87 / SMath 13.1',
+    n1 = report('1차 스위치 (primary MOSFET)   -- Power Components 57..88 / SMath 13.1',
                 PRIMARY, pc, defs)
-    n2 = report('2차 정류 (SR MOSFET)          -- Power Components 180..199 / SMath 13.2',
+    n2 = report('2차 정류 (SR MOSFET)          -- Power Components 181..200 / SMath 13.2',
                 SECONDARY, pc, defs)
 
     # the one internal contradiction worth naming, checked not asserted
@@ -242,8 +242,8 @@ def main():
     print('온도 정합성')
     print('=' * 78)
     bad = 0
-    for label, rds, kt, loss, rth in (('1차', 'D70', 'D58', 'D85', 'D86'),
-                                      ('2차', 'D193', 'D195', 'D197', 'D198')):
+    for label, rds, kt, loss, rth in (('1차', 'D70', 'D58', 'D86', 'D87'),
+                                      ('2차', 'D194', 'D196', 'D198', 'D199')):
         f = pc.get(rth) or ''
         tj = re.search(r'\((\d+)\s*-', f)
         rl = pc.get(loss) or ''
