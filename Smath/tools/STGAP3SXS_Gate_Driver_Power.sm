@@ -350,7 +350,7 @@
     <region left="20" top="904" width="470" height="47" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
-        <p style="font-weight: normal; font-style: normal; font-size: 10px;">Module Q.gd at 800 V, conservative for 400 V [10^-9 A s]:</p>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">Module Q.gd at 800 V [10^-9 A s]:</p>
       </content>
     </text>
     </region>
@@ -419,7 +419,7 @@
     <math>
       <input>
         <e type="operand">V.bus</e>
-        <e type="operand">400</e>
+        <e type="operand">800</e>
         <e type="operand" style="unit">V</e>
         <e type="operator" args="2">*</e>
         <e type="operator" args="2">:</e>
@@ -1037,7 +1037,7 @@
           <e type="operand" style="unit">ns</e>
         </contract>
         <result action="numeric">
-          <e type="operand">22</e>
+          <e type="operand">43</e>
         </result>
     </math>
     </region>
@@ -1061,7 +1061,7 @@
           <e type="operand" style="unit">A</e>
         </contract>
         <result action="numeric">
-          <e type="operand">18.18</e>
+          <e type="operand">9.09</e>
         </result>
     </math>
     </region>
@@ -1101,7 +1101,7 @@
           <e type="operand" style="unit">V</e>
         </contract>
         <result action="numeric">
-          <e type="operand">9.77</e>
+          <e type="operand">8.78</e>
         </result>
     </math>
     </region>
@@ -1124,7 +1124,7 @@
         <e type="operator" args="2">:</e>
       </input>
         <result action="numeric">
-          <e type="operand">0.68</e>
+          <e type="operand">0.75</e>
         </result>
     </math>
     </region>

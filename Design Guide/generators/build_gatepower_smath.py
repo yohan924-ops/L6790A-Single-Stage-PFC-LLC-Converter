@@ -55,10 +55,10 @@ S.const('VH quiescent current, max:', 'I.QH', "6*'mA", 'mA', 1)
 S.const('VDD quiescent current, IN+ low, max:', 'I.DD_lo', "2.5*'mA", 'mA', 1)
 S.const('VDD quiescent current, IN+ high, max:', 'I.DD_hi', "13*'mA", 'mA', 1)
 S.const('Thermal resistance junction-ambient [C/W]:', 'R.th_JA', '65', None, 0)
-S.const('Module Q.gd at 800 V, conservative for 400 V [10^-9 A s]:', 'Q.gd', "391*10^(-9)*'A*'s", None, 0)
+S.const('Module Q.gd at 800 V [10^-9 A s]:', 'Q.gd', "391*10^(-9)*'A*'s", None, 0)
 S.const('Module C.iss - C.rss (800 V):', 'C.gs', "35.8*'nF", 'nF', 1)
 S.const('Module gate threshold, min:', 'V.th_min', "1.9*'V", 'V', 1)
-S.const('Bus voltage:', 'V.bus', "400*'V", 'V', 0)
+S.const('Bus voltage:', 'V.bus', "800*'V", 'V', 0)
 S.const('Drain dv/dt at switching [V/ns]:', 'dvdt', '18.6', None, 1)
 
 # intermediates, folded away (Sheet.set would not write them into the file)
@@ -123,7 +123,7 @@ Qg, f = 1419e-9, 20e3
 PG = Qg * Vs * f
 PDoff = VF * Qg * f * Ron / (Ron + Roff)
 Reff = Ron * Roff / (Ron + Roff)
-tsw = 400 / 18.6e9
+tsw = 800 / 18.6e9
 dV = 391e-9 / tsw * (RL + Reff) * (1 - math.exp(-tsw / ((RL + Reff) * 35.8e-9)))
 ref = {'I.pk_on': Vs / (RH + Ron), 'I.pk_off': VB / RL, 'I.pk_D': (Vs - VB - VF) / Roff,
        'P.G': PG, 't.r': math.log(9) * (RH + Ron) * Qg / Vs, 'ΔV.g': dV,
