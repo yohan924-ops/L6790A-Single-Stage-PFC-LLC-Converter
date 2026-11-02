@@ -53,7 +53,6 @@ S.const('Turn-off diode forward voltage V.F at the peak current:', 'V.F', "0.7*'
 S.const('Turn-off diode surge current rating I.FSM (short pulse):', 'I.FSM_D', "2*'A", 'A', 2)
 S.const('Turn-off diode average forward current rating:', 'I.F_D', "0.15*'A", 'A', 3)
 S.const('Switch internal gate resistance (datasheet R.G):', 'R.g_int', "0*'ohm", 'ohm', 2)
-S.const('Switch input capacitance C.iss:', 'C.iss', "4307*'pF", 'pF', 0)
 S.const('Switch total gate charge Q.g at V.H [10^-9 A s]:', 'Q.g', "210*10^(-9)*'A*'s", None, 0,
         note='read from the gate charge curve at the drive voltage V.H.')
 S.const('Switches driven per channel (paralleled):', 'n.par', '1', None, 0)
@@ -100,16 +99,12 @@ S.row('- diode surge margin (>1):', 'k.D_pk', 'I.FSM_D/I.pk_D', None, 2)
 
 S.h2('4  Gate timing')
 S.row('- Equivalent gate capacitance from the charge, n.par Q.g / V.sw:', 'C.eq',
-      'n.par*Q.g/V.sw', 'nF', 2, note='includes the Miller charge; C.iss alone reads fast.')
+      'n.par*Q.g/V.sw', 'nF', 2, note='includes the Miller charge.')
 S.row('- Gate rising time 10-90 %, 2.2 R.path_on C.eq:', 't.r', '2.2*R.path_on*C.eq', 'ns', 0)
 S.row('- Gate falling time 90-10 %, through the diode path:', 't.f',
       "R.path_off*C.eq*ln(((0.9*V.sw-V.eff)/'V)/((0.1*V.sw-V.eff)/'V))", 'ns', 0)
 S.row('- 10 % point above the branch offset (>1, else t.f is not valid):', 'k.tf',
       '0.1*V.sw/V.eff', None, 2)
-S.row('- the same falling time without the diode (R.g_on alone):', 't.f_noD',
-      '2.2*(R.on_L+R.g_on+R.g_int/n.par)*C.eq', 'ns', 0)
-S.row('- rising time with C.iss, as in the first version:', 't.r_iss',
-      '2.2*R.path_on*n.par*C.iss', 'ns', 0)
 
 S.h2('5  Power')
 S.row('- Gate drive power per channel, n.par Q.g V.sw f.sw:', 'P.G', 'n.par*Q.g*V.sw*f.sw',
@@ -163,14 +158,14 @@ I_tot = VB / RL
 I_d = (VA - VB - VF) / Roff
 Qg, f = 210e-9, 85e3
 ref = {'I.pk_on': 18 / 16, 'I.pk_off': I_tot, 'I.pk_D': I_d, 'P.G': 0.3213,
-       't.r_iss': 152e-9, 'P.sum': 0.3213,
+       't.r': 2.2 * 16 * Qg / Vs, 'P.sum': 0.3213,
        't.f': (RL + Ron * Roff / (Ron + Roff)) * Qg / Vs *
               math.log((0.9 * Vs - VF * Ron / (Ron + Roff)) / (0.1 * Vs - VF * Ron / (Ron + Roff))),
        'P.D_off': VF * Qg * f * Ron / (Ron + Roff)}
 bad = 0
 for k, v in ref.items():
     got = S.ns[k.replace('.', '__')]
-    tol = 0.005 if k == 't.r_iss' else 1e-6
+    tol = 1e-6
     ok = abs(got - v) <= abs(v) * tol
     bad += not ok
     print(f'  {k:10s} sheet={got:<12.6g} ref={v:<12.6g} {"OK" if ok else "** DIFF"}')
