@@ -94,7 +94,7 @@
     <region left="20" top="290" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
-        <p style="font-weight: normal; font-style: normal; font-size: 10px;">[TBD] Module internal gate resistance R.G:</p>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">Module internal gate resistance R.G:</p>
       </content>
     </text>
     </region>
@@ -112,7 +112,7 @@
     <region left="20" top="333" width="470" height="47" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
-        <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS Fig.16] Gate charge 0 -&gt; 18 V [10^-9 A s]:</p>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">Gate charge 0 -&gt; 18 V [10^-9 A s]:</p>
       </content>
     </text>
     </region>
@@ -137,7 +137,7 @@
     <region left="20" top="388" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
-        <p style="font-weight: normal; font-style: normal; font-size: 10px;">[TBD] Switching frequency:</p>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">Switching frequency:</p>
       </content>
     </text>
     </region>
@@ -207,7 +207,7 @@
     <region left="20" top="560" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
-        <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] Source R.DS_ON, max:</p>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">Source R.DS_ON, max:</p>
       </content>
     </text>
     </region>
@@ -225,7 +225,7 @@
     <region left="20" top="603" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
-        <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] Sink R.DS_ON, max:</p>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">Sink R.DS_ON, max:</p>
       </content>
     </text>
     </region>
@@ -243,7 +243,7 @@
     <region left="20" top="646" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
-        <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] Source / sink current capability, min:</p>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">Source / sink current capability, min:</p>
       </content>
     </text>
     </region>
@@ -261,7 +261,7 @@
     <region left="20" top="689" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
-        <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] VH quiescent current, max:</p>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">VH quiescent current, max:</p>
       </content>
     </text>
     </region>
@@ -279,7 +279,7 @@
     <region left="20" top="732" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
-        <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] VDD quiescent current, IN+ low, max:</p>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">VDD quiescent current, IN+ low, max:</p>
       </content>
     </text>
     </region>
@@ -297,7 +297,7 @@
     <region left="20" top="775" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
-        <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] VDD quiescent current, IN+ high, max:</p>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">VDD quiescent current, IN+ high, max:</p>
       </content>
     </text>
     </region>
@@ -315,7 +315,7 @@
     <region left="20" top="818" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
-        <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] Thermal resistance junction-ambient [C/W]:</p>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">Thermal resistance junction-ambient [C/W]:</p>
       </content>
     </text>
     </region>
@@ -331,7 +331,7 @@
     <region left="20" top="861" width="470" height="47" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
-        <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] Module Q.gd (800 V, 600 A) [10^-9 A s]:</p>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">Module Q.gd at 800 V, conservative for 400 V [10^-9 A s]:</p>
       </content>
     </text>
     </region>
@@ -356,7 +356,7 @@
     <region left="20" top="916" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
-        <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] Module C.iss - C.rss (800 V):</p>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">Module C.iss - C.rss (800 V):</p>
       </content>
     </text>
     </region>
@@ -374,7 +374,7 @@
     <region left="20" top="959" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
-        <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS] Module gate threshold, min:</p>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">Module gate threshold, min:</p>
       </content>
     </text>
     </region>
@@ -400,7 +400,7 @@
     <math>
       <input>
         <e type="operand">V.bus</e>
-        <e type="operand">800</e>
+        <e type="operand">400</e>
         <e type="operand" style="unit">V</e>
         <e type="operator" args="2">*</e>
         <e type="operator" args="2">:</e>
@@ -410,7 +410,7 @@
     <region left="20" top="1184" width="470" height="35" color="#000000" fontSize="10" isBreakable="false">
     <text lang="eng" fontFamily="Arial" fontSize="10">
       <content>
-        <p style="font-weight: normal; font-style: normal; font-size: 10px;">[DS Tab.4] Drain dv/dt at switching [V/ns]:</p>
+        <p style="font-weight: normal; font-style: normal; font-size: 10px;">Drain dv/dt at switching [V/ns]:</p>
       </content>
     </text>
     </region>
@@ -1001,7 +1001,7 @@
           <e type="operand" style="unit">ns</e>
         </contract>
         <result action="numeric">
-          <e type="operand">43</e>
+          <e type="operand">22</e>
         </result>
     </math>
     </region>
@@ -1025,7 +1025,7 @@
           <e type="operand" style="unit">A</e>
         </contract>
         <result action="numeric">
-          <e type="operand">9.09</e>
+          <e type="operand">18.18</e>
         </result>
     </math>
     </region>
@@ -1065,7 +1065,7 @@
           <e type="operand" style="unit">V</e>
         </contract>
         <result action="numeric">
-          <e type="operand">8.74</e>
+          <e type="operand">9.75</e>
         </result>
     </math>
     </region>
@@ -1086,7 +1086,7 @@
         <e type="operator" args="2">:</e>
       </input>
         <result action="numeric">
-          <e type="operand">0.22</e>
+          <e type="operand">0.19</e>
         </result>
     </math>
     </region>
