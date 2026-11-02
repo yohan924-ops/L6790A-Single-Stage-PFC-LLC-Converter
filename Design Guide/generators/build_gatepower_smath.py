@@ -7,7 +7,10 @@ and gate current, unipolar (0 V off) drive, one output pin:
 2026-11-02 (user): first like the uploaded 21082025_Gate_Driver_Cal.sm, then the single-pin
 network, then STGAP3SXS values from DS14758 Rev 3 (maximum figures, so the dissipation is an
 upper estimate) and the EVLSTGAP3SXS-H network (DB5386 Rev 2), then "leave only what is
-needed": inputs, peak currents, rise / fall time, power, junction temperature. Intermediate
+needed": inputs, peak currents, rise / fall time, power, junction temperature. Then the
+user's SiC half-bridge module (1200 V, 1.8 mOhm, Q.g 1377 nC at -5..18 V): Q.g 0->18 V read
+from its Fig. 16, and a Miller turn-on check, because 0 V off with V.th min 1.9 V is the
+weak point (the module datasheet measured its switching with -5 V and an active clamp). Intermediate
 quantities sit in one collapsed block (Sheet.set computes in Python only and would leave them
 undefined in SMath).
 
@@ -33,13 +36,13 @@ S = Sheet('STGAP3SXS gate driver power', 'L6790A project',
 S.h1('STGAP3SXS Gate Driver Calculation  -  GOUT, R.g_on and (D.off + R.g_off), 0 V off')
 
 S.h2('1  Inputs')
-S.const('Turn-ON gate resistor R.g_on:', 'R.g_on', "22*'ohm", 'ohm', 2)
-S.const('Turn-OFF gate resistor R.g_off (in series with D.off):', 'R.g_off', "2.2*'ohm",
+S.const('Turn-ON gate resistor R.g_on:', 'R.g_on', "3.3*'ohm", 'ohm', 2)
+S.const('Turn-OFF gate resistor R.g_off (in series with D.off):', 'R.g_off', "4.7*'ohm",
         'ohm', 2)
 S.const('D.off forward voltage at the peak current:', 'V.F', "0.5*'V", 'V', 2)
-S.const('Switch internal gate resistance R.G:', 'R.g_int', "0*'ohm", 'ohm', 2)
-S.const('Switch total gate charge Q.g at V.H [10^-9 A s]:', 'Q.g', "210*10^(-9)*'A*'s", None, 0)
-S.const('Switching frequency:', 'f.sw', "85*'kHz", 'kHz', 1)
+S.const('[TBD] Module internal gate resistance R.G:', 'R.g_int', "0*'ohm", 'ohm', 2)
+S.const('[DS Fig.16] Gate charge 0 -> 18 V [10^-9 A s]:', 'Q.g', "1200*10^(-9)*'A*'s", None, 0)
+S.const('[TBD] Switching frequency:', 'f.sw', "20*'kHz", 'kHz', 1)
 S.const('Gate drive voltage V.H:', 'V.H', "18*'V", 'V', 1)
 S.const('Logic supply V.DD:', 'V.DD', "5*'V", 'V', 1)
 S.const('Input high duty:', 'D.in', '0.5', None, 2)
@@ -50,6 +53,11 @@ S.const('[DS] VH quiescent current, max:', 'I.QH', "6*'mA", 'mA', 1)
 S.const('[DS] VDD quiescent current, IN+ low, max:', 'I.DD_lo', "2.5*'mA", 'mA', 1)
 S.const('[DS] VDD quiescent current, IN+ high, max:', 'I.DD_hi', "13*'mA", 'mA', 1)
 S.const('[DS] Thermal resistance junction-ambient [C/W]:', 'R.th_JA', '65', None, 0)
+S.const('[DS] Module Q.gd (800 V, 600 A) [10^-9 A s]:', 'Q.gd', "391*10^(-9)*'A*'s", None, 0)
+S.const('[DS] Module C.iss - C.rss (800 V):', 'C.gs', "35.8*'nF", 'nF', 1)
+S.const('[DS] Module gate threshold, min:', 'V.th_min', "1.9*'V", 'V', 1)
+S.const('Bus voltage:', 'V.bus', "800*'V", 'V', 0)
+S.const('[DS Tab.4] Drain dv/dt at switching [V/ns]:', 'dvdt', '18.6', None, 1)
 
 # intermediates, folded away (Sheet.set would not write them into the file)
 S.area_begin('intermediate values - collapsed')
@@ -85,7 +93,14 @@ S.row('- R.g_on dissipation:', 'P.Ron',
 S.row('- R.g_off dissipation:', 'P.Roff', 'P.off_R*R.eff/R.path_off*R.g_on/(R.g_on+R.g_off)',
       'W', 3)
 
-S.h2('5  Driver junction temperature')
+S.h2('5  Miller turn-on of the OFF switch (0 V off)')
+S.row('- Drain swing time, V.bus / dv/dt:', 't.sw', "V.bus/dvdt*10^(-9)*'s/'V", 'ns', 0)
+S.row('- Miller current into the off gate, Q.gd / t.sw:', 'i.M', 'Q.gd/t.sw', 'A', 2)
+S.row('- Gate kick through the hold path (R.path_off, C.gs):', 'ΔV.g',
+      "i.M*R.path_off*(1-exp(-(t.sw/'s)/((R.path_off*C.gs)/'s)))", 'V', 2)
+S.row('- margin, V.th_min / ΔV.g (>1):', 'k.Miller', 'V.th_min/ΔV.g', None, 2)
+
+S.h2('6  Driver junction temperature')
 S.const('Ambient temperature 1 [C]:', 'T.amb1', '25', None, 0)
 S.row('- Junction temperature at T.amb1 [C]:', 'T.j1', "T.amb1+P.D/'W*R.th_JA", None, 0)
 S.const('Ambient temperature 2 [C]:', 'T.amb2', '45', None, 0)
@@ -98,14 +113,15 @@ print(f'written {OUT}\n  {nbytes} bytes, {ybottom} px tall, {len(S.r)} regions')
 
 # ---------------------------------------------------------------- self-check
 # independent nodal solution of the turn-off peak (gate at V.H, GOUT through R.on_L to 0 V)
-Vs, RL, RH, Ron, Roff, VF = 18.0, 0.65, 0.80, 22.0, 2.2, 0.5
+Vs, RL, RH, Ron, Roff, VF = 18.0, 0.65, 0.80, 3.3, 4.7, 0.5
 VB = (Vs / Ron + (Vs - VF) / Roff) / (1 / Ron + 1 / Roff + 1 / RL)
-Qg, f = 210e-9, 85e3
+Qg, f = 1200e-9, 20e3
 PG = Qg * Vs * f
 PDoff = VF * Qg * f * Ron / (Ron + Roff)
 Reff = Ron * Roff / (Ron + Roff)
 ref = {'I.pk_on': Vs / (RH + Ron), 'I.pk_off': VB / RL, 'I.pk_D': (Vs - VB - VF) / Roff,
        'P.G': PG, 't.r': math.log(9) * (RH + Ron) * Qg / Vs,
+       'ΔV.g': 391e-9 / (800 / 18.6e9) * (RL + Reff) * (1 - math.exp(-(800 / 18.6e9) / ((RL + Reff) * 35.8e-9))),
        'P.D': PG / 2 * RH / (RH + Ron) + (PG / 2 - PDoff) * RL / (RL + Reff)
               + 6e-3 * 18 + 5 * (0.5 * 13e-3 + 0.5 * 2.5e-3)}
 bad = 0
